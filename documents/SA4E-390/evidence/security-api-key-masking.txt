@@ -1,0 +1,36 @@
+Security Review — API Key Masking Verification (NFR4)
+
+Files Reviewed:
+- src/webview/provider-table.ts
+- src/webview/edit-provider-modal.ts
+- src/config/llm-secret-keys.ts
+
+Findings:
+
+1. Provider Table (provider-table.ts):
+   - Line 51: const MASKED_API_KEY = "●●●●●●●●●●●●●●●●●●●●" (20 bullets)
+   - Line 115: Uses profile.apiKeyMasked || "—" for display
+   - No plaintext API key rendering in table
+
+2. Edit Provider Modal (edit-provider-modal.ts):
+   - Line 445: apiKeyInput.value = "●".repeat(20) for masked display
+   - Toggle visibility button only shows masked value; no plaintext reveal
+   - Copy-to-clipboard available but does not expose in DOM
+
+3. SecretStorage Isolation (llm-secret-keys.ts):
+   - llmSecretKey(profileId): Returns sdlcAgents.{profileId}ApiKey
+   - profileSecretKey(profileId): Returns sdlcAgents.{profileId}Secret
+   - readLlmApiKey(profileId): Centralized read with legacy migration
+   - writeLlmApiKey(profileId, value): Centralized write
+   - deleteLlmApiKey(profileId): Centralized delete
+   - All secret access goes through these helpers — zero direct secrets.get() calls for LLM keys in production code
+
+4. Legacy Key Migration:
+   - readLlmApiKey() lines 79-86: Migrates kiroSdlc.* → sdlcAgents.* on read
+   - Creates new profile if legacy key exists but no profile
+
+Static Grep Verification:
+- grep -r "sk-" extension/src --include="*.ts" | grep -v "__tests__": 0 matches
+- grep -r "secrets\.get.*llm" extension/src --include="*.ts" | grep -v "__tests__": 1 match (legitimate fallback in llm-secret-keys.ts)
+
+Conclusion: API key never rendered in clear text in DOM. All secret access centralized via llmSecretKey() helper. NFR4 PASS.

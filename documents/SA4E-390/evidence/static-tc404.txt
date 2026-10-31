@@ -1,0 +1,21 @@
+Static Check TC-390-404: Flat-key absence gate — grep for direct llm.provider / llm.model / llm.baseUrl reads
+
+Command: Select-String -Pattern "llm\.(provider|model|baseUrl)" -Path src\**\*.ts | Select-String -NotMatch "__tests__" | Select-String -NotMatch "\.d\.ts"
+
+Result: 0 matches in production code (was 14 before fix)
+
+Status: PASS — DEF-390-001 RESOLVED
+
+Before fix (14 violations):
+- src/chat-panel/ChatModelManager.ts:21 (comment)
+- src/commands/LlmCommands.ts:79, 95
+- src/config/config-namespace-migration.ts:10, 43
+- src/config/llm-profile-migration.ts:5, 18
+- src/config/settings-migration-runner.ts:30
+- src/pi-workflow/pi-provider-config-bridge.ts:93
+- src/services/LlmTestService.ts:120
+- src/services/ProviderConfigService.ts:79, 364
+- src/types/server-types.ts:92, 95
+- src/webview/save-all-controller.ts:59, 99
+
+After fix: All migrated to readProviderTurnConfig() SSOT layer

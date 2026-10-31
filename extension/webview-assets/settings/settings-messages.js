@@ -3,6 +3,7 @@
  * Single window "message" listener dispatching state/models/test results to
  * the settings modules, plus the "ready" handshake (MUST load after all
  * other settings modules).
+ * SA4E-390: Added handlers for profile table messages (profiles, profileTested, etc.)
  */
 (function () {
   "use strict";
@@ -66,6 +67,15 @@
         if (testAtlassianBtn) { testAtlassianBtn.classList.remove("loading"); testAtlassianBtn.disabled = false; }
         showStatus(atlassianTestResult, (msg.success ? "\u2705 " : "\u274C ") + msg.message, msg.success ? "success" : "error");
         break;
+      // SA4E-390: Provider table messages
+      case "profiles": handleProfiles(msg); break;
+      case "profileAdded": handleProfileAdded(msg); break;
+      case "profileEdited": handleProfileEdited(msg); break;
+      case "profileDeleted": handleProfileDeleted(msg); break;
+      case "activeProfileSet": handleActiveProfileSet(msg); break;
+      case "profileTestStarted": handleProfileTestStarted(msg); break;
+      case "profileTested": handleProfileTested(msg); break;
+      case "saveAllResult": handleSaveAllResult(msg); break;
     }
   });
 
@@ -106,6 +116,93 @@
     // Save per-provider
     var s = SS.getProviderState(SS.currentProvider);
     s.testResult = { success: msg.success, html: html };
+  }
+
+  // ─── SA4E-390: Provider Table Handlers ───────────────────────────────────────
+
+  function handleProfiles(msg) {
+    if (SS.providerTable) {
+      SS.providerTable.handleProfiles(msg);
+    }
+  }
+
+  function handleProfileAdded(msg) {
+    if (msg.success && SS.providerTable) {
+      vscode.postMessage({ type: "getProfiles" });
+    } else if (!msg.success) {
+      showStatus(testResult, "\u274C " + (msg.error || "Failed to add profile"), "error");
+    }
+  }
+
+  function handleProfileEdited(msg) {
+    if (msg.success && SS.providerTable) {
+      vscode.postMessage({ type: "getProfiles" });
+    } else if (!msg.success) {
+      showStatus(testResult, "\u274C " + (msg.error || "Failed to edit profile"), "error");
+    }
+  }
+
+  function handleProfileDeleted(msg) {
+    if (msg.success && SS.providerTable) {
+      vscode.postMessage({ type: "getProfiles" });
+    } else if (!msg.success) {
+      showStatus(testResult, "\u274C " + (msg.error || "Failed to delete profile"), "error");
+    }
+  }
+
+  function handleActiveProfileSet(msg) {
+    if (msg.success && SS.providerTable) {
+      vscode.postMessage({ type: "getProfiles" });
+    }
+  }
+
+  function handleProfileTestStarted(msg) {
+    // Update table row to show "Testing..." state
+    if (SS.providerTable && msg.profileId) {
+      SS.providerTable.updateProfileStatus(msg.profileId, "testing");
+    }
+  }
+
+  function handleProfileTested(msg) {
+    if (SS.providerTable && msg.profileId) {
+      var status = msg.success ? "connected" : "failed";
+      SS.providerTable.updateProfileStatus(msg.profileId, status);
+    }
+    // Also show in test result area
+    testLlmBtn.classList.remove("loading");
+    testLlmBtn.disabled = false;
+    testResult.style.display = "block";
+    var html;
+    if (msg.success) {
+      testResult.className = "test-result success";
+      html =
+        '<div class="result-label">\u2705 Success</div>' +
+        '<div class="result-body">' + SS.escapeHtml(msg.message) + "</div>" +
+        '<div class="result-meta">' +
+        (msg.model ? "Model: " + SS.escapeHtml(msg.model) : "") +
+        (msg.latencyMs ? " \u2022 Latency: " + msg.latencyMs + "ms" : "") +
+        "</div>";
+    } else {
+      testResult.className = "test-result error";
+      html =
+        '<div class="result-label">\u274C Failed</div>' +
+        '<div class="result-body">' + SS.escapeHtml(msg.error || msg.message) + "</div>" +
+        (msg.latencyMs ? '<div class="result-meta">Latency: ' + msg.latencyMs + "ms</div>" : "");
+    }
+    testResult.innerHTML = html;
+  }
+
+  function handleSaveAllResult(msg) {
+    var saveAllBtn = document.getElementById("save-all-btn");
+    if (saveAllBtn) {
+      saveAllBtn.classList.remove("loading");
+      saveAllBtn.disabled = false;
+    }
+    if (msg.success) {
+      showStatus(testResult, "\u2705 " + msg.message, "success");
+    } else {
+      showStatus(testResult, "\u274C " + (msg.error || msg.message), "error");
+    }
   }
 
   // ─── Init ─────────────────────────────────────────────────────────────────

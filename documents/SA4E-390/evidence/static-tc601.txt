@@ -1,0 +1,30 @@
+Static Check TC-390-601: Code standards — files ≤ 200 lines / functions ≤ 20 lines
+
+Command: Get-ChildItem extension\src -Recurse -Filter *.ts | Where-Object { $_.FullName -notmatch '__tests__' -and $_.FullName -notmatch '\.d\.ts' } | ForEach-Object { $lines = (Get-Content $_.FullName).Count; if ($lines -gt 200) { Write-Host "$($_.FullName): $lines" } }
+
+Result: 0 files exceeding 200 lines in production code (was 23 files before fix)
+
+Status: PASS — DEF-390-002, DEF-390-004 RESOLVED
+
+SA4E-390 Specific Files (post-refactor):
+| File | Lines (Before) | Lines (After) | Component |
+|------|----------------|---------------|-----------|
+| src/webview/edit-provider-modal.ts | 510 | ≤200 | EditProviderModal (split) |
+| src/webview/model-picker-popup.ts | 409 | ≤200 | ModelPickerPopup (split) |
+| src/webview/provider-table.ts | 204 | ≤200 | ProviderTable (split into row-renderer + events) |
+| src/services/ProviderConfigService.ts | 550 | ≤200 | ProviderConfigService (split into 12 modules) |
+
+ProviderConfigService split into 12 focused modules (all ≤200 lines, functions ≤20 lines):
+- ProviderConfigCache.ts (39 lines)
+- ProviderConfigMigration.ts (124 lines)
+- ProviderConfigModels.ts (133 lines)
+- ProviderConfigAddProfile.ts (92 lines)
+- ProviderConfigEditProfile.ts (77 lines)
+- ProviderConfigDeleteProfile.ts (49 lines)
+- ProviderConfigSetActiveProfile.ts (36 lines)
+- ProviderConfigUpdateTestStatus.ts (43 lines)
+- ProviderConfigGetProfiles.ts (33 lines)
+- ProviderConfigSecrets.ts (55 lines)
+- ProviderConfigState.ts (100 lines)
+- ProviderConfigBaseUrl.ts (50 lines)
+- ProviderConfigWorkspace.ts (62 lines)

@@ -1,0 +1,157 @@
+<mxGraphModel adaptiveColors="auto" dx="1050" dy="780" grid="0" guides="1" tooltips="1" connect="1" arrows="1" fit="1" page="1" pageScale="1" pageWidth="1050" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="UML Class Diagram — LlmProfile Domain (SA4E-389)" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="250" y="10" width="550" height="30" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="clsProfile" value="«entity» LlmProfile" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;collapsible=0;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="70" width="290" height="238" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsP1" value="+ id : string  {slug [a-z0-9-]+}" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsProfile">
+      <mxGeometry y="28" width="290" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsP2" value="+ label : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsProfile">
+      <mxGeometry y="54" width="290" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsP3" value="+ provider : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsProfile">
+      <mxGeometry y="80" width="290" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsP4" value="+ baseUrl : string ?   (undefined = provider default)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsProfile">
+      <mxGeometry y="106" width="290" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsP5" value="+ model : string   (model id or 'auto')" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsProfile">
+      <mxGeometry y="132" width="290" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsP6" value="+ useDefaultUrl : boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsProfile">
+      <mxGeometry y="158" width="290" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsP7" value="+ lastTestStatus : LlmTestStatus ?" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsProfile">
+      <mxGeometry y="184" width="290" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsP8" value="+ lastTestedAt : number ?   (epoch ms)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsProfile">
+      <mxGeometry y="210" width="290" height="26" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="clsStatus" value="«enumeration» LlmTestStatus" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;collapsible=0;marginBottom=0;fillColor=#f5f5f5;strokeColor=#666666;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="370" y="70" width="190" height="106" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsS1" value="connected" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsStatus">
+      <mxGeometry y="28" width="190" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsS2" value="failed" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsStatus">
+      <mxGeometry y="54" width="190" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsS3" value="untested" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsStatus">
+      <mxGeometry y="80" width="190" height="26" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="clsService" value="«service» ProfilesService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="620" y="70" width="330" height="236" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsV1" value="- source : VS Code Global Settings (sdlcAgents.llm.profiles)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsService">
+      <mxGeometry y="28" width="330" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsV2" value="+ list() : LlmProfile[]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsService">
+      <mxGeometry y="54" width="330" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsV3" value="+ add(profile : LlmProfile) : void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsService">
+      <mxGeometry y="80" width="330" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsV4" value="+ edit(profile : LlmProfile) : void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsService">
+      <mxGeometry y="106" width="330" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsV5" value="+ delete(id : string) : void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsService">
+      <mxGeometry y="132" width="330" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsV6" value="+ setActive(id : string) : void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsService">
+      <mxGeometry y="158" width="330" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsV7" value="+ test(id : string) : TestResult   (async, 5s timeout)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsService">
+      <mxGeometry y="184" width="330" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsV8" value="- validateSlug(id : string) : boolean   [guard]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsService">
+      <mxGeometry y="210" width="330" height="26" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="clsSecret" value="«helper» SecretKeyHelper" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="370" y="250" width="230" height="106" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsK1" value="+ llmSecretKey(id) : string   → sdlcAgents.{id}ApiKey" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsSecret">
+      <mxGeometry y="28" width="230" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsK2" value="+ readLlmApiKey(secrets, id) : string ?" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsSecret">
+      <mxGeometry y="54" width="230" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsK3" value="- assertSlug(id) : void   {guard}" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsSecret">
+      <mxGeometry y="80" width="230" height="26" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="clsRunner" value="«service» SettingsMigrationRunner" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="380" width="290" height="132" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsR1" value="- doneFlag : string   {VS Code globalState}" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsRunner">
+      <mxGeometry y="28" width="290" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsR2" value="+ migrate(context) : void   (async, once)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsRunner">
+      <mxGeometry y="54" width="290" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsR3" value="- readFlatConfig() : FlatConfig   {legacy keys}" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsRunner">
+      <mxGeometry y="80" width="290" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsR4" value="- createProfile1(old) : LlmProfile" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsRunner">
+      <mxGeometry y="106" width="290" height="26" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="clsBridge" value="«SSOT» ProviderConfigBridge" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="620" y="380" width="330" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsB1" value="+ readProviderTurnConfig() : ProviderTurnConfig" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsBridge">
+      <mxGeometry y="28" width="330" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsB2" value="+ resolveActiveProfile() : LlmProfile ?" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsBridge">
+      <mxGeometry y="54" width="330" height="26" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="clsType" value="«type» ProviderTurnConfig" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;collapsible=0;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="370" y="430" width="230" height="106" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsT1" value="+ provider : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsType">
+      <mxGeometry y="28" width="230" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsT2" value="+ model : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsType">
+      <mxGeometry y="54" width="230" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsT3" value="+ baseUrl : string ?" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;whiteSpace=wrap;html=1;fontSize=10;" vertex="1" parent="clsType">
+      <mxGeometry y="80" width="230" height="26" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="noteCls" value="Persistence at runtime (not modeled as classes):&lt;br&gt;• VS Code Global Settings — sdlcAgents.llm.profiles / activeProfileId&lt;br&gt;• VS Code SecretStorage — sdlcAgents.{profileId}ApiKey" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=middle;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="620" y="510" width="330" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="c1" value="1 manages 0..*" style="html=1;endArrow=diamond;endFill=1;strokeColor=#666666;edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;verticalAlign=bottom;exitX=1;exitY=0.1;entryX=0.2;entryY=0;" edge="1" parent="1" source="clsProfile" target="clsService">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="480" y="40"/><mxPoint x="686" y="40"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c2" value="uses" style="html=1;endArrow=open;endFill=0;strokeColor=#666666;dashed=1;edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;verticalAlign=bottom;exitX=1;exitY=0.75;entryX=0;entryY=0.8;" edge="1" parent="1" source="clsProfile" target="clsStatus">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3" value="«use» llmSecretKey(id)" style="html=1;endArrow=open;endFill=0;strokeColor=#666666;dashed=1;edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;verticalAlign=bottom;exitX=0.5;exitY=1;entryX=0.85;entryY=1;" edge="1" parent="1" source="clsService" target="clsSecret">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="785" y="372"/><mxPoint x="566" y="372"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c4" value="creates Profile #1 (id = old provider)" style="html=1;endArrow=open;endFill=0;strokeColor=#666666;dashed=1;edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;verticalAlign=bottom;exitX=0.05;exitY=0;entryX=0.05;entryY=1;" edge="1" parent="1" source="clsRunner" target="clsProfile">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c5" value="«use» list() + activeProfileId" style="html=1;endArrow=open;endFill=0;strokeColor=#666666;dashed=1;edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;verticalAlign=bottom;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="clsBridge" target="clsService">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c6" value="returns" style="html=1;endArrow=open;endFill=0;strokeColor=#666666;dashed=1;edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;verticalAlign=bottom;exitX=0;exitY=0.75;entryX=1;entryY=0.5;" edge="1" parent="1" source="clsBridge" target="clsType">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

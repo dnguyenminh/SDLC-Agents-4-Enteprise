@@ -1,0 +1,6 @@
+id,provider,name,model,freeBadge
+anthropic,Anthropic,Claude 3 Haiku,true
+openai,OpenAI,GPT-4o,false
+lmstudio,LMStudio,Qwen2-7B,false
+openrouter,OpenRouter,Mixtral,false
+ollama,Ollama,Llama 3,false

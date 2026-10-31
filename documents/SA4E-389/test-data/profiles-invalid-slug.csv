@@ -1,0 +1,11 @@
+id,label,provider,model,useDefaultUrl,lastTestStatus
+My Profile!,Profile Bad Slug,openai,gpt-4o,False,untested
+123_start,Number Start Slug,openai,gpt-4o,False,untested
+start-with-space,Leading Space Slug,ollama,ollama-local,False,untested
+a.b,Dot In Slug,openai,gpt-4o,False,untested
+mid-dash_dash,Double Dash Slug,anthropic,claude-3-5-sonnet,False,untested
+,Empty ID Slug,openai,gpt-4o,False,untested
+マイ_プロフィール,Unicode Slug,openai,gpt-4o,False,untested
+a-b!,Exclamation Slug,anthropic,claude-3-5-sonnet,False,untested
+x y,Space In Slug,openai,gpt-4o,False,untested
+a.b.c,Multiple Dots Slug,anthropic,claude-3-5-sonnet,False,untested

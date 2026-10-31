@@ -47,17 +47,49 @@ export interface ProviderTurnConfig {
   fallbackModelIds: string[];
 }
 
+/** In-memory cache of the resolved active profile config. Updated on settings change. */
+let cachedActiveProfileConfig: ProviderTurnConfig | null = null;
+
 /**
- * SA4E-369 UAT root-cause fix — ONE config-read path for BOTH turn paths.
- * Session (trySessionTurn / selectAgent) and legacy (configureEngineProvider)
- * previously read the same settings with DIFFERENT helpers: the legacy path
- * resolved SA4E-370 dot-notation keys with legacy flat-key fallback
- * (getSetting) while the session path used plain config.get() on
- * the dot keys only — silently missing users who still hold the flat keys
- * (e.g. llmProvider=lmstudio + lmstudioBaseUrl). Every provider-config read
- * now goes through this function (single source of truth).
+ * Invalidate the cached config — call when profiles/activeProfileId changes.
  */
-export function readProviderTurnConfig(): ProviderTurnConfig {
+export function invalidateProviderTurnConfigCache(): void {
+  cachedActiveProfileConfig = null;
+}
+
+/**
+ * Resolve the active profile's provider config from VS Code settings.
+ * Reads `sdlcAgents.llm.activeProfileId` and finds the matching profile in
+ * `sdlcAgents.llm.profiles`. Falls back to legacy flat keys if no profiles exist
+ * (backward compatibility for pre-migration users).
+ * This is the SINGLE SOURCE OF TRUTH for provider/model/baseUrl resolution.
+ */
+function resolveActiveProfileConfig(): ProviderTurnConfig {
+  const config = vscode.workspace.getConfiguration("sdlcAgents");
+
+  // Try new multi-profile config first
+  const profiles = config.get<any[]>("llm.profiles", []);
+  const activeProfileId = config.get<string>("llm.activeProfileId");
+
+  if (profiles.length > 0 && activeProfileId) {
+    const activeProfile = profiles.find((p: any) => p.id === activeProfileId);
+    if (activeProfile) {
+      const providerId = activeProfile.provider;
+      const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
+      const baseUrl = activeProfile.useDefaultUrl
+        ? undefined
+        : (activeProfile.baseUrl || (baseUrlKey ? getSetting<string>(baseUrlKey, baseUrlKey, '') : '') || undefined);
+
+      return {
+        providerId,
+        baseUrl,
+        configuredModelId: activeProfile.model || '',
+        fallbackModelIds: getSetting<string[]>('llm.fallbackModels', 'llm.fallbackModels', []),
+      };
+    }
+  }
+
+  // Fallback: legacy flat config (pre-migration or no profiles yet)
   const providerId = getSetting<string>('llm.provider', 'llm.provider', 'anthropic') || 'anthropic';
   const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
   const baseUrl = (
@@ -67,7 +99,29 @@ export function readProviderTurnConfig(): ProviderTurnConfig {
   ) || undefined;
   const configuredModelId = getSetting<string>('llm.model', 'llm.model', '') || '';
   const fallbackModelIds = getSetting<string[]>('llm.fallbackModels', 'llm.fallbackModels', []);
+
   return { providerId, baseUrl, configuredModelId, fallbackModelIds };
+}
+
+/**
+ * SA4E-369 UAT root-cause fix — ONE config-read path for BOTH turn paths.
+ * Session (trySessionTurn / selectAgent) and legacy (configureEngineProvider)
+ * previously read the same settings with DIFFERENT helpers: the legacy path
+ * resolved SA4E-370 dot-notation keys with legacy flat-key fallback
+ * (getSetting) while the session path used plain config.get() on
+ * the dot keys only — silently missing users who still hold the flat keys
+ * (e.g. llmProvider=lmstudio + lmstudioBaseUrl). Every provider-config read
+ * now goes through this function (single source of truth).
+ *
+ * Now reads from the ACTIVE PROFILE (multi-profile) with legacy fallback.
+ * Uses in-memory cache for performance; invalidated on settings change.
+ */
+export function readProviderTurnConfig(): ProviderTurnConfig {
+  if (cachedActiveProfileConfig) {
+    return cachedActiveProfileConfig;
+  }
+  cachedActiveProfileConfig = resolveActiveProfileConfig();
+  return cachedActiveProfileConfig;
 }
 
 /**

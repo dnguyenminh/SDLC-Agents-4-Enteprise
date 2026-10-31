@@ -1,0 +1,64 @@
+<mxfile host="65bd71144e">
+    <diagram id="W8kiV20Pnu-pzFZHjzO0" name="Page-1">
+        <mxGraphModel dx="1205" dy="1141" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="600" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="build" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="npm build / TSC compile" vertex="1">
+                    <mxGeometry height="60" width="200" y="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="deploy" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="launch VS Code Ext Host / open webview" vertex="1">
+                    <mxGeometry height="80" width="220" x="260" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="unit" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;backgroundOutline=1;backgroundColor=#ffe6cc;strokeColor=#d79b1d;fontSize=13;" value="Unit tests" vertex="1">
+                    <mxGeometry height="70" width="130" x="535" y="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="integration" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;backgroundOutline=1;backgroundColor=#ffe6cc;strokeColor=#d79b1d;fontSize=13;" value="Integration (mock services)" vertex="1">
+                    <mxGeometry height="80" width="170" x="720" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2e" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;backgroundOutline=1;backgroundColor=#ffe6cc;strokeColor=#d79b1d;fontSize=13;" value="E2E (webview interaction)" vertex="1">
+                    <mxGeometry height="90" width="200" x="960" y="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="manualSIT" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="Manual SIT" vertex="1">
+                    <mxGeometry height="70" width="180" x="700" y="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="report" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="Aggregate Report (TEST-REPORT.md)" vertex="1">
+                    <mxGeometry height="70" width="180" x="950" y="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="gate" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;" value="Exit-Criteria Gate (pass / fail loop ≤2 retries)" vertex="1">
+                    <mxGeometry height="90" width="200" x="740" y="330" as="geometry"/>
+                </mxCell>
+                <mxCell id="feedback" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;backgroundOutline=1;backgroundColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Feedback → DEV / re-test" vertex="1">
+                    <mxGeometry height="70" width="180" x="40" y="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="build" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="deploy">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="deploy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="unit">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="unit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="integration">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="integration" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="e2e">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="e2e" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="report">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="report" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="manualSIT" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="report">
+                    <mxGeometry relative="1" x="0.1586" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="manualSIT" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="gate">
+                    <mxGeometry relative="1" x="0.2083" as="geometry"/>
+                </mxCell>
+                <mxCell id="efeed" edge="1" parent="1" source="gate" style="endArrow=classic;html=1;strokeWidth=2;dashed=1;" target="feedback" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

@@ -58,6 +58,20 @@ export interface ChatModelEntry {
   contextWindow?: number;
 }
 
+/** SA4E-389: Grouped model picker item (connected profiles only) */
+export interface ModelPickerItem {
+  profileId: string;
+  modelId: string;
+  modelName: string;
+  isFree: boolean;
+}
+
+/** SA4E-389: Grouped model picker group (one per provider) */
+export interface ModelPickerGroup {
+  provider: string;
+  items: ModelPickerItem[];
+}
+
 // === Webview → Extension Messages ===
 
 export type ChatWebviewToExtMessage =
@@ -71,6 +85,8 @@ export type ChatWebviewToExtMessage =
   | { type: "chat:pickContext"; contextType: "file" | "folder" | "problems" | "gitDiff" | "terminal" | "spec" | "currentFile" | "steering" | "mcp" }
   | { type: "chat:pickAttachment" }
   | { type: "chat:setModel"; model: string }
+  | { type: "chat:setModelAndProfile"; profileId: string; model: string }
+  | { type: "chat:getModelPickerGroups" }
   | { type: "chat:setMode"; mode: AutopilotMode }
   | { type: "chat:applyCode"; code: string; filePath?: string }
   | { type: "chat:insertCode"; code: string }
@@ -115,6 +131,8 @@ export type ChatExtToWebviewMessage =
   | { type: "chat:contextPicked"; item: ContextItem }
   | { type: "chat:configUpdate"; model: string; mode: AutopilotMode; availableModels: ModelOption[] }
   | { type: "chat:models"; provider: string; models: ChatModelEntry[]; selected: string; supportsAuto: boolean }
+  | { type: "chat:modelPickerGroups"; groups: ModelPickerGroup[] }
+  | { type: "chat:modelAndProfileSet"; profileId: string; model: string }
   | { type: "chat:workingStatus"; working: boolean; label?: string }
   | { type: "tab:updated"; payload: { tabs: Array<{ id: string; name: string; messages: unknown[]; tokenCount: number; maxTokens: number }>; activeTabId: string } }
   | { type: "tab:contextUpdate"; payload: { tabId: string; tokenCount: number; maxTokens: number; percentage: number; threshold: string } }

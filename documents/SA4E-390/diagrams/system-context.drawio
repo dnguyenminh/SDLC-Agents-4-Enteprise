@@ -1,0 +1,99 @@
+<mxfile host="65bd71144e">
+    <diagram id="0rWomIz-j4Hs5G_LVZlV" name="Page-1">
+        <mxGraphModel dx="1188" dy="1455" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="990" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;align=center;fontSize=13;fontStyle=1;fontColor=#333333;" value="SDLC Agents 4 Enterprise — VS Code Extension Host + Webviews" vertex="1">
+                    <mxGeometry height="780" width="960" x="230" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontStyle=1;fontColor=#333333;" value="SA4E-390 — System Context (LLM Configuration + Chat Model Picker)" vertex="1">
+                    <mxGeometry height="28" width="700" x="230" y="6" as="geometry"/>
+                </mxCell>
+                <mxCell id="user" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" value="Developer (User)" vertex="1">
+                    <mxGeometry height="100" width="50" x="75" y="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="settingsWv" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;verticalAlign=middle;" value="&lt;b&gt;Settings Panel Webview&lt;/b&gt;&lt;br&gt;Provider Table: Name · Status · API Key (masked) · Base URL · Model · Actions&lt;br&gt;Edit Provider Modal · Add Provider · Save All" vertex="1">
+                    <mxGeometry height="120" width="300" x="260" y="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="chatWv" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;verticalAlign=middle;" value="&lt;b&gt;Chat Panel Webview (SDLC CHAT)&lt;/b&gt;&lt;br&gt;Model Picker Popup: Search · Recent · model name + provider + Free badge&lt;br&gt;Esc / Ctrl+A / Ctrl+F scoped to popup" vertex="1">
+                    <mxGeometry height="120" width="300" x="620" y="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="smh" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="&lt;b&gt;SettingsMessageHandler&lt;/b&gt;&lt;br&gt;(message router)" vertex="1">
+                    <mxGeometry height="70" width="230" x="260" y="400" as="geometry"/>
+                </mxCell>
+                <mxCell id="llmh" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="&lt;b&gt;LlmSettingsHandler&lt;/b&gt;&lt;br&gt;(LLM settings messages)" vertex="1">
+                    <mxGeometry height="70" width="210" x="540" y="400" as="geometry"/>
+                </mxCell>
+                <mxCell id="pcs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="&lt;b&gt;ProviderConfigService&lt;/b&gt;&lt;br&gt;(getCurrentState, getModels, updateConfig)" vertex="1">
+                    <mxGeometry height="70" width="210" x="790" y="400" as="geometry"/>
+                </mxCell>
+                <mxCell id="lts" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="&lt;b&gt;LlmTestService&lt;/b&gt;&lt;br&gt;(testLlm, autoTest)" vertex="1">
+                    <mxGeometry height="70" width="140" x="1030" y="400" as="geometry"/>
+                </mxCell>
+                <mxCell id="wsCfg" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Workspace Configuration&lt;br&gt;sdlcAgents.llm.*&lt;br&gt;(provider · model · baseUrl)" vertex="1">
+                    <mxGeometry height="110" width="240" x="860" y="580" as="geometry"/>
+                </mxCell>
+                <mxCell id="secrets" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="VS Code SecretStorage&lt;br&gt;SECRET_KEYS — API keys&lt;br&gt;(never displayed plainly)" vertex="1">
+                    <mxGeometry height="110" width="230" x="330" y="590" as="geometry"/>
+                </mxCell>
+                <mxCell id="maskNote" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="API keys are stored in SecretStorage and shown masked (••••••••) in the Provider Table" vertex="1">
+                    <mxGeometry height="60" width="280" x="270" y="730" as="geometry"/>
+                </mxCell>
+                <mxCell id="providers" parent="1" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" value="LLM Providers: anthropic · openai · lmstudio · openrouter · ollama" vertex="1">
+                    <mxGeometry height="110" width="460" x="500" y="860" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0.25;entryX=0;entryY=0.7;" target="settingsWv" value="open LLM Provider tab">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0;entryY=0.5;" target="chatWv" value="open / select model">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="180" y="60"/>
+                            <mxPoint x="620" y="60"/>
+                            <mxPoint x="620" y="190"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="settingsWv" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="smh" value="postMessage (2-way)">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="375" y="340"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="chatWv" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="pcs" value="postMessage (2-way): getModels · setModel">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="770" y="340"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="smh" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="llmh" value="routeLlm (msg.type)">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="llmh" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="pcs" value="uses">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="pcs" style="rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.1;exitY=1;entryX=0.5;entryY=0;edgeStyle=orthogonalEdgeStyle;" target="wsCfg" value="update / read llm.*">
+                    <mxGeometry relative="1" x="0.0011" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="llmh" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.79;exitY=1;entryX=0.5;entryY=0;" target="secrets" value="store / get / delete key (masked)">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="705" y="568"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="1" source="lts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" target="providers" value="isAvailable() HTTP probe (5-10s timeout)">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1100" y="500"/>
+                            <mxPoint x="1100" y="920"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

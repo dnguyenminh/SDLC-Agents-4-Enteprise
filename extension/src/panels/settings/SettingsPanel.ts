@@ -97,19 +97,23 @@ export class SettingsPanel {
     );
     // Load order matters (plain browser JS, no bundler — order IS the
     // dependency graph):
-    //  1. settings-core.js       — acquireVsCodeApi + window.SettingsShared
-    //                              namespace (state, DOM refs, helpers)
-    //  2. settings-provider.js   — provider switch + sections/model catalog UI
-    //  3. settings-inputs.js     — API key/model/URL/ollama bindings
-    //  4. settings-connections.js— server/Pega/Atlassian bindings
-    //  5. settings-apply.js      — "state"/"models" payload -> form restore
-    //  6. settings-messages.js   — message handler + "ready" (MUST be last of
-    //                              the settings modules)
-    //  7. proxy-tab.js           — proxy form bindings (window.ProxyTab)
-    //  8. proxy-tab-handlers.js  — proxy message handlers + init
+    //  1. settings-core.js           — acquireVsCodeApi + window.SettingsShared
+    //                                  namespace (state, DOM refs, helpers)
+    //  2. settings-provider.js       — provider switch + sections/model catalog UI
+    //  3. settings-inputs.js         — API key/model/URL/ollama bindings
+    //  4. settings-connections.js    — server/Pega/Atlassian bindings
+    //  5. settings-apply.js          — "state"/"models" payload -> form restore
+    //  6. settings-messages.js       — message handler + "ready" (MUST be last of
+    //                                  the settings modules)
+    //  7. provider-table.js          — Provider Table component (6 columns)
+    //  8. edit-provider-modal.js     — Edit Provider Modal
+    //  9. save-all-controller.js     — Save All Controller
+    //  10. proxy-tab.js              — proxy form bindings (window.ProxyTab)
+    //  11. proxy-tab-handlers.js     — proxy message handlers + init
     const scripts = [
       "settings-core.js", "settings-provider.js", "settings-inputs.js",
       "settings-connections.js", "settings-apply.js", "settings-messages.js",
+      "provider-table.js", "edit-provider-modal.js", "save-all-controller.js",
       "proxy-tab.js", "proxy-tab-handlers.js",
     ];
     const scriptUris = scripts.map((f) =>
@@ -132,7 +136,7 @@ export class SettingsPanel {
     <div id="settings-root">
         <header class="settings-header">
             <h1>&#9881; SDLC Pipeline Settings</h1>
-            <p class="subtitle">Configure LLM provider and server connections</p>
+            <p class="subtitle">Configure LLM provider profiles and server connections</p>
         </header>
         <div class="tab-bar" role="tablist">
             <button class="tab-btn active" id="tab-llm" data-tab="pane-llm" role="tab" aria-selected="true">&#129302; LLM Provider</button>
@@ -140,10 +144,68 @@ export class SettingsPanel {
             <button class="tab-btn" id="tab-proxy" data-tab="pane-proxy" role="tab" aria-selected="false">&#128274; Proxy</button>
         </div>
         <div class="tab-pane active" id="pane-llm" role="tabpanel">
-            <section class="card" id="provider-section"><h2>&#129302; LLM Provider</h2><div class="provider-select-group"><label for="provider-select">Choose provider</label><select id="provider-select">${this.buildProviderOptions()}</select></div></section>
-            <section class="card" id="api-section" style="display:none;"><h2>&#128273; API Configuration</h2><div class="form-group"><label for="api-key-input">API Key</label><div class="input-with-toggle"><input type="password" id="api-key-input" placeholder="Enter API key..." autocomplete="off"><button class="icon-btn" id="toggle-key-visibility" title="Show/Hide" aria-label="Toggle API key visibility">&#128065;</button></div><div id="key-status" class="status-indicator"></div></div><div class="form-group"><label for="base-url-input">Base URL <span style="opacity:0.6">(optional)</span></label><div class="checkbox-group" style="margin-bottom:6px;"><label><input type="checkbox" id="use-default-url-chk" checked> Use default URL for this provider</label></div><input type="text" id="base-url-input" placeholder="Leave empty for official API" disabled></div><div class="form-group"><label for="model-input">Model</label><input type="text" id="model-input" list="model-datalist" autocomplete="off" placeholder="Chọn hoặc gõ model id (vd: free-tier-models, auto/best-free)"><datalist id="model-datalist"></datalist><div class="field-hint" id="model-description-info"></div></div><div class="btn-row"><button id="save-key-btn" class="btn primary" disabled>Save API Key</button><button id="clear-key-btn" class="btn danger-outline">Clear Key</button></div></section>
-            <section class="card" id="ollama-section" style="display:none;"><h2>&#129433; Ollama Configuration</h2><div class="form-group"><label for="ollama-url-input">Server URL</label><input type="text" id="ollama-url-input" value="http://localhost:11434"></div><div class="form-group"><label for="ollama-model-input">Model</label><select id="ollama-model-input"><option value="">— Select model —</option></select></div><div class="btn-row"><button id="test-ollama-btn" class="btn secondary">Test Connection</button></div><div id="ollama-status" class="status-indicator"></div></section>
-            <section class="card" id="test-section"><h2>&#129514; Connection Test</h2><p class="card-desc">Send a test prompt to verify your LLM configuration works end-to-end.</p><div class="btn-row"><button id="test-llm-btn" class="btn primary">Test LLM</button></div><div id="test-result" class="test-result" style="display:none;"></div></section>
+            <section class="card" id="profiles-section">
+                <div class="card-header">
+                    <h2>&#129302; LLM Provider Profiles</h2>
+                    <div class="card-header-actions">
+                        <button id="add-profile-btn" class="btn primary" title="Add new provider profile">&#10010; Add Provider</button>
+                        <button id="save-all-btn" class="btn primary" title="Save all provider configurations">&#10003; Save All</button>
+                    </div>
+                </div>
+                <div id="profiles-table-container">
+                    <div id="provider-table-root" aria-label="LLM Provider Profiles Table">
+                        <!-- Provider Table component renders here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add/Edit Provider Modal -->
+            <div id="provider-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="provider-modal-title">
+                <div class="modal-backdrop"></div>
+                <div class="modal-content">
+                    <header class="modal-header">
+                        <h3 id="provider-modal-title">Add Provider</h3>
+                        <button class="modal-close" aria-label="Close modal">&#10006;</button>
+                    </header>
+                    <form id="provider-form" class="modal-body">
+                        <input type="hidden" id="provider-form-id" name="id">
+                        <div class="form-group">
+                            <label for="provider-form-provider">Provider <span class="required">*</span></label>
+                            <select id="provider-form-provider" name="provider" required>
+                                <option value="">— Select provider —</option>
+                                ${this.buildProviderOptions()}
+                            </select>
+                        </div>
+                        <div class="form-group" id="provider-form-api-key-group">
+                            <label for="provider-form-api-key">API Key <span class="required">*</span></label>
+                            <div class="input-with-toggle">
+                                <input type="password" id="provider-form-api-key" name="apiKey" placeholder="Enter API key..." autocomplete="off">
+                                <button type="button" class="icon-btn" id="provider-toggle-key-visibility" title="Show/Hide" aria-label="Toggle API key visibility">&#128065;</button>
+                            </div>
+                            <span class="field-hint" id="provider-form-api-key-hint">Stored securely in VS Code SecretStorage. Never displayed in plain text.</span>
+                        </div>
+                        <div class="form-group">
+                            <label>Base URL <span style="opacity:0.6">(optional)</span></label>
+                            <div class="checkbox-group" style="margin-bottom:6px;">
+                                <label><input type="checkbox" id="provider-form-use-default-url" name="useDefaultUrl" checked> Use default URL for this provider</label>
+                            </div>
+                            <input type="text" id="provider-form-base-url" name="baseUrl" placeholder="Leave empty for official API" disabled>
+                            <span class="field-hint" id="provider-form-base-url-hint"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="provider-form-model">Model <span class="required">*</span></label>
+                            <input type="text" id="provider-form-model" name="model" required placeholder="e.g., claude-3-sonnet, gpt-4o, qwen2-7b-instruct" autocomplete="off">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn secondary" id="provider-cancel-btn">Cancel</button>
+                            <button type="button" class="btn secondary" id="provider-test-btn">Test Connection</button>
+                            <button type="submit" class="btn primary" id="provider-save-btn" disabled>Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <section class="card" id="test-section"><h2>&#129514; Connection Test</h2><p class="card-desc">Send a test prompt to verify your active LLM configuration works end-to-end.</p><div class="btn-row"><button id="test-llm-btn" class="btn primary">Test Active Profile</button></div><div id="test-result" class="test-result" style="display:none;"></div></section>
         </div>
         <div class="tab-pane" id="pane-server" role="tabpanel">
             <section class="card" id="pega-config-section"><h2>&#127970; Pega Platform Connection</h2><p class="card-desc">Configure Pega REST API credentials for rule indexing.</p><div class="form-group"><label for="pega-endpoint-input">Pega Endpoint URL</label><input type="text" id="pega-endpoint-input" placeholder="http://localhost:8080/prweb"></div><div class="form-group"><label for="pega-username-input">Operator ID (Username)</label><input type="text" id="pega-username-input" placeholder="admin@jira"></div><div class="form-group"><label for="pega-password-input">Password / Token</label><div class="input-with-toggle"><input type="password" id="pega-password-input" placeholder="Enter Pega password..." autocomplete="off"><button class="icon-btn" id="toggle-pega-password-visibility" title="Show/Hide" aria-label="Toggle Pega password visibility">&#128065;</button></div></div><div class="btn-row"><button id="save-pega-btn" class="btn primary">Save Pega Config</button><button id="test-pega-btn" class="btn secondary">Test Connection</button><button id="fetch-pega-btn" class="btn secondary">Fetch Pega Context</button></div><div id="pega-test-result" class="status-indicator"></div></section>

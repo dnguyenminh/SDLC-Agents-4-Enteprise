@@ -1,0 +1,110 @@
+<mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1260" pageHeight="560" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-390 — State Machine: Provider Connection Status + Edit Provider Modal" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="280" y="2" width="700" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="groupA" value="Provider Connection Status (per table row)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;verticalAlign=top;align=left;spacingLeft=10;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="560" height="380" as="geometry"/>
+    </mxCell>
+    <mxCell id="groupB" value="Edit Provider Modal (Settings Panel)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;verticalAlign=top;align=left;spacingLeft=10;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="640" y="40" width="560" height="380" as="geometry"/>
+    </mxCell>
+    <mxCell id="startA" style="shape=startState;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+      <mxGeometry x="171" y="75" width="28" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="unknownA" value="Unknown — no test yet (gray badge)" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="120" y="170" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="testingA" value="Testing (async)" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="150" y="290" width="130" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="connectedA" value="Connected (green badge)" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="230" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="failedA" value="Failed (red badge)" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="340" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="startB" style="shape=startState;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+      <mxGeometry x="771" y="75" width="28" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="closedB" value="Closed" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="170" width="130" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="openB" value="Open (form pre-filled — masked key)" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="700" y="290" width="170" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="savingB" value="Saving (persist)" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="950" y="290" width="140" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="endB" style="shape=endState;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1046" y="170" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="ea1" value="panel load" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="startA" target="unknownA">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ea2" value="click Test Connection" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.2;entryY=0;" edge="1" parent="1" source="unknownA" target="testingA">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ea3" value="isAvailable() 200 OK" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" edge="1" parent="1" source="testingA" target="connectedA">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ea4" value="timeout / HTTP error" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0.8;entryX=0;entryY=0.5;" edge="1" parent="1" source="testingA" target="failedA">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ea5" value="retest (Edit / Test)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="connectedA" target="testingA">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ea6" value="retry after fix" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="failedA" target="testingA">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="455" y="408"/>
+          <mxPoint x="215" y="408"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eb1" value="default" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="startB" target="closedB">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eb2" value="Add Provider / Edit click" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="closedB" target="openB">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eb3" value="Save button" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="openB" target="savingB">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eb4" value="validation error / save failed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="savingB" target="openB">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1020" y="372"/>
+          <mxPoint x="785" y="372"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eb5" value="success — refresh table" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=1;entryY=0.5;" edge="1" parent="1" source="savingB" target="closedB">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1020" y="195"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eb6" value="Esc / Cancel" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="openB" target="closedB">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="668" y="315"/>
+          <mxPoint x="668" y="195"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eb7" value="modal closed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="closedB" target="endB">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1061" y="160"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note1" value="Persist via ProviderConfigService (workspace sdlcAgents.llm.*) and SecretStorage (SECRET_KEYS) — status updates only after Test Connection; status cache valid per webview session" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="450" width="1160" height="60" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

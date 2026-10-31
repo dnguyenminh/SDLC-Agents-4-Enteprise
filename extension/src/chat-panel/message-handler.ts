@@ -33,6 +33,8 @@ export class MessageHandler {
     private readonly onApplyCode?: (code: string, filePath?: string) => void,
     private readonly onInsertCode?: (code: string) => void,
     private readonly onSetModel?: (model: string) => void,
+    private readonly onSetModelAndProfile?: (profileId: string, model: string) => Promise<void>,
+    private readonly onGetModelPickerGroups?: () => Promise<void>,
     private readonly onTurnComplete?: () => void,
     private readonly onReady?: () => void
   ) {
@@ -85,6 +87,17 @@ export class MessageHandler {
       case "chat:setModel":
         this.currentModel = msg.model;
         if (this.onSetModel) { this.onSetModel(msg.model); }
+        break;
+      case "chat:setModelAndProfile":
+        // Delegate to ChatModelManager (via onSetModelAndProfile callback)
+        if (this.onSetModelAndProfile) {
+          await this.onSetModelAndProfile(msg.profileId, msg.model);
+        }
+        break;
+      case "chat:getModelPickerGroups":
+        if (this.onGetModelPickerGroups) {
+          await this.onGetModelPickerGroups();
+        }
         break;
       case "chat:setMode":
         this.currentMode = msg.mode;

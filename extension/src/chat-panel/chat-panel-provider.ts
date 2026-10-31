@@ -18,6 +18,7 @@ import { SessionCompactor } from "../pi-agent/session-compactor";
 import { ChatStatusManager } from "./ChatStatusManager";
 import { ChatModelManager } from "./ChatModelManager";
 import { ChatStateManager } from "./ChatStateManager";
+import { ProviderConfigService } from "../services/ProviderConfigService";
 import { syncPeerTabNames } from "../pi-workflow/peer/lifecycle";
 import { CountedFlags } from "./chat-panel-provider/counted-flags";
 import { sendInitialContextUsage as runInitialContextUsage, updateContextUsageFromSavedState as runSavedStateContextUsage } from "./chat-panel-provider/context-usage";
@@ -45,6 +46,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   private readonly statusManager: ChatStatusManager;
   private readonly modelManager: ChatModelManager;
   private readonly stateManager: ChatStateManager;
+  private readonly configService: ProviderConfigService;
   private readonly engineListeners = new Set<(msg: ChatExtToWebviewMessage) => void>();
   private turnTabId: string | undefined;
   private diffTracker: import('../chat/diff/IDiffTracker').IDiffTracker | null = null;
@@ -57,7 +59,8 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     private readonly workspaceState?: vscode.Memento
   ) {
     this.statusManager = new ChatStatusManager(mcpManager, secrets, (msg) => this.sendToWebview(msg));
-    this.modelManager = new ChatModelManager((msg) => this.sendToWebview(msg));
+    this.configService = new ProviderConfigService(secrets!);
+    this.modelManager = new ChatModelManager((msg) => this.sendToWebview(msg), this.configService);
     this.stateManager = new ChatStateManager(workspaceRoot, workspaceState, (msg) => this.sendToWebview(msg), () => this.getEngine());
     this.contextUsageDeps = {
       getOrCreateEngine: () => this.getEngine(),
@@ -215,7 +218,20 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
 
   private getMessageHandler(): MessageHandler {
     if (!this.messageHandler) {
-      this.messageHandler = new MessageHandler(() => this.getEngine(), (msg) => this.sendToWebview(msg), this.workspaceRoot, (ct) => pickChatContext(this.workspaceRoot, (m) => this.sendToWebview(m), ct), () => pickAttachmentFiles((m) => this.sendToWebview(m)), (code, filePath) => applyCodeToEditor(code, filePath), (code) => insertCodeToEditor(code), (model) => setLlmModelConfig(model), () => this.updateContextUsageAfterTurn(), () => this.stateManager.broadcastInitialState());
+      this.messageHandler = new MessageHandler(
+        () => this.getEngine(),
+        (msg) => this.sendToWebview(msg),
+        this.workspaceRoot,
+        (ct) => pickChatContext(this.workspaceRoot, (m) => this.sendToWebview(m), ct),
+        () => pickAttachmentFiles((m) => this.sendToWebview(m)),
+        (code, filePath) => applyCodeToEditor(code, filePath),
+        (code) => insertCodeToEditor(code),
+        (model) => setLlmModelConfig(model),
+        async (profileId, model) => { await this.modelManager.handleSetModelAndProfile(profileId, model); },
+        async () => { await this.modelManager.sendModelPickerGroups(); },
+        () => this.updateContextUsageAfterTurn(),
+        () => this.stateManager.broadcastInitialState()
+      );
     }
     return this.messageHandler;
   }

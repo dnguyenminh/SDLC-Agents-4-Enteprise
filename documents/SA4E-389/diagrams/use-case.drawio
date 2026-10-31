@@ -1,0 +1,81 @@
+<mxfile host="65bd71144e">
+    <diagram id="-Kxxn6JDcaZtnGY6ExWQ" name="Page-1">
+        <mxGraphModel dx="891" dy="1091" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0" adaptiveColors="auto">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="system" parent="1" style="swimlane;html=1;startSize=30;fillColor=#e1f5fe;strokeColor=#0277bd;strokeWidth=2;startSize=30;" value="SDLC Agents Extension" vertex="1">
+                    <mxGeometry height="620" width="740" x="210" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc1" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;strokeWidth=2;" value="UC1: Xem danh sách profile (AC1)" vertex="1">
+                    <mxGeometry height="50" width="200" x="25" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;strokeWidth=2;" value="UC3: Nhiều profile c├¹ng provider (AC3)" vertex="1">
+                    <mxGeometry height="50" width="200" x="260" y="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc4" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;strokeWidth=2;" value="UC4: Đặt profile active (AC4)" vertex="1">
+                    <mxGeometry height="50" width="200" x="25" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=2;" value="UC5: Chọn model chat picker (AC5, AC6)" vertex="1">
+                    <mxGeometry height="50" width="200" x="25" y="345" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc6" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=2;" value="UC6: Migration config cŨ (AC7)" vertex="1">
+                    <mxGeometry height="50" width="200" x="20" y="470" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc8" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=2;" value="UC8: Unified config resolution (AC9)" vertex="1">
+                    <mxGeometry height="50" width="200" x="270" y="345" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc2" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;strokeWidth=2;" value="UC2: Thêm profile mới (AC2)" vertex="1">
+                    <mxGeometry height="50" width="200" x="470" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" edge="1" parent="system" source="uc2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;dashed=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="uc3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc7" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=2;" value="UC7: Test LLM theo profile (AC8)" vertex="1">
+                    <mxGeometry height="50" width="200" x="470" y="460" as="geometry"/>
+                </mxCell>
+                <mxCell id="actor-user" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7b1fa2;strokeWidth=2;" value="User (Settings)" vertex="1">
+                    <mxGeometry height="60" width="120" x="40" y="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="actor-chat" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7b1fa2;strokeWidth=2;" value="Chat User" vertex="1">
+                    <mxGeometry height="60" width="120" x="40" y="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="actor-system" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7b1fa2;strokeWidth=2;" value="System (Extension)" vertex="1">
+                    <mxGeometry height="60" width="120" x="40" y="505" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="actor-user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" target="uc1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="actor-user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="uc2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="actor-user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" target="uc3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="actor-user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" target="uc4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="actor-user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" target="uc7">
+                    <mxGeometry relative="1" x="-0.1915" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="930" y="170"/>
+                            <mxPoint x="930" y="525"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="actor-chat" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" target="uc5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="actor-system" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;dashed=1;" target="uc6">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="uc4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;dashed=1;" target="uc5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="1" source="uc5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;dashed=1;" target="uc8">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

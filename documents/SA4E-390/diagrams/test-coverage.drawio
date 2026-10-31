@@ -1,0 +1,121 @@
+<mxfile host="65bd71144e">
+    <diagram id="slT8xZE-hqkvTKgfFVL-" name="Page-1">
+        <mxGraphModel dx="1367" dy="1673" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="ac01" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AC1 Provider table full columns" vertex="1">
+                    <mxGeometry height="60" width="200" x="40" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="ac02" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AC2 Add Provider" vertex="1">
+                    <mxGeometry height="60" width="170" x="280" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="ac03" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AC3 Edit Provider modal" vertex="1">
+                    <mxGeometry height="60" width="170" x="280" y="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="ac04" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AC4 Status badges" vertex="1">
+                    <mxGeometry height="60" width="170" x="470" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="ac05" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AC5 Save All persists" vertex="1">
+                    <mxGeometry height="60" width="170" x="470" y="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="ac06" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AC6 Model Picker popup" vertex="1">
+                    <mxGeometry height="70" width="190" x="280" y="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="ac07" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AC7 Search filter" vertex="1">
+                    <mxGeometry height="60" width="170" x="480" y="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="ac08" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AC8 Recent section" vertex="1">
+                    <mxGeometry height="70" width="190" x="280" y="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="ac09" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AC9 Name+provider+Free badge" vertex="1">
+                    <mxGeometry height="70" width="170" x="480" y="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="ac10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AC10 Keyboard shortcuts" vertex="1">
+                    <mxGeometry height="60" width="170" x="20" y="410" as="geometry"/>
+                </mxCell>
+                <mxCell id="poolUnit" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;backgroundOutline=1;backgroundColor=#ffe6cc;strokeColor=#d79b1d;fontSize=13;" value="Unit Tests" vertex="1">
+                    <mxGeometry height="60" width="130" x="680" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="poolInt" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;backgroundOutline=1;backgroundColor=#ffe6cc;strokeColor=#d79b1d;fontSize=13;" value="Integration" vertex="1">
+                    <mxGeometry height="60" width="130" x="850" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="poolE2E" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;backgroundOutline=1;backgroundColor=#ffe6cc;strokeColor=#d79b1d;fontSize=13;" value="E2E" vertex="1">
+                    <mxGeometry height="60" width="130" x="1040" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="poolManual" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;backgroundOutline=1;backgroundColor=#ffe6cc;strokeColor=#d79b1d;fontSize=13;" value="Manual SIT" vertex="1">
+                    <mxGeometry height="60" width="130" x="850" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="poolStatic" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;backgroundOutline=1;backgroundColor=#ffe6cc;strokeColor=#d79b1d;fontSize=13;" value="Static Checks" vertex="1">
+                    <mxGeometry height="80" width="130" x="850" y="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="gate" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="Exit Criteria Gate" vertex="1">
+                    <mxGeometry height="90" width="200" x="1120" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="ac10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="poolUnit">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="poolUnit">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="poolUnit">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="poolInt">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="poolE2E">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="poolE2E">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="poolE2E">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="poolInt">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="poolStatic">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="poolStatic">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" edge="1" parent="1" source="ac10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e13" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e14" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e15" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e16" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e17" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e18" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e19" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e20" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="gate">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eoAll" edge="1" parent="1" source="gate" style="endArrow=classic;html=1;strokeWidth=2;" target="gate" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

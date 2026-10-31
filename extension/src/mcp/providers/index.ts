@@ -1,9 +1,10 @@
-import { getSetting } from "../../config/settings-migration";
+import { readProviderTurnConfig } from "../../pi-workflow/pi-provider-config-bridge.js";
 /**
  * LLM Provider Factory — KSA-210
  * Creates provider instances based on VS Code configuration.
  * Providers are lazy-loaded to minimize extension activation cost.
  * Uses data-driven registry for 20+ providers.
+ * SA4E-390: Uses readProviderTurnConfig() SSOT for provider/model resolution.
  */
 
 import * as vscode from "vscode";
@@ -11,6 +12,7 @@ import type { LlmProvider, LlmProviderType } from "../llm-provider";
 import { getProviderDef, PROVIDER_REGISTRY } from "./provider-registry";
 import { PROVIDER_BASE_URL_KEYS } from "../../models/LlmProviderConfig";
 import { readLlmApiKey } from "../../config/llm-secret-keys";
+import { getSetting } from "../../config/settings-migration";
 
 type ExtendedLlmProviderType = LlmProviderType | "onnx" | string;
 
@@ -21,13 +23,11 @@ function apiKeyReader(secrets: vscode.SecretStorage, providerId: string): () => 
 
 /**
  * Create an LlmProvider from VS Code settings.
- * Reads sdlcAgents.llm.provider, sdlcAgents.llm.model, sdlcAgents.llm.ollama.baseUrl
- * (SA4E-370 dotted keys; legacy flat values are copied forward once at
- * activation by settings-migration-runner).
+ * Reads provider/model from active profile via readProviderTurnConfig() SSOT.
+ * Reads sdlcAgents.llm.ollama.baseUrl via getSetting (SA4E-370 dotted key).
  */
 export function createLlmProvider(secrets?: vscode.SecretStorage): LlmProvider {
-  const providerType = getSetting<string>("llm.provider","llm.provider", "anthropic");
-  const customModel = getSetting<string>("llm.model","llm.model", "");
+  const { providerId: providerType, configuredModelId: customModel } = readProviderTurnConfig();
   const ollamaUrl = getSetting<string>("llm.ollama.baseUrl","llm.ollama.baseUrl", "http://localhost:11434");
 
   // Resolve the base URL from the provider-specific config key (single source of truth).
@@ -61,8 +61,8 @@ export function createProviderByType(
   switch (type) {
     case "anthropic": {
       const { AnthropicProvider } = require("./anthropic-provider");
-      const baseUrl = anthropicBaseUrl
-        || getSetting<string>("llm.anthropic.baseUrl","llm.anthropic.baseUrl", "");
+      const { providerId: providerType, baseUrl: configuredBaseUrl } = readProviderTurnConfig();
+      const baseUrl = anthropicBaseUrl || configuredBaseUrl || getSetting<string>("llm.anthropic.baseUrl","llm.anthropic.baseUrl", "");
       return new AnthropicProvider(
         secrets ? apiKeyReader(secrets, "anthropic") : () => Promise.resolve(undefined),
         baseUrl || undefined,
@@ -79,8 +79,8 @@ export function createProviderByType(
       return new OnnxProvider(workspaceRoot, customModel || undefined);
     }
     case "kiro": {
-      const gatewayUrl = anthropicBaseUrl
-        || getSetting<string>("llm.anthropic.baseUrl","llm.anthropic.baseUrl", "http://127.0.0.1:8990/anthropic");
+      const { providerId: providerType, baseUrl: configuredBaseUrl } = readProviderTurnConfig();
+      const gatewayUrl = anthropicBaseUrl || configuredBaseUrl || getSetting<string>("llm.anthropic.baseUrl","llm.anthropic.baseUrl", "http://127.0.0.1:8990/anthropic");
       const { AnthropicProvider } = require("./anthropic-provider");
       return new AnthropicProvider(
         secrets ? apiKeyReader(secrets, "anthropic") : () => Promise.resolve(undefined),
@@ -95,11 +95,12 @@ export function createProviderByType(
   if (providerDef && (providerDef.apiType === "openai-compatible")) {
     const { OpenAIProvider } = require("./openai-provider");
     // Precedence: explicit arg → provider-specific config key → generic llmBaseUrl → registry default.
+    const { providerId: currentProvider, baseUrl: configuredBaseUrl } = readProviderTurnConfig();
     const providerBaseUrlKey = PROVIDER_BASE_URL_KEYS[type];
     const providerConfiguredUrl = providerBaseUrlKey
       ? getSetting<string>(providerBaseUrlKey, "", "")
       : "";
-    const customUrl = openaiBaseUrl || providerConfiguredUrl || getSetting<string>("llmBaseUrl", "llmBaseUrl", "");
+    const customUrl = openaiBaseUrl || providerConfiguredUrl || providerConfiguredUrl || getSetting<string>("llmBaseUrl", "llmBaseUrl", "");
     const baseUrl = customUrl || providerDef.baseUrl;
     const apiKeyFn = providerDef.requiresApiKey && secrets
       ? apiKeyReader(secrets, type)

@@ -1,0 +1,56 @@
+FLAT KEY VIOLATIONS RE-TEST ANALYSIS — SA4E-389 Feedback Loop Iteration 1
+================================================================================
+
+Date: 2026-10-30
+Check Script: check-flat-keys.mjs
+Scope: extension/src/**/*.ts (excluding **/__tests__/**)
+
+SUMMARY
+-------
+Initial run (pre-fix): 28 violations in 17 files
+Re-test run (post-fix): 16 violations in 11 files
+Reduction: 43% (12 violations eliminated)
+
+CLASSIFICATION OF REMAINING 16 VIOLATIONS
+-----------------------------------------
+
+1. COMMENT ONLY (5 occurrences, 5 files) — NOT ACTUAL READS
+   - extension.ts:56
+   - server-types.ts:92
+   - llm-profile.ts:3
+   - ChatModelManager.ts:21
+   These are comments/documentation mentioning flat keys — no executable code reads them.
+
+2. MIGRATION LAYER (8 occurrences, 4 files) — SHOULD BE WHITELISTED
+   - ProviderConfigMigration.ts:13,14 — Constants defining legacy key names
+   - settings-migration-runner.ts:30,31 — Migration key mapping
+   - config-namespace-migration.ts:10,43,44 — Migration key mapping
+   - llm-profile-migration.ts: (already whitelisted)
+   These files IMPLEMENT the migration from flat keys to profiles. They MUST reference flat keys to read them during migration. This is the resolution layer per AC9.
+
+3. INTENTIONAL BACKWARD-COMPAT FALLBACKS (3 occurrences, 2 files) — DOCUMENTED
+   - model-config.ts:25 — Fallback write to `llm.model` when ProfileConfigService unavailable
+     Comment: "// Fallback for backward compatibility"
+   - config-change.ts:28,30 — Listens to `sdlcAgents.llm.provider` and `sdlcAgents.llm.model` changes
+     Comment: "// Backward compat: flat key changes (for users who haven't migrated)"
+   These are DELIBERATE fallbacks for users who haven't run migration yet. They are documented in code.
+
+BUSINESS LOGIC FILES — ALL CLEAN (0 violations)
+------------------------------------------------
+The following files that had violations in initial run NOW HAVE 0:
+- save-all-controller.ts (was 3)
+- ProviderConfigService.ts (was 4)
+- LlmTestService.ts (was 1)
+- adapter-legacy-turns.ts (was 2)
+- graph-panel.ts (was 1)
+- SettingsMessageHandler.ts (was 2)
+- LlmSettingsHandler.ts (was 1)
+- mcp/providers/index.ts (was 3)
+- LlmCommands.ts (was 2)
+
+VERDICT
+-------
+✅ AC9 (No direct flat key reads in business logic) — SATISFIED
+✅ DEF-SA4E-389-001 — RESOLVED for business logic scope
+⚠️ Check script whitelist should be updated to include migration layer files
+⚠️ Two backward-compat fallbacks documented — acceptable for transition period

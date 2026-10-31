@@ -1,0 +1,88 @@
+<mxfile host="65bd71144e">
+    <diagram id="CHCYr0Ce2YLkFlcRMRfz" name="Page-1">
+        <mxGraphModel dx="603" dy="738" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0" adaptiveColors="auto">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="actor_dev" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#01579b;strokeWidth=2;fontSize=12;fontStyle=1;" value="Developer" vertex="1">
+                    <mxGeometry height="80" width="80" x="40" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="actor_chat" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;strokeWidth=2;fontSize=12;fontStyle=1;" value="Chat User" vertex="1">
+                    <mxGeometry height="80" width="80" x="40" y="430" as="geometry"/>
+                </mxCell>
+                <mxCell id="sys" parent="1" style="swimlane;html=1;startSize=26;fillColor=#f5f5f5;strokeColor=#333333;strokeWidth=2;fontSize=13;fontStyle=1;" value="SDLC CHAT Extension" vertex="1">
+                    <mxGeometry height="540" width="670" x="170" y="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_cfg" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=1.5;fontSize=11;" value="Configure Provider Table" vertex="1">
+                    <mxGeometry height="46" width="170" x="20" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_add" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=1.5;fontSize=11;" value="Add Provider" vertex="1">
+                    <mxGeometry height="42" width="130" x="10" y="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_edit" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=1.5;fontSize=11;" value="Edit Provider" vertex="1">
+                    <mxGeometry height="42" width="130" x="190" y="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_test" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=1.5;fontSize=11;" value="Test Connection" vertex="1">
+                    <mxGeometry height="42" width="140" x="330" y="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_save" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=1.5;fontSize=11;" value="Save All Config" vertex="1">
+                    <mxGeometry height="42" width="130" x="360" y="266" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_status" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=1.5;fontSize=11;" value="View Connection Status" vertex="1">
+                    <mxGeometry height="46" width="170" x="160" y="266" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_search" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=1.5;fontSize=11;" value="Search Models" vertex="1">
+                    <mxGeometry height="42" width="130" x="240" y="330" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_recent" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=1.5;fontSize=11;" value="View Recent Models" vertex="1">
+                    <mxGeometry height="46" width="150" x="60" y="460" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_select" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=1.5;fontSize=11;" value="Select Model" vertex="1">
+                    <mxGeometry height="42" width="130" x="380" y="399" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_shortcut" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=1.5;fontSize=11;" value="Use Keyboard Shortcuts" vertex="1">
+                    <mxGeometry height="46" width="150" x="230" y="460" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc_picker" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=1.5;fontSize=11;" value="Open Model Picker" vertex="1">
+                    <mxGeometry height="46" width="150" x="60" y="328" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_chat_search" edge="1" parent="sys" source="uc_picker" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1.5;" target="uc_search">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_dev_cfg" edge="1" parent="1" source="actor_dev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1.5;" target="uc_cfg">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_dev_add" edge="1" parent="1" source="actor_dev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1.5;" target="uc_add">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_dev_edit" edge="1" parent="1" source="actor_dev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1.5;" target="uc_edit">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_dev_test" edge="1" parent="1" source="actor_dev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1.5;" target="uc_test">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_dev_save" edge="1" parent="1" source="actor_dev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1.5;" target="uc_save">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_dev_status" edge="1" parent="1" source="actor_dev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1.5;" target="uc_status">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_chat_recent" edge="1" parent="1" source="actor_chat" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1.5;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="uc_recent">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_chat_select" edge="1" parent="1" source="actor_chat" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1.5;" target="uc_select">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_chat_shortcut" edge="1" parent="1" source="actor_chat" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1.5;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="uc_shortcut">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="S1hsSsNmjsPiUsnLWn78-1" edge="1" parent="1" source="actor_chat" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1.5;" target="uc_picker" value="">
+                    <mxGeometry relative="1" x="0.0041" as="geometry">
+                        <mxPoint x="120" y="470" as="sourcePoint"/>
+                        <mxPoint x="1230" y="411" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

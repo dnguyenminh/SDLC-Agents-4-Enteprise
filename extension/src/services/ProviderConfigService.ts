@@ -1,24 +1,82 @@
 /**
  * ProviderConfigService — manages reading/writing LLM provider configuration.
- * Extracted from SettingsPanel for SRP.
+ * Updated for SA4E-389: now works with multi-profile configuration.
+ * Reads active profile from `sdlcAgents.llm.profiles` and `sdlcAgents.llm.activeProfileId`.
+ * SA4E-390: Split into focused modules (Cache, Models, Migration, Profile Ops, Secrets, State, BaseUrl, Workspace).
  */
 
 import * as vscode from "vscode";
-import { getStaticModels, fetchGatewayModels, getDefaultModel } from "../chat-panel/chat-models";
-import { SECRET_KEYS, PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_DEFAULTS, PROVIDER_BASE_URL_LEGACY_KEYS } from "../models";
-import { getBackendUrl } from "../config/backend-url";
-import { getSetting } from "../config/settings-migration";
-import { ensureMigrated, getWsHash, secretKey, readScopedSecret, type SecretBase } from "./WorkspaceScopeResolver";
+import { ensureMigrated } from "./WorkspaceScopeResolver";
+import { ProfileTableRow, LlmProviderId } from "../shared/types/llm-profile.js";
+import { invalidateProviderTurnConfigCache, readProviderTurnConfig } from "../pi-workflow/pi-provider-config-bridge.js";
+import { ProviderConfigCache } from "./ProviderConfigCache.js";
+import { buildModelListForProvider, buildModelListForActiveProfile, buildModelPickerGroups } from "./ProviderConfigModels.js";
+import { runLlmProfileMigration } from "./ProviderConfigMigration.js";
+import { addProfile } from "./ProviderConfigAddProfile.js";
+import { editProfile } from "./ProviderConfigEditProfile.js";
+import { deleteProfile } from "./ProviderConfigDeleteProfile.js";
+import { setActiveProfile } from "./ProviderConfigSetActiveProfile.js";
+import { updateProfileTestStatus } from "./ProviderConfigUpdateTestStatus.js";
+import { getProfileRows, getActiveProfileRow } from "./ProviderConfigGetProfiles.js";
+import { writeProfileApiKey, deleteProfileApiKey, readProfileApiKey, readSecret, safeGet } from "./ProviderConfigSecrets.js";
+import { getCurrentState } from "./ProviderConfigState.js";
+import { getBaseUrlForProvider, getBaseUrlForProfile } from "./ProviderConfigBaseUrl.js";
+import { updateConfig, updatePegaConfig, clearPegaPassword } from "./ProviderConfigWorkspace.js";
 
-/** Config keys isolated per workspace (SA4E-323) — never via generic updateConfig. */
-const WORKSPACE_SCOPED_KEYS = ["pega.endpoint", "pega.username", "jira.connectionType"];
+export interface ProfileState {
+  profiles: ProfileTableRow[];
+  activeProfileId: string | undefined;
+  activeProfile: ProfileTableRow | undefined;
+}
+
+export interface ProfileOpResult {
+  success: boolean;
+  profiles?: ProfileTableRow[];
+  activeProfileId?: string;
+  error?: string;
+}
 
 export class ProviderConfigService {
-  constructor(private readonly secrets: vscode.SecretStorage) {}
+  private readonly cache = new ProviderConfigCache();
+  private readonly context?: vscode.ExtensionContext;
+  private readonly deps: {
+    getConfig: () => vscode.WorkspaceConfiguration;
+    secrets: vscode.SecretStorage;
+    invalidateCache: () => void;
+    toTableRow: (p: any) => ProfileTableRow;
+  };
 
-  /**
-   * Build current settings state to send to webview.
-   */
+  constructor(
+    private readonly secrets: vscode.SecretStorage,
+    context?: vscode.ExtensionContext
+  ) {
+    this.context = context;
+    this.deps = {
+      getConfig: () => this.getConfig(),
+      secrets: this.secrets,
+      invalidateCache: () => this.invalidateCache(),
+      toTableRow: (p: any) => this.toTableRow(p),
+    };
+  }
+
+  private getConfig(): vscode.WorkspaceConfiguration {
+    return vscode.workspace.getConfiguration("sdlcAgents");
+  }
+
+  private async ensureProfileMigration(): Promise<void> {
+    if (this.context) await runLlmProfileMigration(this.context, () => this.getConfig());
+  }
+
+  private invalidateCache(): void {
+    invalidateProviderTurnConfigCache();
+    this.cache.invalidate();
+  }
+
+  private toTableRow(p: any): ProfileTableRow {
+    return { profileId: p.id, label: p.label, provider: p.provider, model: p.model, useDefaultUrl: p.useDefaultUrl ?? true, lastTestStatus: p.lastTestStatus, lastTestedAt: p.lastTestedAt };
+  }
+
+  /** Build current settings state for webview. */
   async getCurrentState(): Promise<{
     provider: string; model: string; ollamaUrl: string; baseUrl: string;
     hasAnthropicKey: boolean; hasOpenaiKey: boolean;
@@ -27,156 +85,90 @@ export class ProviderConfigService {
     pegaEndpoint: string; pegaUsername: string; hasPegaPassword: boolean;
     atlassianBaseUrl: string; atlassianEmail: string; hasAtlassianToken: boolean;
     atlassianConnectionType: string;
+    profiles: ProfileTableRow[];
+    activeProfileId: string | undefined;
   }> {
     await ensureMigrated(this.secrets);
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const provider = getSetting<string>("llm.provider", "llm.provider", "anthropic");
-    const model = getSetting<string>("llm.model", "llm.model", "");
-    const ollamaUrl = getSetting<string>("llm.ollama.baseUrl", "llm.ollama.baseUrl", "http://localhost:11434");
+    await this.ensureProfileMigration();
+    return getCurrentState({
+      getConfig: () => this.getConfig(),
+      secrets: this.secrets,
+      getProfileRows: () => this.getProfileRows(),
+      getActiveProfileRow: () => this.getActiveProfileRow(),
+      getBaseUrlForProvider: (p) => getBaseUrlForProvider(p),
+      getBaseUrlForProfile: (p) => getBaseUrlForProfile({ getConfig: () => this.getConfig() }, p),
+      safeGet: (k) => safeGet({ secrets: this.secrets, getConfig: () => this.getConfig() }, k),
+      readSecret: (wsHash, base) => readSecret({ secrets: this.secrets, getConfig: () => this.getConfig() }, wsHash, base as "pega" | "atlassianBaseUrl" | "atlassianEmail" | "atlassianToken"),
+    });
+  }
 
-    const baseUrl = this.getBaseUrlForProvider(provider);
-    const backendUrl = getBackendUrl();
-    const allowInsecureRemote = config.get<boolean>("backend.allowInsecureRemote", false);
-    const mcpServerPort = getSetting<number>("mcp.serverPort", "mcp.serverPort", 9181);
-    const enableMcpServer = getSetting<boolean>("mcp.enabled", "mcp.enabled", true);
+  async getProfileRows(): Promise<ProfileTableRow[]> {
+    return getProfileRows(this.deps);
+  }
 
-    const anthropicKey = await this.safeGet(SECRET_KEYS.anthropic);
-    const openaiKey = await this.safeGet(SECRET_KEYS.openai);
-    const wsHash = getWsHash();
-    const pegaPassword = await this.readSecret(wsHash, "pega");
-    const pegaEndpoint = getSetting<string>("pega.endpoint", "pega.endpoint", "http://localhost:8080/prweb");
-    const pegaUsername = getSetting<string>("pega.username", "pega.username", "");
+  async getActiveProfileRow(): Promise<ProfileTableRow | undefined> {
+    return getActiveProfileRow(this.deps);
+  }
 
-    const atlassianBaseUrl = (await this.readSecret(wsHash, "atlassianBaseUrl")) || "";
-    const atlassianEmail = (await this.readSecret(wsHash, "atlassianEmail")) || "";
-    const atlassianToken = await this.readSecret(wsHash, "atlassianToken");
-    const atlassianConnectionType = getSetting<string>("jira.connectionType", "jira.connectionType", "cloud");
+  async addProfile(payload: { id: string; label: string; provider: LlmProviderId; baseUrl?: string; model: string; useDefaultUrl: boolean; apiKey?: string }): Promise<ProfileOpResult> {
+    return addProfile(this.deps, payload);
+  }
 
-    return {
-      provider, model, ollamaUrl, baseUrl: baseUrl || "",
-      hasAnthropicKey: !!anthropicKey, hasOpenaiKey: !!openaiKey,
-      backendUrl, allowInsecureRemote, mcpServerPort, enableMcpServer,
-      pegaEndpoint, pegaUsername, hasPegaPassword: !!pegaPassword,
-      atlassianBaseUrl, atlassianEmail, hasAtlassianToken: !!atlassianToken,
-      atlassianConnectionType,
-    };
+  async editProfile(profileId: string, updates: Partial<Pick<ProfileTableRow, "label" | "provider" | "model" | "useDefaultUrl">> & { baseUrl?: string; apiKey?: string }): Promise<ProfileOpResult> {
+    return editProfile(this.deps, profileId, updates);
+  }
+
+  async deleteProfile(profileId: string): Promise<ProfileOpResult> {
+    return deleteProfile(this.deps, profileId);
+  }
+
+  async setActiveProfile(profileId: string): Promise<ProfileOpResult> {
+    return setActiveProfile(this.deps, profileId);
+  }
+
+  async updateProfileTestStatus(profileId: string, status: "connected" | "failed", timestamp = Date.now()): Promise<ProfileOpResult> {
+    return updateProfileTestStatus(this.deps, profileId, status, timestamp);
+  }
+
+  async getModels(provider: string, currentModel: string): Promise<{ models: any[]; selected: string; defaultModel: string }> {
+    return buildModelListForProvider(this.secrets, provider, currentModel, () => this.getConfig());
+  }
+
+  async getModelsForActiveProfile(): Promise<{ models: any[]; selected: string; defaultModel: string; provider: string }> {
+    const activeProfile = await this.getActiveProfileRow();
+    if (!activeProfile) {
+      const turnConfig = readProviderTurnConfig();
+      const result = await buildModelListForProvider(this.secrets, turnConfig.providerId, turnConfig.configuredModelId, () => this.getConfig());
+      return { ...result, provider: turnConfig.providerId };
+    }
+    return buildModelListForActiveProfile(this.secrets, activeProfile, () => this.getConfig());
+  }
+
+  async getModelPickerGroups(): Promise<Array<{ provider: string; items: Array<{ profileId: string; modelId: string; modelName: string; isFree: boolean }> }>> {
+    return buildModelPickerGroups(() => this.getConfig(), () => this.getProfileRows());
+  }
+
+  async updateConfig(key: string, value: any): Promise<void> {
+    return updateConfig({ secrets: this.secrets, getConfig: () => this.getConfig() }, key, value);
   }
 
   async updatePegaConfig(endpoint: string, username: string, password?: string): Promise<void> {
-    const wsHash = getWsHash();
-    if (!wsHash) {
-      throw new Error("No workspace folder open — Pega config requires a workspace to isolate credentials.");
-    }
-    await ensureMigrated(this.secrets);
-    const e = (endpoint || "").trim();
-    const u = (username || "").trim();
-    if (!/^https?:\/\//.test(e)) { throw new Error("Invalid Pega Endpoint URL (http/https required)."); }
-    try {
-      const config = vscode.workspace.getConfiguration("sdlcAgents");
-      await config.update("pega.endpoint", e, vscode.ConfigurationTarget.Workspace);
-      await config.update("pega.username", u, vscode.ConfigurationTarget.Workspace);
-      if (password && password.trim().length > 0) {
-        await this.secrets.store(secretKey("pega", wsHash)!, password);
-      }
-    } catch (err: any) {
-      throw new Error(`Failed to save Pega config: ${err.message} (password may not be saved — retry).`);
-    }
+    return updatePegaConfig({ secrets: this.secrets, getConfig: () => this.getConfig() }, endpoint, username, password);
   }
 
-  /** OI-8: explicit clear of the workspace Pega password; marker stays. */
   async clearPegaPassword(): Promise<void> {
-    const wsHash = getWsHash();
-    if (!wsHash) {
-      throw new Error("No workspace folder open — Pega config requires a workspace to isolate credentials.");
-    }
-    await this.secrets.delete(secretKey("pega", wsHash)!);
+    return clearPegaPassword({ secrets: this.secrets, getConfig: () => this.getConfig() });
   }
 
-  /**
-   * Build the provider-aware model list.
-   */
-  async getModels(provider: string, currentModel: string): Promise<{
-    models: any[]; selected: string; defaultModel: string;
-  }> {
-    let models = getStaticModels(provider);
-    const gatewayBaseUrl = this.getGatewayBaseUrl(provider);
-    const lmstudioBaseUrl = getSetting<string>("llm.lmstudio.baseUrl", "llm.lmstudio.baseUrl", "")
-      || "http://localhost:1234/v1";
-
-    const fetchUrl = provider === "lmstudio"
-      ? lmstudioBaseUrl
-      : gatewayBaseUrl;
-
-    if (fetchUrl) {
-      // Pass the provider's API key as a Bearer token — gateways (e.g. OmniRoute)
-      // return 401 on /v1/models without it, which caused a silent fallback to the
-      // static catalog. Local providers (lmstudio/ollama) don't need auth.
-      const providerSecretKey = SECRET_KEYS[provider];
-      const apiKey = providerSecretKey ? await this.safeGet(providerSecretKey) : undefined;
-      const authHeader = apiKey ? `Bearer ${apiKey}` : undefined;
-      const gatewayModels = await fetchGatewayModels(fetchUrl, authHeader);
-      if (gatewayModels && gatewayModels.length > 0) {
-        models = gatewayModels;
-      }
-    }
-
-    let selected = currentModel;
-    if (selected && !models.some((m: any) => m.id === selected)) {
-      models = [...models, { id: selected, name: selected }];
-    } else if (!selected) {
-      selected = models.length > 0 ? models[0].id : getDefaultModel(provider);
-    }
-
-    return { models, selected, defaultModel: getDefaultModel(provider) };
+  async writeProfileApiKey(profileId: string, key: string): Promise<void> {
+    return writeProfileApiKey({ secrets: this.secrets, getConfig: () => this.getConfig() }, profileId, key);
   }
 
-  /** Update a kiroSdlc configuration key globally. */
-  async updateConfig(key: string, value: any): Promise<void> {
-    if (WORKSPACE_SCOPED_KEYS.includes(key)) {
-      throw new Error(`Use workspace-scoped method for ${key} (SA4E-323).`);
-    }
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    await config.update(key, value || undefined, vscode.ConfigurationTarget.Global);
+  async deleteProfileApiKey(profileId: string): Promise<void> {
+    return deleteProfileApiKey({ secrets: this.secrets, getConfig: () => this.getConfig() }, profileId);
   }
 
-  /**
-   * Read a workspace secret; null scope falls back to the legacy flat key.
-   * SA4E-323: delegates to the shared readScopedSecret choke-point (BR-18) so
-   * scope/legacy resolution lives in exactly one place.
-   */
-  private async readSecret(wsHash: string | null, base: SecretBase): Promise<string | undefined> {
-    return readScopedSecret(this.secrets, base, wsHash);
-  }
-
-  /**
-   * Best-effort secret read that never breaks state load (UC-3 EF-3).
-   * Migrates on read: when a `sdlcAgents.*` key is empty but the pre-rename
-   * `kiroSdlc.*` value exists, copy it forward and return it.
-   */
-  private async safeGet(key: string): Promise<string | undefined> {
-    try {
-      const current = await this.secrets.get(key);
-      if (current) { return current; }
-      const legacyKey = key.startsWith("sdlcAgents.")
-        ? key.replace(/^sdlcAgents\./, "kiroSdlc.") : undefined;
-      if (!legacyKey) { return undefined; }
-      const legacy = await this.secrets.get(legacyKey);
-      if (!legacy) { return undefined; }
-      try { await this.secrets.store(key, legacy); } catch { /* fail-open write */ }
-      return legacy;
-    } catch { return undefined; }
-  }
-
-  private getBaseUrlForProvider(provider: string): string {
-    const key = PROVIDER_BASE_URL_KEYS[provider];
-    if (!key) { return ""; }
-    return getSetting<string>(key, key, "");
-  }
-
-  private getGatewayBaseUrl(provider: string): string {
-    const key = PROVIDER_BASE_URL_KEYS[provider];
-    if (!key) { return ""; }
-    const configuredUrl = getSetting<string>(key, key, "");
-    return configuredUrl || PROVIDER_BASE_URL_DEFAULTS[provider] || "";
+  async readProfileApiKey(profileId: string): Promise<string | undefined> {
+    return readProfileApiKey({ secrets: this.secrets, getConfig: () => this.getConfig() }, profileId);
   }
 }

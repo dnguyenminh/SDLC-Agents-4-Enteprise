@@ -1,0 +1,6 @@
+scenario,oldProviderId,oldModel,legacySecretKey,legacyBaseUrl,expectedNewProfileId,expectedSecretKeyPrefix,legacyBaseUrlOverrides
+M01,openai,gpt-4o,sk-legacy-901,None,openai-gpt,sdlcAgents.openai-gptApiKey
+M02,anthropic,claude-3-5-sonnet,sk-legacy-404,None,anthropic-claude-3-5-sonnet,sdlcAgents.anthropic-claude-3-5-sonnetApiKey
+M03,ollama,ollama-local,sk-legacy-777,http://localhost:11434/v1,ollama-local,sdlcAgents.ollama-localApiKey
+M04,openrouter,py,None,None,openrouter-py,sdlcAgents.openrouter-pyApiKey
+M05,lmstudio,qwen2-7b-instruct,sk-legacy-901,https://lmstudio.local/v1,lmstudio-qwen,sdlcAgents.lmstudio-qwenApiKey

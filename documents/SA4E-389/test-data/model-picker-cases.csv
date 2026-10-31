@@ -1,0 +1,6 @@
+groupId,visibleIfConnected,badgeVisible,filterMatches,recentModel
+G01,true,true,true,none
+G02,false,false,true,none
+G03,true,true,true,gpt-4o
+G04,true,true,true,qwen2-7b-instruct
+G05,false,false,false,none

@@ -1,0 +1,79 @@
+LINE COUNT VIOLATIONS RE-TEST ANALYSIS — SA4E-389 Feedback Loop Iteration 1
+===============================================================================
+
+Date: 2026-10-30
+Check Script: check-line-count.mjs
+Threshold: 200 lines per file (TDD §5.1)
+
+SA4E-389 NEW FILES — ALL COMPLIANT
+-----------------------------------
+
+Original 3 files that violated (from initial run):
+1. profiles-service.ts — 326 lines
+2. model-picker-popup.ts — 409 lines
+3. edit-provider-modal.ts — 510 lines
+
+After splitting (DEF-SA4E-389-002 fix):
+
+profiles-service.ts split into 4 files:
+  - profiles-service.ts: 144 lines ✅
+  - profiles-validator.ts: 154 lines ✅
+  - profiles-persistence.ts: 132 lines ✅
+  - profiles-reader.ts: 49 lines ✅
+
+model-picker-popup.ts split into 7 files:
+  - model-picker-popup.ts: 145 lines ✅
+  - model-picker-groups.ts: 88 lines ✅
+  - model-picker-search.ts: 40 lines ✅
+  - model-picker-dom.ts: 124 lines ✅
+  - model-picker-keyboard.ts: 90 lines ✅
+  - model-picker-renderer.ts: 56 lines ✅
+  - model-picker-recent.ts: 42 lines ✅
+
+edit-provider-modal.ts split into 6 files:
+  - edit-provider-modal.ts: 151 lines ✅
+  - edit-provider-form.ts: 149 lines ✅
+  - edit-provider-validation.ts: 61 lines ✅
+  - edit-provider-events.ts: 82 lines ✅
+  - edit-provider-actions.ts: 112 lines ✅
+  - edit-provider-template.ts: 119 lines ✅
+
+ALL 17 SA4E-389 RESULTING FILES ≤ 200 LINES ✅
+
+PRE-EXISTING VIOLATIONS (27 files, unchanged)
+----------------------------------------------
+These files existed before SA4E-389 and are OUT OF SCOPE for this ticket:
+
+  - remote-backend-client.ts: 216 lines
+  - webview/slash-menu/SlashMenuView.ts: 217 lines
+  - webview/options/OptionsController.ts: 204 lines
+  - webview/context-menu/PickerPanel.ts: 206 lines
+  - test/svelte-shim/compiler/interfaces.d.ts: 430 lines (generated)
+  - services/WorkspaceScopeResolver.ts: 213 lines
+  - services/PathResolver.ts: 304 lines
+  - services/LlmTestService.ts: 206 lines
+  - services/DataTableResolver.ts: 205 lines
+  - services/BindingExtractor.ts: 215 lines
+  - services/PegaBfsIndexer/bfs-indexer.ts: 203 lines
+  - services/jira-sync/AttachmentFetcher.ts: 207 lines
+  - services/EnrichmentStatusService/enrichment-status-service.ts: 201 lines
+  - pi-workflow/turn-budget/TurnBudgetGuard.ts: 201 lines
+  - pi-workflow/session-host/create-host.ts: 205 lines
+  - pi-workflow/pi-workflow-adapter/adapter-session-turns.ts: 210 lines
+  - pi-workflow/pi-workflow-adapter/adapter-core.ts: 339 lines
+  - pi-workflow/peer/types.ts: 242 lines
+  - pi-agent/agent-configurator.ts: 222 lines
+  - panels/graph-panel.ts: 203 lines
+  - panels/settings/SettingsPanel.ts: 227 lines
+  - mcp/stream-handler.ts: 219 lines
+  - mcp/ide-launch-helpers.ts: 218 lines
+  - chat-panel/message-handler.ts: 265 lines
+  - chat-panel/conversation-manager.ts: 234 lines
+  - chat-panel/chat-panel-provider.ts: 262 lines
+  - auth/AuthManager.ts: 201 lines
+
+VERDICT
+-------
+✅ DEF-SA4E-389-002 — RESOLVED for SA4E-389 scope
+✅ All SA4E-389 new/modified files comply with ≤200 lines
+ℹ️ 27 pre-existing violations are technical debt unrelated to this ticket

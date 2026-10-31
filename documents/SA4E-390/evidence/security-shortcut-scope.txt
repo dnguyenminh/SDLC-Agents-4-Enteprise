@@ -1,0 +1,37 @@
+Security Review — Keyboard Shortcut Non-Conflict Verification (NFR4, AC10)
+
+Files Reviewed:
+- src/webview/model-picker-keyboard.ts
+- src/webview/keyboard-shortcut-handler.ts
+
+Findings:
+
+1. Esc Key (Close Picker):
+   - model-picker-keyboard.ts line 59: handleKeyDown checks event.key === "Escape"
+   - keyboard-shortcut-handler.ts line 59: Same logic
+   - Both have isPopupFocused / popup visibility guard
+   - Listener attached to popup container only (not document/window)
+   - Result: Esc only closes picker when popup is focused/visible; does not affect editor panels
+
+2. Ctrl+A (Connect Integration):
+   - model-picker-keyboard.ts line 67: Checks event.ctrlKey && event.key === "A"
+   - keyboard-shortcut-handler.ts line 75: Same logic
+   - Both have !isSearchFocused guard — prevents "Select All" in search field
+   - Listener on popup container only
+   - event.preventDefault() called to suppress browser/editor default
+   - Result: Ctrl+A triggers connect integration only in picker context; editor "Select All" unaffected
+
+3. Ctrl+F (Focus Search):
+   - model-picker-keyboard.ts line 75: Checks event.ctrlKey && event.key === "F"
+   - keyboard-shortcut-handler.ts line 83: Same logic
+   - Listener on popup container only
+   - event.preventDefault() called to suppress browser Find dialog
+   - Calls searchInput.focus() when not already focused
+   - Result: Ctrl+F focuses picker search only when picker open; editor Find unaffected
+
+4. Additional Shortcuts (ArrowDown, ArrowUp, Enter, Home, End, Tab, Shift+Tab):
+   - All scoped to popup container with visibility/focus guards
+   - Tab/Shift+Tab allow default browser behavior (focus cycling)
+   - No global document/window listeners
+
+Conclusion: All keyboard shortcuts (Esc, Ctrl+A, Ctrl+F, Arrow keys, Enter, Home, End, Tab) are properly scoped to the Model Picker popup context. No conflicts with editor or OS default behaviors. NFR4/AC10 PASS.

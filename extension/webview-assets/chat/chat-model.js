@@ -1,120 +1,197 @@
 /**
- * Chat Panel — Model Selector (KSA-237)
- * Model dropdown rendering (name + rate badge), label resolution with
- * local-model path shortening, selection handling. Reads/writes
- * window.ChatState (availableModels, supportsAuto, currentModel).
+ * Chat Panel — Model Picker Popup (SA4E-390)
+ * Replaces the simple dropdown with a full-featured picker:
+ * - Search field (real-time filter)
+ * - Recent section (recently used models)
+ * - Model list: name + provider + Free badge
+ * - Keyboard shortcuts: Esc (close), Ctrl+A (connect integration), Ctrl+F (focus search)
  */
 (function () {
   "use strict";
-  var S = window.ChatState;
+
+  var S = window.ChatState = window.ChatState || {};
 
   var vscode = S.vscode;
   var modelBtn = S.modelBtn;
   var modelLabel = S.modelLabel;
-  var modelDropdown = S.modelDropdown;
+  var modelDropdown = S.modelDropdown; // Kept for backward compat, now hidden
   var contextMenu = S.contextMenu;
 
-  // Available models are populated dynamically from the extension
-  // (chat:models message) based on the configured SDLC provider.
+  // Model picker popup reference
+  var modelPicker = null;
+  var isPickerInitialized = false;
 
-  // === Model Selector ===
-  modelBtn.addEventListener("click", function (e) {
-    e.stopPropagation();
-    modelDropdown.classList.toggle("hidden");
-    contextMenu.classList.add("hidden");
-  });
-
-  // Delegate clicks on dynamically-rendered model buttons.
-  modelDropdown.addEventListener("click", function (e) {
-    var btn = e.target.closest ? e.target.closest("button[data-model]") : null;
-    if (!btn) return;
-    var model = btn.getAttribute("data-model");
-    S.setModel(model);
-    modelDropdown.classList.add("hidden");
-    vscode.postMessage({ type: "chat:setModel", model: model });
-  });
-
-  S.renderModelDropdown = function () {
-    modelDropdown.innerHTML = "";
-    if (S.supportsAuto) {
-      modelDropdown.appendChild(makeModelButton({ id: "auto", name: "Auto" }));
-    }
-    for (var i = 0; i < S.availableModels.length; i++) {
-      modelDropdown.appendChild(makeModelButton(S.availableModels[i]));
-    }
-    // Reflect current selection
-    var allBtns = modelDropdown.querySelectorAll("button");
-    for (var j = 0; j < allBtns.length; j++) {
-      allBtns[j].classList.toggle("active", allBtns[j].getAttribute("data-model") === S.currentModel);
-    }
+  // Provider display labels
+  var PROVIDER_LABELS = {
+    anthropic: "Anthropic",
+    openai: "OpenAI",
+    lmstudio: "LM Studio",
+    openrouter: "OpenRouter",
+    ollama: "Ollama",
+    onnx: "ONNX (Local)",
   };
 
-  function makeModelButton(model) {
-    var btn = document.createElement("button");
-    btn.setAttribute("data-model", model.id);
-    // KSA-237: render name + rate badge like Kiro IDE
-    var nameSpan = document.createElement("span");
-    nameSpan.className = "model-item-name";
-    nameSpan.textContent = model.name;
-    btn.appendChild(nameSpan);
+  /** Initialize the model picker popup. */
+  function initModelPicker() {
+    if (isPickerInitialized) { return; }
+    isPickerInitialized = true;
 
-    if (typeof model.rateMultiplier === "number") {
-      var badge = document.createElement("span");
-      badge.className = "model-rate-badge";
-      if (model.rateMultiplier === 0) {
-        badge.textContent = "Free";
-        badge.classList.add("rate-free");
-      } else {
-        badge.textContent = model.rateMultiplier + (model.rateMultiplier === 1 ? " Credit" : " Credits");
-      }
-      btn.appendChild(badge);
+    // Create the model picker popup
+    if (S.modelPicker && S.modelPicker.createPopup) {
+      S.modelPicker.createPopup();
+      modelPicker = S.modelPicker;
+    } else {
+      console.warn("[chat-model] modelPicker not available, ensure model-picker-popup.js loads first");
     }
-
-    if (model.description) {
-      var desc = document.createElement("span");
-      desc.className = "model-item-desc";
-      desc.textContent = model.description;
-      btn.appendChild(desc);
-    }
-
-    return btn;
   }
 
-  function labelForModel(model) {
-    if (model === "auto") return "Auto";
-    for (var i = 0; i < S.availableModels.length; i++) {
-      if (S.availableModels[i].id === model) {
-        var lbl = S.availableModels[i].name;
-        // KSA-237: show compact rate in the button label
-        if (typeof S.availableModels[i].rateMultiplier === "number" && S.availableModels[i].rateMultiplier !== 1) {
-          if (S.availableModels[i].rateMultiplier === 0) {
-            lbl += " (Free)";
-          } else {
-            lbl += " (" + S.availableModels[i].rateMultiplier + "x)";
+  /** Handle model selector button click. */
+  function handleModelBtnClick(e) {
+    e.stopPropagation();
+    contextMenu?.classList.add("hidden");
+
+    if (!modelPicker) {
+      initModelPicker();
+    }
+
+    if (modelPicker) {
+      // Fetch fresh model groups from extension
+      vscode.postMessage({ type: "chat:getModelPickerGroups" });
+    }
+  }
+
+  /** Open the model picker with grouped data. */
+  function openModelPicker(groups, selectedModel, selectedProfileId) {
+    if (!modelPicker) { return; }
+
+    // Convert grouped data to flat model list for picker
+    var allModels = [];
+    for (var g = 0; g < groups.length; g++) {
+      var group = groups[g];
+      var providerLabel = PROVIDER_LABELS[group.provider] || group.provider;
+      for (var i = 0; i < group.items.length; i++) {
+        var item = group.items[i];
+        allModels.push({
+          id: item.modelId,
+          name: item.modelName,
+          provider: providerLabel,
+          providerId: group.provider,
+          isFree: item.isFree,
+          rateMultiplier: item.isFree ? 0 : 1,
+          profileId: item.profileId,
+        });
+      }
+    }
+
+    modelPicker.setModels(allModels);
+    modelPicker.open(modelBtn);
+  }
+
+  /** Close the model picker. */
+  function closeModelPicker() {
+    if (modelPicker) {
+      modelPicker.close();
+    }
+  }
+
+  /** Handle model selection from picker. */
+  function onModelSelect(model) {
+    // Send message to extension: switch profile + model in ONE operation
+    vscode.postMessage({
+      type: "chat:setModelAndProfile",
+      profileId: model.profileId,
+      model: model.id,
+    });
+    closeModelPicker();
+  }
+
+  /** Update model button label from current selection. */
+  function updateModelLabel(model, profileId, groups) {
+    var label = "Auto";
+    if (model === "auto") {
+      label = "Auto";
+    } else {
+      for (var g = 0; g < groups.length; g++) {
+        var group = groups[g];
+        for (var i = 0; i < group.items.length; i++) {
+          var item = group.items[i];
+          if (item.modelId === model && item.profileId === profileId) {
+            label = item.modelName + (item.isFree ? " (Free)" : "");
+            break;
           }
         }
-        return lbl;
+        if (label !== "Auto") { break; }
+      }
+      // Fallback: use model ID
+      if (label === "Auto" && model !== "auto") {
+        label = model;
       }
     }
-    // For local models with long paths, extract just the filename
-    var shortName = model;
-    if (model.indexOf("/") !== -1 || model.indexOf("\\") !== -1) {
-      var parts = model.replace(/\\/g, "/").split("/");
-      shortName = parts[parts.length - 1] || parts[parts.length - 2] || model;
+    if (modelLabel) {
+      modelLabel.textContent = label;
     }
-    // Remove .gguf extension for cleaner display
-    shortName = shortName.replace(/\.gguf$/i, "");
-    return shortName;
+    if (modelBtn) {
+      modelBtn.title = model + (profileId ? " (" + profileId + ")" : "");
+    }
   }
 
-  S.setModel = function (model) {
-    S.currentModel = model;
-    modelLabel.textContent = labelForModel(model);
-    // Set full model path as tooltip for hover display
-    modelBtn.title = model;
-    var allBtns = modelDropdown.querySelectorAll("button");
-    for (var i = 0; i < allBtns.length; i++) {
-      allBtns[i].classList.toggle("active", allBtns[i].getAttribute("data-model") === model);
+  // === Event Listeners ===
+
+  // Model button click
+  if (modelBtn) {
+    modelBtn.addEventListener("click", handleModelBtnClick);
+  }
+
+  // Close on outside click (for backward compat with dropdown)
+  document.addEventListener("click", function (e) {
+    if (modelPicker && modelPicker.isVisible()) {
+      var pickerEl = modelPicker.popupEl || document.querySelector(".model-picker-popup");
+      if (pickerEl && !pickerEl.contains(e.target) && e.target !== modelBtn) {
+        closeModelPicker();
+      }
     }
+    // Also close legacy dropdown
+    if (modelDropdown && !modelDropdown.classList.contains("hidden") &&
+        !modelDropdown.contains(e.target) && e.target !== modelBtn) {
+      modelDropdown.classList.add("hidden");
+    }
+  });
+
+  // Escape key closes picker (handled by model picker's keyboard handler)
+
+  // === Message Handlers ===
+
+  var originalOnMessage = S.onMessage || function () {};
+  S.onMessage = function (msg) {
+    if (msg.type === "modelPickerGroups") {
+      // Open picker with grouped data
+      initModelPicker();
+      openModelPicker(msg.groups, S.currentModel, S.currentProfileId);
+    } else if (msg.type === "chat:models") {
+      // Legacy model list - still support for backward compat
+      S.availableModels = msg.models;
+      S.supportsAuto = msg.supportsAuto;
+      S.currentModel = msg.selected;
+      // Also fetch grouped picker data for the new picker
+      vscode.postMessage({ type: "chat:getModelPickerGroups" });
+    } else if (msg.type === "chat:modelAndProfileSet") {
+      // Extension confirms the switch
+      S.currentModel = msg.model;
+      S.currentProfileId = msg.profileId;
+      // Re-fetch groups to update label
+      vscode.postMessage({ type: "chat:getModelPickerGroups" });
+    }
+    originalOnMessage(msg);
   };
+
+  // Expose update function for external use
+  S.updateModelLabel = updateModelLabel;
+
+  // Initialize model picker when chat panel loads
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initModelPicker);
+  } else {
+    initModelPicker();
+  }
+
 })();

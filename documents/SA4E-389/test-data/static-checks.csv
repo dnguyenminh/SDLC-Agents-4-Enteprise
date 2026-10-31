@@ -1,0 +1,5 @@
+sCaseId,grepPattern,checks,evidenceFile,runner
+S01,llm.provider[^n],0,extension/src/**/**.ts,grep script
+S02,llm.model[^n],0,extension/src/**/**.ts,grep script
+S03,secrets.get\(.*[A-Za-z].*\)$0,0,extension/src/**/**.ts,grep script
+S04,line-count > 200$,0,extension/src/**/**.ts,grep script

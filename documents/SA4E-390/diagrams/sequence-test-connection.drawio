@@ -1,0 +1,168 @@
+<mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1340" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-390 — Sequence: Test Connection (row / modal → LlmTestService → status badge, async)" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="250" y="0" width="840" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1" value="Developer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="95" y="30" width="50" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2" value="Settings Webview (Provider Table / Modal)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="40" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="p3" value="SettingsMessageHandler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="470" y="40" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="p4" value="LlmSettingsHandler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="690" y="40" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="p5" value="LlmTestService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="910" y="40" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="p6" value="LLM Provider API (cloud)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="1120" y="40" width="170" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="ll1" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="112" as="sourcePoint"/>
+        <mxPoint x="120" y="770" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ll2" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="90" as="sourcePoint"/>
+        <mxPoint x="340" y="770" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ll3" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="90" as="sourcePoint"/>
+        <mxPoint x="560" y="770" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ll4" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="780" y="90" as="sourcePoint"/>
+        <mxPoint x="780" y="770" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ll5" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1000" y="90" as="sourcePoint"/>
+        <mxPoint x="1000" y="770" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ll6" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1205" y="90" as="sourcePoint"/>
+        <mxPoint x="1205" y="770" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a2" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="334" y="150" width="12" height="610" as="geometry"/>
+    </mxCell>
+    <mxCell id="a3" style="rounded=0;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="554" y="250" width="12" height="310" as="geometry"/>
+    </mxCell>
+    <mxCell id="a4" style="rounded=0;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="774" y="280" width="12" height="250" as="geometry"/>
+    </mxCell>
+    <mxCell id="a5" style="rounded=0;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="994" y="310" width="12" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="m1" value="1: click Test Connection (row or modal)" style="html=1;verticalAlign=middle;endArrow=block;endFill=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="160" as="sourcePoint"/>
+        <mxPoint x="334" y="160" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2: set badge = Testing (async — UI not blocked)" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=middle;endArrow=block;endFill=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="346" y="200" as="sourcePoint"/>
+        <mxPoint x="346" y="235" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="430" y="200"/>
+          <mxPoint x="430" y="235"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3: postMessage testLlm { provider, baseUrl }" style="html=1;verticalAlign=middle;endArrow=block;endFill=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="346" y="260" as="sourcePoint"/>
+        <mxPoint x="554" y="260" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4: routeLlm — handleTestLlm(msg)" style="html=1;verticalAlign=middle;endArrow=block;endFill=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="566" y="290" as="sourcePoint"/>
+        <mxPoint x="774" y="290" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5: testLlm(provider, baseUrl)" style="html=1;verticalAlign=middle;endArrow=block;endFill=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="786" y="320" as="sourcePoint"/>
+        <mxPoint x="994" y="320" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6: createProviderByType(...) + timeout controller" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=middle;endArrow=block;endFill=1;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1006" y="350" as="sourcePoint"/>
+        <mxPoint x="1006" y="385" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="1090" y="350"/>
+          <mxPoint x="1090" y="385"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7: isAvailable() HTTP probe" style="html=1;verticalAlign=middle;endArrow=block;endFill=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1006" y="420" as="sourcePoint"/>
+        <mxPoint x="1205" y="420" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="8: 200 OK / error" style="html=1;verticalAlign=middle;endArrow=open;endFill=0;dashed=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1205" y="450" as="sourcePoint"/>
+        <mxPoint x="1006" y="450" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="9: { success, message, error }" style="html=1;verticalAlign=middle;endArrow=open;endFill=0;dashed=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="994" y="480" as="sourcePoint"/>
+        <mxPoint x="786" y="480" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="10: postMessage llmTestResult" style="html=1;verticalAlign=middle;endArrow=open;endFill=0;dashed=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="774" y="510" as="sourcePoint"/>
+        <mxPoint x="566" y="510" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="11: llmTestResult" style="html=1;verticalAlign=middle;endArrow=open;endFill=0;dashed=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="554" y="540" as="sourcePoint"/>
+        <mxPoint x="346" y="540" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="12: update status badge — Connected (green) / Failed (red)" style="edgeStyle=orthogonalEdgeStyle;html=1;verticalAlign=middle;endArrow=block;endFill=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="346" y="580" as="sourcePoint"/>
+        <mxPoint x="346" y="615" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="440" y="580"/>
+          <mxPoint x="440" y="615"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m13" value="13: table stays interactive (test ran in background)" style="html=1;verticalAlign=middle;endArrow=open;endFill=0;dashed=1;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="334" y="700" as="sourcePoint"/>
+        <mxPoint x="120" y="700" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note1" value="Status machine per row: unknown → testing → connected / failed — 5s timeout (Ollama), 10s (LLM test)" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="500" y="630" width="400" height="70" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

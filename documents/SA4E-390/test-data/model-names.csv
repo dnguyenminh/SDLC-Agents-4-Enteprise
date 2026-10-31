@@ -1,0 +1,6 @@
+id,name,provider,freeBadge,model,maxTokens,pricingPerK
+haiku,Claude 3 Haiku,anthropic,true,anthropic-claude-3-haiku-20240307,8000,.0025/1K
+gpt4o,OpenAI GPT-4o,openai,false,openai-gpt-4o,128000,.03/1K
+qwen2-7b,LMStudio Qwen2-7B,lmstudio,false,qwen2-7b-instruct,8000,.0012/1K
+mixtral,OpenRouter Mixtral,openrouter,false,openrouter-mixtral,32000,.0018/1K
+llama3,Ollama Llama 3,ollama,false,ollama-llama3-8b,8192,.0021/1K

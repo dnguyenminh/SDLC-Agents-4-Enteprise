@@ -15,6 +15,7 @@ import { ProxyDetectionService } from "./proxy/ProxyDetectionService";
 import { applyGlobalFetchPatch } from "./proxy/global-fetch-patch";
 import { migrateConfigNamespace } from "./config/config-namespace-migration";
 import { runConfigMigration } from "./config/settings-migration-runner";
+import { runLlmProfileMigration } from "./config/llm-profile-migration";
 import { runtime } from "./extension/registration/state";
 import { initializeWorkspace } from "./extension/registration/workspace-init";
 import { registerTreeView } from "./extension/registration/tree-view";
@@ -49,6 +50,15 @@ export async function activate(context: vscode.ExtensionContext) {
     await runConfigMigration(context);
   } catch (err) {
     console.warn(`[config-migration] key migration failed: ${(err as Error).message}`);
+  }
+
+  // SA4E-389: one-time LLM profile migration — copies old flat LLM config
+  // (llm.provider, llm.model, llm.<provider>.baseUrl, sdlcAgents.<provider>ApiKey)
+  // to Profile #1 under sdlcAgents.llm.profiles. Guarded by a globalState flag.
+  try {
+    await runLlmProfileMigration(context);
+  } catch (err) {
+    console.warn(`[config-migration] LLM profile migration failed: ${(err as Error).message}`);
   }
 
   // Register Settings command early — must work even without a workspace folder.

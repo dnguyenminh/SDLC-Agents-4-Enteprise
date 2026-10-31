@@ -1,0 +1,82 @@
+<mxGraphModel adaptiveColors="auto" dx="1000" dy="750" grid="0" guides="1" tooltips="1" connect="1" arrows="1" fit="1" page="1" pageScale="1" pageWidth="960" pageHeight="720" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="State Machine — LlmProfile Lifecycle (lastTestStatus + activeProfileId transitions)" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="120" y="10" width="700" height="30" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="init" value="" style="ellipse;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="60" y="95" width="22" height="22" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="stUntested" value="Untested&lt;br&gt;lastTestStatus = 'untested'" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="120" y="80" width="190" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="stTesting" value="Testing&lt;br&gt;async connection test (5s timeout)" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="80" width="190" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="stConnected" value="Connected&lt;br&gt;lastTestStatus = 'connected'&lt;br&gt;lastTestedAt set" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="680" y="80" width="190" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="stFailed" value="Failed&lt;br&gt;lastTestStatus = 'failed'" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="250" width="190" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="stActive" value="Active&lt;br&gt;sdlcAgents.llm.activeProfileId = id" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="680" y="250" width="190" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="stDeleted" value="Deleted&lt;br&gt;removed from profiles[]" style="rounded=1;arcSize=40;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="430" width="190" height="70" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="fin" value="" style="ellipse;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="620" y="447" width="26" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="finDot" value="" style="ellipse;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="628" y="455" width="10" height="10" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="note1" value="Set active does NOT change lastTestStatus — it only updates sdlcAgents.llm.activeProfileId. Any state can be set active; picker shows models enabled only for 'connected'." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=middle;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="230" width="300" height="95" as="geometry"/>
+    </mxCell>
+    <mxCell id="note2" value="Delete is allowed from ANY state (guard: confirm dialog). Deleting the active profile resets activeProfileId to the first remaining profile or null." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=middle;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="120" y="430" width="260" height="85" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="eInit" value="profile created / migrated" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4d4d4d;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="init" target="stUntested">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eUT" value="Test clicked" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4d4d4d;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="stUntested" target="stTesting">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eTC" value="[test ok] → connected" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4d4d4d;exitX=1;exitY=0.2;entryX=0;entryY=0.2;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="stTesting" target="stConnected">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eTF" value="[error / 5s timeout] → failed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;exitX=0.5;exitY=1;entryX=0.75;entryY=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="stTesting" target="stFailed">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eFT" value="test again" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4d4d4d;exitX=0;exitY=0.3;entryX=0;entryY=0.7;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="stFailed" target="stTesting">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eCT" value="test again" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4d4d4d;exitX=0;exitY=0.55;entryX=1;entryY=0.55;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="stConnected" target="stTesting">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eCA" value="Set active" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4d4d4d;exitX=1;exitY=0.7;entryX=1;entryY=0.3;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="stConnected" target="stActive">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eUA" value="Set active (optional)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.9;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="stUntested" target="stActive">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="620" y="115"/><mxPoint x="620" y="315"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eAD" value="Delete confirmed (&gt;1 remaining) → reset activeProfileId if needed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;exitX=0;exitY=1;entryX=1;entryY=0.3;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="stActive" target="stDeleted">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eFD" value="Delete confirmed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;dashed=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;fontSize=10;verticalAlign=bottom;" edge="1" parent="1" source="stFailed" target="stDeleted">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eFin" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4d4d4d;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="stDeleted" target="fin">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,7 @@
+Static Check TC-390-403: Masked-key gate — grep for direct secret reads in UI code
+
+Command: Select-String -Pattern "secrets\.get.*llm" -Path src\**\*.ts | Select-String -NotMatch "__tests__"
+
+Result: 1 match (llm-secret-keys.ts line 81 — legitimate migrate-on-read fallback)
+
+Status: PASS

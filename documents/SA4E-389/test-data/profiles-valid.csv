@@ -1,0 +1,5 @@
+id,label,provider,baseUrl,model,useDefaultUrl,lastTestStatus,lastTestedAt
+lmstudio-qwen,LMStudio - Qwen,lmstudio,https://lmstudio.local/v1,qwen2-7b-instruct,False,untested,0
+openrouter-anthropic,OpenRouter - Anthropic,openrouter,None,anthropic-claude-3-5-sonnet,False,untested,0
+ollama-local,Ollama - Local,ollama,http://localhost:11434/v1,ollama-local,False,untested,0
+openai-gpt,OpenAI - GPT,openai,None,gpt-4o,True,untested,0

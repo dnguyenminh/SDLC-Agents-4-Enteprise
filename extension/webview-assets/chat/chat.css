@@ -1522,7 +1522,7 @@ body {
   40% { transform: scale(1); opacity: 1; }
 }
 
-/* === Model Dropdown Popup === */
+/* === Model Dropdown Popup (SA4E-389: Grouped Picker) === */
 .model-dropdown {
   position: absolute;
   bottom: 100%;
@@ -1533,8 +1533,8 @@ body {
   border-radius: 6px;
   padding: 4px;
   min-width: 220px;
-  max-width: 320px;
-  max-height: 360px;
+  max-width: 360px;
+  max-height: 400px;
   overflow-y: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 100;
@@ -1542,7 +1542,81 @@ body {
 
 .model-dropdown.hidden { display: none; }
 
-.model-dropdown button {
+/* Grouped picker styles */
+.model-picker {
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.provider-group {
+  margin-bottom: 8px;
+}
+
+.provider-group-header {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+  color: var(--vscode-foreground);
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.15));
+  margin-bottom: 4px;
+}
+
+.provider-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.model-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  color: var(--vscode-foreground);
+  background: none;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.model-item:hover {
+  background: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.1));
+}
+
+.model-item.active {
+  background: var(--vscode-list-activeSelectionBackground, rgba(99, 102, 241, 0.2));
+  font-weight: 500;
+}
+
+.model-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.free-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: var(--vscode-testing-iconPassed, #22c55e);
+  color: #000;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+/* Legacy single-list dropdown (fallback) */
+.model-dropdown.legacy button {
   display: block;
   width: 100%;
   padding: 4px 8px;
@@ -1555,11 +1629,11 @@ body {
   cursor: pointer;
 }
 
-.model-dropdown button:hover { background: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.1)); }
-.model-dropdown button.active { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
+.model-dropdown.legacy button:hover { background: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.1)); }
+.model-dropdown.legacy button.active { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
 
 /* KSA-237: Rich model item layout (name + rate badge + description) */
-.model-dropdown button {
+.model-dropdown.legacy button {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1755,4 +1829,302 @@ body {
   color: #94a3b8;
   font-style: italic;
   line-height: 1.5;
+}
+
+/* ─────────────────────────────────────────────
+   SA4E-390: Model Picker Popup (shared with settings)
+   ───────────────────────────────────────────── */
+
+.model-picker-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 60px;
+  pointer-events: none;
+}
+
+.model-picker-popup.hidden {
+  display: none;
+}
+
+.model-picker-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+}
+
+.model-picker-dialog {
+  position: relative;
+  pointer-events: auto;
+  background: var(--vscode-editorWidget-background, var(--vscode-sideBar-background));
+  border: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.2));
+  border-radius: 8px;
+  width: 100%;
+  max-width: 420px;
+  max-height: 70vh;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  animation: pickerFadeIn 0.15s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes pickerFadeIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.model-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.2));
+}
+
+.model-picker-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.picker-close-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.6;
+  color: var(--vscode-foreground);
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.picker-close-btn:hover {
+  opacity: 1;
+  background: var(--vscode-toolbar-hoverBackground, rgba(128,128,128,0.1));
+}
+
+.model-picker-search {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.15));
+}
+
+.model-picker-search input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border, rgba(128,128,128,0.3)));
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.model-picker-search input:focus {
+  border-color: var(--vscode-focusBorder, #007acc);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.model-picker-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  min-height: 100px;
+}
+
+.model-picker-recent,
+.model-picker-models {
+  margin-bottom: 16px;
+}
+
+.model-picker-recent h4,
+.model-picker-models h4 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+  color: var(--vscode-foreground);
+  margin: 0 0 8px 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.15));
+}
+
+.model-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.model-group {
+  margin-bottom: 12px;
+}
+
+.model-group h5 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+  color: var(--vscode-foreground);
+  margin: 0 0 6px 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.1));
+}
+
+.model-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.model-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  color: var(--vscode-foreground);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.model-item:hover,
+.model-item.focused {
+  background: var(--vscode-list-hoverBackground, rgba(128,128,128,0.08));
+  outline: none;
+}
+
+.model-item:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder, #007acc);
+  outline-offset: -2px;
+}
+
+.model-item.recent {
+  border-left: 2px solid var(--vscode-button-background, #007acc);
+  padding-left: 10px;
+}
+
+.model-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.model-item-provider {
+  font-size: 11px;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+.model-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.model-badge.free-badge {
+  background: var(--vscode-testing-iconPassed, #73c991);
+  color: #000;
+}
+
+.model-badge.paid-badge {
+  background: var(--vscode-button-secondaryBackground, rgba(128,128,128,0.2));
+  color: var(--vscode-foreground);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 24px 16px;
+  opacity: 0.6;
+}
+
+.empty-state p {
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.empty-state .hint {
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+.model-picker-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.15));
+  background: var(--vscode-editorWidget-background, rgba(128,128,128,0.03));
+  border-radius: 0 0 8px 8px;
+}
+
+.shortcut-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  opacity: 0.6;
+  background: var(--vscode-editorWidget-background, rgba(128,128,128,0.05));
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.shortcut-hint kbd {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  padding: 0;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .model-picker-dialog {
+    max-width: 100%;
+    max-height: 85vh;
+    border-radius: 0;
+  }
 }

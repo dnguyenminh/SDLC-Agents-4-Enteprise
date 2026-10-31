@@ -1,0 +1,33 @@
+FLAT KEY VIOLATIONS (outside allowed files):
+extension\src\extension.ts:56: // (llm.provider, llm.model, llm.<provider>.baseUrl, sdlcAgents.<provider>ApiKey)
+extension\src\webview\save-all-controller.ts:59: await config.update("llm.provider", activeProvider.providerId, vscode.ConfigurationTarget.Workspace);
+extension\src\webview\save-all-controller.ts:60: await config.update("llm.model", activeProvider.model, vscode.ConfigurationTarget.Workspace);
+extension\src\webview\save-all-controller.ts:99: return config.get<string>("llm.provider", "anthropic");
+extension\src\types\server-types.ts:92: // SA4E-370: provider read via fallback helper (new `llm.provider` + legacy
+extension\src\types\server-types.ts:95: const providerType = getSetting<string>("llm.provider","llm.provider", "anthropic");
+extension\src\shared\types\llm-profile.ts:3: * Replaces the flat `llm.provider` / `llm.model` configuration with a list
+extension\src\services\ProviderConfigService.ts:79: provider = getSetting<string>("llm.provider", "llm.provider", "anthropic");
+extension\src\services\ProviderConfigService.ts:80: model = getSetting<string>("llm.model", "llm.model", "");
+extension\src\services\ProviderConfigService.ts:364: const provider = getSetting<string>("llm.provider", "llm.provider", "anthropic");
+extension\src\services\ProviderConfigService.ts:365: const model = getSetting<string>("llm.model", "llm.model", "");
+extension\src\services\LlmTestService.ts:120: const providerType = providerOverride || getSetting<string>("llm.provider", "llm.provider", "anthropic");
+extension\src\pi-workflow\pi-workflow-adapter\adapter-legacy-turns.ts:37: const modelId = getSetting<string>('llm.model', 'llm.model', '');
+extension\src\pi-workflow\pi-workflow-adapter\adapter-legacy-turns.ts:101: const providerId = getSetting<string>('llm.provider', 'llm.provider', 'anthropic') || 'anthropic';
+extension\src\panels\graph-panel.ts:171: const llmModel = getSetting<string>('llm.model', 'llm.model', '');
+extension\src\panels\settings\SettingsMessageHandler.ts:67: await this.configService.updateConfig("llm.provider", msg.provider);
+extension\src\panels\settings\SettingsMessageHandler.ts:71: case "setModel": await this.configService.updateConfig("llm.model", msg.model); return true;
+extension\src\panels\settings\handlers\LlmSettingsHandler.ts:37: const currentModel = getSetting<string>("llm.model","llm.model", "");
+extension\src\mcp\providers\index.ts:24: * Reads sdlcAgents.llm.provider, sdlcAgents.llm.model, sdlcAgents.llm.ollama.baseUrl
+extension\src\mcp\providers\index.ts:29: const providerType = getSetting<string>("llm.provider","llm.provider", "anthropic");
+extension\src\mcp\providers\index.ts:30: const customModel = getSetting<string>("llm.model","llm.model", "");
+extension\src\config\settings-migration-runner.ts:30: "llmProvider": "llm.provider",
+extension\src\config\settings-migration-runner.ts:31: "llmModel": "llm.model",
+extension\src\config\config-namespace-migration.ts:10: * dotted keys (e.g. kiroSdlc.llmProvider → sdlcAgents.llm.provider). Legacy
+extension\src\config\config-namespace-migration.ts:43: ["configPath", "workspace.configPath"], ["llmProvider", "llm.provider"],
+extension\src\config\config-namespace-migration.ts:44: ["llmModel", "llm.model"], ["llmFallbackModels", "llm.fallbackModels"],
+extension\src\commands\LlmCommands.ts:79: const provider = getSetting<string>("llm.provider","llm.provider", "anthropic");
+extension\src\commands\LlmCommands.ts:95: const provider = getSetting<string>("llm.provider","llm.provider", "anthropic");
+extension\src\chat-panel\ChatModelManager.ts:21: * (dot keys + legacy flat-key fallback) — plain config.get('llm.provider')
+extension\src\chat-panel\chat-panel-provider\model-config.ts:11: await config.update("llm.model", model === "auto" ? undefined : model, vscode.ConfigurationTarget.Global);
+extension\src\chat-panel\chat-panel-provider\config-change.ts:22: e.affectsConfiguration("sdlcAgents.llm.provider");
+extension\src\chat-panel\chat-panel-provider\config-change.ts:24: e.affectsConfiguration("sdlcAgents.llm.model");

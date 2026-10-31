@@ -1,0 +1,6 @@
+scenario,testName,expectedPickerBehavior,searchTerm,expectedResultCount
+R01,recent-shows-used,recent-filter,,
+R02,empty-search-no-results,empty-search,,0
+R03,filter-by-prefix,search-focus,gpt,2
+R04,filter-full-model-name,search-focus,openai-gpt,1
+R05,clear-picker-reset,focus-reset,,5

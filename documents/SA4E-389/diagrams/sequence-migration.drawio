@@ -1,0 +1,103 @@
+<mxGraphModel adaptiveColors="auto" dx="1100" dy="850" grid="0" guides="1" tooltips="1" connect="1" arrows="1" fit="1" page="1" pageScale="1" pageWidth="1100" pageHeight="820" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Sequence — One-Time Migration: Flat Config → Profile #1 (idempotent, fail-safe)" style="text;html=1;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="130" y="5" width="840" height="30" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="q1" value="Extension Host (activation)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="25" y="40" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="q2" value="SettingsMigrationRunner" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="230" y="40" width="240" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="q3" value="VS Code Settings (Global)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="520" y="40" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="q4" value="SecretStorage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="790" y="40" width="200" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="l1" style="html=1;endArrow=none;strokeColor=#999999;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="100" y="90" as="sourcePoint"/><mxPoint x="100" y="720" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l2" style="html=1;endArrow=none;strokeColor=#999999;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="350" y="90" as="sourcePoint"/><mxPoint x="350" y="720" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l3" style="html=1;endArrow=none;strokeColor=#999999;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="630" y="90" as="sourcePoint"/><mxPoint x="630" y="720" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l4" style="html=1;endArrow=none;strokeColor=#999999;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="890" y="90" as="sourcePoint"/><mxPoint x="890" y="720" as="targetPoint"/></mxGeometry>
+    </mxCell>
+
+    <mxCell id="barQ1" style="html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="95" y="140" width="10" height="490" as="geometry"/>
+    </mxCell>
+    <mxCell id="barQ2" style="html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="345" y="150" width="10" height="470" as="geometry"/>
+    </mxCell>
+    <mxCell id="barQ3" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="625" y="175" width="10" height="415" as="geometry"/>
+    </mxCell>
+    <mxCell id="barQ4" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="885" y="390" width="10" height="40" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="opt1" value="opt  [profiles list already populated → already migrated]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;fontSize=11;fontStyle=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=2;" vertex="1" parent="1">
+      <mxGeometry x="230" y="225" width="760" height="75" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="a1" value="activate(context)" style="html=1;endArrow=block;endFill=1;strokeColor=#4d4d4d;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="100" y="130" as="sourcePoint"/><mxPoint x="345" y="130" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="a2" value="get('sdlcAgents.llm.profiles')" style="html=1;endArrow=block;endFill=1;strokeColor=#4d4d4d;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="355" y="175" as="sourcePoint"/><mxPoint x="625" y="175" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="r2" value="absent / empty []" style="html=1;endArrow=open;endFill=0;strokeColor=#4d4d4d;dashed=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="625" y="205" as="sourcePoint"/><mxPoint x="355" y="205" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="a3" value="skip (idempotent exit)" style="html=1;endArrow=open;endFill=0;strokeColor=#4d4d4d;dashed=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="350" y="275" as="sourcePoint"/><mxPoint x="105" y="275" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="a4" value="read flat keys: llm.provider / llm.model / llm.{provider}.baseUrl" style="html=1;endArrow=block;endFill=1;strokeColor=#4d4d4d;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="355" y="330" as="sourcePoint"/><mxPoint x="625" y="330" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="r4" value="oldProvider • oldModel • oldBaseUrl" style="html=1;endArrow=open;endFill=0;strokeColor=#4d4d4d;dashed=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="625" y="360" as="sourcePoint"/><mxPoint x="355" y="360" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="a5" value="readLlmApiKey(secrets, oldProviderId)" style="html=1;endArrow=block;endFill=1;strokeColor=#4d4d4d;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="355" y="390" as="sourcePoint"/><mxPoint x="885" y="390" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="r5" value="old API key" style="html=1;endArrow=open;endFill=0;strokeColor=#4d4d4d;dashed=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="885" y="420" as="sourcePoint"/><mxPoint x="355" y="420" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="s1" value="create Profile #1 {id=oldProvider, label='{Provider} - default', useDefaultUrl, lastTestStatus='untested'}" style="html=1;endArrow=block;endFill=1;strokeColor=#4d4d4d;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="355" y="450" as="sourcePoint"/>
+        <mxPoint x="355" y="480" as="targetPoint"/>
+        <Array as="points"><mxPoint x="500" y="450"/><mxPoint x="500" y="480"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a6" value="update('sdlcAgents.llm.profiles', [..., profile1])" style="html=1;endArrow=block;endFill=1;strokeColor=#4d4d4d;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="355" y="520" as="sourcePoint"/><mxPoint x="625" y="520" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="a7" value="update('sdlcAgents.llm.activeProfileId', oldProvider)" style="html=1;endArrow=block;endFill=1;strokeColor=#4d4d4d;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="355" y="550" as="sourcePoint"/><mxPoint x="625" y="550" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="a8" value="globalState.set('llm.profile.migration.done', true)" style="html=1;endArrow=block;endFill=1;strokeColor=#4d4d4d;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="355" y="580" as="sourcePoint"/><mxPoint x="625" y="580" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="r9" value="activation complete" style="html=1;endArrow=open;endFill=0;strokeColor=#4d4d4d;dashed=1;rounded=0;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="350" y="615" as="sourcePoint"/><mxPoint x="105" y="615" as="targetPoint"/></mxGeometry>
+    </mxCell>
+
+    <mxCell id="note2" value="readLlmApiKey auto-migrates legacy kiroSdlc.* key on first read" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=middle;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="25" y="385" width="290" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="note3" value="Fail-safe: old flat keys and legacy secret keys are NOT deleted — enables rollback to the previous extension version. Future activations skip migration via the globalState flag." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=middle;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="645" width="690" height="55" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,68 @@
+<mxGraphModel adaptiveColors="auto" dx="1100" dy="800" grid="0" guides="1" tooltips="1" connect="1" arrows="1" fit="1" page="1" pageScale="1" pageWidth="1150" pageHeight="780" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-389 — System Context: Multi LLM Configuration Profiles + Chat Model Switcher" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="120" y="10" width="830" height="30" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="settingsUser" value="User" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="40" y="170" width="120" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="chatUser" value="User" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="40" y="430" width="120" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="ext" value="SDLC Agents — VS Code Extension" style="swimlane;html=1;startSize=28;fillColor=none;strokeColor=#0277bd;strokeWidth=2;dashed=1;fontSize=13;fontStyle=1;verticalAlign=top;align=center;collapsible=0;" vertex="1" parent="1">
+      <mxGeometry x="215" y="60" width="480" height="620" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="settingsPanel" value="Settings Panel Webview&lt;br&gt;Profile Table — Add / Edit / Delete / Set-active" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="ext">
+      <mxGeometry x="40" y="50" width="400" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="chatWebview" value="Chat Webview&lt;br&gt;Model Picker (grouped by provider)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="ext">
+      <mxGeometry x="40" y="170" width="400" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="services" value="Core Services&lt;br&gt;ProfilesService • SettingsMigrationRunner&lt;br&gt;readProviderTurnConfig() (SSOT) • llmSecretKey(id)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;" vertex="1" parent="ext">
+      <mxGeometry x="40" y="300" width="400" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="engine" value="Chat / Workflow Engine&lt;br&gt;(per-turn provider resolution)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;" vertex="1" parent="ext">
+      <mxGeometry x="40" y="480" width="400" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="settingsStore" value="VS Code Workspace Settings&lt;br&gt;sdlcAgents.llm.profiles : LlmProfile[]&lt;br&gt;sdlcAgents.llm.activeProfileId : string" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="760" y="140" width="250" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="secretStore" value="VS Code SecretStorage&lt;br&gt;sdlcAgents.{profileId}ApiKey&lt;br&gt;(per-profile, via llmSecretKey(id))" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="760" y="340" width="250" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="providers" value="LLM Providers&lt;br&gt;anthropic • openai • lmstudio&lt;br&gt;openrouter • ollama" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="760" y="520" width="250" height="100" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e1" value="manage profiles" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10;" edge="1" parent="1" source="settingsUser" target="settingsPanel">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="chat • switch model" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10;" edge="1" parent="1" source="chatUser" target="chatWebview">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="commands (postMessage)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10;" edge="1" parent="1" source="settingsPanel" target="services">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="resolve turn config" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10;" edge="1" parent="1" source="chatWebview" target="services">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="read / write sdlcAgents.llm.*" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10;" edge="1" parent="1" source="services" target="settingsStore">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="llmSecretKey(id) → read / write key" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10;" edge="1" parent="1" source="services" target="secretStore">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="turn config" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;dashed=1;fontSize=10;" edge="1" parent="1" source="services" target="engine">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="provider + model + baseUrl + apiKey" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10;" edge="1" parent="1" source="engine" target="providers">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,27 @@
+SA4E-390 Automated Test Results — Feedback Loop Iteration 1
+Date: 2026-10-30T22:15:00Z
+
+=== SUMMARY ===
+Test Files: 6 failed (6)
+Tests: 73 failed | 28 passed (101 total)
+
+=== PER FILE BREAKDOWN ===
+
+ProviderTable.test.ts (16): 10 PASS, 6 FAIL (document undefined)
+ModelPickerPopup.test.ts (20): 7 PASS, 13 FAIL (localStorage/KeyboardEvent undefined)
+EditProviderModal.test.ts (22): 7 PASS, 15 FAIL (document undefined + 4 validation msg mismatches)
+KeyboardShortcutHandler.test.ts (12): 0 PASS, 12 FAIL (KeyboardEvent undefined)
+SaveAllController.test.ts (11): 6 PASS, 5 FAIL (mock expectations)
+ProviderConfigService.integration.test.ts (20): 0 PASS, 20 FAIL (mock config.get returns undefined)
+
+=== FAILURE CATEGORIES ===
+1. jsdom environment missing (57 tests): document, localStorage, KeyboardEvent not defined
+2. Mock configuration incomplete (20 tests): config.get returns undefined for llm.profiles
+3. Validation message mismatches (4 tests): Test expectations don't match implementation
+4. SaveAllController mock expectations (5 tests): mockConfig.update not called as expected
+
+=== RECOMMENDATIONS ===
+1. Add `environment: "jsdom"` to vitest config for src/webview/__tests__/**
+2. Fix ProviderConfigService integration test mock: config.get.mockImplementation to return [] for "llm.profiles"
+3. Align validation error messages in EditProviderModal tests with implementation
+4. Fix SaveAllController mock to properly track update calls

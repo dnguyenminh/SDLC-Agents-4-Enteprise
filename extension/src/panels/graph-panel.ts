@@ -1,10 +1,11 @@
-import { getSetting } from "../config/settings-migration";
 /**
  * GraphPanel — KB Graph viewer via iframe (shared viewer on MCP port).
  * Uses same viewer as browser (http://localhost:PORT/) for consistent results.
  */
 
 import * as vscode from "vscode";
+import { readProviderTurnConfig } from "../pi-workflow/pi-provider-config-bridge.js";
+import { getSetting } from "../config/settings-migration";
 import { WebviewToExtMessage } from "../types";
 import { IServerManager } from "../types/server-types";
 import { BasePanel } from "./base-panel";
@@ -168,7 +169,7 @@ export class GraphPanel extends BasePanel {
     // copied forward once by the activation migration; defaults mirror the
     // manifest so an unset key keeps the exact pre-rename resolution.
     const ollamaUrl = getSetting<string>('llm.ollama.baseUrl', 'llm.ollama.baseUrl', 'http://localhost:11434').trim();
-    const llmModel = getSetting<string>('llm.model', 'llm.model', '');
+    const { configuredModelId: llmModel } = readProviderTurnConfig();
     if (ollamaUrl) candidates.push({ label: 'ollama', baseUrl: `${ollamaUrl.replace(/\/$/, '')}/v1`, model: llmModel || 'qwen2.5-coder' });
     const lmstudioUrl = getSetting<string>('llm.lmstudio.baseUrl', 'llm.lmstudio.baseUrl', '').trim();
     if (lmstudioUrl) candidates.push({ label: 'lmstudio', baseUrl: lmstudioUrl.replace(/\/$/, ''), model: llmModel || 'local-model' });

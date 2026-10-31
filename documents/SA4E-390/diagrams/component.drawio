@@ -1,0 +1,113 @@
+<mxfile host="65bd71144e">
+    <diagram id="Vsfj-N-PFovrmxlfSaHe" name="Page-1">
+        <mxGraphModel dx="1224" dy="1499" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1260" pageHeight="700" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontStyle=1;fontColor=#333333;" value="SA4E-390 — Component Diagram (LLM Configuration + Chat Model Picker)" vertex="1">
+                    <mxGeometry height="28" width="700" x="280" y="6" as="geometry"/>
+                </mxCell>
+                <mxCell id="cap1" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#1f497d;" value="Webview UI" vertex="1">
+                    <mxGeometry height="24" width="200" x="40" y="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="cap2" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#874d00;" value="Extension Host Services" vertex="1">
+                    <mxGeometry height="24" width="240" x="40" y="265" as="geometry"/>
+                </mxCell>
+                <mxCell id="cap3" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#3f6212;" value="Storage" vertex="1">
+                    <mxGeometry height="24" width="140" x="40" y="485" as="geometry"/>
+                </mxCell>
+                <mxCell id="cmp-tr" parent="1" style="shape=component;whiteSpace=wrap;html=1;align=left;spacingLeft=40;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;" value="ProviderTable (webview) — rows, badges, actions" vertex="1">
+                    <mxGeometry height="80" width="200" x="40" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="cmp-modal" parent="1" style="shape=component;whiteSpace=wrap;html=1;align=left;spacingLeft=40;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;" value="EditProviderModal — form + Test Connection" vertex="1">
+                    <mxGeometry height="80" width="210" x="270" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="cmp-save" parent="1" style="shape=component;whiteSpace=wrap;html=1;align=left;spacingLeft=40;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;" value="SaveAllController — persist all" vertex="1">
+                    <mxGeometry height="80" width="190" x="510" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="cmp-picker" parent="1" style="shape=component;whiteSpace=wrap;html=1;align=left;spacingLeft=40;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;" value="ModelPickerPopup — search / Recent / Free badge" vertex="1">
+                    <mxGeometry height="80" width="220" x="730" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="cmp-kbd" parent="1" style="shape=component;whiteSpace=wrap;html=1;align=left;spacingLeft=40;fontSize=11;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=middle;" value="KeyboardShortcutHandler — Esc / Ctrl+A / Ctrl+F" vertex="1">
+                    <mxGeometry height="80" width="240" x="980" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc-llm" parent="1" style="shape=component;whiteSpace=wrap;html=1;align=left;spacingLeft=40;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;verticalAlign=middle;" value="LlmSettingsHandler" vertex="1">
+                    <mxGeometry height="80" width="220" x="290" y="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc-cfg" parent="1" style="shape=component;whiteSpace=wrap;html=1;align=left;spacingLeft=40;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;verticalAlign=middle;" value="ProviderConfigService" vertex="1">
+                    <mxGeometry height="80" width="240" x="670" y="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="svc-test" parent="1" style="shape=component;whiteSpace=wrap;html=1;align=left;spacingLeft=40;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;verticalAlign=middle;" value="LlmTestService" vertex="1">
+                    <mxGeometry height="80" width="200" x="20" y="283" as="geometry"/>
+                </mxCell>
+                <mxCell id="sto-secret" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="SecretStorage adapter — vscode.secrets (SECRET_KEYS)" vertex="1">
+                    <mxGeometry height="90" width="280" x="300" y="520" as="geometry"/>
+                </mxCell>
+                <mxCell id="sto-ws" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Workspace config — sdlcAgents.llm.*" vertex="1">
+                    <mxGeometry height="90" width="300" x="650" y="520" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1" edge="1" parent="1" source="cmp-tr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" target="cmp-modal" value="opens (Add / Edit)">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="140" y="178"/>
+                            <mxPoint x="375" y="178"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r2" edge="1" parent="1" source="cmp-tr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.3;exitY=1;entryX=0.3;entryY=0;" target="svc-llm" value="postMessage: testLlm · render state">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r3" edge="1" parent="1" source="cmp-modal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.7;exitY=1;entryX=0.7;entryY=0;" target="svc-llm" value="saveApiKey / testLlm">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r4" edge="1" parent="1" source="cmp-save" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.1;entryY=0;" target="svc-cfg" value="persist all providers">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r5" edge="1" parent="1" source="cmp-picker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.25;exitY=1;entryX=0.85;entryY=0;" target="svc-cfg" value="getModels / setModel (llm.model)">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r6" edge="1" parent="1" source="cmp-kbd" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;startArrow=block;startFill=1;endArrow=block;endFill=1;exitX=0.35;exitY=1;entryX=0.8;entryY=1;" target="cmp-picker" value="Esc / Ctrl+A / Ctrl+F (popup scope)">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1064" y="196"/>
+                            <mxPoint x="906" y="196"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r7" edge="1" parent="1" source="svc-llm" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="svc-cfg" value="uses">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r8" edge="1" parent="1" source="svc-llm" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.849;entryY=0.945;entryDx=0;entryDy=0;entryPerimeter=0;" target="svc-test" value="delegates tests">
+                    <mxGeometry relative="1" x="0.1696" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="400" y="450"/>
+                            <mxPoint x="190" y="450"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r9" edge="1" parent="1" source="svc-cfg" style="rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.7;exitY=1;entryX=0.5;entryY=0;edgeStyle=orthogonalEdgeStyle;" target="sto-ws" value="update llm.*">
+                    <mxGeometry relative="1" x="0.0002" as="geometry"/>
+                </mxCell>
+                <mxCell id="r10" edge="1" parent="1" source="svc-cfg" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.2;exitY=1;entryX=0.5;entryY=0;" target="sto-secret" value="store / get / delete (SECRET_KEYS)">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="718" y="420"/>
+                            <mxPoint x="518" y="420"/>
+                            <mxPoint x="518" y="430"/>
+                            <mxPoint x="440" y="430"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r11" edge="1" parent="1" source="svc-test" style="rounded=0;html=1;strokeColor=#666666;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.15;exitY=1;entryX=0;entryY=0.5;edgeStyle=orthogonalEdgeStyle;entryDx=0;entryDy=0;entryPerimeter=0;" target="sto-secret" value="reads key for probe">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="50" y="420"/>
+                            <mxPoint x="140" y="420"/>
+                            <mxPoint x="140" y="565"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
