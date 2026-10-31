@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.11-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.12-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/tools-66+-teal?style=for-the-badge" alt="Tools">
   <img src="https://img.shields.io/badge/node-%3E%3D18-green?style=for-the-badge" alt="Node">
 </p>
@@ -38,7 +38,7 @@ Server starts at **http://localhost:48721**. Verify it's running:
 
 ```bash
 curl http://localhost:48721/health
-# → {"status":"healthy","version":"1.53.0","uptime":5,"tools_loaded":52}
+# → {"status":"healthy","version":"1.55.12","uptime":5,"tools_loaded":52}
 ```
 
 ### Development Mode (auto-reload)
@@ -233,6 +233,7 @@ The embedding model is expected at `.code-intel/models/model.onnx`. Download it:
 
 | Version | Date | Ticket | Changes |
 |---------|------|--------|---------|
+| 1.55.12 | 2026-10-31 | SA4E-389/390 | Multi LLM Configuration Profiles + Chat model/provider switcher (L3 to UAT). Version sync root/`backend`/`extension` → `1.55.12`. |
 | 1.55.3 | 2026-10-23 | SA4E-380 | Content Proxy for child MCP tools — backend `content-proxy/` layer: convention detection + overrides, in-place schema adaptation, invocation adaptation (strict base64), transport-agnostic artifact retrieval (25 MB cap), multi-file `outputs[]`, host-path stripping; zero new tools. Extension output-proxy fail-loud. Backend content-proxy tests 21/21; live 6/6 exporters. Docs: BRD/FSD/TDD/STP/STC/SECURITY-REVIEW (F-01 binding). |
 | 1.55.2 | 2026-10-23 | SA4E-369 | Fix: Pega config save reverts to default — `updatePegaConfig` uses new dotted keys (`pega.endpoint`, `pega.username`); `WORKSPACE_SCOPED_KEYS` + tests updated. |
 | 1.55.1 | 2026-10-23 | SA4E-369 | Unified config reads — ALL reads via `getSetting` (zero direct `config.get`); one-time migration runner; runtime fallback removed. 3,247/3,247 pass. |

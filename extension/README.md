@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.11-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.12-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.55.11.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.12.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.55.11.vsix
+code --install-extension sdlc-agents-4-enterprise-1.55.12.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,16 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.12 (2026-10-31)
+
+**SA4E-389 + SA4E-390 — Multi LLM Configuration Profiles + Chat model/provider switcher (L3 to UAT)**
+
+- 🧩 **SA4E-389 (Story)** — Multi-profile LLM config: `LlmProfile` data model, one-time migration flat→Profile #1, `llmSecretKey`/`readProviderTurnConfig` SSOT, `ProfilesService` CRUD, `SettingsMigrationRunner`, profile table + grouped chat model picker, `LlmTestService` async connection test
+- 🎨 **SA4E-390 (Task)** — UI redesign: Provider Table (6 cols), Edit Provider modal, Save All, Model Picker popup (search/Recent/Free badge), keyboard shortcuts (Esc/Ctrl+A/Ctrl+F scoped to picker)
+- 📋 **Phase 4–7** — STP/STC (35+33 TC), TEST-REPORT, DPG/RLN, deployment-flow + rollback-flow diagrams (+PNG); all docs in English
+- 🧪 **QA** — 100/100 targeted tests PASS, static gates PASS (flat-key/secret-bypass/line-count), build 0 TS errors
+- 🏷️ **Version sync** — root/`backend`/`extension` → `1.55.12`
 
 ### v1.55.11 (2026-10-29)
 
