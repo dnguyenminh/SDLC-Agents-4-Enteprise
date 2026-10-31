@@ -66,6 +66,8 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
     mockConfigValues['llm.profiles'] = [
       { id: 'openai-gpt-4o', provider: 'openai', model: 'gpt-4o', useDefaultUrl: true },
     ];
+    mockConfigValues['llm.activeProfileId'] = 'openai-gpt-4o';
+    mockConfigValues['llm.activeProfileId'] = 'openai-gpt-4o';
 
     await realAdapter.invokeChat('Say hello');
 
@@ -85,6 +87,7 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
     mockConfigValues['llm.profiles'] = [
       { id: 'faux', provider: 'faux', model: 'faux-1', useDefaultUrl: true },
     ];
+    mockConfigValues['llm.activeProfileId'] = 'faux';
 
     // Spy on the stream handler to assert tokens are emitted to the UI
     const emitSpy = vi.spyOn(adapter.getStreamHandler(), 'emitToken');
@@ -126,6 +129,7 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
     mockConfigValues['llm.profiles'] = [
       { id: 'faux', provider: 'faux', model: 'faux-1', useDefaultUrl: true },
     ];
+    mockConfigValues['llm.activeProfileId'] = 'faux';
     // Override the beforeEach response queue — exactly 2 responses for 2 queued turns.
     faux.setResponses([
       fauxAssistantMessage('turn one response'),

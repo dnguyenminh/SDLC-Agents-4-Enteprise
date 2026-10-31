@@ -189,3 +189,4 @@ describe("PathResolver — N-1 resolution latency smoke benchmark", () => {
     expect(meanMs).toBeLessThan(50);
   });
 });
+

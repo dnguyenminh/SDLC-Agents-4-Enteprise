@@ -92,6 +92,7 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     mockConfigValues['llm.profiles'] = [
       { id: 'lmstudio', provider: 'lmstudio', model: 'qwen-7b', useDefaultUrl: true },
     ];
+    mockConfigValues['llm.activeProfileId'] = 'lmstudio';
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,
       workspaceRoot: 'C:/ws/test',
@@ -138,7 +139,7 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
   });
 
   it('cloud provider with key routes to the session path', async () => {
-    mockConfigValues['llm.provider'] = 'anthropic';
+    mockConfigValues['llm.provider'] = 'anthropic-claude-3-haiku';
     mockConfigValues['llm.model'] = '';
     mockConfigValues['llm.profiles'] = [
       { id: 'anthropic', provider: 'anthropic', model: 'claude-3-haiku', useDefaultUrl: true },
@@ -176,7 +177,7 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
   });
 
   it('closes the stream even for textless turns (tool-only output)', async () => {
-    mockConfigValues['llm.provider'] = 'anthropic';
+    mockConfigValues['llm.provider'] = 'anthropic-claude-3-haiku';
     mockConfigValues['llm.model'] = '';
     const secrets = { get: async () => 'sk-x', store: async () => undefined, delete: async () => undefined };
     adapter = new PiWorkflowAdapter({
@@ -198,3 +199,12 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     expect(chatErrors(onEvent)).toEqual([]);
   });
 });
+
+
+
+
+
+
+
+
+
