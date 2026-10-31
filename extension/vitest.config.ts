@@ -39,6 +39,13 @@ export default defineConfig({
             },
           },
         },
+        resolve: {
+          alias: {
+            vscode: path.resolve(__dirname, "src/test/mocks/vscode.ts"),
+            svelte: path.resolve(__dirname, "src/test/svelte-shim/runtime"),
+            "svelte/compiler": path.resolve(__dirname, "src/test/svelte-shim/compiler"),
+          },
+        },
       },
       {
         // Node environment for SaveAllController (webview folder but no DOM needed)
@@ -49,6 +56,13 @@ export default defineConfig({
           environment: "node",
           fileParallelism: false,
           retry: 2,
+        },
+        resolve: {
+          alias: {
+            vscode: path.resolve(__dirname, "src/test/mocks/vscode.ts"),
+            svelte: path.resolve(__dirname, "src/test/svelte-shim/runtime"),
+            "svelte/compiler": path.resolve(__dirname, "src/test/svelte-shim/compiler"),
+          },
         },
       },
       {
@@ -61,6 +75,13 @@ export default defineConfig({
           environment: "jsdom",
           fileParallelism: false,
           retry: 2,
+        },
+        resolve: {
+          alias: {
+            vscode: path.resolve(__dirname, "src/test/mocks/vscode.ts"),
+            svelte: path.resolve(__dirname, "src/test/svelte-shim/runtime"),
+            "svelte/compiler": path.resolve(__dirname, "src/test/svelte-shim/compiler"),
+          },
         },
       },
     ],
