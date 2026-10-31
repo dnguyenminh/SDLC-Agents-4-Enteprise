@@ -89,6 +89,9 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
     mockConfigValues['llm.provider'] = 'lmstudio';
     mockConfigValues['llm.model'] = '';
+    mockConfigValues['llm.profiles'] = [
+      { id: 'lmstudio-qwen-7b', provider: 'lmstudio', model: 'qwen-7b', useDefaultUrl: true },
+    ];
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,
       workspaceRoot: 'C:/ws/test',

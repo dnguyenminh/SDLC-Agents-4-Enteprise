@@ -63,6 +63,9 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
     });
     mockConfigValues['llm.provider'] = 'openai';
     mockConfigValues['llm.model'] = 'auto';
+    mockConfigValues['llm.profiles'] = [
+      { id: 'openai-gpt-4o', provider: 'openai', model: 'gpt-4o', useDefaultUrl: true },
+    ];
 
     await realAdapter.invokeChat('Say hello');
 
@@ -79,6 +82,9 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
     // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
     mockConfigValues['llm.provider'] = 'faux';
     mockConfigValues['llm.model'] = 'faux-1';
+    mockConfigValues['llm.profiles'] = [
+      { id: 'faux-1', provider: 'faux', model: 'faux-1', useDefaultUrl: true },
+    ];
 
     // Spy on the stream handler to assert tokens are emitted to the UI
     const emitSpy = vi.spyOn(adapter.getStreamHandler(), 'emitToken');
@@ -117,6 +123,9 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
     // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
     mockConfigValues['llm.provider'] = 'faux';
     mockConfigValues['llm.model'] = 'faux-1';
+    mockConfigValues['llm.profiles'] = [
+      { id: 'faux-1', provider: 'faux', model: 'faux-1', useDefaultUrl: true },
+    ];
     // Override the beforeEach response queue — exactly 2 responses for 2 queued turns.
     faux.setResponses([
       fauxAssistantMessage('turn one response'),
