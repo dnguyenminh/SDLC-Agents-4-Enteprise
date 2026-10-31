@@ -68,7 +68,7 @@ function resolveActiveProfileConfig(): ProviderTurnConfig {
   const config = vscode.workspace.getConfiguration("sdlcAgents");
 
   // Try new multi-profile config first
-  const profiles = config.get<any[]>("llm.profiles", []);
+  const profiles = (config.get<any[]>("llm.profiles", []) ?? []);
   const activeProfileId = config.get<string>("llm.activeProfileId");
 
   if (profiles.length > 0 && activeProfileId) {
