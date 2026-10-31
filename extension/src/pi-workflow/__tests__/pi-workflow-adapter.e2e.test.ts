@@ -83,7 +83,7 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
     mockConfigValues['llm.provider'] = 'faux';
     mockConfigValues['llm.model'] = 'faux-1';
     mockConfigValues['llm.profiles'] = [
-      { id: 'faux-1', provider: 'faux', model: 'faux-1', useDefaultUrl: true },
+      { id: 'faux', provider: 'faux', model: 'faux-1', useDefaultUrl: true },
     ];
 
     // Spy on the stream handler to assert tokens are emitted to the UI
@@ -124,7 +124,7 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
     mockConfigValues['llm.provider'] = 'faux';
     mockConfigValues['llm.model'] = 'faux-1';
     mockConfigValues['llm.profiles'] = [
-      { id: 'faux-1', provider: 'faux', model: 'faux-1', useDefaultUrl: true },
+      { id: 'faux', provider: 'faux', model: 'faux-1', useDefaultUrl: true },
     ];
     // Override the beforeEach response queue — exactly 2 responses for 2 queued turns.
     faux.setResponses([

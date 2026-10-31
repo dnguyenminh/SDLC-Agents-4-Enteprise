@@ -90,7 +90,7 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     mockConfigValues['llm.provider'] = 'lmstudio';
     mockConfigValues['llm.model'] = '';
     mockConfigValues['llm.profiles'] = [
-      { id: 'lmstudio-qwen-7b', provider: 'lmstudio', model: 'qwen-7b', useDefaultUrl: true },
+      { id: 'lmstudio', provider: 'lmstudio', model: 'qwen-7b', useDefaultUrl: true },
     ];
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,
