@@ -81,10 +81,9 @@ export function defaultWorkspaceRootProvider(): string | undefined {
     // fall through to cwd fallback
   }
 
-  // Fallback: use process.cwd() as the workspace root
-  // This ensures absolute paths within the project directory work correctly
-  // even when no VS Code workspace folder is open.
-  return process.cwd();
+  // No VS Code workspace open — return undefined so the caller falls back
+  // to process.cwd() with rootSource = "cwd_fallback" (BR-06).
+  return undefined;
 }
 /* v8 ignore stop */
 
