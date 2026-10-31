@@ -52,8 +52,8 @@ vi.mock('vscode', () => ({
 }));
 
 vi.mock('../pi-agent-session-host.js', () => ({
-  ensureSessionHost: (...a: unknown[]) =>
-    (mocks.ensureSessionHost as (...a: unknown[]) => Promise<unknown>)(...a),
+  ensureSessionHost: (...args: unknown[]) =>
+    (mocks.ensureSessionHost as (...args: unknown[]) => Promise<unknown>)(...args),
   clearSessionHostCache: () => undefined,
 }));
 
@@ -116,6 +116,10 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
     mockConfigValues['llm.provider'] = 'lmstudio';
     mockConfigValues['llm.model'] = '';
+    mockConfigValues['llm.profiles'] = [
+      { id: 'lmstudio', provider: 'lmstudio', model: 'qwen-7b', useDefaultUrl: true },
+    ];
+    mockConfigValues['llm.activeProfileId'] = 'lmstudio';
     // Simulate the session host failing to resolve a model (local server
     // unreachable / lists no models → PI_MODEL_UNRESOLVED from createModelRuntime).
     mocks.ensureSessionHost.mockRejectedValueOnce(
@@ -142,8 +146,9 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     mockConfigValues['llm.provider'] = 'anthropic-claude-3-haiku';
     mockConfigValues['llm.model'] = '';
     mockConfigValues['llm.profiles'] = [
-      { id: 'anthropic', provider: 'anthropic', model: 'claude-3-haiku', useDefaultUrl: true },
+      { id: 'anthropic-claude-3-haiku', provider: 'anthropic', model: 'claude-3-haiku', useDefaultUrl: true },
     ];
+    mockConfigValues['llm.activeProfileId'] = 'anthropic-claude-3-haiku';
     const secrets = { get: async () => 'sk-x', store: async () => undefined, delete: async () => undefined };
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,
@@ -179,6 +184,10 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
   it('closes the stream even for textless turns (tool-only output)', async () => {
     mockConfigValues['llm.provider'] = 'anthropic-claude-3-haiku';
     mockConfigValues['llm.model'] = '';
+    mockConfigValues['llm.profiles'] = [
+      { id: 'anthropic-claude-3-haiku', provider: 'anthropic', model: 'claude-3-haiku', useDefaultUrl: true },
+    ];
+    mockConfigValues['llm.activeProfileId'] = 'anthropic-claude-3-haiku';
     const secrets = { get: async () => 'sk-x', store: async () => undefined, delete: async () => undefined };
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,
@@ -199,12 +208,3 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     expect(chatErrors(onEvent)).toEqual([]);
   });
 });
-
-
-
-
-
-
-
-
-
