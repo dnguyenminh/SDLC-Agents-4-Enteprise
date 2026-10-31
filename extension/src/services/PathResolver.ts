@@ -231,9 +231,22 @@ export {
 /**
  * Detect if the current working directory is in a branch worktree.
  * Uses `git worktree list` to determine if we're in a linked worktree (BR-17, FR-18).
- * Pure string ops — NO I/O, NEVER throws (C-1, C-2).
+ * Memoized per cwd — git spawn is I/O; the hot resolve path must stay pure
+ * (doc contract "NO I/O" applies after the first detection per directory).
  */
+let cachedWorktree: { cwd: string; type: WorktreeType } | undefined;
+
 export function detectWorktreeType(): WorktreeType {
+  const cwd = process.cwd();
+  if (cachedWorktree && cachedWorktree.cwd === cwd) {
+    return cachedWorktree.type;
+  }
+  const type = detectWorktreeTypeUncached();
+  cachedWorktree = { cwd, type };
+  return type;
+}
+
+function detectWorktreeTypeUncached(): WorktreeType {
   try {
     // Check if git worktree is available and if current dir is a linked worktree
     const result = execSync('git rev-parse --show-toplevel', {

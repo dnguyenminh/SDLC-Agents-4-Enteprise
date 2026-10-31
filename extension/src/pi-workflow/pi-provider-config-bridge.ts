@@ -47,13 +47,29 @@ export interface ProviderTurnConfig {
   fallbackModelIds: string[];
 }
 
-/** In-memory cache of the resolved active profile config. Updated on settings change. */
+/** In-memory cache of the resolved active profile config, keyed by a
+ *  fingerprint of the raw settings it was derived from — a settings change
+ *  (or a test changing the mocked config) always produces a fresh resolve. */
+let cacheFingerprint = "";
 let cachedActiveProfileConfig: ProviderTurnConfig | null = null;
 
+/** Fingerprint of every raw key resolveActiveProfileConfig() reads. */
+function configFingerprint(): string {
+  const config = vscode.workspace.getConfiguration("sdlcAgents");
+  return JSON.stringify([
+    config.get<any[]>("llm.profiles", []),
+    config.get<string>("llm.activeProfileId"),
+    config.get<string>("llm.provider"),
+    config.get<string>("llm.model"),
+  ]);
+}
+
 /**
- * Invalidate the cached config — call when profiles/activeProfileId changes.
+ * Invalidate the cached config — defensive escape hatch for settings
+ * changes outside the fingerprinted keys.
  */
 export function invalidateProviderTurnConfigCache(): void {
+  cacheFingerprint = "";
   cachedActiveProfileConfig = null;
 }
 
@@ -79,7 +95,7 @@ function resolveActiveProfileConfig(): ProviderTurnConfig {
   if (activeProfileId) {
     const activeProfile = profiles.find((p: any) => p.id === activeProfileId);
     if (activeProfile) {
-    const providerId = activeProfile.id;  // Use profile ID, not provider name
+      const providerId = activeProfile.provider; // real provider id for model registry lookup
       const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
       const baseUrl = activeProfile.useDefaultUrl
         ? undefined
@@ -122,9 +138,11 @@ function resolveActiveProfileConfig(): ProviderTurnConfig {
  * Uses in-memory cache for performance; invalidated on settings change.
  */
 export function readProviderTurnConfig(): ProviderTurnConfig {
-  if (cachedActiveProfileConfig) {
+  const fingerprint = configFingerprint();
+  if (cachedActiveProfileConfig && fingerprint === cacheFingerprint) {
     return cachedActiveProfileConfig;
   }
+  cacheFingerprint = fingerprint;
   cachedActiveProfileConfig = resolveActiveProfileConfig();
   return cachedActiveProfileConfig;
 }
