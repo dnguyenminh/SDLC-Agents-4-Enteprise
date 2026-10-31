@@ -1,0 +1,10 @@
+occurrence 1 @376: ...       <div class="form-group">\n          <label for="modal-provider-select">Provider <span class="r...
+occurrence 2 @470: ...ass="required">*</span></label>\n          <select id="modal-provider-select" required="">\n          ...
+total occurrences: 2
+select tags: 1
+select[0]: outerStart="<select id="modal-provider-select" required="">
+            <option value="">— S"
+  hasAttribute id: true, id="modal-provider-select", idLength=21
+  id char codes: 6d,6f,64,61,6c,2d,70,72,6f,76,69,64,65,72,2d,73,65,6c,65,63,74
+form children: 5
+form select[0]: id="modal-provider-select"

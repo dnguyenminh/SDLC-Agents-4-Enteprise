@@ -1,0 +1,17 @@
+direct query: FOUND
+fn source: function initFormElements(modalEl) {
+	return {
+		form: modalEl.querySelector("#edit-provider-form"),
+		providerSelect: modalEl.querySelector("#modal-provider-select"),
+		apiKeyInput: modalEl.querySelector("#modal-api-key"),
+		useDefaultUrlChk: modalEl.querySelector("#modal-use-default-url"),
+		baseUrlInput: modalEl.querySelector("#modal-base-url"),
+		modelInput: modalEl.querySelector("#modal-model"),
+		testBtn: modalEl.querySelector("#modal-test-btn"),
+		cancelBtn: modalEl.querySelector("#modal-
+el.providerSelect: FOUND
+select count: 1
+select[0] id="modal-provider-select"
+template contains 'modal-provider-select' at index: 376
+template snippet: ass="form-group">
+          <label for="modal-provider-select">Provider <span class="required">*</sp

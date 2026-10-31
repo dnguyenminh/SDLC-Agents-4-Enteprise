@@ -1,0 +1,29 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-389
+
+ ✓ source/slash/__tests__/handlers.test.ts > slash command handlers (unit) > TC-01 /copy serializes markdown and writes to clipboard 3ms
+ ✓ source/slash/__tests__/handlers.test.ts > slash command handlers (unit) > TC-02 /debug prints runtime metrics 0ms
+ ✓ source/slash/__tests__/handlers.test.ts > slash command handlers (unit) > TC-03 /help lists all 8 commands 1ms
+ ✓ source/slash/__tests__/handlers.test.ts > slash command handlers (unit) > TC-04 /init scaffolds .code-intel structure 1ms
+ ✓ source/slash/__tests__/handlers.test.ts > slash command handlers (unit) > TC-05 /sessions lists and switches 0ms
+ ✓ source/slash/__tests__/handlers.test.ts > slash command handlers (unit) > TC-06 /skills lists dir or invokes 1ms
+ ✓ source/slash/__tests__/handlers.test.ts > slash command handlers (unit) > TC-07 /status shows counts 0ms
+ ✓ source/slash/__tests__/handlers.test.ts > slash command handlers (unit) > TC-08 /thinking toggles flag 0ms
+ ✓ source/slash/__tests__/handlers.test.ts > slash command handlers (unit) > TC-09 security: args are data only (no shell exec) 1ms
+ ✓ source/slash/__tests__/e2e.test.ts > slash commands e2e (real modules) > registers exactly 8 commands 2ms
+ ✓ source/slash/__tests__/e2e.test.ts > slash commands e2e (real modules) > /help outputs all commands 1ms
+ ✓ source/slash/__tests__/e2e.test.ts > slash commands e2e (real modules) > /copy writes markdown to clipboard 0ms
+ ✓ source/slash/__tests__/e2e.test.ts > slash commands e2e (real modules) > /init creates .code-intel on disk 5ms
+ ✓ source/slash/__tests__/e2e.test.ts > slash commands e2e (real modules) > /sessions switches session 0ms
+ ✓ source/slash/__tests__/e2e.test.ts > slash commands e2e (real modules) > /skills invokes a skill 0ms
+ ✓ source/slash/__tests__/e2e.test.ts > slash commands e2e (real modules) > /status and /debug and /thinking run without error 0ms
+ ✓ source/slash/__tests__/e2e.test.ts > slash commands e2e (real modules) > unknown command shows friendly error 0ms
+
+ Test Files  2 passed (2)
+      Tests  17 passed (17)
+   Start at  07:21:06
+   Duration  335ms (transform 116ms, setup 0ms, import 252ms, tests 21ms, environment 0ms)
+

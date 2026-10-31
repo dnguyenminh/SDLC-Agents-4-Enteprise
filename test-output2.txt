@@ -1,0 +1,12 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-389
+
+No test files found, exiting with code 1
+
+filter: extension/src/__tests__/backend-local-tools.test.ts, extension/src/__tests__/backend-local-tools.provider.test.ts, extension/src/services/__tests__/path-resolver.test.ts
+include: source/slash/**/*.test.ts
+exclude:  **/node_modules/**, **/.git/**
+

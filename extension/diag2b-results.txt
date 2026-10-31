@@ -1,0 +1,6 @@
+direct query on modalEl: NULL
+modalEl.innerHTML length: 2810
+modalEl contains select: true
+el.providerSelect: NULL
+el.form: FOUND
+el.apiKeyInput: FOUND

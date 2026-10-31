@@ -140,6 +140,9 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
   it('cloud provider with key routes to the session path', async () => {
     mockConfigValues['llm.provider'] = 'anthropic';
     mockConfigValues['llm.model'] = '';
+    mockConfigValues['llm.profiles'] = [
+      { id: 'anthropic', provider: 'anthropic', model: 'claude-3-haiku', useDefaultUrl: true },
+    ];
     const secrets = { get: async () => 'sk-x', store: async () => undefined, delete: async () => undefined };
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,

@@ -61,8 +61,8 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
       workspaceRoot: 'C:/ws/test',
       onEvent: onEventMock as (msg: ChatExtToWebviewMessage) => void,
     });
-    mockConfigValues['llm.provider'] = 'openai';
-    mockConfigValues['llm.model'] = 'auto';
+    mockConfigValues['llm.provider'] = 'openai-gpt-4o';
+    mockConfigValues['llm.model'] = 'gpt-4o';
     mockConfigValues['llm.profiles'] = [
       { id: 'openai-gpt-4o', provider: 'openai', model: 'gpt-4o', useDefaultUrl: true },
     ];

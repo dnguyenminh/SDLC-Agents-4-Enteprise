@@ -1,0 +1,69 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.8 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-389/extension
+
+stderr | src/__tests__/backend-local-tools.test.ts > Backend Local Tools (E2E Tests) > stream_write_file > TC-07: Absolute path outside cwd passes on fallback (DISC-1)
+[backend-local-tools] stream_write_file resolve failed: PATH_REJECTED_OUTSIDE_WORKSPACE: Path rejected: C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-389\sa4e-tc07-outside-workspace.txt resolves to C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-389\sa4e-tc07-outside-workspace.txt — outside workspace root C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-389\extension.
+
+stderr | src/__tests__/backend-local-tools.test.ts > Backend Local Tools (E2E Tests) > stream_write_file > TC-07: Absolute path outside cwd passes on fallback (DISC-1)
+[backend-local-tools] stream_write_file resolve failed: PATH_REJECTED_OUTSIDE_WORKSPACE: Path rejected: C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-389\sa4e-tc07-outside-workspace.txt resolves to C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-389\sa4e-tc07-outside-workspace.txt — outside workspace root C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-389\extension.
+
+stderr | src/__tests__/backend-local-tools.test.ts > Backend Local Tools (E2E Tests) > stream_write_file > TC-07: Absolute path outside cwd passes on fallback (DISC-1)
+[backend-local-tools] stream_write_file resolve failed: PATH_REJECTED_OUTSIDE_WORKSPACE: Path rejected: C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-389\sa4e-tc07-outside-workspace.txt resolves to C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-389\sa4e-tc07-outside-workspace.txt — outside workspace root C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-389\extension.
+
+ ❯ src/__tests__/backend-local-tools.test.ts (12 tests | 2 failed) 71ms
+       × TC-06: Should reject relative path with PATH_NO_WORKSPACE when no workspace (BR-06b) 10ms (retry x2)
+       × TC-07: Absolute path outside cwd passes on fallback (DISC-1) 3ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/backend-local-tools.test.ts > Backend Local Tools (E2E Tests) > stream_write_file > TC-06: Should reject relative path with PATH_NO_WORKSPACE when no workspace (BR-06b)
+ FAIL  src/__tests__/backend-local-tools.test.ts > Backend Local Tools (E2E Tests) > stream_write_file > TC-06: Should reject relative path with PATH_NO_WORKSPACE when no workspace (BR-06b)
+ FAIL  src/__tests__/backend-local-tools.test.ts > Backend Local Tools (E2E Tests) > stream_write_file > TC-06: Should reject relative path with PATH_NO_WORKSPACE when no workspace (BR-06b)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/__tests__/backend-local-tools.test.ts:109:30
+    107|         mode: 'write'
+    108|       });
+    109|       expect(result.isError).toBe(true);
+       |                              ^
+    110|       expect(result.content[0].text).toContain('PATH_NO_WORKSPACE:');
+    111|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/__tests__/backend-local-tools.test.ts > Backend Local Tools (E2E Tests) > stream_write_file > TC-07: Absolute path outside cwd passes on fallback (DISC-1)
+ FAIL  src/__tests__/backend-local-tools.test.ts > Backend Local Tools (E2E Tests) > stream_write_file > TC-07: Absolute path outside cwd passes on fallback (DISC-1)
+ FAIL  src/__tests__/backend-local-tools.test.ts > Backend Local Tools (E2E Tests) > stream_write_file > TC-07: Absolute path outside cwd passes on fallback (DISC-1)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/backend-local-tools.test.ts:127:32
+    125|         });
+    126|
+    127|         expect(result.isError).toBe(false);
+       |                                ^
+    128|         expect(result.content[0].text).toContain('Wrote file:');
+    129|         expect(fs.readFileSync(outsidePath, 'utf-8')).toBe('Fallback p…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 13 passed (15)
+   Start at  07:25:46
+   Duration  1.04s (transform 189ms, setup 0ms, import 434ms, tests 168ms, environment 0ms)
+
