@@ -106,6 +106,13 @@ export function bridgeProviderConfig(input: ProviderBridgeInput): ProviderBridge
   return { credentialResolver: buildCredentialResolver(input.secrets) };
 }
 
+let providerTurnConfigCache: ProviderTurnConfig | null = null;
+
+/** Invalidate the cached provider turn config so next read re-reads settings. */
+export function invalidateProviderTurnConfigCache(): void {
+  providerTurnConfigCache = null;
+}
+
 let cachedExtensionVersion: string | undefined;
 
 /**

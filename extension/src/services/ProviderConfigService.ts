@@ -179,4 +179,208 @@ export class ProviderConfigService {
     const configuredUrl = getSetting<string>(key, key, "");
     return configuredUrl || PROVIDER_BASE_URL_DEFAULTS[provider] || "";
   }
+
+  /**
+   * Get all profile rows from the global config.
+   * Returns array of profiles with profileId, label, provider, model, etc.
+   */
+  async getProfileRows(): Promise<any[]> {
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
+    return config.get<any[]>("llm.profiles", []);
+  }
+
+  /** Get the active profile row. */
+  async getActiveProfileRow(): Promise<any | null> {
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
+    const activeProfileId = config.get<string>("llm.activeProfileId");
+    if (!activeProfileId) return null;
+    const profiles = await this.getProfileRows();
+    return profiles.find((p: any) => p.id === activeProfileId) || null;
+  }
+
+  /** Add a new profile. */
+  async addProfile(payload: {
+    id: string;
+    label: string;
+    provider: string;
+    baseUrl?: string;
+    model: string;
+    useDefaultUrl: boolean;
+    apiKey?: string;
+  }): Promise<{ success: boolean; profiles?: any[]; activeProfileId?: string; error?: string }> {
+    try {
+      const config = vscode.workspace.getConfiguration("sdlcAgents");
+      const profiles = await this.getProfileRows();
+      const validProviders = ["anthropic", "openai", "lmstudio", "openrouter", "ollama", "onnx"];
+
+      if (!/^[a-z0-9-]+$/.test(payload.id)) {
+        return { success: false, error: "Profile ID must be a valid slug [a-z0-9-]+" };
+      }
+      if (profiles.some((p: any) => p.id === payload.id)) {
+        return { success: false, error: `Profile ID '${payload.id}' already exists` };
+      }
+      if (!payload.label?.trim()) {
+        return { success: false, error: "Profile label is required" };
+      }
+      if (!payload.model?.trim()) {
+        return { success: false, error: "Model is required" };
+      }
+      if (!["anthropic", "openai", "lmstudio", "openrouter", "ollama", "onnx"].includes(payload.provider)) {
+        return { success: false, error: "Unknown provider" };
+      }
+      if (!payload.useDefaultUrl && payload.baseUrl) {
+        try { new URL(payload.baseUrl); }
+        catch { return { success: false, error: "Base URL must be a valid URL" }; }
+      }
+
+      const newProfile = {
+        id: payload.id,
+        label: payload.label.trim(),
+        provider: payload.provider,
+        baseUrl: payload.useDefaultUrl ? undefined : (payload.baseUrl?.trim() || undefined),
+        model: payload.model.trim(),
+        useDefaultUrl: payload.useDefaultUrl,
+        lastTestStatus: "untested" as const,
+        lastTestedAt: undefined,
+      };
+
+      // Save API key if provided
+      if (payload.apiKey?.trim()) {
+        const { writeLlmApiKey } = await import("../config/llm-secret-keys.js");
+        await writeLlmApiKey(this.secrets, payload.id, payload.apiKey.trim());
+      }
+
+      profiles.push(newProfile);
+      await config.update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
+
+      // If first profile, make it active
+      if (profiles.length === 1) {
+        await config.update("llm.activeProfileId", payload.id, vscode.ConfigurationTarget.Global);
+      }
+
+      return { success: true, profiles: [...profiles, newProfile], activeProfileId: profiles.length === 1 ? payload.id : undefined };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /** Edit an existing profile by profileId. */
+  async editProfile(profileId: string, updates: {
+    label?: string;
+    provider?: string;
+    baseUrl?: string;
+    model?: string;
+    useDefaultUrl?: boolean;
+    apiKey?: string;
+  }): Promise<{ success: boolean; profiles?: any[]; error?: string }> {
+    try {
+      const config = vscode.workspace.getConfiguration("sdlcAgents");
+      const profiles = await this.getProfileRows();
+      const index = profiles.findIndex((p: any) => p.id === profileId);
+      if (index === -1) {
+        return { success: false, error: "Profile not found" };
+      }
+
+      const validProviders = ["anthropic", "openai", "lmstudio", "openrouter", "ollama", "onnx"];
+      if (updates.provider && !["anthropic", "openai", "lmstudio", "openrouter", "ollama", "onnx"].includes(updates.provider)) {
+        return { success: false, error: "Unknown provider" };
+      }
+
+      if (updates.baseUrl !== undefined && !updates.useDefaultUrl && updates.baseUrl) {
+        try { new URL(updates.baseUrl); }
+        catch { return { success: false, error: "Base URL must be a valid URL" }; }
+      }
+
+      const profile = profiles[index];
+      if (updates.label !== undefined) profile.label = updates.label.trim();
+      if (updates.provider !== undefined) profile.provider = updates.provider;
+      if (updates.model !== undefined) profile.model = updates.model.trim();
+      if (updates.useDefaultUrl !== undefined) profile.useDefaultUrl = updates.useDefaultUrl;
+      if (updates.baseUrl !== undefined) profile.baseUrl = updates.useDefaultUrl ? undefined : (updates.baseUrl?.trim() || undefined);
+      if (updates.apiKey !== undefined && updates.apiKey.trim()) {
+        const { writeLlmApiKey } = await import("../config/llm-secret-keys.js");
+        await writeLlmApiKey(this.secrets, profileId, updates.apiKey.trim());
+      }
+
+      await config.update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
+      return { success: true, profiles };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /** Delete a profile by profileId. */
+  async deleteProfile(profileId: string): Promise<{ success: boolean; profiles?: any[]; activeProfileId?: string; error?: string }> {
+    try {
+      const config = vscode.workspace.getConfiguration("sdlcAgents");
+      const profiles = await this.getProfileRows();
+      const index = profiles.findIndex((p: any) => p.id === profileId);
+      if (index === -1) {
+        return { success: false, error: "Profile not found" };
+      }
+
+      profiles.splice(index, 1);
+      await config.update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
+
+      // If deleted profile was active, clear active or set to first
+      const activeProfile = await this.getActiveProfileRow();
+      if (activeProfile?.id === profileId) {
+        if (profiles.length > 0) {
+          await config.update("llm.activeProfileId", profiles[0].id, vscode.ConfigurationTarget.Global);
+          return { success: true, profiles, activeProfileId: profiles[0].id };
+        } else {
+          await config.update("llm.activeProfileId", undefined, vscode.ConfigurationTarget.Global);
+          return { success: true, profiles, activeProfileId: undefined };
+        }
+      }
+
+      return { success: true, profiles };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /** Set the active profile by profileId. */
+  async setActiveProfile(profileId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const profiles = await this.getProfileRows();
+      if (!profiles.some((p: any) => p.id === profileId)) {
+        return { success: false, error: "Profile not found" };
+      }
+      const config = vscode.workspace.getConfiguration("sdlcAgents");
+      await config.update("llm.activeProfileId", profileId, vscode.ConfigurationTarget.Global);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /** Update profile test status by profileId. */
+  async updateProfileTestStatus(profileId: string, status: string, testedAt: string): Promise<void> {
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
+    const profiles = await this.getProfileRows();
+    const index = profiles.findIndex((p: any) => p.id === profileId);
+    if (index >= 0) {
+      profiles[index] = { ...profiles[index], lastTestStatus: status, lastTestedAt: testedAt };
+      await config.update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
+    }
+  }
+
+  /** Get model picker groups (connected profiles only). */
+  async getModelPickerGroups(): Promise<any[]> {
+    const profiles = await this.getProfileRows();
+    // Group by provider, only include tested/connected profiles
+    const groups: Record<string, any[]> = {};
+    for (const profile of profiles) {
+      if (profile.lastTestStatus === "success") {
+        if (!groups[profile.provider]) groups[profile.provider] = [];
+        groups[profile.provider].push({
+          profileId: profile.id,
+          label: profile.label,
+          model: profile.model,
+        });
+      }
+    }
+    return Object.entries(groups).map(([provider, profiles]) => ({ provider, profiles }));
+  }
 }

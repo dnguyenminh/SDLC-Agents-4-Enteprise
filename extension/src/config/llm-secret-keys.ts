@@ -36,16 +36,41 @@ export function legacyLlmSecretKey(providerId: string): string {
   return `${LEGACY_PREFIX}.${apiKeySuffix(providerId)}`;
 }
 
+/** Secret key for provider profile secret (e.g., model picker settings). */
+export function profileSecretKey(providerId: string, _isProfile?: boolean): string {
+  return `${NEW_PREFIX}.${providerId}ProfileSecret`;
+}
+
+/** Write a provider API key to secret storage. */
+export async function writeLlmApiKey(
+  secrets: SecretStorage, providerId: string, value: string,
+  _isProfileKey?: boolean,
+): Promise<void> {
+  await secrets.store(llmSecretKey(providerId), value);
+}
+
+/** Delete a provider API key from secret storage. */
+export async function deleteLlmApiKey(
+  secrets: SecretStorage, providerId: string,
+  _isProfileKey?: boolean,
+): Promise<void> {
+  await secrets.delete(llmSecretKey(providerId));
+  // Also delete legacy key if present
+  await secrets.delete(legacyLlmSecretKey(providerId));
+}
+
 /**
  * Read a provider API key, migrating a legacy value on read. When the new key
  * is empty but the legacy `kiroSdlc.*` key holds a value, that value is copied
- * to the new key and returned. Never throws.
+ * forward (migrate-on-read) so a user's key survives the rename without a login/re-entry. Never throws.
  * @param secrets VS Code SecretStorage.
  * @param providerId Provider identifier.
+ * @param _migrateOnRead Optional flag to control migration behavior (legacy compat).
  * @returns The stored API key, or undefined when neither key is set.
  */
 export async function readLlmApiKey(
   secrets: SecretStorage, providerId: string,
+  _migrateOnRead?: boolean,
 ): Promise<string | undefined> {
   try {
     const current = await secrets.get(llmSecretKey(providerId));

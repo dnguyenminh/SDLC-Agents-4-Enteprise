@@ -92,5 +92,33 @@ export class LlmTestService {
       return { success: false, error: `Connection test failed: ${"$"}{(err as Error).message}` };
     }
   }
-}
 
+  /** Test a specific provider profile config. */
+  async testProfile(profileId: string, config: any): Promise<{ success: boolean; message?: string; error?: string; status?: string; testedAt?: string }> {
+    const ollamaUrl = getSetting<string>("llm.ollama.baseUrl","llm.ollama.baseUrl", "http://localhost:11434");
+    const provider = config.provider;
+    
+    try {
+      const providerInstance = createProviderByType(
+        provider as any, this.secrets, undefined,
+        ollamaUrl, 
+        provider === "anthropic" ? (config.baseUrl || "") : "",
+        provider !== "anthropic" ? (config.baseUrl || "") : ""
+      );
+      const timeoutPromise = new Promise<boolean>((_, reject) =>
+        setTimeout(() => reject(new Error("Connection test timed out after 10s")), 10000)
+      );
+      const available = await Promise.race([providerInstance.isAvailable(), timeoutPromise]);
+      providerInstance.dispose();
+
+      const testedAt = new Date().toISOString();
+      if (available) {
+        return { success: true, message: `Connected to ${provider} successfully.`, status: "success", testedAt };
+      }
+      return { success: false, error: "LLM provider is not reachable. Check your base URL.", status: "error", testedAt };
+    } catch (err: any) {
+      const testedAt = new Date().toISOString();
+      return { success: false, error: err.message, status: "error", testedAt };
+    }
+  }
+}
