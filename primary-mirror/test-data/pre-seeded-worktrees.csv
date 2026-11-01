@@ -1,0 +1,10 @@
+fixture_id,fixture_path,fixture_type,contents,registered_in_allowlist,purpose
+FIX-MAIN,{TEMP_DIR}/sa4e394/main,directory,"documents/SA4E-394/BRD.md; notes.txt",legacy-pinned-root,Legacy pinned root (primary checkout simulation) used when base_dir is omitted
+FIX-WT-A,{TEMP_DIR}/sa4e394/wt-a,directory,"docs/plan.md; diag/flow.drawio; img/logo.png",yes,Registered worktree A - cross-worktree source and alias-conflict target
+FIX-WT-B,{TEMP_DIR}/sa4e394/wt-b,directory,"documents/SA4E-394/BRD.md; diag/flow.drawio; script.py; tmp/; img/logo.png",yes,Registered worktree B - primary cross-worktree target
+FIX-WT-B-SYMLINK,{TEMP_DIR}/sa4e394/wt-b/link-out,symlink->{TEMP_DIR}/sa4e394/outside,-,n/a,Symlink escape fixture for T3 (TC-602) - capability-guarded on Windows CI
+FIX-LINK-WT-A,{TEMP_DIR}/sa4e394/link-to-wt-a,symlink->{TEMP_DIR}/sa4e394/wt-a,-,n/a,Symlink allowlist entry for BR-14 startup realpath test (TC-107 / CFG-10)
+FIX-WT-UNREG,{TEMP_DIR}/sa4e394/wt-unreg,directory,secret.txt,no,Unregistered existing directory - allowlist rejection tests (AC2)
+FIX-WT-GHOST,{TEMP_DIR}/sa4e394/wt-ghost,directory-absent,(not created on disk),yes,Registered-format entry missing on disk - FS_ERROR fixture (TC-201)
+FIX-OUTSIDE,{TEMP_DIR}/sa4e394/outside,directory,evil.txt,no,Outside all roots - containment escape target
+FIX-PLAINFILE,{TEMP_DIR}/sa4e394/plainfile.txt,file,-,yes-warned,Regular file registered as root (warns at startup) - BR-06 is-directory fixture (TC-205)

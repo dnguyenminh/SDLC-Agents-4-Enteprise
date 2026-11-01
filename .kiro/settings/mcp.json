@@ -2,7 +2,7 @@
   "mcpServers": {
     "code-intelligence": {
       "type": "httpStream",
-      "url": "http://127.0.0.1:9183/mcp",
+      "url": "http://127.0.0.1:9181/mcp",
       "autoApprove": [
         "mem_ingest",
         "execute_dynamic_tool",
@@ -56,7 +56,7 @@
       "disabledTools": []
     },
     "atlassian": {
-      "url": "http://localhost:3010/mcp",
+      "url": "http://localhost:3011/mcp",
       "type": "httpStream",
       "transportType": "httpStream",
       "disabled": false,

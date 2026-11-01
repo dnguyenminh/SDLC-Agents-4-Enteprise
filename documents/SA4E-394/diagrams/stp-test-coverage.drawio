@@ -1,0 +1,300 @@
+<mxfile host="app.diagrams.net" agent="qa-agent" version="24.7.5"><diagram id="stp-cov" name="STP Test Coverage"><mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-394 — STP Test Coverage Map: BRD ACs → Test Levels → Tools" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="1460" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="n1" value="BRD AC1–AC5&#10;FSD BR-01…BR-23, UC-1/2/3&#10;TDD threats T1–T10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="40" y="72" width="260" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="n2" value="STC v1.0 — 71 test cases&#10;TC-001…TC-803" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="400" y="72" width="240" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="n3" value="Levels: PBT · UT · IT · E2E-API · SIT&#10;70/71 automated (98.6%)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="740" y="72" width="250" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="n4" value="8 tools × 5 scenarios = 40 matrix assertions&#10;TC-307…TC-314 (BR-20 uniformity)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="1090" y="72" width="410" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="n1" target="n2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="n2" target="n3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="n3" target="n4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="h0" value="Requirement" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="144" width="330" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h1" value="FSD TC" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="370" y="144" width="80" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h2" value="STC Test Cases" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="450" y="144" width="300" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h3" value="PBT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="750" y="144" width="76" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h4" value="UT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="826" y="144" width="76" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h5" value="IT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="902" y="144" width="76" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h6" value="E2E-API" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="978" y="144" width="76" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h7" value="SIT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1054" y="144" width="76" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h8" value="Coverage" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1130" y="144" width="370" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1a" value="AC1 — Cross-worktree success (registered base_dir)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="40" y="174" width="330" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1b" value="TC-1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="370" y="174" width="80" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1c" value="TC-001, TC-003…010, TC-307…314 (S1), TC-700" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="174" width="300" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1d" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="750" y="174" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1e" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="826" y="174" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1f" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="902" y="174" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1g" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="978" y="174" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1h" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1054" y="174" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1i" value="100% — V2 proof" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1130" y="174" width="370" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2a" value="AC2 — Unregistered root rejected (no FS access)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="40" y="214" width="330" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2b" value="TC-2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="370" y="214" width="80" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2c" value="TC-200, TC-207, TC-307…314 (S2), TC-700" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="214" width="300" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2d" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="750" y="214" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2e" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="826" y="214" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2f" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="902" y="214" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2g" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="978" y="214" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2h" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1054" y="214" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2i" value="100% — BR-23 spy assertion" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1130" y="214" width="370" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3a" value="AC3 — base_dir omitted → legacy byte-identical" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="40" y="254" width="330" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3b" value="TC-3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="370" y="254" width="80" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3c" value="TC-100, TC-204, TC-800, TC-307…314 (S3), TC-700" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="254" width="300" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3d" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="750" y="254" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3e" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="826" y="254" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3f" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="902" y="254" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3g" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="978" y="254" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3h" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1054" y="254" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3i" value="100% — golden snapshots (C-3)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1130" y="254" width="370" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4a" value="AC4 — Containment (absolute escape + ../ traversal)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="40" y="294" width="330" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4b" value="TC-4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="370" y="294" width="80" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4c" value="TC-202/203, TC-402, TC-408, TC-307…314 (S4/S5), TC-700" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="294" width="300" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4d" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="750" y="294" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4e" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="826" y="294" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4f" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="902" y="294" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4g" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="978" y="294" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4h" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1054" y="294" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4i" value="100% — fast-check invariant + V5 proof" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1130" y="294" width="370" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5a" value="AC5 — base_dir documented in all 8 tool schemas" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="40" y="334" width="330" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5b" value="TC-5" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="370" y="334" width="80" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5c" value="TC-300, TC-301 (schema snapshot)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="334" width="300" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5d" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="750" y="334" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5e" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="826" y="334" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5f" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="902" y="334" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5g" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="978" y="334" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5h" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1054" y="334" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5i" value="100% — V1 proof (tools/list)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1130" y="334" width="370" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6a" value="Supplementary — BR-06/09/10/12…19 (TC-6…TC-11)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="40" y="374" width="330" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6b" value="TC-6…11" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="370" y="374" width="80" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6c" value="TC-101…104, TC-106…109, TC-201, TC-205, TC-302…305" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="374" width="300" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6d" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="750" y="374" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6e" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="826" y="374" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6f" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="902" y="374" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6g" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="978" y="374" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6h" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1054" y="374" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6i" value="100% — startup + alias + normalization rules" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1130" y="374" width="370" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7a" value="Security — threats T1…T10 (fail-closed)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="40" y="414" width="330" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7b" value="TC-extra" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="370" y="414" width="80" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7c" value="TC-102, TC-202/203, TC-400…405, TC-408, TC-602, TC-603" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="414" width="300" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7d" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="750" y="414" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7e" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="826" y="414" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7f" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="902" y="414" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7g" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="978" y="414" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7h" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1054" y="414" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7i" value="100% — T7 TOCTOU is the only manual item (TC-603)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1130" y="414" width="370" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r8a" value="Non-Functional — resolve() p95 < 5 ms; startup < 50 ms" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="40" y="454" width="330" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r8b" value="TC-extra" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="370" y="454" width="80" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r8c" value="TC-600, TC-601 (benchmarks)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="454" width="300" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r8d" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="750" y="454" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r8e" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="826" y="454" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r8f" value="✓" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="902" y="454" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r8g" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="978" y="454" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r8h" value="—" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1054" y="454" width="76" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r8i" value="100% — TDD §8.3 budgets" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1130" y="454" width="370" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="legend" value="Legend: green = covered at this level · gray = not applicable at this level · Coverage column = RTM status. Overall RTM: 52/52 requirements = 100%. SIT manual is limited to TC-603 (TOCTOU review); 70/71 cases automated (98.6%)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="40" y="510" width="1460" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="t1" value="stream_write_file&#10;TC-307" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="566" width="172" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="t2" value="mem_ingest_file&#10;TC-308" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="222" y="566" width="172" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="t3" value="embed_image&#10;TC-309" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="404" y="566" width="172" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="t4" value="drawio_export_png&#10;TC-310" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="586" y="566" width="172" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="t5" value="drawio_auto_layout&#10;TC-311" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="768" y="566" width="172" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="t6" value="jira_attach_file&#10;TC-312" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="950" y="566" width="172" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="t7" value="confluence_add_attachment&#10;TC-313" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1132" y="566" width="172" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="t8" value="sandbox_run (file)&#10;TC-314" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1314" y="566" width="186" height="46" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel></diagram></mxfile>

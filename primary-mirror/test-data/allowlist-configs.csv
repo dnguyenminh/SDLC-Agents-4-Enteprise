@@ -1,0 +1,15 @@
+config_id,test_case_id,source,mcp_workspace_roots,mcp_workspace_roots_file_content,expected_registered_roots,expected_legacy_mode,expected_startup_log,description
+CFG-01,"TC-001; TC-003..TC-010; TC-303; TC-304",env,"{TMP}\main;{TMP}\wt-a;{TMP}\wt-b",,3,no,INFO: allowlist loaded (roots+source),Standard 3-root allowlist via env var - default precondition for most suites
+CFG-02,TC-104,file,,"# comment line\n{TMP}\main\n\n{TMP}\wt-b",2,no,INFO: allowlist loaded (source=config_file),Allowlist via MCP_WORKSPACE_ROOTS_FILE - one root per line; # comments and blank lines skipped
+CFG-03,TC-107,env,"{TMP}\main;{TMP}\main;{TMP}\wt-a",,2,no,INFO: allowlist loaded,Duplicate entries silently deduplicated (Set semantics)
+CFG-04,"TC-106; TC-201; TC-205; TC-210; TC-306",env,"{TMP}\main;{TMP}\wt-ghost;{TMP}\wt-b;{TMP}\plainfile.txt",,4,no,WARN: wt-ghost does not exist or is not a directory; WARN: plainfile.txt is not a directory,Missing entry and file-not-directory both WARN and are RETAINED (P6) - startup continues
+CFG-05,"TC-108; TC-207",env,";;",,0,yes,INFO: MCP_WORKSPACE_ROOTS empty - legacy single-root mode active,Empty tokens only - empty allowlist selects legacy mode
+CFG-06,TC-108,env,(unset),,0(+pinned),yes,INFO: legacy single-root mode active,Variable unset - legacy mode fallback
+CFG-07,TC-208,file,,"(unreadable/garbage file)",0,yes,WARN: config file unreadable - legacy fallback,Unreadable config file degrades to legacy mode without blocking startup
+CFG-08,TC-109,env-POSIX,"{TMP}/main:{TMP}/wt-a",,2,no,INFO: allowlist loaded,POSIX colon delimiter parses into 2 normalized roots
+CFG-09,TC-109,env-Windows,"{TMP}\main;{TMP}\wt-a",,2,no,INFO: allowlist loaded,Windows semicolon delimiter parses into equivalent normalized set
+CFG-10,TC-107; TC-602,env,"{TMP}\main;{TMP}\link-to-wt-a",,2,no,INFO: allowlist loaded,Symlink entry resolved to real path wt-a at startup (P5)
+CFG-11,"TC-302; TC-305",env,"{TMP}\main;{TMP}\wt-a;{TMP}\wt-b",,3,no,INFO: allowlist loaded,Used to prove cache-once and no-hot-reload - env mutated after load has no effect
+CFG-12,TC-104,file,(unset),"MCP_WORKSPACE_ROOTS={TMP}\main (env wins)\n{TMP}\wt-b",2,no,INFO: allowlist loaded (source=env),Precedence proof - env var set together with config file: env wins
+CFG-13,TC-107,env-Windows,"{TMP}\MAIN;{TMP}\main;{TMP}\Wt-A;{TMP}\wt-a",,2,no,INFO: allowlist loaded,Case-insensitive dedupe on win32 (exact-case on POSIX)
+CFG-14,TC-601,env,20 distinct existing directories under {TMP}\roots-20,,20,no,INFO: allowlist loaded,20-entry allowlist for startup build performance budget (<50 ms)

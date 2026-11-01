@@ -1,0 +1,9 @@
+tool_name,path_argument,base_dir_documented,workspace_root_documented,description_contains_example,description_mentions_allowlist,neither_property_required,test_case_id,notes
+mem_ingest_file,file_path,yes,yes,yes,yes,yes,TC-300; TC-301,Backend fallback + extension pre-read proxy (Base64ProxyService)
+embed_image,file_path + output_path,yes,yes,yes,yes,yes,TC-300; TC-301,Extension adapter via PathResolver (TDD 6.3)
+drawio_export_png,file_path (reference-only),yes,yes,yes,yes,yes,TC-300; TC-301,Backend writes temp dir + returns output_base64 (DISC-4)
+drawio_auto_layout,file_path,yes,yes,yes,yes,yes,TC-300; TC-301,Handler handleDrawioLayout
+jira_attach_file,file_path,yes,yes,yes,yes,yes,TC-300; TC-301,ALLOWED_BASES containment replaced by shared resolver (TDD 6.4)
+confluence_add_attachment,file_path,yes,yes,yes,yes,yes,TC-300; TC-301,validateFilePath replaced by shared resolver (TDD 6.4)
+sandbox_run,file,yes,yes,yes,yes,yes,TC-300; TC-301,Path argument is file not file_path (DISC-2); host-side pre-mount
+stream_write_file,path + file_path (both accepted),yes,yes,yes,yes,yes,TC-300; TC-301,Module variant uses path; code-intel and extension variants use file_path (DISC-3)

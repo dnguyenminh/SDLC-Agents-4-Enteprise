@@ -1,0 +1,150 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="lane1" value="1. Pre-Deploy" style="swimlane;horizontal=0;html=1;startSize=28;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1340" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1" value="Merge SA4E-394 → release branch&#10;(resolver + allowlist + 8 tool handlers)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane1">
+      <mxGeometry x="50" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2" value="Tests green —&#10;npm run check:ci&#10;(lint · build · unit · contract)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane1">
+      <mxGeometry x="310" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="p3" value="Security conditions cleared —&#10;5.7 assessment + 6.7 deploy review&#10;(no open Critical/High)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane1">
+      <mxGeometry x="570" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="p4" value="Backup point —&#10;tag previous build + record&#10;current env / extension config" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane1">
+      <mxGeometry x="830" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane2" value="2. Configuration" style="swimlane;horizontal=0;html=1;startSize=28;rounded=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="190" width="1340" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1" value="Set MCP_WORKSPACE_ROOTS&#10;(&quot;;&quot; win32 / &quot;:&quot; POSIX)&#10;primary checkout + Orca worktrees" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane2">
+      <mxGeometry x="50" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="c2" value="Alt source: MCP_WORKSPACE_ROOTS_FILE&#10;1 root/line · &quot;#&quot; comments ·&#10;blank lines skipped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane2">
+      <mxGeometry x="310" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3" value="Mirror allowlist in extension&#10;settings —&#10;kiro-code-intel.workspaceRoots" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane2">
+      <mxGeometry x="570" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="c4" value="Validate — absolute paths,&#10;dirs exist, dedupe (P4–P7)&#10;missing dirs → WARN only" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane2">
+      <mxGeometry x="830" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane3" value="3. Application Deploy" style="swimlane;horizontal=0;html=1;startSize=28;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="340" width="1340" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="d1" value="Build —&#10;npm ci &amp;&amp; npm run build&#10;(tsc → dist/)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane3">
+      <mxGeometry x="50" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="d2" value="Restart backend —&#10;npm run dev (tsx watch) or&#10;npm start (node dist/index.js)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane3">
+      <mxGeometry x="310" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="d3" value="Extension-host mode —&#10;update bundle → Ctrl+Shift+P →&#10;&quot;Developer: Reload Window&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane3">
+      <mxGeometry x="570" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="d4" value="Restart REQUIRED — allowlist is&#10;startup-loaded, no hot-reload&#10;(BR-17 · single instance rule)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane3">
+      <mxGeometry x="830" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane4" value="4. Verification" style="swimlane;horizontal=0;html=1;startSize=28;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="490" width="1340" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="v1" value="Health — GET /health → 200&#10;healthy (default port 48721)&#10;do NOT start a 2nd instance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane4">
+      <mxGeometry x="50" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="v2" value="Startup log — INFO&#10;&quot;MCP workspace allowlist loaded&quot;&#10;lists roots + source (BR-19)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane4">
+      <mxGeometry x="310" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="v3" value="Smoke V1–V6 — schema base_dir,&#10;cross-worktree success,&#10;negative reject, legacy parity" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane4">
+      <mxGeometry x="570" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="d5" value="All checks pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="lane4">
+      <mxGeometry x="830" y="25" width="210" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="endGo" value="GO — deployment complete" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="lane4">
+      <mxGeometry x="1100" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane5" value="5. Rollback Path" style="swimlane;horizontal=0;html=1;startSize=28;rounded=0;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="640" width="1340" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1" value="Config rollback — unset&#10;MCP_WORKSPACE_ROOTS(+_FILE) →&#10;restart → legacy mode (BR-16)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="lane5">
+      <mxGeometry x="50" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2" value="Code rollback — git revert →&#10;npm run build → restart;&#10;extension: revert bundle + reload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="lane5">
+      <mxGeometry x="310" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3" value="Verify rollback — /health 200 +&#10;legacy smoke (no base_dir →&#10;legacy OK) + rejections stop" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="lane5">
+      <mxGeometry x="570" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4" value="Rollback complete —&#10;re-enter verification (Lane 4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=0;" vertex="1" parent="lane5">
+      <mxGeometry x="830" y="40" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="p1" target="p2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="p2" target="p3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="p3" target="p4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="p4" target="c1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="c1" target="c2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="c2" target="c3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="c3" target="c4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c4" target="d1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="d1" target="d2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="d2" target="d3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="d3" target="d4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="d4" target="v1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="v1" target="v2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="v2" target="v3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="v3" target="d5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e16" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontColor=#2d7600;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="d5" target="endGo">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e17" value="No — config issue" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#ae4132;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="d5" target="r1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e18" value="No — code defect" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#ae4132;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="d5" target="r2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.3;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="r1" target="r3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e20" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.7;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="r2" target="r3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="r3" target="r4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e22" value="re-verify" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;dashed=1;fontColor=#ae4132;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="r4" target="v1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

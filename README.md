@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.12.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.13.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,20 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.13 (2026-11-01)
+
+**SA4E-394 — Multi-Worktree base_dir Support for All file_path Tools**
+
+- 🆕 **SA4E-394 (Task)** — Per-call `base_dir` (alias `workspace_root`) parameter on all 8 MCP tools that accept `file_path`: `mem_ingest_file`, `embed_image`, `drawio_export_png`, `drawio_auto_layout`, `jira_attach_file`, `confluence_add_attachment`, `sandbox_run`, `stream_write_file`
+- 📦 **New shared resolver** `backend/src/shared/multi-worktree-path-resolver.ts` + `workspace-allowlist.ts` + `path-resolution-types.ts` (single source of truth, ≤200 lines/file)
+- ⚙️ **Allowlist config**: `MCP_WORKSPACE_ROOTS` env var (semicolon-Windows/colon-POSIX) → `MCP_WORKSPACE_ROOTS_FILE` config file; precedence: env → file → legacy single-root; restart required (no hot-reload)
+- 🔒 **Containment never widened**: strict AFTER-resolution check blocks `../` traversal even inside allowlist; threat model T1–T10 covered
+- ↩️ **Backward compatible**: omitting `base_dir` → legacy pinned root behavior byte-identical; all 71 test cases (TC-1..TC-71) PASS, RTM 52/52 = 100%
+- 📚 **Docs updated**: BRD.md (14/14), FSD.md v1.1 (11/11 + 6 diagrams), TDD.md v1.0 (11/11 + 8 diagrams), STP.md (14/14), STC.md (71 TC), DPG.md (10/10), UG.md (9/9); 5 CSV test-data fixtures; 28 draw.io + 28 PNG diagrams
+- ✅ **BA↔SA feedback loop**: 5 DISCREPANCY resolved (1 High + 4 Low) via FSD v1.1 sync
+- ✅ **QA review gate**: 8/8 checks PASS on STP/STC (AC1-AC5, BR-01..BR-23, T1-T10, per-tool args)
+- 📦 **Branch**: `dnguyenminh/SA4E-394` with all TDD implementation, unit tests, and build artifacts
 
 ### v1.55.12 (2026-10-31)
 

@@ -1,0 +1,68 @@
+test_case_id,tool_name,path_param,path_value,base_dir_value,expected_result,expected_code,expected_message_fragment,description
+RES-001,core-resolver,file_path,documents/SA4E-394/BRD.md,{TMP}\wt-b,SUCCESS,,,"TC-001: relative path resolved against registered base_dir (AC1/BR-02)"
+RES-002,core-resolver,file_path,{TMP}\wt-b\docs\plan.md,{TMP}\wt-b,SUCCESS,,,"TC-002: absolute path within base_dir accepted (BR-04/AF-4)"
+RES-100,core-resolver,file_path,notes.txt,(omitted),SUCCESS,,,TC-100: base_dir omitted resolves against legacy pinned root main (AC3/BR-03)
+RES-101,core-resolver,file_path,documents/SA4E-394/BRD.md,alias workspace_root={TMP}\wt-b,SUCCESS,,,"TC-101: workspace_root alias alone behaves identically (BR-10)"
+RES-102,core-resolver,file_path,notes.txt,base_dir={TMP}\wt-b + workspace_root={TMP}\wt-a,SUCCESS,,,"TC-102: both provided - base_dir wins deterministically (BR-10/T10)"
+RES-103,core-resolver,file_path,documents/SA4E-394/BRD.md,wt-b (relative),SUCCESS,,,"TC-103: relative base_dir normalized to absolute before allowlist check (BR-09)"
+RES-105,core-resolver,file_path,docs/../documents/SA4E-394/BRD.md,{TMP}\wt-b,SUCCESS,,,"TC-105: in-root ../ segments allowed when final path inside effective root (AF-5)"
+RES-201,core-resolver,file_path,x.txt,{TMP}\wt-ghost,ERROR,FS_ERROR,Workspace root '{base_dir}' does not exist on filesystem,TC-201: registered-format base_dir missing on disk (BR-06/TC-6)
+RES-202,core-resolver,file_path,../../../outside/evil.txt,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root '{base_dir}',TC-202: traversal escaping base_dir (AC4/BR-07/T1)
+RES-203,core-resolver,file_path,{TMP}\outside\evil.txt,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root '{base_dir}',TC-203: absolute path outside base_dir (AC4/BR-04/T2)
+RES-204,core-resolver,file_path,{TMP}\outside\evil.txt,(omitted),ERROR,PATH_REJECTED_OUTSIDE_WORKSPACE,(unchanged legacy message),TC-204: legacy rejection code preserved when base_dir omitted (BR-03/AF-1)
+RES-205,core-resolver,file_path,x.txt,{TMP}\plainfile.txt,ERROR,FS_ERROR,Workspace root '{base_dir}' does not exist on filesystem,TC-205: base_dir is a file not a directory (BR-06)
+RES-207,core-resolver,file_path,notes.txt,{TMP}\wt-b (empty allowlist CFG-05),ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,is not registered in the allowlist,TC-207: any base_dir rejected when allowlist empty (BR-16/EF-5)
+RES-210a,core-resolver,file_path,x.txt,{TMP}\nonexistent-unreg,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,is not registered in the allowlist,TC-210: unregistered+missing yields ALLOWLIST code never FS_ERROR (BR-11)
+RES-210b,core-resolver,file_path,x.txt,{TMP}\wt-ghost,ERROR,FS_ERROR,does not exist on filesystem,TC-210: registered+missing yields FS_ERROR never PATH_REJECTED_* (BR-11)
+RES-210c,core-resolver,file_path,../outside/x.txt,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-210: registered+exists+escape yields containment code last (BR-11)
+RES-304a,core-resolver,file_path,notes.txt,{TMP}\main,SUCCESS,,,TC-304: primary checkout usable as base_dir (BR-18)
+RES-304b,core-resolver,file_path,docs/plan.md,{TMP}\wt-a,SUCCESS,,,TC-304: worktree A usable as base_dir in same server lifetime (BR-18)
+RES-304c,core-resolver,file_path,notes.txt,{TMP}\wt-b,SUCCESS,,,TC-304: worktree B usable as base_dir in same server lifetime (BR-18)
+RES-401a,core-resolver,file_path,(empty string),{TMP}\wt-b,ERROR,(per-tool validation),,TC-401: empty file_path typed error no crash
+RES-401b,core-resolver,file_path,x.txt,(empty string),ERROR/legacy-absent,(typed or legacy),,TC-401: empty base_dir never silently bypasses allowlist
+RES-406a,core-resolver,file_path,x.txt,123 (number),ERROR,(typed input error),,TC-406: non-string base_dir typed business error
+RES-406b,core-resolver,file_path,123 (number),{TMP}\wt-b,ERROR,(typed input error),,TC-406: non-string file_path typed business error
+RES-407a,core-resolver,file_path,.,{TMP}\wt-b,SUCCESS,,,TC-407: root itself resolves to exactly base_dir - inclusive containment
+RES-407b,core-resolver,file_path,a/../../../../wt-b/x.txt,{TMP}\wt-b,SUCCESS,,,TC-407: deep traversal landing back inside root accepted (AF-5)
+SWF-01,stream_write_file,path,tmp/ug-proof.txt,{TMP}\wt-b,SUCCESS,,,"TC-003/TC-307 S1: cross-worktree write (AC1)"
+SWF-02,stream_write_file,path,tmp/ug-proof.txt,{TMP}\wt-unreg,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,is not registered in the allowlist. Configure MCP_WORKSPACE_ROOTS to include this path.,TC-200/TC-307 S2: unregistered root (AC2) - zero FS access
+SWF-03,stream_write_file,path,tmp/legacy.txt,(omitted),SUCCESS,,,TC-307 S3: omitted base_dir - legacy pinned root (AC3)
+SWF-04,stream_write_file,path,{TMP}\outside\evil.txt,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root '{base_dir}',TC-307 S4: absolute outside base_dir (AC4)
+SWF-05,stream_write_file,path,../../../outside/evil.txt,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root '{base_dir}',TC-307 S5: traversal escape (AC4)
+SWF-06,stream_write_file,path,wt-b locked target,{TMP}\wt-b,ERROR,FS_ERROR,FS_ERROR: {OS error details},TC-206: permission denied on operation (EF-4)
+MIF-01,mem_ingest_file,file_path,documents/SA4E-394/BRD.md,{TMP}\wt-b,SUCCESS,,,"TC-004/TC-308 S1: ingest from worktree B (AC1)"
+MIF-02,mem_ingest_file,file_path,documents/SA4E-394/BRD.md,{TMP}\wt-unreg,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,is not registered in the allowlist,TC-308 S2: unregistered root (AC2)
+MIF-03,mem_ingest_file,file_path,documents/SA4E-394/BRD.md,(omitted),SUCCESS,,,TC-308 S3: legacy pinned root (AC3)
+MIF-04,mem_ingest_file,file_path,{TMP}\outside\x.md,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-308 S4: absolute outside (AC4)
+MIF-05,mem_ingest_file,file_path,../../../outside/x.md,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-308 S5: traversal escape (AC4)
+EMB-01,embed_image,file_path,img/logo.png,{TMP}\wt-b,SUCCESS,,,"TC-005/TC-309 S1: inline image from wt-b (AC1) - extension adapter"
+EMB-02,embed_image,file_path,img/logo.png,{TMP}\wt-unreg,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,is not registered in the allowlist,TC-309 S2: unregistered root (AC2) - same contract as backend
+EMB-03,embed_image,file_path,img/logo.png,(omitted),SUCCESS,,,TC-309 S3: legacy root behavior (AC3)
+EMB-04,embed_image,file_path,{TMP}\outside\x.png,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-309 S4: absolute outside (AC4)
+EMB-05,embed_image,file_path,../../outside/x.png,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-309 S5: traversal escape (AC4)
+DEP-01,drawio_export_png,file_path,diag/flow.drawio,{TMP}\wt-b,SUCCESS,,,"TC-006/TC-310 S1: export diagram from wt-b (AC1) - file_path reference-only (DISC-4)"
+DEP-02,drawio_export_png,file_path,diag/flow.drawio,{TMP}\wt-unreg,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,is not registered in the allowlist,TC-310 S2: unregistered root (AC2)
+DEP-03,drawio_export_png,file_path,diag/flow.drawio,(omitted),SUCCESS,,,TC-310 S3: legacy behavior (AC3)
+DEP-04,drawio_export_png,file_path,{TMP}\outside\x.drawio,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-310 S4: absolute outside (AC4)
+DEP-05,drawio_export_png,file_path,../../../outside/x.drawio,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-310 S5: traversal escape (AC4)
+DEP-06,drawio_export_png,output_path,out/flow.png,{TMP}\wt-b,SUCCESS,,,"TC-111: extension output proxy resolves output_path under wt-b (DISC-4)"
+DAL-01,drawio_auto_layout,file_path,diag/flow.drawio,{TMP}\wt-b,SUCCESS,,,"TC-007/TC-311 S1: layout file in wt-b (AC1)"
+DAL-02,drawio_auto_layout,file_path,diag/flow.drawio,{TMP}\wt-unreg,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,is not registered in the allowlist,TC-311 S2: unregistered root (AC2)
+DAL-03,drawio_auto_layout,file_path,diag/flow.drawio,(omitted),SUCCESS,,,TC-311 S3: legacy behavior (AC3)
+DAL-04,drawio_auto_layout,file_path,{TMP}\outside\x.drawio,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-311 S4: absolute outside (AC4)
+DAL-05,drawio_auto_layout,file_path,../../outside/x.drawio,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-311 S5: traversal escape (AC4)
+JAF-01,jira_attach_file,file_path,docs/plan.md,{TMP}\wt-b,SUCCESS,,,"TC-009/TC-312 S1: attach from wt-b (AC1) - Atlassian stubbed"
+JAF-02,jira_attach_file,file_path,docs/plan.md,{TMP}\wt-unreg,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,is not registered in the allowlist,TC-312 S2: unregistered root (AC2) - zero upload calls (BR-23)
+JAF-03,jira_attach_file,file_path,docs/plan.md,(omitted),SUCCESS,,,TC-312 S3: legacy behavior (AC3)
+JAF-04,jira_attach_file,file_path,{TMP}\outside\x.md,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-312 S4: absolute outside (AC4)
+JAF-05,jira_attach_file,file_path,../../../outside/x.md,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-312 S5: traversal escape (AC4)
+CAA-01,confluence_add_attachment,file_path,docs/plan.md,{TMP}\wt-b,SUCCESS,,,"TC-010/TC-313 S1: upload from wt-b (AC1) - Atlassian stubbed"
+CAA-02,confluence_add_attachment,file_path,docs/plan.md,{TMP}\wt-unreg,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,is not registered in the allowlist,TC-313 S2: unregistered root (AC2) - zero upload calls
+CAA-03,confluence_add_attachment,file_path,docs/plan.md,(omitted),SUCCESS,,,TC-313 S3: legacy behavior (AC3)
+CAA-04,confluence_add_attachment,file_path,{TMP}\outside\x.md,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-313 S4: absolute outside (AC4)
+CAA-05,confluence_add_attachment,file_path,../../../outside/x.md,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-313 S5: traversal escape (AC4)
+SBR-01,sandbox_run,file,script.py,{TMP}\wt-b,SUCCESS,,,"TC-008/TC-314 S1: host-side file resolution pre-mount (AC1) - param is file (DISC-2)"
+SBR-02,sandbox_run,file,script.py,{TMP}\wt-unreg,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,is not registered in the allowlist,TC-314 S2: unregistered root (AC2) - no execution
+SBR-03,sandbox_run,file,script.py,(omitted),SUCCESS,,,TC-314 S3: legacy pinned root (AC3)
+SBR-04,sandbox_run,file,{TMP}\outside\evil.py,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-314 S4: absolute outside (AC4)
+SBR-05,sandbox_run,file,../../../outside/evil.py,{TMP}\wt-b,ERROR,PATH_REJECTED_OUTSIDE_ALLOWLIST,Resolved path '{resolved}' is outside workspace root,TC-314 S5: traversal escape (AC4)
