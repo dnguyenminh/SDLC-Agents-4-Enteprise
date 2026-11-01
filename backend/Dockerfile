@@ -35,6 +35,11 @@ FROM node:22-alpine AS production
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
 
+# SEC-04 supply-chain hardening: the stock node:22-alpine bundles an npm/yarn
+# with known HIGH CVEs (2026-11). Runtime never uses yarn — strip it; patch
+# global npm to current so the image's npm tree is clean for the Trivy gate.
+RUN npm install -g npm@latest && rm -rf /opt/yarn*
+
 COPY --from=build /usr/src/app/package*.json ./
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist ./dist
