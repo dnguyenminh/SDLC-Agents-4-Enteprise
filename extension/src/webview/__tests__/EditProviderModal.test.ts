@@ -3,6 +3,8 @@
  * STC: UT-21..UT-30 — EditProviderModal form, validation, actions.
  */
 
+// @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { validateForm } from "../edit-provider-validation.ts";
 import type { EditProviderFormData } from "../edit-provider-modal.ts";

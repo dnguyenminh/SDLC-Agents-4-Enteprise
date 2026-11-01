@@ -18,6 +18,7 @@ import { EmbeddingService } from '../../../engine/parsers/embedding/EmbeddingSer
 import type { MemoryToolDispatcher } from '../dispatchers/index.js';
 import type { TaskWorker } from '../task-queue/TaskWorker.js';
 import { loadPersistedLLMConfig } from '../../../admin/db/config.js';
+import { bus, Events } from '../../../shared/EventBus.js';
 
 /** Probe/health-check timeout for the LLM server (ms). */
 const LLM_PROBE_TIMEOUT_MS = 5000;
@@ -168,6 +169,10 @@ export function initLLMInBackground(
       } catch (err) {
         logger.warn({ err }, '[LLMInitializer] CodeEnrichmentHandler init failed (non-fatal)');
       }
+
+      // SA4E-387: announce availability so deferred consumers (e.g. the
+      // EnrichmentModule) can complete their lazy wiring without a restart.
+      bus.emit<{ llmService: LLMService }>(Events.LLM_SERVICE_READY, { llmService });
 
       try {
         const embSvc = EmbeddingService.getInstance();

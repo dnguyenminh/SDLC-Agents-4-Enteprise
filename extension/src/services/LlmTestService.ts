@@ -113,12 +113,12 @@ export class LlmTestService {
 
       const testedAt = new Date().toISOString();
       if (available) {
-        return { success: true, message: `Connected to ${provider} successfully.`, status: "success", testedAt };
+        return { success: true, message: `Connected to ${provider} successfully.`, status: "connected", testedAt };
       }
-      return { success: false, error: "LLM provider is not reachable. Check your base URL.", status: "error", testedAt };
+      return { success: false, error: "LLM provider is not reachable. Check your base URL.", status: "failed", testedAt };
     } catch (err: any) {
       const testedAt = new Date().toISOString();
-      return { success: false, error: err.message, status: "error", testedAt };
+      return { success: false, error: err.message, status: "failed", testedAt };
     }
   }
 }

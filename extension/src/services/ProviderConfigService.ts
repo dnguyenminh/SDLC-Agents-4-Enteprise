@@ -9,6 +9,17 @@ import { SECRET_KEYS, PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_DEFAULTS, PROVID
 import { getBackendUrl } from "../config/backend-url";
 import { getSetting } from "../config/settings-migration";
 import { ensureMigrated, getWsHash, secretKey, readScopedSecret, type SecretBase } from "./WorkspaceScopeResolver";
+import {
+  type LlmProfile,
+  type LlmProviderId,
+  type LlmTestStatus,
+  type ProfileOpResult,
+  type ProfileTableRow,
+  type ModelPickerGroup,
+  type ModelPickerItem,
+  isValidProfileId,
+  isValidProvider,
+} from "../shared/types/llm-profile.js";
 
 /** Config keys isolated per workspace (SA4E-323) — never via generic updateConfig. */
 const WORKSPACE_SCOPED_KEYS = ["pega.endpoint", "pega.username", "jira.connectionType"];
@@ -27,14 +38,26 @@ export class ProviderConfigService {
     pegaEndpoint: string; pegaUsername: string; hasPegaPassword: boolean;
     atlassianBaseUrl: string; atlassianEmail: string; hasAtlassianToken: boolean;
     atlassianConnectionType: string;
+    profiles: ProfileTableRow[]; activeProfileId?: string;
   }> {
     await ensureMigrated(this.secrets);
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const provider = getSetting<string>("llm.provider", "llm.provider", "anthropic");
-    const model = getSetting<string>("llm.model", "llm.model", "");
+    let provider = getSetting<string>("llm.provider", "llm.provider", "anthropic");
+    let model = getSetting<string>("llm.model", "llm.model", "");
     const ollamaUrl = getSetting<string>("llm.ollama.baseUrl", "llm.ollama.baseUrl", "http://localhost:11434");
 
-    const baseUrl = this.getBaseUrlForProvider(provider);
+    let baseUrl = this.getBaseUrlForProvider(provider);
+    // Multi-profile mode: the active profile drives provider/model/baseUrl (SA4E-389).
+    const rows = await this.readRows();
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
+    const activeRaw = rows.find((p) => p.id === config.get<string>("llm.activeProfileId"));
+    if (activeRaw) {
+      provider = activeRaw.provider;
+      model = activeRaw.model;
+      baseUrl = activeRaw.useDefaultUrl
+        ? this.getBaseUrlForProvider(activeRaw.provider)
+        : (activeRaw.baseUrl ?? "");
+    }
+
     const backendUrl = getBackendUrl();
     const allowInsecureRemote = config.get<boolean>("backend.allowInsecureRemote", false);
     const mcpServerPort = getSetting<number>("mcp.serverPort", "mcp.serverPort", 9181);
@@ -59,6 +82,8 @@ export class ProviderConfigService {
       pegaEndpoint, pegaUsername, hasPegaPassword: !!pegaPassword,
       atlassianBaseUrl, atlassianEmail, hasAtlassianToken: !!atlassianToken,
       atlassianConnectionType,
+      profiles: rows.map((p) => this.toTableRow(p)),
+      activeProfileId: activeRaw?.id,
     };
   }
 
@@ -96,7 +121,7 @@ export class ProviderConfigService {
    * Build the provider-aware model list.
    */
   async getModels(provider: string, currentModel: string): Promise<{
-    models: any[]; selected: string; defaultModel: string;
+    models: { id: string; name: string; isFree?: boolean }[]; selected: string; defaultModel: string;
   }> {
     let models = getStaticModels(provider);
     const gatewayBaseUrl = this.getGatewayBaseUrl(provider);
@@ -180,25 +205,47 @@ export class ProviderConfigService {
     return configuredUrl || PROVIDER_BASE_URL_DEFAULTS[provider] || "";
   }
 
+  /** Map an LlmProfile to its webview row shape (profileId-keyed). */
+  private toTableRow(p: LlmProfile): ProfileTableRow {
+    return {
+      profileId: p.id,
+      label: p.label,
+      provider: p.provider,
+      model: p.model,
+      useDefaultUrl: p.useDefaultUrl,
+      lastTestStatus: p.lastTestStatus,
+      lastTestedAt: p.lastTestedAt,
+    };
+  }
+
+  /** Secret key that stores a profile's API key: `sdlcAgents.<profileId>ApiKey`. */
+  private profileApiKeySecretKey(profileId: string): string {
+    return `sdlcAgents.${profileId}ApiKey`;
+  }
+
+  /** Raw profiles list from configuration. */
+  private async readRows(): Promise<LlmProfile[]> {
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
+    return config.get<LlmProfile[]>("llm.profiles", []);
+  }
+
   /**
-   * Get all profile rows from the global config.
-   * Returns array of profiles with profileId, label, provider, model, etc.
+   * Get all profile rows (webview row shape) from the global config.
    */
-  async getProfileRows(): Promise<any[]> {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    return config.get<any[]>("llm.profiles", []);
+  async getProfileRows(): Promise<ProfileTableRow[]> {
+    return (await this.readRows()).map((p) => this.toTableRow(p));
   }
 
-  /** Get the active profile row. */
-  async getActiveProfileRow(): Promise<any | null> {
+  /** Get the active profile row, or null when none is active. */
+  async getActiveProfileRow(): Promise<ProfileTableRow | null> {
     const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const activeProfileId = config.get<string>("llm.activeProfileId");
-    if (!activeProfileId) return null;
-    const profiles = await this.getProfileRows();
-    return profiles.find((p: any) => p.id === activeProfileId) || null;
+    const activeId = config.get<string>("llm.activeProfileId");
+    if (!activeId) { return null; }
+    const active = (await this.readRows()).find((p) => p.id === activeId);
+    return active ? this.toTableRow(active) : null;
   }
 
-  /** Add a new profile. */
+  /** Add a new profile; the first profile automatically becomes active. */
   async addProfile(payload: {
     id: string;
     label: string;
@@ -207,16 +254,13 @@ export class ProviderConfigService {
     model: string;
     useDefaultUrl: boolean;
     apiKey?: string;
-  }): Promise<{ success: boolean; profiles?: any[]; activeProfileId?: string; error?: string }> {
+  }): Promise<ProfileOpResult> {
     try {
-      const config = vscode.workspace.getConfiguration("sdlcAgents");
-      const profiles = await this.getProfileRows();
-      const validProviders = ["anthropic", "openai", "lmstudio", "openrouter", "ollama", "onnx"];
-
-      if (!/^[a-z0-9-]+$/.test(payload.id)) {
+      const profiles = await this.readRows();
+      if (!isValidProfileId(payload.id)) {
         return { success: false, error: "Profile ID must be a valid slug [a-z0-9-]+" };
       }
-      if (profiles.some((p: any) => p.id === payload.id)) {
+      if (profiles.some((p) => p.id === payload.id)) {
         return { success: false, error: `Profile ID '${payload.id}' already exists` };
       }
       if (!payload.label?.trim()) {
@@ -225,42 +269,38 @@ export class ProviderConfigService {
       if (!payload.model?.trim()) {
         return { success: false, error: "Model is required" };
       }
-      if (!["anthropic", "openai", "lmstudio", "openrouter", "ollama", "onnx"].includes(payload.provider)) {
+      if (!isValidProvider(payload.provider)) {
         return { success: false, error: "Unknown provider" };
       }
       if (!payload.useDefaultUrl && payload.baseUrl) {
         try { new URL(payload.baseUrl); }
         catch { return { success: false, error: "Base URL must be a valid URL" }; }
       }
+      if (payload.apiKey?.trim()) {
+        await this.secrets.store(this.profileApiKeySecretKey(payload.id), payload.apiKey.trim());
+      }
 
-      const newProfile = {
+      const newProfile: LlmProfile = {
         id: payload.id,
         label: payload.label.trim(),
-        provider: payload.provider,
+        provider: payload.provider as LlmProviderId,
         baseUrl: payload.useDefaultUrl ? undefined : (payload.baseUrl?.trim() || undefined),
         model: payload.model.trim(),
         useDefaultUrl: payload.useDefaultUrl,
-        lastTestStatus: "untested" as const,
-        lastTestedAt: undefined,
+        lastTestStatus: "untested",
       };
+      const updated = [...profiles, newProfile];
+      const config = vscode.workspace.getConfiguration("sdlcAgents");
+      await config.update("llm.profiles", updated, vscode.ConfigurationTarget.Global);
 
-      // Save API key if provided
-      if (payload.apiKey?.trim()) {
-        const { writeLlmApiKey } = await import("../config/llm-secret-keys.js");
-        await writeLlmApiKey(this.secrets, payload.id, payload.apiKey.trim());
-      }
-
-      profiles.push(newProfile);
-      await config.update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
-
-      // If first profile, make it active
-      if (profiles.length === 1) {
+      let activeProfileId: string | undefined;
+      if (updated.length === 1) {
+        activeProfileId = payload.id;
         await config.update("llm.activeProfileId", payload.id, vscode.ConfigurationTarget.Global);
       }
-
-      return { success: true, profiles: [...profiles, newProfile], activeProfileId: profiles.length === 1 ? payload.id : undefined };
-    } catch (err: any) {
-      return { success: false, error: err.message };
+      return { success: true, profiles: updated.map((p) => this.toTableRow(p)), activeProfileId };
+    } catch (err) {
+      return { success: false, error: (err as Error).message };
     }
   }
 
@@ -272,115 +312,148 @@ export class ProviderConfigService {
     model?: string;
     useDefaultUrl?: boolean;
     apiKey?: string;
-  }): Promise<{ success: boolean; profiles?: any[]; error?: string }> {
+  }): Promise<ProfileOpResult> {
     try {
-      const config = vscode.workspace.getConfiguration("sdlcAgents");
-      const profiles = await this.getProfileRows();
-      const index = profiles.findIndex((p: any) => p.id === profileId);
+      const profiles = await this.readRows();
+      const index = profiles.findIndex((p) => p.id === profileId);
       if (index === -1) {
         return { success: false, error: "Profile not found" };
       }
-
-      const validProviders = ["anthropic", "openai", "lmstudio", "openrouter", "ollama", "onnx"];
-      if (updates.provider && !["anthropic", "openai", "lmstudio", "openrouter", "ollama", "onnx"].includes(updates.provider)) {
+      if (updates.provider !== undefined && !isValidProvider(updates.provider)) {
         return { success: false, error: "Unknown provider" };
       }
-
       if (updates.baseUrl !== undefined && !updates.useDefaultUrl && updates.baseUrl) {
         try { new URL(updates.baseUrl); }
         catch { return { success: false, error: "Base URL must be a valid URL" }; }
       }
 
       const profile = profiles[index];
-      if (updates.label !== undefined) profile.label = updates.label.trim();
-      if (updates.provider !== undefined) profile.provider = updates.provider;
-      if (updates.model !== undefined) profile.model = updates.model.trim();
-      if (updates.useDefaultUrl !== undefined) profile.useDefaultUrl = updates.useDefaultUrl;
-      if (updates.baseUrl !== undefined) profile.baseUrl = updates.useDefaultUrl ? undefined : (updates.baseUrl?.trim() || undefined);
+      if (updates.label !== undefined) { profile.label = updates.label.trim(); }
+      if (updates.provider !== undefined) { profile.provider = updates.provider as LlmProviderId; }
+      if (updates.model !== undefined) { profile.model = updates.model.trim(); }
+      if (updates.useDefaultUrl !== undefined) { profile.useDefaultUrl = updates.useDefaultUrl; }
+      if (updates.baseUrl !== undefined) {
+        profile.baseUrl = updates.useDefaultUrl ? undefined : (updates.baseUrl?.trim() || undefined);
+      }
       if (updates.apiKey !== undefined && updates.apiKey.trim()) {
-        const { writeLlmApiKey } = await import("../config/llm-secret-keys.js");
-        await writeLlmApiKey(this.secrets, profileId, updates.apiKey.trim());
+        await this.secrets.store(this.profileApiKeySecretKey(profileId), updates.apiKey.trim());
       }
 
+      const config = vscode.workspace.getConfiguration("sdlcAgents");
       await config.update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
-      return { success: true, profiles };
-    } catch (err: any) {
-      return { success: false, error: err.message };
+      return { success: true, profiles: profiles.map((p) => this.toTableRow(p)) };
+    } catch (err) {
+      return { success: false, error: (err as Error).message };
     }
   }
 
-  /** Delete a profile by profileId. */
-  async deleteProfile(profileId: string): Promise<{ success: boolean; profiles?: any[]; activeProfileId?: string; error?: string }> {
+  /** Delete a profile, its API key, and fix the active pointer. */
+  async deleteProfile(profileId: string): Promise<ProfileOpResult> {
     try {
-      const config = vscode.workspace.getConfiguration("sdlcAgents");
-      const profiles = await this.getProfileRows();
-      const index = profiles.findIndex((p: any) => p.id === profileId);
-      if (index === -1) {
+      const profiles = await this.readRows();
+      const updated = profiles.filter((p) => p.id !== profileId);
+      if (updated.length === profiles.length) {
         return { success: false, error: "Profile not found" };
       }
+      await this.secrets.delete(this.profileApiKeySecretKey(profileId));
 
-      profiles.splice(index, 1);
-      await config.update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
+      const config = vscode.workspace.getConfiguration("sdlcAgents");
+      await config.update("llm.profiles", updated, vscode.ConfigurationTarget.Global);
 
-      // If deleted profile was active, clear active or set to first
-      const activeProfile = await this.getActiveProfileRow();
-      if (activeProfile?.id === profileId) {
-        if (profiles.length > 0) {
-          await config.update("llm.activeProfileId", profiles[0].id, vscode.ConfigurationTarget.Global);
-          return { success: true, profiles, activeProfileId: profiles[0].id };
-        } else {
-          await config.update("llm.activeProfileId", undefined, vscode.ConfigurationTarget.Global);
-          return { success: true, profiles, activeProfileId: undefined };
-        }
+      let activeProfileId: string | undefined;
+      if (config.get<string>("llm.activeProfileId") === profileId) {
+        activeProfileId = updated.length > 0 ? updated[0].id : undefined;
+        await config.update("llm.activeProfileId", activeProfileId, vscode.ConfigurationTarget.Global);
       }
-
-      return { success: true, profiles };
-    } catch (err: any) {
-      return { success: false, error: err.message };
+      return { success: true, profiles: updated.map((p) => this.toTableRow(p)), activeProfileId };
+    } catch (err) {
+      return { success: false, error: (err as Error).message };
     }
   }
 
   /** Set the active profile by profileId. */
-  async setActiveProfile(profileId: string): Promise<{ success: boolean; error?: string }> {
+  async setActiveProfile(profileId: string): Promise<ProfileOpResult> {
     try {
-      const profiles = await this.getProfileRows();
-      if (!profiles.some((p: any) => p.id === profileId)) {
+      const profiles = await this.readRows();
+      if (!profiles.some((p) => p.id === profileId)) {
         return { success: false, error: "Profile not found" };
       }
       const config = vscode.workspace.getConfiguration("sdlcAgents");
       await config.update("llm.activeProfileId", profileId, vscode.ConfigurationTarget.Global);
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message };
+      return { success: true, activeProfileId: profileId };
+    } catch (err) {
+      return { success: false, error: (err as Error).message };
     }
   }
 
-  /** Update profile test status by profileId. */
-  async updateProfileTestStatus(profileId: string, status: string, testedAt: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const profiles = await this.getProfileRows();
-    const index = profiles.findIndex((p: any) => p.id === profileId);
-    if (index >= 0) {
-      profiles[index] = { ...profiles[index], lastTestStatus: status, lastTestedAt: testedAt };
-      await config.update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
-    }
-  }
-
-  /** Get model picker groups (connected profiles only). */
-  async getModelPickerGroups(): Promise<any[]> {
-    const profiles = await this.getProfileRows();
-    // Group by provider, only include tested/connected profiles
-    const groups: Record<string, any[]> = {};
-    for (const profile of profiles) {
-      if (profile.lastTestStatus === "success") {
-        if (!groups[profile.provider]) groups[profile.provider] = [];
-        groups[profile.provider].push({
-          profileId: profile.id,
-          label: profile.label,
-          model: profile.model,
-        });
+  /** Persist a profile's last connection-test outcome (testedAt: epoch ms or ISO). */
+  async updateProfileTestStatus(
+    profileId: string,
+    status: LlmTestStatus | string,
+    testedAt?: number | string,
+  ): Promise<ProfileOpResult> {
+    try {
+      const profiles = await this.readRows();
+      const index = profiles.findIndex((p) => p.id === profileId);
+      if (index === -1) {
+        return { success: false, error: "Profile not found" };
       }
+      const at = typeof testedAt === "string" ? Date.parse(testedAt) : (testedAt ?? Date.now());
+      profiles[index] = {
+        ...profiles[index],
+        lastTestStatus: status as LlmTestStatus,
+        lastTestedAt: Number.isNaN(at) ? Date.now() : at,
+      };
+      const config = vscode.workspace.getConfiguration("sdlcAgents");
+      await config.update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
+      return { success: true, profiles: profiles.map((p) => this.toTableRow(p)) };
+    } catch (err) {
+      return { success: false, error: (err as Error).message };
     }
-    return Object.entries(groups).map(([provider, profiles]) => ({ provider, profiles }));
+  }
+
+  /** Read the API key stored for a profile. */
+  async readProfileApiKey(profileId: string): Promise<string | undefined> {
+    try {
+      return await this.secrets.get(this.profileApiKeySecretKey(profileId));
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Get models for the active profile (or the flat-config fallback).
+   */
+  async getModelsForActiveProfile(): Promise<{
+    provider: string; selected: string; models: { id: string; name: string; isFree?: boolean }[];
+  }> {
+    const active = await this.getActiveProfileRow();
+    if (!active) {
+      const provider = getSetting<string>("llm.provider", "llm.provider", "anthropic");
+      const fallback = getStaticModels(provider);
+      const selected = getSetting<string>("llm.model", "llm.model", "") || (fallback[0]?.id ?? "");
+      return { provider, selected, models: fallback };
+    }
+    const { models, selected } = await this.getModels(active.provider, active.model);
+    return { provider: active.provider, selected, models };
+  }
+
+  /** Get model picker groups (connected profiles only, one item per profile). */
+  async getModelPickerGroups(): Promise<ModelPickerGroup[]> {
+    const rows = await this.getProfileRows();
+    const byProvider = new Map<LlmProviderId, ModelPickerItem[]>();
+    for (const row of rows) {
+      if (row.lastTestStatus !== "connected") { continue; }
+      const items = byProvider.get(row.provider) ?? [];
+      items.push({
+        provider: row.provider,
+        modelName: row.model,
+        isFree: false,
+        profileId: row.profileId,
+        modelId: row.model,
+      });
+      byProvider.set(row.provider, items);
+    }
+    return [...byProvider.entries()].map(([provider, items]) => ({ provider, items }));
   }
 }

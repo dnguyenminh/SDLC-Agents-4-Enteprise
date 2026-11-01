@@ -3,6 +3,8 @@
  * STC: UT-11..UT-20 — ModelPickerPopup rendering, search, recent models, keyboard.
  */
 
+// @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { filterModels, createSearchState, updateSearchState } from "../model-picker-search.ts";
 import { createRecentModelsManager } from "../model-picker-recent.ts";

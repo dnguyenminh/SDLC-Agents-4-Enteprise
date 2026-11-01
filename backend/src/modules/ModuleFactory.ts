@@ -63,12 +63,13 @@ export class ModuleFactory {
         // Get DatabaseAdapter from MemoryModule
         const engine = memoryModule.getEngine?.();
         const adapter = engine?.getAdapter?.();
-        
-        // Get LLMService from TaskWorker
+
+        // Get LLMService from TaskWorker (may be undefined — no LLM server yet;
+        // EnrichmentModule completes wiring later via LLM_SERVICE_READY — SA4E-387)
         const taskWorker = memoryModule.taskWorker;
         const llmService = taskWorker?.getLlmService?.();
 
-        if (adapter && llmService) {
+        if (adapter) {
           await enrichmentModule.initializeWithDependencies(adapter, llmService, this.registry);
           this.logger.info('EnrichmentModule cross-module dependencies initialized (SA4E-387)');
         } else {

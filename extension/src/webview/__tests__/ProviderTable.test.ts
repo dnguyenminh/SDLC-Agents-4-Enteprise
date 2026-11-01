@@ -3,6 +3,8 @@
  * STC: UT-01..UT-10 — ProviderTable rendering and event binding.
  */
 
+// @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderRow, renderEmptyRow, getProviderIcon, escapeHtml } from "../provider-table-row-renderer.ts";
 import { bindTableEvents } from "../provider-table-events.ts";
