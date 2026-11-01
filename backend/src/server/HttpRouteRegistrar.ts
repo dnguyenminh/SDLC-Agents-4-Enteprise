@@ -16,6 +16,7 @@ import { createApiRoute } from './routes/api.js';
 import { createProjectTypeRoutes } from './routes/project-type-routes.js';
 import { createEnrichmentStatusRoutes } from './routes/enrichment-status-routes.js';
 import { createAdminRoute } from './routes/admin.js';
+import { createEnrichmentRoutes } from './routes/enrichment.js';
 import { createEntraAuthRoutes } from './routes/auth/entra.js';
 import { createUnifiedAuthRoutes } from './routes/auth/unified.js';
 import { createSsoDynamicRoutes } from './routes/auth/sso-dynamic.js';
@@ -90,10 +91,14 @@ function registerMiddleware(app: Hono, logger: Logger): void {
   // Require login session for all Pega APIs except login itself.
   // Dev-friendly: use jwtAuth to allow anonymous when CODE_INTEL_REQUIRE_AUTH is false
   app.use('/api/v1/pega/*', jwtAuth);
-  // Enforce login session for all /api/v1/* endpoints except login itself
+  // Enforce login session for all /api/v1/* endpoints except login itself and enrichment (public for testing)
   app.use('/api/v1/*', async (c, next) => {
     const path = c.req.path;
     if (path === '/api/v1/auth/login' || path.startsWith('/api/v1/auth/login/')) {
+      return next();
+    }
+    // Allow public access to enrichment endpoints for SA4E-387 UAT
+    if (path.startsWith('/api/v1/enrich')) {
       return next();
     }
     return jwtAuthStrict(c, next);
@@ -122,6 +127,7 @@ function mountCoreRoutes(app: Hono, options: HttpServerOptions, toolRouter: Tool
 function mountApiRoutes(app: Hono, options: HttpServerOptions): void {
   // SA4E-217: Rate limit config API
   app.route('/api/v1', createRateLimitConfigRoutes(options.logger));
+  app.route('/api/v1', createEnrichmentRoutes(options.logger, options.registry));
 
   app.route('/api/v1', createKbApiRoutes(options.registry, options.logger));
   app.route('/api/v1', createPegaApiRoutes(options.registry, options.logger));

@@ -88,6 +88,9 @@ async function main() {
     'Modules initialized',
   );
 
+  // --- Cross-module dependencies (SA4E-387: EnrichmentModule wiring) ---
+  await factory.initializeCrossModuleDependencies();
+
   // --- HTTP Server ---
   // Ensure indexTempDir exists for source file writes
   const indexTempDir = config.indexTempDir;

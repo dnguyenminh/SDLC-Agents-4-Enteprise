@@ -1,0 +1,99 @@
+<mxfile host="65bd71144e">
+    <diagram name="Business Flow" id="SA4E-387-Business-Flow">
+        <mxGraphModel dx="1104" dy="1046" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="lane-client" parent="1" style="swimlane;html=1;startSize=30;fillColor=#E3F2FD;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=12;fontStyle=1;strokeWidth=2;" value="Client" vertex="1">
+                    <mxGeometry height="1000" width="250" x="40" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane-backend" parent="1" style="swimlane;html=1;startSize=30;fillColor=#F5F5F5;strokeColor=#757575;fontColor=#212121;fontSize=12;fontStyle=1;strokeWidth=2;" value="Backend Services" vertex="1">
+                    <mxGeometry height="1000" width="500" x="310" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="s12" parent="lane-backend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#EF5350;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="12. Model Swap Runtime" vertex="1">
+                    <mxGeometry height="70" width="200" x="270" y="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane-external" parent="1" style="swimlane;html=1;startSize=30;fillColor=#FFF3E0;strokeColor=#F57C00;fontColor=#E65100;fontSize=12;fontStyle=1;strokeWidth=2;" value="External Systems" vertex="1">
+                    <mxGeometry height="1000" width="250" x="830" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="s1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=11;fontStyle=1;strokeWidth=2;" value="1. Submit Enrich Request" vertex="1">
+                    <mxGeometry height="70" width="220" x="50" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="s2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=2;" value="2. Validate Request" vertex="1">
+                    <mxGeometry height="70" width="220" x="330" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=2;" value="3. Resolve Active Model" vertex="1">
+                    <mxGeometry height="70" width="220" x="330" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="s4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=2;" value="4. Calculate Dynamic Budget" vertex="1">
+                    <mxGeometry height="70" width="220" x="330" y="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="s5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#8E24AA;fontColor=#4A148C;fontSize=11;fontStyle=1;strokeWidth=2;" value="5. Discover Context Window" vertex="1">
+                    <mxGeometry height="70" width="220" x="330" y="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="s6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECEFF1;strokeColor=#546E7A;fontColor=#263238;fontSize=11;fontStyle=1;strokeWidth=2;" value="6. Build Prompt with Budget" vertex="1">
+                    <mxGeometry height="70" width="220" x="330" y="480" as="geometry"/>
+                </mxCell>
+                <mxCell id="s7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="7. Split into Chunks" vertex="1">
+                    <mxGeometry height="70" width="220" x="330" y="580" as="geometry"/>
+                </mxCell>
+                <mxCell id="s8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="8. Enrich Each Chunk" vertex="1">
+                    <mxGeometry height="70" width="220" x="330" y="680" as="geometry"/>
+                </mxCell>
+                <mxCell id="s9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#F57C00;fontColor=#E65100;fontSize=11;fontStyle=1;strokeWidth=2;" value="9. Call LLM Provider" vertex="1">
+                    <mxGeometry height="70" width="220" x="850" y="580" as="geometry"/>
+                </mxCell>
+                <mxCell id="s10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFEBE9;strokeColor=#6D4C41;fontColor=#3E2723;fontSize=11;fontStyle=1;strokeWidth=2;" value="10. Map-Reduce Aggregate" vertex="1">
+                    <mxGeometry height="70" width="220" x="330" y="780" as="geometry"/>
+                </mxCell>
+                <mxCell id="s11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=11;fontStyle=1;strokeWidth=2;" value="11. Return Enriched Content" vertex="1">
+                    <mxGeometry height="70" width="220" x="50" y="780" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1" edge="1" parent="1" source="s1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#1976D2;strokeWidth=2;" target="s2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2" edge="1" parent="1" source="s2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#3F51B5;strokeWidth=2;" target="s3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3" edge="1" parent="1" source="s3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#3F51B5;strokeWidth=2;" target="s4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4" edge="1" parent="1" source="s4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#FBC02D;strokeWidth=2;" target="s5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c5" edge="1" parent="1" source="s5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#8E24AA;strokeWidth=2;" target="s6">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c6" edge="1" parent="1" source="s6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#546E7A;strokeWidth=2;" target="s7">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c7" edge="1" parent="1" source="s7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#E53935;strokeWidth=2;" target="s8">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c8" edge="1" parent="1" source="s8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#F57C00;strokeWidth=2;" target="s9">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c9" edge="1" parent="1" source="s8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#6D4C41;strokeWidth=2;" target="s10">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c10" edge="1" parent="1" source="s10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#43A047;strokeWidth=2;" target="s11">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="c11" edge="1" parent="1" source="s12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#EF5350;strokeWidth=2;dashed=1;" target="s3">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="680" y="215"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="c12" edge="1" parent="1" source="s12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#EF5350;strokeWidth=2;dashed=1;" target="s5">
+                    <mxGeometry relative="1" x="0.2203" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="680" y="415"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

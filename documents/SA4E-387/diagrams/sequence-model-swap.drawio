@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-10-31T13:40:00" agent="Mozilla/5.0" version="24.2.5" type="device">
+  <diagram name="Sequence Diagram - Model Swap" id="SA4E-387-Sequence-Model-Swap">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="860" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Headers -->
+        <mxCell id="h1" value="Client / Admin" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=11;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="50" y="55" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="h2" value="Hono Route&#10;POST /model/swap" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=10;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="270" y="55" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="h3" value="LLMService&#10;setActiveModel / resolveActive" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=10;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="490" y="55" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="h4" value="ContextWindowDiscovery&#10;invalidateWindowCache()" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#8E24AA;fontColor=#4A148C;fontSize=10;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="710" y="55" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="h5" value="OllamaAdapter / OpenAIAdapter&#10;(rebuilt on swap)" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=10;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="930" y="55" width="180" height="50" as="geometry" />
+        </mxCell>
+        <!-- Lifeline bars -->
+        <mxCell id="b1" parent="1" vertex="1" style="rounded=0;strokeColor=#1976D2;fillColor=#1976D2;strokeWidth=1;">
+          <mxGeometry x="138" y="115" width="4" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="b2" parent="1" vertex="1" style="rounded=0;strokeColor=#1976D2;fillColor=#BBDEFB;strokeWidth=1;">
+          <mxGeometry x="358" y="115" width="4" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="b3" parent="1" vertex="1" style="rounded=0;strokeColor=#FBC02D;fillColor=#FFF59D;strokeWidth=1;">
+          <mxGeometry x="578" y="115" width="4" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="b4" parent="1" vertex="1" style="rounded=0;strokeColor=#8E24AA;fillColor=#CE93D8;strokeWidth=1;">
+          <mxGeometry x="798" y="115" width="4" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="b5" parent="1" vertex="1" style="rounded=0;strokeColor=#43A047;fillColor=#A5D6A7;strokeWidth=1;">
+          <mxGeometry x="1018" y="115" width="4" height="560" as="geometry" />
+        </mxCell>
+        <!-- Messages: y = 115 + frac*560 -->
+        <mxCell id="m1" value="1. POST /model/swap&#10;{model, ticketId}" parent="1" edge="1" source="b1" target="b2" style="html=1;endArrow=block;endFill=1;endSize=9;rounded=0;strokeColor=#1976D2;strokeWidth=2;fontSize=9;fontStyle=1;exitX=1;exitY=0.09;entryX=0;entryY=0.09;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m2" value="2. Forward swap request" parent="1" edge="1" source="b2" target="b3" style="html=1;endArrow=block;endFill=1;endSize=9;rounded=0;strokeColor=#3F51B5;strokeWidth=2;fontSize=9;fontStyle=1;exitX=1;exitY=0.16;entryX=0;entryY=0.16;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3" value="3. setActiveModel({model})&#10;&#8594; update activeModel in LLMService registry" parent="1" edge="1" source="b2" target="b3" style="html=1;endArrow=block;endFill=1;endSize=9;rounded=0;strokeColor=#FBC02D;strokeWidth=2;fontSize=9;fontStyle=1;exitX=1;exitY=0.24;entryX=0;entryY=0.24;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m4" value="4. rebuild adapter&#10;(provider / model / baseUrl changed)" parent="1" edge="1" source="b3" target="b5" style="html=1;endArrow=block;endFill=1;endSize=9;rounded=0;strokeColor=#43A047;strokeWidth=2;fontSize=9;fontStyle=1;exitX=1;exitY=0.33;entryX=0;entryY=0.33;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5" value="5. invalidateWindowCache()" parent="1" edge="1" source="b3" target="b4" style="html=1;endArrow=block;endFill=1;endSize=9;rounded=0;strokeColor=#8E24AA;strokeWidth=2;fontSize=9;fontStyle=1;exitX=1;exitY=0.42;entryX=0;entryY=0.42;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m6" value="6. Adapter ready (activeModel = {model})" parent="1" edge="1" source="b5" target="b3" style="html=1;endArrow=open;endFill=1;endSize=9;rounded=0;strokeColor=#43A047;strokeWidth=2;dashed=1;fontSize=9;fontStyle=1;exitX=0;exitY=0.51;entryX=1;entryY=0.51;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m7" value="7. SwapResult{success, activeModel}" parent="1" edge="1" source="b3" target="b2" style="html=1;endArrow=open;endFill=1;endSize=9;rounded=0;strokeColor=#3F51B5;strokeWidth=2;dashed=1;fontSize=9;fontStyle=1;exitX=0;exitY=0.6;entryX=1;entryY=0.6;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m8" value="8. Swap confirmation - 200 OK" parent="1" edge="1" source="b2" target="b1" style="html=1;endArrow=open;endFill=1;endSize=9;rounded=0;strokeColor=#1976D2;strokeWidth=2;dashed=1;fontSize=9;fontStyle=1;exitX=0;exitY=0.69;entryX=1;entryY=0.69;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m9" value="9. Subsequent enrich calls use the new model config&#10;(no process restart needed)" parent="1" edge="1" source="b1" target="b3" style="html=1;endArrow=block;endFill=1;endSize=9;rounded=0;strokeColor=#F57C00;strokeWidth=2;fontSize=9;fontStyle=1;exitX=1;exitY=0.78;entryX=0;entryY=0.78;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

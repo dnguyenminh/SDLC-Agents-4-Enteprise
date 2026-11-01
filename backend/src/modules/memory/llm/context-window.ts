@@ -13,6 +13,8 @@ export interface WindowInfo {
 
 const DISCOVERY_TIMEOUT_MS = 5000;
 const FALLBACK_WINDOW = 8192;
+// TTL cache: 5 minutes default
+const WINDOW_CACHE_TTL_MS = 5 * 60 * 1000;
 const cache = new Map<string, WindowInfo>();
 
 function parsePositiveInt(s: string | undefined): number | null {
@@ -35,11 +37,41 @@ export class ContextWindowDiscovery {
     this.reservedOutputTokens = reservedOutputTokens;
   }
 
+  // Public setters for per-call configuration (SA4E-387)
+  setProvider(provider: LLMProviderId): void { this.provider = provider; }
+  setModel(model: string): void { this.model = model; }
+  setBaseUrl(baseUrl: string): void { this.baseUrl = baseUrl; }
+  setReservedOutputTokens(tokens: number): void { this.reservedOutputTokens = tokens; }
+
+  // Public getters
+  getProvider(): LLMProviderId { return this.provider; }
+  getModel(): string { return this.model; }
+  getBaseUrl(): string { return this.baseUrl; }
+  getReservedOutputTokens(): number { return this.reservedOutputTokens; }
+
   private modelKey(): string {
     return `${this.provider}:${this.model}:${this.baseUrl}`;
   }
 
   async getContextWindow(): Promise<WindowInfo> {
+    // 1. Per-model env override: LLM_CONTEXT_WINDOW__<model>
+    const envModelKey = `LLM_CONTEXT_WINDOW__${this.model}`;
+    const envModelVal = process.env[envModelKey];
+    const envModelParsed = parsePositiveInt(envModelVal);
+    if (envModelParsed !== null) {
+      const info: WindowInfo = {
+        contextWindow: envModelParsed,
+        windowSource: 'env',
+        provider: this.provider,
+        reservedOutputTokens: this.reservedOutputTokens,
+        modelKey: this.modelKey(),
+        cachedAt: new Date().toISOString(),
+      };
+      cache.set(this.modelKey(), info);
+      return info;
+    }
+
+    // 2. Fallback to global LLM_CONTEXT_WINDOW (deprecated but supported)
     const envVal = process.env.LLM_CONTEXT_WINDOW;
     const envParsed = parsePositiveInt(envVal);
     if (envParsed !== null) {
@@ -59,13 +91,18 @@ export class ContextWindowDiscovery {
       console.warn('ERR-02 LLM_CONTEXT_WINDOW invalid — ignoring override');
     }
 
+    // 3. Check TTL cache
     const key = this.modelKey();
     const cached = cache.get(key);
     if (cached) {
-      return cached;
+      const cacheAge = Date.now() - new Date(cached.cachedAt).getTime();
+      if (cacheAge < WINDOW_CACHE_TTL_MS) {
+        return cached;
+      }
+      // Cache expired, will re-discover
     }
 
-    // Try provider metadata discovery
+    // 4. Try provider metadata discovery
     try {
       const info = await this.discoverFromProvider();
       if (info) {
@@ -76,6 +113,7 @@ export class ContextWindowDiscovery {
       console.warn('ERR-01 context window fallback to 8192');
     }
 
+    // 5. Fallback
     const fallback: WindowInfo = {
       contextWindow: FALLBACK_WINDOW,
       windowSource: 'fallback',
@@ -167,7 +205,21 @@ export class ContextWindowDiscovery {
     return null;
   }
 
-  invalidateWindowCache(): void {
-    cache.clear();
+  /** Invalidate cache for this model (or all if called without args) */
+  invalidateWindowCache(modelKey?: string): void {
+    if (modelKey) {
+      cache.delete(modelKey);
+    } else {
+      cache.clear();
+    }
+  }
+
+  /** Check if cache has valid entry for this model */
+  hasValidCache(): boolean {
+    const key = this.modelKey();
+    const cached = cache.get(key);
+    if (!cached) return false;
+    const cacheAge = Date.now() - new Date(cached.cachedAt).getTime();
+    return cacheAge < WINDOW_CACHE_TTL_MS;
   }
 }

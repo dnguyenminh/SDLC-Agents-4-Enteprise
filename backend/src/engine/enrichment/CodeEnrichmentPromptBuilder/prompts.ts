@@ -1,43 +1,44 @@
 /**
  * Per-strategy LLM prompt templates for code enrichment.
  * Extracted from CodeEnrichmentPromptBuilder (BR-18) — same prompt text, no behavior change.
+ * SA4E-387: Accepts bodyBudget parameter (derived from inputBudget) instead of hardcoded MAX_BODY_TOKENS.
  */
 
 import type { LLMMessage } from '../../../modules/memory/llm/types.js';
 import type { SymbolContext } from '../types.js';
 import { VALID_TAG_CATEGORIES } from '../types.js';
-import { MAX_BODY_TOKENS, truncateToTokens } from './token-budget.js';
+import { truncateToTokens } from './token-budget.js';
 
 /** Assemble the CLASS_SUMMARY message pair. */
-export function classMessages(ctx: SymbolContext): LLMMessage[] {
+export function classMessages(ctx: SymbolContext, bodyBudget: number): LLMMessage[] {
   const system = classSystemPrompt();
-  const user = buildClassUserPrompt(ctx);
+  const user = buildClassUserPrompt(ctx, bodyBudget);
   return [{ role: 'system', content: system }, { role: 'user', content: user }];
 }
 
 /** Assemble the FUNCTION_SUMMARY message pair. */
-export function functionMessages(ctx: SymbolContext): LLMMessage[] {
+export function functionMessages(ctx: SymbolContext, bodyBudget: number): LLMMessage[] {
   const system = functionSystemPrompt();
-  const user = buildFunctionUserPrompt(ctx);
+  const user = buildFunctionUserPrompt(ctx, bodyBudget);
   return [{ role: 'system', content: system }, { role: 'user', content: user }];
 }
 
 /** Assemble the TAG_EXTRACTION message pair. */
-export function tagMessages(ctx: SymbolContext): LLMMessage[] {
+export function tagMessages(ctx: SymbolContext, bodyBudget: number): LLMMessage[] {
   const system = tagSystemPrompt();
-  const user = buildTagUserPrompt(ctx);
+  const user = buildTagUserPrompt(ctx, bodyBudget);
   return [{ role: 'system', content: system }, { role: 'user', content: user }];
 }
 
 /** Assemble the PEGA_SUMMARY message pair. */
-export function pegaMessages(ctx: SymbolContext): LLMMessage[] {
+export function pegaMessages(ctx: SymbolContext, bodyBudget: number): LLMMessage[] {
   const system = pegaSystemPrompt();
-  const user = buildPegaUserPrompt(ctx);
+  const user = buildPegaUserPrompt(ctx, bodyBudget);
   return [{ role: 'system', content: system }, { role: 'user', content: user }];
 }
 
 /** Assemble the METADATA_SUMMARY message pair. */
-export function metadataMessages(ctx: SymbolContext): LLMMessage[] {
+export function metadataMessages(ctx: SymbolContext, bodyBudget: number): LLMMessage[] {
   const system = metadataSystemPrompt();
   const user = buildMetadataUserPrompt(ctx);
   return [{ role: 'system', content: system }, { role: 'user', content: user }];
@@ -124,7 +125,7 @@ FORMAT:
 - Use \\n for line breaks; indent nested blocks with 2 spaces. Max 2000 chars.`;
 }
 
-function buildClassUserPrompt(ctx: SymbolContext): string {
+function buildClassUserPrompt(ctx: SymbolContext, bodyBudget: number): string {
   const parts = [`[${ctx.kind}] ${ctx.name}`];
   if (ctx.signature) parts.push(`Signature: ${ctx.signature}`);
   if (ctx.docComment) parts.push(`Documentation: ${ctx.docComment}`);
@@ -133,33 +134,34 @@ function buildClassUserPrompt(ctx: SymbolContext): string {
   }
   // Include class body so the LLM can produce grounded pseudo code (not just from signature).
   if (ctx.bodyText) {
-    const truncated = truncateToTokens(ctx.bodyText, MAX_BODY_TOKENS);
+    const truncated = truncateToTokens(ctx.bodyText, bodyBudget);
     parts.push(`Body:\n${truncated}`);
   }
   return parts.join('\n');
 }
 
-function buildFunctionUserPrompt(ctx: SymbolContext): string {
+function buildFunctionUserPrompt(ctx: SymbolContext, bodyBudget: number): string {
   const parts = [`[${ctx.kind}] ${ctx.name}`];
   if (ctx.signature) parts.push(`Signature: ${ctx.signature}`);
   if (ctx.docComment) parts.push(`Documentation: ${ctx.docComment}`);
   if (ctx.bodyText) {
-    const truncated = truncateToTokens(ctx.bodyText, MAX_BODY_TOKENS);
+    const truncated = truncateToTokens(ctx.bodyText, bodyBudget);
     parts.push(`Body:\n${truncated}`);
   }
   return parts.join('\n');
 }
 
-function buildTagUserPrompt(ctx: SymbolContext): string {
+function buildTagUserPrompt(ctx: SymbolContext, bodyBudget: number): string {
   const parts = [`[${ctx.kind}] ${ctx.name}`];
   if (ctx.signature) parts.push(`Signature: ${ctx.signature}`);
   if (ctx.bodyText) {
-    parts.push(`Body (first 500 chars): ${ctx.bodyText.slice(0, 500)}`);
+    const truncated = truncateToTokens(ctx.bodyText, bodyBudget);
+    parts.push(`Body:\n${truncated}`);
   }
   return parts.join('\n');
 }
 
-function buildPegaUserPrompt(ctx: SymbolContext): string {
+function buildPegaUserPrompt(ctx: SymbolContext, bodyBudget: number): string {
   const parts = [`[${ctx.kind}] ${ctx.name}`];
   if (ctx.pegaClass) parts.push(`Class: ${ctx.pegaClass}`);
   if (ctx.pegaRuleset) parts.push(`RuleSet: ${ctx.pegaRuleset}`);
@@ -169,7 +171,7 @@ function buildPegaUserPrompt(ctx: SymbolContext): string {
   if (ctx.schemaContext) parts.push(ctx.schemaContext);
   // SA4E-106: rule body (steps/params/Java) extracted from rule.json
   if (ctx.bodyText) {
-    const truncated = truncateToTokens(ctx.bodyText, MAX_BODY_TOKENS);
+    const truncated = truncateToTokens(ctx.bodyText, bodyBudget);
     // S5: Wrap rule body in UNTRUSTED delimiters to prevent prompt injection
     parts.push(`Rule Content:\n--- BEGIN UNTRUSTED RULE CONTENT ---\n${truncated}\n--- END UNTRUSTED RULE CONTENT ---`);
   }

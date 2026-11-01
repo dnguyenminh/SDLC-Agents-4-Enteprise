@@ -69,6 +69,7 @@ export class TaskWorker {
   setTagAnalyzer(analyzer: TagAnalyzerService): void { this.tagAnalyzer = analyzer; }
   setEmbeddingService(service: EmbeddingService): void { this.embeddingService = service; }
   setLlmService(service: LlmServiceLike): void { this.llmService = service; }
+  getLlmService(): LlmServiceLike | undefined { return this.llmService; }
 
   /** SA4E-107: Wire CodeEnrichmentHandler — delegates CODE_ENRICHMENT tasks to proper handler. */
   setCodeEnrichmentHandler(handler: CodeEnrichmentHandlerLike): void {

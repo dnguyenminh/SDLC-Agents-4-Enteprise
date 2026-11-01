@@ -1,6 +1,7 @@
 /**
  * Ollama LLM adapter — local inference via REST API.
  * Handles qwen3 "thinking" mode: appends /no_think and falls back to thinking field.
+ * SA4E-387: Supports num_ctx from config.contextWindow for runtime model swap.
  */
 
 import type { LLMAdapter, LLMConfig, LLMMessage, LLMResponse } from './types.js';
@@ -22,14 +23,21 @@ export class OllamaAdapter implements LLMAdapter {
       processedMessages.unshift({ role: 'system', content: 'Be concise. /no_think' });
     }
 
+    const options: Record<string, unknown> = {
+      temperature: config.temperature ?? 0.3,
+      num_predict: config.maxTokens ?? 200,
+    };
+
+    // SA4E-387: Set num_ctx from config.contextWindow if provided
+    if (config.contextWindow && config.contextWindow > 0) {
+      options.num_ctx = config.contextWindow;
+    }
+
     const body = {
       model: config.model,
       messages: processedMessages,
       stream: false,
-      options: {
-        temperature: config.temperature ?? 0.3,
-        num_predict: config.maxTokens ?? 200,
-      },
+      options,
     };
 
     const res = await fetch(url, {

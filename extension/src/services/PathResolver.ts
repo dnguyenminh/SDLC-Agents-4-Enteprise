@@ -4,14 +4,12 @@
  * Pure string ops — NO I/O, NEVER throws (C-1, C-2).
  */
 import * as path from "path";
-import * as fs from "fs";
-import { execSync } from "child_process";
 import { sanitizeLogText } from "./path-format";
 
 // ── Types (TDD §3.2) ────────────────────────────────────────────────────
 
 /** Resolution origin — in error messages on failure (BR-08). */
-export type PathRootSource = "workspace" | "cwd_fallback" | "branch_worktree";
+export type PathRootSource = "workspace" | "cwd_fallback";
 
 /** Workspace root AT CALL TIME — never cached (UC-01 AF-2). */
 export type WorkspaceRootProvider = () => string | undefined;
@@ -22,9 +20,6 @@ export type PathResolutionCode =
   | "PATH_INVALID"
   | "PATH_NO_WORKSPACE"
   | "PATH_REJECTED_OUTSIDE_WORKSPACE";
-
-/** Worktree type — main or branch (BR-17, FR-18). */
-export type WorktreeType = "main" | "branch";
 
 export interface PathResolutionOk {
   ok: true;
@@ -68,22 +63,11 @@ try {
 }
 
 export function defaultWorkspaceRootProvider(): string | undefined {
-  // Try VS Code workspace folder first
   try {
-    const folders = vscode?.workspace?.workspaceFolders;
-    if (folders && folders.length > 0) {
-      const fsPath = folders[0].uri?.fsPath;
-      if (fsPath && fsPath.trim() !== '') {
-        return fsPath;
-      }
-    }
+    return vscode?.workspace?.workspaceFolders?.[0]?.uri?.fsPath; // per-call, no cache
   } catch {
-    // fall through to cwd fallback
+    return undefined; // UC-05 EF-2
   }
-
-  // No VS Code workspace open — return undefined so the caller falls back
-  // to process.cwd() with rootSource = "cwd_fallback" (BR-06).
-  return undefined;
 }
 /* v8 ignore stop */
 
@@ -98,10 +82,7 @@ export class PathResolverError extends Error {
 // ── Core API ─────────────────────────────────────────────────────────────
 export function resolveWorkspacePath(
   rawPath: unknown,
-  opts?: { 
-    rootProvider?: WorkspaceRootProvider,
-    worktreeType?: WorktreeType
-  },
+  opts?: { rootProvider?: WorkspaceRootProvider },
 ): PathResolutionResult {
   // Step 1 — validate (UC-01 EF-3): fail-loud BEFORE resolving.
   if (typeof rawPath !== "string" || rawPath.trim() === "") {
@@ -143,25 +124,6 @@ export function resolveWorkspacePath(
   } else {
     rootPath = process.cwd(); // BR-06 fallback
     rootSource = "cwd_fallback";
-  }
-  let worktreeType: WorktreeType = "main";
-  if (opts?.worktreeType) {
-    worktreeType = opts.worktreeType;
-  } else if (rootSource === "workspace") {
-    // Only detect worktree type when running inside a VS Code workspace.
-    // When rootSource is "cwd_fallback", there's no VS Code workspace, so
-    // worktree detection should not apply (BR-17, FR-18).
-    worktreeType = detectWorktreeType();
-  }
-
-  // Step 2d — worktree type specific handling
-  if (worktreeType === "branch" && rootSource === "cwd_fallback") {
-    // In branch worktree with cwd_fallback, use the actual worktree root
-    const branchRoot = getBranchWorktreeRoot();
-    if (branchRoot) {
-      rootPath = branchRoot;
-      rootSource = "workspace"; // Treat branch worktree as workspace for containment
-    }
   }
 
   // Step 2b — SEC-02 (BR-06b, AD-16): reject relative on cwd_fallback.
@@ -227,90 +189,3 @@ export {
   formatFileNotFound,
   formatFsError,
 } from "./path-format";
-
-/**
- * Detect if the current working directory is in a branch worktree.
- * Uses `git worktree list` to determine if we're in a linked worktree (BR-17, FR-18).
- * Memoized per cwd — git spawn is I/O; the hot resolve path must stay pure
- * (doc contract "NO I/O" applies after the first detection per directory).
- */
-let cachedWorktree: { cwd: string; type: WorktreeType } | undefined;
-
-export function detectWorktreeType(): WorktreeType {
-  const cwd = process.cwd();
-  if (cachedWorktree && cachedWorktree.cwd === cwd) {
-    return cachedWorktree.type;
-  }
-  const type = detectWorktreeTypeUncached();
-  cachedWorktree = { cwd, type };
-  return type;
-}
-
-function detectWorktreeTypeUncached(): WorktreeType {
-  try {
-    // Check if git worktree is available and if current dir is a linked worktree
-    const result = execSync('git rev-parse --show-toplevel', {
-      cwd: process.cwd(),
-      encoding: 'utf-8',
-      timeout: 5000,
-    }).trim();
-    // Check if there are linked worktrees
-    const linkedWorktrees = execSync('git worktree list --porcelain', {
-      cwd: process.cwd(),
-      encoding: 'utf-8',
-      timeout: 5000,
-    }).trim();
-    if (linkedWorktrees && linkedWorktrees.length > 0) {
-      return "branch";
-    }
-    // Additional check: see if .git/worktrees directory exists
-    const gitDir = path.join(result, '.git', 'worktrees');
-    try {
-      fs.accessSync(gitDir);
-      return "branch";
-    } catch {
-      // .git/worktrees doesn't exist, this is the main worktree
-    }
-  } catch {
-    // If git commands fail, assume main worktree
-  }
-  return "main";
-}
-
-/**
- * Get the branch worktree root path.
- * Returns the path of the current branch worktree root, or undefined if in main worktree (BR-17, FR-18).
- * Pure string ops — NO I/O, NEVER throws (C-1, C-2).
- */
-export function getBranchWorktreeRoot(): string | undefined {
-  try {
-    const result = execSync('git rev-parse --show-toplevel', {
-      cwd: process.cwd(),
-      encoding: 'utf-8',
-      timeout: 5000,
-    }).trim();
-    const linkedWorktrees = execSync('git worktree list --porcelain', {
-      cwd: process.cwd(),
-      encoding: 'utf-8',
-      timeout: 5000,
-    }).trim();
-    // Parse the current worktree entry
-    const lines = linkedWorktrees.split('\n').filter(l => l.length > 0);
-    for (const line of lines) {
-      // Format: <path> <commit-ish>
-      const parts = line.split(' ');
-      if (parts.length >= 2) {
-        const worktreePath = parts[0];
-        // Check if this worktree points to a different commit than the toplevel
-        if (worktreePath !== result) {
-          return worktreePath;
-        }
-      }
-    }
-    // If no specific branch worktree found, return undefined (main worktree)
-    return undefined;
-  } catch {
-    // If git commands fail, return undefined
-  }
-  return undefined;
-}

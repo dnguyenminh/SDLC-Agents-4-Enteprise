@@ -2,6 +2,7 @@
  * SA4E-107: Symbol context loading (extracted from CodeEnrichmentHandler).
  * Reads symbol metadata, body text, child members and existing pseudo code
  * from the database to build the SymbolContext for enrichment prompts.
+ * SA4E-387: loadBodyText reads all chunks by chunk_index (not just chunk 0).
  */
 
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
@@ -43,14 +44,15 @@ export async function loadSymbolContext(
   };
 }
 
-/** Body text lives in body_embeddings (chunk 0) as raw UTF-8. */
+/** Body text lives in body_embeddings (all chunks ordered by chunk_index) as raw UTF-8.
+ *  SA4E-387: Reads ALL chunks (not just chunk_index = 0) to support map-reduce for large symbols. */
 async function loadBodyText(adapter: DatabaseAdapter, symbolId: number): Promise<string | null> {
-  const row = await adapter.getAsync<{ embedding: Buffer }>(
-    'SELECT embedding FROM body_embeddings WHERE symbol_id = ? AND chunk_index = 0',
+  const rows = await adapter.allAsync<{ embedding: Buffer; chunk_index: number }>(
+    'SELECT embedding, chunk_index FROM body_embeddings WHERE symbol_id = ? ORDER BY chunk_index',
     [symbolId],
   );
-  if (!row?.embedding) return null;
-  return Buffer.from(row.embedding).toString('utf-8');
+  if (!rows.length) return null;
+  return rows.map(r => Buffer.from(r.embedding).toString('utf-8')).join('');
 }
 
 /** Immediate child symbols ("kind:name"), capped at 30 to bound prompt size. */

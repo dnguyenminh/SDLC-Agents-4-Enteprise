@@ -1,0 +1,150 @@
+// Sample large code for testing enrichment
+// This file is larger than the context window to test chunking and dynamic budget.
+
+// Function 1
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+console.log(greet('World'));
+
+// Function 2
+function add(a, b) {
+  return a + b;
+}
+
+console.log(add(1, 2));
+
+// Function 3
+function multiply(a, b) {
+  return a * b;
+}
+
+console.log(multiply(3, 4));
+
+// Function 4
+function divide(a, b) {
+  if (b === 0) {
+    throw new Error('Cannot divide by zero');
+  }
+  return a / b;
+}
+
+console.log(divide(10, 2));
+
+// Function 5
+function isEven(num) {
+  return num % 2 === 0;
+}
+
+console.log(isEven(4));
+
+// Function 6
+function factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+console.log(factorial(5));
+
+// Function 7
+function sumArray(arr) {
+  return arr.reduce((acc, val) => acc + val, 0);
+}
+
+console.log(sumArray([1, 2, 3, 4, 5]));
+
+// Function 8
+function filterEven(arr) {
+  return arr.filter((num) => num % 2 === 0);
+}
+
+console.log(filterEven([1, 2, 3, 4, 5]));
+
+// Function 9
+function mapArray(arr, fn) {
+  return arr.map(fn);
+}
+
+console.log(mapArray([1, 2, 3], (x) => x * 2));
+
+// Function 10
+function reduceArray(arr, fn, initialValue) {
+  return arr.reduce(fn, initialValue);
+}
+
+console.log(reduceArray([1, 2, 3], (acc, val) => acc + val, 0));
+
+// Function 11
+function findMax(arr) {
+  return Math.max(...arr);
+}
+
+console.log(findMax([1, 2, 3, 4, 5]));
+
+// Function 12
+function findMin(arr) {
+  return Math.min(...arr);
+}
+
+console.log(findMin([1, 2, 3, 4, 5]));
+
+// Function 13
+function reverseString(str) {
+  return str.split('').reverse().join('');
+}
+
+console.log(reverseString('hello'));
+
+// Function 14
+function countChars(str) {
+  return str.length;
+}
+
+console.log(countChars('hello'));
+
+// Function 15
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+console.log(capitalize('hello'));
+
+// Function 16
+function isPalindrome(str) {
+  return str === reverseString(str);
+}
+
+console.log(isPalindrome('racecar'));
+
+// Function 17
+function flattenArray(arr) {
+  return arr.flat();
+}
+
+console.log(flattenArray([1, [2, 3], 4]));
+
+// Function 18
+function uniqueArray(arr) {
+  return [...new Set(arr)];
+}
+
+console.log(uniqueArray([1, 2, 2, 3, 4, 4]));
+
+// Function 19
+function chunkArray(arr, size) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
+console.log(chunkArray([1, 2, 3, 4, 5, 6], 2));
+
+// Function 20
+function mergeObjects(obj1, obj2) {
+  return { ...obj1, ...obj2 };
+}
+
+console.log(mergeObjects({ a: 1 }, { b: 2 }));

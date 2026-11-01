@@ -11,6 +11,7 @@ export interface LLMConfig {
   apiKey?: string;
   temperature?: number;
   maxTokens?: number;
+  contextWindow?: number; // NEW: input window hint
 }
 
 export interface LLMMessage {

@@ -1,0 +1,15 @@
+// Sample code for testing enrichment
+// This is a small file for testing basic functionality.
+
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+console.log(greet('World'));
+
+// Another function for testing
+function add(a, b) {
+  return a + b;
+}
+
+console.log(add(1, 2));
