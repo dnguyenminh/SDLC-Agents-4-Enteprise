@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.11.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.13.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,25 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.13 (2026-11-02)
+
+**SA4E-387 — Enrichment with Dynamic Context Budget & Runtime Model Swap**
+
+- 🧠 **Runtime model swap** — `LLMService.resolveActive()` / `setActiveModel()`; per-call model override on `complete()`; `POST /api/v1/model/swap` endpoint
+- 📊 **Dynamic context budget** — `BudgetGuard` computes per-call `inputBudget` (context window − reserved output − overhead), replacing the static `PROMPT_TOKEN_CAP`; prompt builder accepts the budget at build time
+- 🔎 **Context-window discovery** — per-provider probing (Ollama `/api/show`, LM Studio `/api/v0/models`, vLLM `/v1/models`) with 5-min TTL cache + invalidation; `LLM_CONTEXT_WINDOW__<model>` env override; Ollama `num_ctx` passthrough
+- 🗺️ **Real map-reduce** — `ReductionPipeline` chunked-reduce for oversized bodies; full body text now read across all chunks (`chunk_index`)
+- 🔌 **Enrichment API** — `POST /api/v1/enrich`, `GET /api/v1/enrich/status`; module registered with lifecycle-ready boot + lazy capability wiring via the new `LLM_SERVICE_READY` event (no more `/health` 503 in headless environments)
+- 🩹 **CI green again** — extension profile API rebuilt to the STC contract (`profileId` rows, `readProfileApiKey`, `getModelsForActiveProfile`); webview tests moved to jsdom; multi-stage Dockerfile restored (build/test/production) with base-image npm/undici supply-chain patch (Trivy gate green); 4 files split under the 200-line gate (`mcp-endpoint.ts`, `window-providers.ts`, `task-worker-delegates.ts`, `llm-config.ts`)
+- 🧪 **Verified** — backend 3369 unit + 180 E2E green; extension compile + full vitest suite green; all 7 CI jobs + Docker/Trivy success
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.13`
+
+### v1.55.12 (2026-11-01)
+
+**SA4E-389/SA4E-390 close-out**
+
+- 📚 **Docs close-out** — STATUS.json CI-green evidence + lesson-learned recorded for the LLM profile management tickets (profile CRUD, test connection, grouped model picker)
 
 ### v1.55.11 (2026-10-29)
 
