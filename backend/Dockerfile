@@ -35,10 +35,14 @@ FROM node:22-alpine AS production
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
 
-# SEC-04 supply-chain hardening: the stock node:22-alpine bundles an npm/yarn
-# with known HIGH CVEs (2026-11). Runtime never uses yarn — strip it; patch
-# global npm to current so the image's npm tree is clean for the Trivy gate.
-RUN npm install -g npm@latest && rm -rf /opt/yarn*
+# SEC-04 supply-chain hardening: the stock node:22-alpine bundles npm/yarn
+# whose trees carry HIGH CVEs (undici 6.29.0 inside npm's make-fetch-happen,
+# 2026-11). Runtime never uses yarn — strip it; patch global npm to current
+# and bump its bundled undici so the image's tooling is clean for the Trivy gate.
+RUN npm install -g npm@latest \
+ && cd /usr/local/lib/node_modules/npm \
+ && npm install --no-save undici@6.29.1 \
+ && rm -rf /opt/yarn*
 
 COPY --from=build /usr/src/app/package*.json ./
 COPY --from=build /usr/src/app/node_modules ./node_modules
