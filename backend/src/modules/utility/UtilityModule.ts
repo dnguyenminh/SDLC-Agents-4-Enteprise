@@ -12,6 +12,13 @@ import * as path from 'path';
 import { loadConfig } from '../../engine/config.js';
 import { resolveWithinWorkspace } from '../../shared/path-safety.js';
 import { withErrorHandling } from '../../tool-router/ToolHandlerDecorators.js';
+import {
+  hasBaseDirArg,
+  type MultiWorktreePathResolver,
+} from '../../shared/multi-worktree-path-resolver.js';
+import { getSharedPathResolver } from '../../shared/path-resolver-provider.js';
+import { baseDirSchemaProperties } from '../../shared/base-dir-schema.js';
+import type { ToolResult } from '../../types/tool.js';
 
 /** Supported log levels for agent_log. */
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
@@ -56,32 +63,56 @@ export class UtilityModule implements IModule {
 
     handlers.set('stream_write_file', withErrorHandling(this.logger, 'stream_write_file')(
       async (args) => {
-      const relPath = String(args.path || '');
+      // SA4E-394 (DISC-3): both `path` (module variant) and `file_path`
+      // (code-intel/extension variant) are accepted and routed through the
+      // shared resolver on every surface.
+      const rawPath = String(args.path ?? args.file_path ?? '');
       const content = String(args.content ?? '');
-      if (!relPath) {
+      if (!rawPath) {
         return { content: [{ type: 'text', text: 'Missing required argument: path' }], isError: true };
       }
-      const fullPath = resolveWithinWorkspace(this.workspace, relPath);
+      if (hasBaseDirArg(args)) {
+        return this.writeWithBaseDir(args, rawPath, content);
+      }
+      const fullPath = resolveWithinWorkspace(this.workspace, rawPath);
       if (!fullPath) {
-        return { content: [{ type: 'text', text: `Path rejected by safety guard: ${relPath}` }], isError: true };
+        return { content: [{ type: 'text', text: `Path rejected by safety guard: ${rawPath}` }], isError: true };
       }
-      const dir = path.dirname(fullPath);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      const append = args.append === true;
-      if (append) {
-        fs.appendFileSync(fullPath, content, 'utf-8');
-      } else {
-        fs.writeFileSync(fullPath, content, 'utf-8');
-      }
-      const bytes = Buffer.byteLength(content, 'utf-8');
-      this.logger.info({ path: fullPath, bytes, append }, 'stream_write_file written');
-      return {
-        content: [{ type: 'text', text: `Written ${bytes} bytes to ${relPath}${append ? ' (appended)' : ''}` }],
-        isError: false,
-      };
+      return this.writeToResolvedPath(fullPath, rawPath, content, args.append === true, false);
     }));
 
     return handlers;
+  }
+
+  /** SA4E-394 — resolver-driven branch (base_dir/workspace_root present). */
+  private writeWithBaseDir(args: Record<string, unknown>, rawPath: string, content: string): ToolResult {
+    const result = getSharedPathResolver(this.logger).resolve({
+      filePath: rawPath, baseDir: args.base_dir, workspaceRoot: args.workspace_root,
+    });
+    if (!result.ok) {
+      return { content: [{ type: 'text', text: result.message }], isError: true };
+    }
+    return this.writeToResolvedPath(result.resolvedPath, rawPath, content, args.append === true, true);
+  }
+
+  /** Shared write tail — mkdir -p, write/append, log, report the path. */
+  private writeToResolvedPath(
+    fullPath: string, displayPath: string, content: string, append: boolean, withResolvedPath: boolean,
+  ): ToolResult {
+    const dir = path.dirname(fullPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    if (append) {
+      fs.appendFileSync(fullPath, content, 'utf-8');
+    } else {
+      fs.writeFileSync(fullPath, content, 'utf-8');
+    }
+    const bytes = Buffer.byteLength(content, 'utf-8');
+    this.logger.info({ path: fullPath, bytes, append }, 'stream_write_file written');
+    const suffix = `${append ? ' (appended)' : ''}${withResolvedPath ? ` [resolved: ${fullPath}]` : ''}`;
+    return {
+      content: [{ type: 'text', text: `Written ${bytes} bytes to ${displayPath}${suffix}` }],
+      isError: false,
+    };
   }
 
   getToolDefinitions(): ToolDefinition[] {
@@ -102,13 +133,15 @@ export class UtilityModule implements IModule {
       },
       {
         name: 'stream_write_file',
-        description: 'Write or append content to a file within the workspace. Path must be relative and cannot escape the workspace root.',
+        description: 'Write or append content to a file within the workspace. Relative paths resolve against the workspace root (or base_dir when provided); paths cannot escape the effective root.',
         inputSchema: {
           type: 'object',
           properties: {
-            path: { type: 'string', description: 'Relative file path within workspace (e.g. documents/TICKET/BRD.md)' },
+            path: { type: 'string', description: 'Relative file path within workspace (e.g. documents/TICKET/BRD.md). Alias of file_path — both are accepted.' },
+            file_path: { type: 'string', description: 'Relative file path within workspace (alias of path — both are accepted).' },
             content: { type: 'string', description: 'Content to write' },
             append: { type: 'boolean', description: 'If true, append instead of overwrite (default: false)' },
+            ...baseDirSchemaProperties('path'),
           },
           required: ['path', 'content'],
         },

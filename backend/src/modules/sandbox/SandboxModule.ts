@@ -17,6 +17,8 @@ import { ExecutionManager } from './ExecutionManager.js';
 import { BUILTIN_HARDENING, type SandboxHardening } from './executors/hardening.js';
 import { SANDBOX_TOOL_DEFINITIONS } from './tools/tool-definitions.js';
 import { createSandboxHandlers } from './tools/tool-handlers.js';
+import { getSharedPathResolver } from '../../shared/path-resolver-provider.js';
+import type { MultiWorktreePathResolver } from '../../shared/multi-worktree-path-resolver.js';
 
 export class SandboxModule implements IModule {
   readonly name = 'sandbox';
@@ -80,7 +82,9 @@ export class SandboxModule implements IModule {
   }
 
   getToolHandlers(): Map<string, ToolHandler> {
-    return createSandboxHandlers(this.manager, this.config, this.logger);
+    // SA4E-394 — BR-13: shared resolver (index.ts installs it at boot).
+    const pathResolver: MultiWorktreePathResolver = getSharedPathResolver(this.logger);
+    return createSandboxHandlers(this.manager, this.config, this.logger, pathResolver);
   }
 
   getToolDefinitions(): ToolDefinition[] {

@@ -8,6 +8,12 @@ import * as path from 'path';
 import * as os from 'os';
 import pino from 'pino';
 import { setCachedDrawioCliPath, exportWithCli, exportWithChrome, exportWithPuppeteer, findDrawioCli, hasUpstreamServer } from './drawio-renderers.js';
+import {
+  hasBaseDirArg,
+  type MultiWorktreePathResolver,
+} from '../../shared/multi-worktree-path-resolver.js';
+import { getSharedPathResolver } from '../../shared/path-resolver-provider.js';
+import { baseDirSchemaProperties } from '../../shared/base-dir-schema.js';
 
 const logger = pino({ name: 'drawio-export-png' });
 
@@ -19,6 +25,7 @@ export const DRAWIO_EXPORT_PNG_DEFINITION = {
     properties: {
       content_base64: { type: 'string', description: 'Base64-encoded .drawio XML content' },
       file_path: { type: 'string', description: 'Original file path (reference only)' },
+      ...baseDirSchemaProperties('file_path'),
     },
     required: ['content_base64'],
   },
@@ -54,10 +61,22 @@ export function resetRendererCache(): void {
 export async function handleDrawioExportPng(
   args: Record<string, unknown>,
   workspace: string,
-  orchestrationEngine?: any
+  orchestrationEngine?: any,
+  resolver?: MultiWorktreePathResolver,
 ): Promise<string> {
   const b64 = args.content_base64 as string | undefined;
   if (!b64) return jsonError('content_base64 is required');
+
+  // SA4E-394 (DISC-4): backend file_path is reference-only — the render writes
+  // to a temp dir and returns output_base64. When base_dir is supplied the
+  // reference is still validated through the shared resolver (containment
+  // enforced); the output_path write-back belongs to the extension proxy.
+  if (hasBaseDirArg(args) && typeof args.file_path === 'string' && args.file_path.trim() !== '') {
+    const result = (resolver ?? getSharedPathResolver(logger)).resolve({
+      filePath: args.file_path, baseDir: args.base_dir, workspaceRoot: args.workspace_root,
+    });
+    if (!result.ok) return jsonError(result.message);
+  }
 
   const content = decodeBase64Content(b64);
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'drawio-'));

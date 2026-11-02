@@ -4,10 +4,18 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
+import pino from 'pino';
 import { QueryLayer } from '../query/query-layer.js';
 import { IndexingEngine } from '../indexer/indexing-engine.js';
 import { resolveWithinWorkspace } from '../../shared/path-safety.js';
 import { requireProjectId } from '../query/code-intel-isolation.js';
+import {
+  hasBaseDirArg,
+  type MultiWorktreePathResolver,
+} from '../../shared/multi-worktree-path-resolver.js';
+import { getSharedPathResolver } from '../../shared/path-resolver-provider.js';
+
+const logger = pino({ name: 'code-intel-handlers' });
 
 export async function handleCodeSearch(args: Record<string, unknown>, ql: QueryLayer, projectId?: string): Promise<string> {
   const query = (args.query as string) ?? '';
@@ -109,19 +117,37 @@ export async function handleCodeIndexStatus(args: Record<string, unknown>, ql: Q
   ].join('\n');
 }
 
-export function handleStreamWriteFile(args: Record<string, unknown>, workspace: string, projectId?: string): string {
+export function handleStreamWriteFile(args: Record<string, unknown>, workspace: string, projectId?: string, resolver?: MultiWorktreePathResolver): string {
   const rawPath = args.file_path as string;
   if (!rawPath) return '{"error":"file_path is required"}';
   try { requireProjectId(projectId); } catch { return JSON.stringify({ error: 'PROJECT_REQUIRED: X-Project-Id needed to write files' }); }
   const mode = (args.mode as string) ?? 'write';
   const content = (args.content as string) ?? '';
+  // SA4E-394 (DISC-3): base_dir present → resolve via the shared resolver;
+  // absent → legacy pinned-root behavior unchanged (byte-for-byte, C-3).
+  if (hasBaseDirArg(args)) {
+    const result = (resolver ?? getSharedPathResolver(logger)).resolve({
+      filePath: rawPath, baseDir: args.base_dir, workspaceRoot: args.workspace_root,
+    });
+    if (!result.ok) return JSON.stringify({ error: result.message });
+    return writeResolvedFile(result.resolvedPath, mode, content, true);
+  }
   const filePath = resolveWithinWorkspace(workspace, rawPath);
   if (!filePath) return JSON.stringify({ error: `Invalid or out-of-workspace path: ${rawPath}` });
+  return writeResolvedFile(filePath, mode, content, false);
+}
+
+/** Shared write tail — creates parent dirs, writes/appends, reports the path. */
+function writeResolvedFile(filePath: string, mode: string, content: string, withResolvedPath: boolean): string {
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   if (mode === 'append') fs.appendFileSync(filePath, content, 'utf-8');
   else fs.writeFileSync(filePath, content, 'utf-8');
-  return JSON.stringify({ file_path: filePath, mode });
+  // SA4E-394: resolved_path reported only on the base_dir path (FSD §3.1.4);
+  // legacy response shape unchanged (TC-800 byte-parity).
+  return withResolvedPath
+    ? JSON.stringify({ file_path: filePath, mode, resolved_path: filePath })
+    : JSON.stringify({ file_path: filePath, mode });
 }
 
 export function handleCodeKbExport(_args: Record<string, unknown>, _ql: QueryLayer, _workspace: string): string {

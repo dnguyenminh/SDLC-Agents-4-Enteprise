@@ -1,5 +1,7 @@
 /** Tier 1 tool definitions — high-frequency standalone tools. */
 
+import { baseDirSchemaProperties } from '../../../shared/base-dir-schema.js';
+
 export const TIER1_TOOLS = [
   {
     name: 'mem_search',
@@ -47,6 +49,7 @@ export const TIER1_TOOLS = [
         type: { type: 'string', description: 'Knowledge type: REQUIREMENT, ARCHITECTURE, DECISION, PROCEDURE, CONTEXT (default: CONTEXT)' },
         scope: { type: 'string', description: 'Visibility scope: USER (private), PROJECT (team), SHARED (company). Default: USER' },
         format: { type: 'string', description: 'Format: markdown (default) or text' },
+        ...baseDirSchemaProperties('file_path'),
       },
       required: ['file_path'],
     },

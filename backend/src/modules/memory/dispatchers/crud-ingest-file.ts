@@ -10,11 +10,16 @@ import { classifyFormat, normalizeExt } from '../ingest/FormatClassifier.js';
 import type { ConvertToolResolver } from '../ingest/ConvertToolResolver.js';
 import { PendingTaskRepository } from '../task-queue/PendingTaskRepository.js';
 import { TaskType } from '../task-queue/models.js';
-import { getDbAdapter } from '../../../admin/db/core.js';
 import { EpochService } from '../evolution/EpochService.js';
 import { loadFileMetadata } from '../../../engine/indexer/file-scanner.js';
 import { extractAndInsertIngestEdges } from '../engine/edge-on-ingest.js';
 import { upsertGraphNode, logger } from './crud-shared.js';
+import { deleteStaleGraphNodes } from './graph-node-cleanup.js';
+import {
+  hasBaseDirArg,
+  type MultiWorktreePathResolver,
+} from '../../../shared/multi-worktree-path-resolver.js';
+import { getSharedPathResolver } from '../../../shared/path-resolver-provider.js';
 
 type Args = Record<string, unknown>;
 
@@ -37,9 +42,19 @@ export async function handleIngestFile(
   resolver?: ConvertToolResolver,
   dbAdapter?: DatabaseAdapter,
   embeddingAvailable?: boolean,
+  pathResolver?: MultiWorktreePathResolver,
 ): Promise<string> {
-  const filePath = a.file_path as string;
+  let filePath = a.file_path as string;
   if (!filePath) return 'Error: file_path required';
+  // SA4E-394 — base_dir/workspace_root present → resolve the ingest source via
+  // the shared resolver BEFORE any read/dedup (BR-02/05/07); omitted → legacy.
+  if (hasBaseDirArg(a)) {
+    const resolution = (pathResolver ?? getSharedPathResolver(logger)).resolve({
+      filePath, baseDir: a.base_dir, workspaceRoot: a.workspace_root,
+    });
+    if (!resolution.ok) return `Error: ${resolution.message}`;
+    filePath = resolution.resolvedPath;
+  }
   const type = (a.type as string) ?? 'CONTEXT';
   const scope = ((a.scope as string) ?? 'PROJECT').toUpperCase() as KBScope;
   const userId = (a.user_id as string) ?? scopeCtx?.userId ?? null;
@@ -170,23 +185,4 @@ async function deleteStaleIngestFileData(engine: MemoryEngine, scopeCtx: ScopeCo
     } catch (err) { logger.debug({ err }, '[ingest-file] Failed to delete stale pending tasks (non-fatal)'); }
     await engine.getAdapter().runAsync('DELETE FROM knowledge_entries WHERE source = ?', [filePath]);
   }
-}
-
-async function deleteStaleGraphNodes(engine: MemoryEngine, filePath: string, projectId: string | null): Promise<void> {
-  try {
-    const adminAdapter = getDbAdapter();
-    const oldIds = projectId === null
-      ? await engine.getAdapter().allAsync<{ id: number }>(
-          'SELECT id FROM knowledge_entries WHERE source = $1',
-          [filePath],
-        )
-      : await engine.getAdapter().allAsync<{ id: number }>(
-          'SELECT id FROM knowledge_entries WHERE source = $1 AND project_id = $2',
-          [filePath, projectId],
-        );
-    if (oldIds.length > 0) {
-      const idList = oldIds.map(r => `'doc-${r.id}'`).join(',');
-      await adminAdapter.runAsync(`DELETE FROM graph_nodes WHERE entry_id IN (${idList})`, []);
-    }
-  } catch (err) { logger.debug({ err }, '[ingest-file] Failed to delete stale graph nodes (non-fatal)'); }
 }
