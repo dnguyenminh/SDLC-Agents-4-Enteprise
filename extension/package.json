@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.55.12",
+  "version": "1.55.13",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -321,6 +321,12 @@
           "type": "string",
           "default": ".code-intel/orchestration.json",
           "description": "Path to orchestration config file (relative to workspace root)"
+        },
+        "sdlcAgents.workspace.workspaceRoots": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "SA4E-394 allowlist mirror: workspace roots permitted as per-call base_dir for file_path tools. MUST mirror the backend MCP_WORKSPACE_ROOTS (backend remains source of truth). Falls back to the MCP_WORKSPACE_ROOTS env var when empty."
         },
         "sdlcAgents.llm.provider": {
           "type": "string",
