@@ -111,6 +111,19 @@ RUN uv venv --python "${PYTHON_VERSION}" /opt/markdown-exporter-venv \
  && /opt/markdown-exporter-venv/bin/python -c "import markdown_exporter_mcp.server, md_exporter" \
  && /opt/markdown-exporter-venv/bin/python -c "import PIL, sys; assert PIL.__version__ == '${PILLOW_VERSION}', 'pillow drift: '+PIL.__version__"
 
+# SEC-04 Trivy gate: the uv-managed standalone CPython ships a bundled `pip`
+# whose vendored `msgpack` (1.1.2) carries 5 HIGH CVEs (DoS). The runtime never
+# uses pip — the venvs are prebuilt — so strip pip/setuptools wheel tooling from
+# the interpreter. This removes the vendored msgpack from the image (and the
+# Trivy scan) without touching the two venvs, which have their own site-packages.
+RUN rm -rf /opt/uv-python/*/lib/python*/site-packages/pip \
+           /opt/uv-python/*/lib/python*/site-packages/pip-*.dist-info \
+           /opt/uv-python/*/lib/python*/site-packages/setuptools \
+           /opt/uv-python/*/lib/python*/site-packages/setuptools-*.dist-info \
+           /opt/uv-python/*/lib/python*/site-packages/pkg_resources \
+ && /opt/markitdown-venv/bin/python -c "import markitdown_mcp" \
+ && /opt/markdown-exporter-venv/bin/python -c "import markdown_exporter_mcp.server"
+
 # ---------- Stage: production ----------
 FROM node:22-slim AS production
 WORKDIR /usr/src/app
