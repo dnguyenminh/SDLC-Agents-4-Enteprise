@@ -1,10 +1,8 @@
 /**
  * SA4E-394 — Shared multi-worktree path resolver (BR-20: ONE pipeline for all
- * 8 file_path tools). Pipeline order is normative (BR-11):
- *   extract base_dir (BR-10) → normalize (BR-09) → allowlist (BR-05) →
- *   existence (BR-06) → resolve (BR-02/04) → containment AFTER resolution
- *   (BR-07, incl. symlink anti-escape T3).
- *
+ * 8 file_path tools). Normative order (BR-11): extract base_dir (BR-10) →
+ * normalize (BR-09) → allowlist (BR-05) → existence (BR-06) → resolve
+ * (BR-02/04) → containment AFTER resolution (BR-07, incl. symlink T3).
  * Legacy branch (base_dir omitted) keeps legacy pinned-root semantics with the
  * legacy error code (BR-03, C-3). Error-as-value: never throws on business
  * paths (§1.4). All echoed paths pass sanitizePathText (T6 — anti log-forging).
@@ -132,6 +130,9 @@ export class MultiWorktreePathResolver {
       resolvedPath,
     );
   }
+
+  /** SEC-01 — configured roots for the legacy-read gate (legacy-path-gate.ts). */
+  allowlistRoots(): readonly string[] { return this.allowlist.snapshot(); }
 }
 
 /** Sentinel — a non-string base_dir was supplied (TC-406: typed error, no echo). */
@@ -148,11 +149,7 @@ function extractBaseDir(input: ResolvePathInput): string | undefined | typeof IN
   return undefined;
 }
 
-/**
- * Handler-side presence check: true when the call carries base_dir (or the
- * workspace_root alias) — handlers route such calls through the resolver and
- * keep their legacy code path byte-for-byte otherwise (C-3).
- */
+/** Handler-side presence check (C-3): base_dir/workspace_root → resolver; otherwise the legacy path stays byte-for-byte. */
 export function hasBaseDirArg(args: Record<string, unknown>): boolean {
   return args['base_dir'] !== undefined || args['workspace_root'] !== undefined;
 }
@@ -166,12 +163,8 @@ function isDirectory(baseDir: string): boolean {
   }
 }
 
-/**
- * T3 — realpath the deepest existing ancestor and re-check containment so a
- * symlinked segment cannot smuggle the target outside the effective root.
- * Returns the escaped real path, or null when containment holds.
- */
-function symlinkEscape(root: string, resolvedPath: string): string | null {
+/** T3 — realpath the deepest existing ancestor + containment re-check; returns the escaped real path or null. */
+export function symlinkEscape(root: string, resolvedPath: string): string | null {
   try {
     let cursor = resolvedPath;
     while (cursor !== path.dirname(cursor) && !fs.existsSync(cursor)) {
@@ -186,7 +179,7 @@ function symlinkEscape(root: string, resolvedPath: string): string | null {
 }
 
 /** T5/T9 — separator-boundary + win32 case-fold containment (extension parity). */
-function containsFolded(root: string, candidate: string): boolean {
+export function containsFolded(root: string, candidate: string): boolean {
   if (process.platform !== 'win32') return isWithinRoot(root, candidate);
   const fold = (p: string): string => p.toLowerCase();
   const resolvedRoot = path.resolve(root);

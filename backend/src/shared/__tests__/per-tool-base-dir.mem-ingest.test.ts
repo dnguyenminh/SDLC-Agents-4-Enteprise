@@ -90,4 +90,35 @@ describe('TC-308 — mem_ingest_file (backend fallback path, real pipeline)', ()
     expect(r2).toContain(CONTAINMENT_MSG);
     expect(await rowCount()).toBe(0);
   });
+
+  // SEC-01 — LEGACY (base_dir omitted) branch containment (SA4E-394 hardening):
+  // the old code ingested ANY existing host file (arbitrary-read primitive).
+  it('S6 (SEC-01): legacy absolute OUTSIDE every root → rejection, zero side effects', async () => {
+    const out = await handleIngestFile(ctx.engine, undefined, fx.main, {
+      file_path: path.join(fx.outside, 'evil.txt'),
+    });
+    expect(out).toContain('PATH_REJECTED_OUTSIDE_ALLOWLIST');
+    expect(out).toContain(CONTAINMENT_MSG);
+    expect(await rowCount()).toBe(0);
+  });
+
+  it('S7 (SEC-01): legacy relative ../ traversal escape → rejection, zero side effects', async () => {
+    const out = await handleIngestFile(ctx.engine, undefined, fx.main, {
+      file_path: '../../../outside/x.md',
+    });
+    expect(out).toContain('PATH_REJECTED_OUTSIDE_ALLOWLIST');
+    expect(out).toContain(CONTAINMENT_MSG);
+    expect(await rowCount()).toBe(0);
+  });
+
+  it('S8 (SEC-01 back-compat): legacy absolute inside ANOTHER allowlisted root still ingests', async () => {
+    const out = await handleIngestFile(ctx.engine, undefined, fx.main, {
+      file_path: path.join(fx.wtB, 'documents', 'SA4E-394', 'BRD.md'),
+    });
+    expect(JSON.parse(out)).toMatchObject({ status: 'ingested' });
+    const source = path.join(fx.wtB, 'documents', 'SA4E-394', 'BRD.md') as string;
+    const rows = await rowsForSource(source);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].content).toContain('# BRD wt-b');
+  });
 });
