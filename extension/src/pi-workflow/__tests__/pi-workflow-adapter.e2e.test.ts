@@ -9,7 +9,6 @@ import { createModels } from '@earendil-works/pi-ai';
 import type { MutableModels } from '@earendil-works/pi-ai';
 import { fauxProvider, fauxAssistantMessage } from '@earendil-works/pi-ai/providers/faux';
 import { PiWorkflowAdapter } from '../pi-workflow-adapter.js';
-import { clearSessionHostCache } from '../session-host/registry.js';
 import type { ChatExtToWebviewMessage } from '../../chat-panel/message-protocol';
 
 const { mockConfigValues } = vi.hoisted(() => ({
@@ -33,14 +32,6 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
 
   beforeEach(async () => {
     process.env.NODE_ENV = 'test';
-    // Reset the shared config mock — leftover keys from a previous test
-    // (e.g. a resolvable faux profile) would leak into the next test's
-    // provider resolution and mask the error paths under test.
-    for (const k of Object.keys(mockConfigValues)) delete mockConfigValues[k];
-    // The session-host registry caches hosts per workspaceRoot+tabId at module
-    // level — a host created by an earlier test (different provider) would
-    // leak into this test and resolve models it must not resolve.
-    clearSessionHostCache();
     models = createModels();
     faux = fauxProvider();
     models.setProvider(faux.provider);
@@ -70,13 +61,8 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
       workspaceRoot: 'C:/ws/test',
       onEvent: onEventMock as (msg: ChatExtToWebviewMessage) => void,
     });
-    mockConfigValues['llm.provider'] = 'openai-gpt-4o';
-    mockConfigValues['llm.model'] = 'gpt-4o';
-    mockConfigValues['llm.profiles'] = [
-      { id: 'openai-gpt-4o', provider: 'openai', model: 'gpt-4o', useDefaultUrl: true },
-    ];
-    mockConfigValues['llm.activeProfileId'] = 'openai-gpt-4o';
-    mockConfigValues['llm.activeProfileId'] = 'openai-gpt-4o';
+    mockConfigValues['llm.provider'] = 'openai';
+    mockConfigValues['llm.model'] = 'auto';
 
     await realAdapter.invokeChat('Say hello');
 
@@ -93,10 +79,6 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
     // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
     mockConfigValues['llm.provider'] = 'faux';
     mockConfigValues['llm.model'] = 'faux-1';
-    mockConfigValues['llm.profiles'] = [
-      { id: 'faux', provider: 'faux', model: 'faux-1', useDefaultUrl: true },
-    ];
-    mockConfigValues['llm.activeProfileId'] = 'faux';
 
     // Spy on the stream handler to assert tokens are emitted to the UI
     const emitSpy = vi.spyOn(adapter.getStreamHandler(), 'emitToken');
@@ -135,10 +117,6 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
     // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
     mockConfigValues['llm.provider'] = 'faux';
     mockConfigValues['llm.model'] = 'faux-1';
-    mockConfigValues['llm.profiles'] = [
-      { id: 'faux', provider: 'faux', model: 'faux-1', useDefaultUrl: true },
-    ];
-    mockConfigValues['llm.activeProfileId'] = 'faux';
     // Override the beforeEach response queue — exactly 2 responses for 2 queued turns.
     faux.setResponses([
       fauxAssistantMessage('turn one response'),

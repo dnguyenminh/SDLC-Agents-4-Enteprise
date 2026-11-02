@@ -8,11 +8,13 @@ import type { IModule, ModuleHealth, ModuleStatus } from '../types/module.js';
 import type { ToolHandler, ToolDefinition } from '../types/tool.js';
 import type { Logger } from 'pino';
 import { bus, Events } from '../shared/EventBus.js';
+import type { CodeEnrichmentHandler } from '../engine/enrichment/CodeEnrichmentHandler.js';
 
 export class ModuleRegistry {
   private modules: Map<string, IModule> = new Map();
   private logger: Logger;
   private eventBus: typeof bus;
+  private enrichmentHandler: CodeEnrichmentHandler | null = null;
 
   constructor(logger: Logger, eventBus?: typeof bus) {
     this.logger = logger;
@@ -23,6 +25,17 @@ export class ModuleRegistry {
     this.modules.set(module.name, module);
     this.logger.info({ module: module.name }, 'Module registered');
     this.eventBus.emit(Events.MODULE_REGISTERED, { name: module.name });
+  }
+
+  /** Register the CodeEnrichmentHandler for TaskWorker access (SA4E-387) */
+  registerEnrichmentHandler(handler: CodeEnrichmentHandler): void {
+    this.enrichmentHandler = handler;
+    this.logger.info('CodeEnrichmentHandler registered');
+  }
+
+  /** Get the registered CodeEnrichmentHandler */
+  getEnrichmentHandler(): CodeEnrichmentHandler | null {
+    return this.enrichmentHandler;
   }
 
   async initializeAll(): Promise<void> {

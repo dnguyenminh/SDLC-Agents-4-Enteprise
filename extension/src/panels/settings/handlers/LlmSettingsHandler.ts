@@ -1,9 +1,8 @@
-import { readProviderTurnConfig } from "../../../pi-workflow/pi-provider-config-bridge.js";
+import { getSetting } from "../../../config/settings-migration";
 /**
  * LlmSettingsHandler — LLM provider settings messages (SA4E-323 refactor).
  * Split out of SettingsMessageHandler for SRP / ≤200-LOC compliance.
  * Behavior-preserving: message types and postMessage payloads unchanged.
- * SA4E-390: Uses readProviderTurnConfig() SSOT for model resolution.
  */
 
 import * as vscode from "vscode";
@@ -35,7 +34,7 @@ export class LlmSettingsHandler {
 
   /** Fetch and post the model list for a provider. */
   async getModels(provider: string): Promise<void> {
-    const { configuredModelId: currentModel } = readProviderTurnConfig();
+    const currentModel = getSetting<string>("llm.model","llm.model", "");
     const { models, selected, defaultModel } = await this.configService.getModels(provider, currentModel);
     this.postMessage({ type: "models", provider, models, selected, defaultModel });
   }

@@ -1,0 +1,210 @@
+<mxfile host="65bd71144e">
+    <diagram name="Class Diagram" id="SA4E-387-Class-Diagram">
+        <mxGraphModel dx="679" dy="644" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1450" pageHeight="860" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="cls2" parent="1" style="swimlane;html=1;startSize=30;fillColor=#FFF9C4;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=12;fontStyle=1;strokeWidth=2;" value="LLMService" vertex="1">
+                    <mxGeometry height="260" width="300" x="40" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2_1" parent="cls2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ resolveActive(): LLMConfig (mới SA4E-387)" vertex="1">
+                    <mxGeometry height="30" width="300" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2_2" parent="cls2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ setActiveModel(next): void (mới SA4E-387)" vertex="1">
+                    <mxGeometry height="30" width="300" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2_3" parent="cls2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ complete(messages): Promise&amp;lt;LLMResponse&amp;gt;" vertex="1">
+                    <mxGeometry height="30" width="300" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2_4" parent="cls2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;strokeWidth=1;" value="+ onModelChanged?: (config) =&amp;gt; void (mới SA4E-387)" vertex="1">
+                    <mxGeometry height="30" width="300" y="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2_5" parent="cls2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;strokeWidth=1;dashed=1;" value="- config: LLMConfig (cố định lúc constructor)" vertex="1">
+                    <mxGeometry height="30" width="300" y="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2_6" parent="cls2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;strokeWidth=1;dashed=1;" value="- adapter: LLMAdapter" vertex="1">
+                    <mxGeometry height="30" width="300" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="cls1" parent="1" style="swimlane;html=1;startSize=30;fillColor=#FFCDD2;strokeColor=#E53935;fontColor=#B71C1C;fontSize=12;fontStyle=1;strokeWidth=2;" value="CodeEnrichmentHandler" vertex="1">
+                    <mxGeometry height="300" width="300" x="370" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_1" parent="cls1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ enrichSymbol(task: PendingTask): Promise&amp;lt;void&amp;gt;" vertex="1">
+                    <mxGeometry height="30" width="300" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_2" parent="cls1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;strokeWidth=1;" value="- callLLMWithTimeout(messages): Promise&amp;lt;string&amp;gt;" vertex="1">
+                    <mxGeometry height="30" width="300" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_3" parent="cls1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;strokeWidth=1;dashed=1;" value="- adapter: DatabaseAdapter" vertex="1">
+                    <mxGeometry height="30" width="300" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_4" parent="cls1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;strokeWidth=1;dashed=1;" value="- llmService: LLMService" vertex="1">
+                    <mxGeometry height="30" width="300" y="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_5" parent="cls1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;strokeWidth=1;dashed=1;" value="- promptBuilder: CodeEnrichmentPromptBuilder" vertex="1">
+                    <mxGeometry height="30" width="300" y="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_6" parent="cls1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;strokeWidth=1;dashed=1;" value="- budgetGuard: BudgetGuard (mới SA4E-387)" vertex="1">
+                    <mxGeometry height="30" width="300" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_7" parent="cls1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;strokeWidth=1;dashed=1;" value="- windowProvider: ContextWindowDiscovery (mới SA4E-387)" vertex="1">
+                    <mxGeometry height="30" width="300" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1_8" parent="cls1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;strokeWidth=1;dashed=1;" value="- schemaContext: EnrichmentSchemaContextLoader" vertex="1">
+                    <mxGeometry height="30" width="300" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="cls3" parent="1" style="swimlane;html=1;startSize=30;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=12;fontStyle=1;strokeWidth=2;" value="BudgetGuard" vertex="1">
+                    <mxGeometry height="220" width="300" x="720" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3_1" parent="cls3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ computeInputBudget(window: WindowInfo, overhead): number" vertex="1">
+                    <mxGeometry height="30" width="300" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3_2" parent="cls3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ check(input: BudgetInput): BudgetDecision" vertex="1">
+                    <mxGeometry height="30" width="300" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3_3" parent="cls3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;strokeWidth=1;" value="+ warnLine(d: BudgetDecision): string" vertex="1">
+                    <mxGeometry height="30" width="300" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3_4" parent="cls3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;strokeWidth=1;" value="+ CONTEXT_FRACTION_WARN = 0.80" vertex="1">
+                    <mxGeometry height="30" width="300" y="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3_5" parent="cls3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=1;" value="// hiện chưa ai gọi — SA4E-387 sẽ wire (TDD §3.2)" vertex="1">
+                    <mxGeometry height="30" width="300" y="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="cls4" parent="1" style="swimlane;html=1;startSize=30;fillColor=#F3E5F5;strokeColor=#8E24AA;fontColor=#4A148C;fontSize=12;fontStyle=1;strokeWidth=2;" value="ContextWindowDiscovery" vertex="1">
+                    <mxGeometry height="200" width="300" x="1060" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4_1" parent="cls4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#8E24AA;fontColor=#4A148C;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ getContextWindow(): Promise&amp;lt;WindowInfo&amp;gt;" vertex="1">
+                    <mxGeometry height="30" width="300" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4_2" parent="cls4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#8E24AA;fontColor=#4A148C;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ invalidateWindowCache(): void" vertex="1">
+                    <mxGeometry height="30" width="300" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4_3" parent="cls4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#8E24AA;fontColor=#4A148C;fontSize=11;fontStyle=1;strokeWidth=1;" value="- reservedOutputTokens = 800" vertex="1">
+                    <mxGeometry height="30" width="300" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4_4" parent="cls4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#8E24AA;fontColor=#4A148C;fontSize=11;strokeWidth=1;dashed=1;" value="- cache: Map&amp;lt;string, WindowInfo&amp;gt;" vertex="1">
+                    <mxGeometry height="30" width="300" y="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="cls5" parent="1" style="swimlane;html=1;startSize=30;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=12;fontStyle=1;strokeWidth=2;" value="CodeEnrichmentPromptBuilder" vertex="1">
+                    <mxGeometry height="180" width="300" x="40" y="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="c5_1" parent="cls5" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ build(strategy, context): LLMMessage[]" vertex="1">
+                    <mxGeometry height="30" width="300" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c5_2" parent="cls5" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ capTotalPrompt(messages): LLMMessage[]" vertex="1">
+                    <mxGeometry height="30" width="300" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="c5_3" parent="cls5" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;dashed=1;" value="+ MAX_BODY_TOKENS = 4000 (legacy)" vertex="1">
+                    <mxGeometry height="30" width="300" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="c5_4" parent="cls5" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;dashed=1;" value="+ PROMPT_TOKEN_CAP = 24000 (fallback)" vertex="1">
+                    <mxGeometry height="30" width="300" y="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="cls6" parent="1" style="swimlane;html=1;startSize=30;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=12;fontStyle=1;strokeWidth=2;" value="ReductionPipeline" vertex="1">
+                    <mxGeometry height="200" width="300" x="360" y="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="c6_1" parent="cls6" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ reduce(ast, digest, trigger, budget, buildCtx): Promise&amp;lt;ReductionOutcome&amp;gt;" vertex="1">
+                    <mxGeometry height="30" width="300" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c6_2" parent="cls6" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ MAX_REDUCE_ROUNDS = 3" vertex="1">
+                    <mxGeometry height="30" width="300" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="c6_3" parent="cls6" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ MAX_CHUNKS_PER_RULE = 32" vertex="1">
+                    <mxGeometry height="30" width="300" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="c6_4" parent="cls6" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;strokeWidth=1;dashed=1;" value="- STUB: reduce() is stubbed (fail-fast)" vertex="1">
+                    <mxGeometry height="30" width="300" y="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="cls7" parent="1" style="swimlane;html=1;startSize=30;fillColor=#E0F2F1;strokeColor=#00897B;fontColor=#004D40;fontSize=12;fontStyle=1;strokeWidth=2;" value="LLMAdapter (interface)" vertex="1">
+                    <mxGeometry height="150" width="300" x="720" y="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="c7_1" parent="cls7" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#00897B;fontColor=#004D40;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ complete(messages, config): Promise&amp;lt;LLMResponse&amp;gt;" vertex="1">
+                    <mxGeometry height="30" width="300" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c7_2" parent="cls7" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#00897B;fontColor=#004D40;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ isAvailable(config): Promise&amp;lt;boolean&amp;gt;" vertex="1">
+                    <mxGeometry height="30" width="300" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="cls8" parent="1" style="swimlane;html=1;startSize=30;fillColor=#E8F5E9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=12;fontStyle=1;strokeWidth=2;" value="OllamaAdapter" vertex="1">
+                    <mxGeometry height="150" width="300" x="1060" y="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="c8_1" parent="cls8" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#43A047;fontColor=#1B5E20;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ complete(messages, config): Promise&amp;lt;LLMResponse&amp;gt;" vertex="1">
+                    <mxGeometry height="30" width="300" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c8_2" parent="cls8" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#43A047;fontColor=#1B5E20;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ isAvailable(config): Promise&amp;lt;boolean&amp;gt;" vertex="1">
+                    <mxGeometry height="30" width="300" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="c8_3" parent="cls8" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#43A047;fontColor=#1B5E20;fontSize=11;strokeWidth=1;" value="+ options.num_ctx = config.contextWindow (SA4E-387)" vertex="1">
+                    <mxGeometry height="30" width="300" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="cls9" parent="1" style="swimlane;html=1;startSize=30;fillColor=#ECEFF1;strokeColor=#546E7A;fontColor=#263238;fontSize=12;fontStyle=1;strokeWidth=2;" value="LLMConfig" vertex="1">
+                    <mxGeometry height="180" width="300" x="40" y="600" as="geometry"/>
+                </mxCell>
+                <mxCell id="c9_1" parent="cls9" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#546E7A;fontColor=#263238;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ provider: LLMProvider" vertex="1">
+                    <mxGeometry height="30" width="300" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="c9_2" parent="cls9" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#546E7A;fontColor=#263238;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ model: string" vertex="1">
+                    <mxGeometry height="30" width="300" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="c9_3" parent="cls9" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#546E7A;fontColor=#263238;fontSize=11;fontStyle=1;strokeWidth=1;" value="+ baseUrl: string" vertex="1">
+                    <mxGeometry height="30" width="300" y="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="c9_4" parent="cls9" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#546E7A;fontColor=#263238;fontSize=11;strokeWidth=1;" value="+ contextWindow?: number (SA4E-387)" vertex="1">
+                    <mxGeometry height="30" width="300" y="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="c9_5" parent="cls9" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#546E7A;fontColor=#263238;fontSize=11;strokeWidth=1;" value="+ maxTokens?: number" vertex="1">
+                    <mxGeometry height="30" width="300" y="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1" edge="1" parent="1" source="cls1" target="cls2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=8;strokeColor=#E53935;strokeWidth=2;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r2" edge="1" parent="1" source="cls1" target="cls3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=8;strokeColor=#FBC02D;strokeWidth=2;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r3" edge="1" parent="1" source="cls1" target="cls4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=8;strokeColor=#8E24AA;strokeWidth=2;dashed=1;exitX=0.95;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="655" y="12"/>
+                            <mxPoint x="1210" y="12"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r4" edge="1" parent="1" source="cls1" target="cls5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=8;strokeColor=#3F51B5;strokeWidth=2;dashed=1;exitX=0.05;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="385" y="362"/>
+                            <mxPoint x="190" y="362"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r5" edge="1" parent="1" source="cls1" target="cls6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=8;strokeColor=#E53935;strokeWidth=2;dashed=1;exitX=0.15;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="415" y="372"/>
+                            <mxPoint x="352" y="372"/>
+                            <mxPoint x="352" y="480"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r6" edge="1" parent="1" source="cls2" target="cls7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=8;strokeColor=#00897B;strokeWidth=2;dashed=1;exitX=0.9;exitY=1;exitDx=0;exitDy=0;entryX=0.05;entryY=0;entryDx=0;entryDy=0;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="310" y="355"/>
+                            <mxPoint x="735" y="355"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r7" edge="1" parent="1" source="cls7" target="cls8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=8;strokeColor=#43A047;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r8" edge="1" parent="1" source="cls2" target="cls9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=8;strokeColor=#546E7A;strokeWidth=2;dashed=1;exitX=0.05;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="20" y="335"/>
+                            <mxPoint x="20" y="690"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

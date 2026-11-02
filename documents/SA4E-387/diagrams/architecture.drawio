@@ -1,0 +1,143 @@
+<mxfile host="65bd71144e">
+    <diagram name="System Architecture" id="SA4E-387-Architecture">
+        <mxGraphModel dx="752" dy="712" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="api-layer" parent="1" style="swimlane;html=1;startSize=26;fillColor=#E3F2FD;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=11;fontStyle=1;strokeWidth=2;" value="API Layer (Hono routes/enrichment.ts)" vertex="1">
+                    <mxGeometry height="100" width="540" x="40" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="ep-enrich" parent="api-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=10;fontStyle=1;strokeWidth=1.5;" value="POST /enrich&#xa;{symbol, filePath, model, budget?}" vertex="1">
+                    <mxGeometry height="50" width="245" x="15" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="ep-swap" parent="api-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=10;fontStyle=1;strokeWidth=1.5;" value="POST /model/swap&#xa;{model, ticketId}" vertex="1">
+                    <mxGeometry height="50" width="245" x="280" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="sa4e387-layer" parent="1" style="swimlane;html=1;startSize=26;fillColor=#FFF9C4;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=2;" value="SA4E-387 New Modules (modules/enrichment/)" vertex="1">
+                    <mxGeometry height="200" width="540" x="40" y="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="m-resolver" parent="sa4e387-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=10;fontStyle=1;strokeWidth=1.5;" value="ModelResolver&#xa;resolveModel(modelName, ticketId)&#xa;per-call resolution" vertex="1">
+                    <mxGeometry height="70" width="160" x="15" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="m-budget" parent="sa4e387-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=10;fontStyle=1;strokeWidth=1.5;" value="BudgetGuard&#xa;calculateBudget(fileSize, modelConfig)&#xa;= ceil(fileSize / windowSize)" vertex="1">
+                    <mxGeometry height="70" width="160" x="190" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="m-ctx" parent="sa4e387-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=10;fontStyle=1;strokeWidth=1.5;" value="ContextWindowDiscovery&#xa;discoverWindow / invalidateCache" vertex="1">
+                    <mxGeometry height="70" width="160" x="365" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="m-engine" parent="sa4e387-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=10;fontStyle=1;strokeWidth=1.5;" value="EnrichmentEngine&#xa;enrichChunk(chunk, modelConfig, budget)" vertex="1">
+                    <mxGeometry height="60" width="160" x="15" y="125" as="geometry"/>
+                </mxCell>
+                <mxCell id="m-prompt" parent="sa4e387-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=10;fontStyle=1;strokeWidth=1.5;" value="PromptBuilder&#xa;buildPrompt(chunk, budget)" vertex="1">
+                    <mxGeometry height="60" width="160" x="190" y="125" as="geometry"/>
+                </mxCell>
+                <mxCell id="m-mapreduce" parent="sa4e387-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=10;fontStyle=1;strokeWidth=1.5;" value="MapReduce&#xa;reduceResults(enrichedChunks)" vertex="1">
+                    <mxGeometry height="60" width="160" x="365" y="125" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="sa4e387-layer" source="pipeline-layer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=9;strokeColor=#3F51B5;strokeWidth=1.5;dashed=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;">
+                    <mxGeometry relative="1" x="-0.122" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="570" y="115"/>
+                            <mxPoint x="570" y="210"/>
+                            <mxPoint x="130" y="210"/>
+                        </Array>
+                        <mxPoint x="570" y="120" as="sourcePoint"/>
+                        <mxPoint x="130" y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="pipeline-layer" parent="1" style="swimlane;html=1;startSize=26;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="Existing Enrichment Pipeline (engine/enrichment/ — SA4E-107)" vertex="1">
+                    <mxGeometry height="340" width="510" x="620" y="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p-handler" parent="pipeline-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;fontColor=#B71C1C;fontSize=10;fontStyle=1;strokeWidth=1.5;" value="CodeEnrichmentHandler.enrichSymbol(PendingTask)&#xa;facade — strategy pattern" vertex="1">
+                    <mxGeometry height="55" width="480" x="15" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="p-ctxloader" parent="pipeline-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=10;strokeWidth=1.5;" value="symbol-context-loader&#xa;loadSymbolContext()" vertex="1">
+                    <mxGeometry height="55" width="150" x="15" y="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="p-strategy" parent="pipeline-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=10;strokeWidth=1.5;" value="selectStrategy()&#xa;CLASS / FUNCTION / METADATA / PEGA_SUMMARY&#xa;(isPegaKind — SA4E-171)" vertex="1">
+                    <mxGeometry height="55" width="150" x="180" y="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="p-schema" parent="pipeline-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=10;strokeWidth=1.5;" value="enrichment-schema-context&#xa;loadOrCreateSchemaContext() (Pega KB)" vertex="1">
+                    <mxGeometry height="55" width="150" x="345" y="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="p-tokenbudget" parent="pipeline-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#EF6C00;fontColor=#E65100;fontSize=10;fontStyle=1;strokeWidth=2;dashed=1;" value="token-budget.ts — SA4E-387 FIX&#xa;MAX_BODY_TOKENS=4000 (static)&#xa;PROMPT_TOKEN_CAP=24000 (static)&#xa;→ replace with dynamic BudgetGuard" vertex="1">
+                    <mxGeometry height="75" width="240" x="15" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="p-promptbuilder" parent="pipeline-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=10;strokeWidth=1.5;" value="CodeEnrichmentPromptBuilder&#xa;truncateToTokens / capTotalPrompt" vertex="1">
+                    <mxGeometry height="55" width="225" x="270" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="p-reduction" parent="pipeline-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#EF6C00;fontColor=#E65100;fontSize=10;fontStyle=1;strokeWidth=2;dashed=1;" value="ReductionPipeline.reduce() — STUB fail-fast&#xa;MAX_REDUCE_ROUNDS=3, MAX_CHUNKS_PER_RULE=32&#xa;→ SA4E-387: real map-reduce" vertex="1">
+                    <mxGeometry height="60" width="240" x="15" y="268" as="geometry"/>
+                </mxCell>
+                <mxCell id="p-parser" parent="pipeline-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=10;strokeWidth=1.5;" value="enrichment-response-parser&#xa;parseEnrichmentResponse()" vertex="1">
+                    <mxGeometry height="40" width="225" x="270" y="248" as="geometry"/>
+                </mxCell>
+                <mxCell id="p-store" parent="pipeline-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=10;strokeWidth=1.5;" value="enrichment-result-store&#xa;storeEnrichmentResults() → symbols table" vertex="1">
+                    <mxGeometry height="40" width="225" x="270" y="295" as="geometry"/>
+                </mxCell>
+                <mxCell id="llm-layer" parent="1" style="swimlane;html=1;startSize=26;fillColor=#E0F2F1;strokeColor=#00897B;fontColor=#004D40;fontSize=11;fontStyle=1;strokeWidth=2;" value="LLM Layer (modules/memory/llm/)" vertex="1">
+                    <mxGeometry height="290" width="510" x="620" y="410" as="geometry"/>
+                </mxCell>
+                <mxCell id="l-service" parent="llm-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#EF6C00;fontColor=#E65100;fontSize=10;fontStyle=1;strokeWidth=2;dashed=1;" value="LLMService — BUG: config captured at constructor&#xa;→ SA4E-387: resolve per-call via ModelResolver" vertex="1">
+                    <mxGeometry height="50" width="480" x="15" y="38" as="geometry"/>
+                </mxCell>
+                <mxCell id="l-ollama" parent="llm-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#EF6C00;fontColor=#E65100;fontSize=10;fontStyle=1;strokeWidth=2;dashed=1;" value="OllamaAdapter&#xa;POST /api/chat — BUG: missing num_ctx&#xa;→ SA4E-387: set num_ctx = windowSize" vertex="1">
+                    <mxGeometry height="65" width="240" x="15" y="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="l-openai" parent="llm-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00897B;fontColor=#004D40;fontSize=10;strokeWidth=1.5;" value="OpenAIAdapter&#xa;(anthropic / gemini / lmstudio /&#xa;copilot / opencode compatible)" vertex="1">
+                    <mxGeometry height="65" width="225" x="270" y="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="l-ctxwin" parent="llm-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00897B;fontColor=#004D40;fontSize=10;strokeWidth=1.5;" value="ContextWindowDiscovery (context-window.ts)&#xa;priority: env LLM_CONTEXT_WINDOW → provider metadata&#xa;(Ollama /api/show .context_length, LMStudio max_context_length,&#xa;vLLM max_model_len) → fallback 8192; timeout 5s;&#xa;cache Map(provider:model:baseUrl); invalidateWindowCache()" vertex="1">
+                    <mxGeometry height="70" width="480" x="15" y="178" as="geometry"/>
+                </mxCell>
+                <mxCell id="l-timeout" parent="llm-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00897B;fontColor=#004D40;fontSize=10;strokeWidth=1.5;" value="callLLMWithTimeout&#xa;LLM_ENRICH_TIMEOUT_MS default 120s (BR-02)" vertex="1">
+                    <mxGeometry height="20" width="300" x="15" y="262" as="geometry"/>
+                </mxCell>
+                <mxCell id="db-layer" parent="1" style="swimlane;html=1;startSize=26;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=2;" value="Database (SQLite via DatabaseAdapter)" vertex="1">
+                    <mxGeometry height="290" width="540" x="40" y="410" as="geometry"/>
+                </mxCell>
+                <mxCell id="db-symbols" parent="db-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=10;fontStyle=1;strokeWidth=1.5;" value="symbols&#xa;summary, pseudo_code, llm_tags,&#xa;enrichment_status, enriched_at, enrichment_meta&#xa;(storeEnrichmentResults writes here)" vertex="1">
+                    <mxGeometry height="70" width="250" x="15" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="db-files" parent="db-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=10;strokeWidth=1.5;" value="files / modules&#xa;symbol source context" vertex="1">
+                    <mxGeometry height="70" width="245" x="280" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="db-taskqueue" parent="db-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=10;strokeWidth=1.5;" value="Task Queue (PendingTask)&#xa;CODE_ENRICHMENT tasks → TaskWorker&#xa;→ setCodeEnrichmentHandler()" vertex="1">
+                    <mxGeometry height="70" width="250" x="15" y="125" as="geometry"/>
+                </mxCell>
+                <mxCell id="db-embeddings" parent="db-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=10;strokeWidth=1.5;" value="embeddings / body_embeddings /&#xa;relationships / file_index" vertex="1">
+                    <mxGeometry height="70" width="245" x="280" y="125" as="geometry"/>
+                </mxCell>
+                <mxCell id="db-pega" parent="db-layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=10;strokeWidth=1.5;" value="Pega schema KB&#xa;(enrichment-schema-context reads/creates)" vertex="1">
+                    <mxGeometry height="60" width="250" x="15" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="ep-enrich" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=9;strokeColor=#1976D2;strokeWidth=1.5;" target="sa4e387-layer">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="ep-swap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=9;strokeColor=#1976D2;strokeWidth=1.5;" target="m-ctx">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="m-engine" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=9;strokeColor=#F57F17;strokeWidth=1.5;" target="pipeline-layer">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="220" y="325"/>
+                            <mxPoint x="220" y="200"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="pipeline-layer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=9;strokeColor=#00897B;strokeWidth=1.5;" target="llm-layer">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="p-ctxloader" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=9;strokeColor=#3F51B5;strokeWidth=1.5;dashed=1;" target="db-layer">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="590" y="167.5"/>
+                            <mxPoint x="590" y="390"/>
+                            <mxPoint x="310" y="390"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

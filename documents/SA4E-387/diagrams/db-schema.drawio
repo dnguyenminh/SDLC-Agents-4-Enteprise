@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-10-31T09:30:00" agent="Mozilla/5.0" version="24.2.5" type="device">
+  <diagram name="Database Schema" id="SA4E-387-DB-Schema">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- symbols table -->
+        <mxCell id="t1" value="symbols" parent="1" vertex="1" style="swimlane;html=1;startSize=30;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=12;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="50" y="50" width="340" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_1" value="id INTEGER PK AUTOINCREMENT" parent="t1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="30" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_2" value="name TEXT NOT NULL" parent="t1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="60" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_3" value="kind TEXT NOT NULL" parent="t1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="90" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_4" value="signature TEXT" parent="t1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="120" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_5" value="bodyText TEXT" parent="t1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="150" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_6" value="summary TEXT" parent="t1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="180" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_7" value="pseudo_code TEXT (≤2000 chars)" parent="t1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="210" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_8" value="llm_tags TEXT (JSON array)" parent="t1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="240" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_9" value="enrichment_status TEXT" parent="t1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="270" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_10" value="enriched_at TEXT (ISO)" parent="t1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="300" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_11" value="enrichment_meta TEXT (JSON)" parent="t1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="330" width="340" height="30" as="geometry" />
+        </mxCell>
+        <!-- body_embeddings table -->
+        <mxCell id="t2" value="body_embeddings" parent="1" vertex="1" style="swimlane;html=1;startSize=30;fillColor=#FFF9C4;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=12;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="420" y="50" width="340" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_1" value="id INTEGER PK AUTOINCREMENT" parent="t2" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="30" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_2" value="symbol_id INTEGER FK → symbols.id" parent="t2" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="60" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_3" value="chunk_index INTEGER NOT NULL" parent="t2" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="90" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_4" value="embedding BLOB NOT NULL" parent="t2" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="120" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_5" value="Ordered by chunk_index for loadBodyText()" parent="t2" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="150" width="340" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_6" value="symbol_id 1:N → symbols" parent="t2" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="180" width="340" height="30" as="geometry" />
+        </mxCell>
+        <!-- files table -->
+        <mxCell id="t3" value="files" parent="1" vertex="1" style="swimlane;html=1;startSize=30;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=12;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="790" y="50" width="300" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_1" value="id INTEGER PK AUTOINCREMENT" parent="t3" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="30" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_2" value="path TEXT NOT NULL" parent="t3" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="60" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_3" value="language TEXT" parent="t3" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="90" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_4" value="module_id INTEGER FK" parent="t3" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="120" width="300" height="30" as="geometry" />
+        </mxCell>
+        <!-- modules table -->
+        <mxCell id="t4" value="modules" parent="1" vertex="1" style="swimlane;html=1;startSize=30;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=12;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="790" y="280" width="300" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_1" value="id INTEGER PK AUTOINCREMENT" parent="t4" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="30" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_2" value="name TEXT NOT NULL" parent="t4" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="60" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_3" value="path TEXT" parent="t4" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="90" width="300" height="30" as="geometry" />
+        </mxCell>
+        <!-- relationships table -->
+        <mxCell id="t5" value="relationships" parent="1" vertex="1" style="swimlane;html=1;startSize=30;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=12;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="1120" y="50" width="260" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_1" value="id INTEGER PK AUTOINCREMENT" parent="t5" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="30" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_2" value="from_symbol_id INTEGER FK" parent="t5" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="60" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_3" value="to_symbol_id INTEGER FK" parent="t5" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="90" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_4" value="type TEXT" parent="t5" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="120" width="260" height="30" as="geometry" />
+        </mxCell>
+        <!-- embeddings table -->
+        <mxCell id="t6" value="embeddings" parent="1" vertex="1" style="swimlane;html=1;startSize=30;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=12;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="1120" y="280" width="260" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="c6_1" value="id INTEGER PK AUTOINCREMENT" parent="t6" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="30" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c6_2" value="symbol_id INTEGER FK" parent="t6" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="60" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c6_3" value="embedding BLOB" parent="t6" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="90" width="260" height="30" as="geometry" />
+        </mxCell>
+        <!-- file_index table -->
+        <mxCell id="t7" value="file_index" parent="1" vertex="1" style="swimlane;html=1;startSize=30;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=12;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="1120" y="450" width="260" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="c7_1" value="id INTEGER PK AUTOINCREMENT" parent="t7" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="30" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c7_2" value="file_path TEXT NOT NULL" parent="t7" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="60" width="260" height="30" as="geometry" />
+        </mxCell>
+        <!-- graph_meta table -->
+        <mxCell id="t8" value="graph_meta" parent="1" vertex="1" style="swimlane;html=1;startSize=30;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=12;fontStyle=1;strokeWidth=2;">
+          <mxGeometry x="1120" y="600" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="c8_1" value="id INTEGER PK AUTOINCREMENT" parent="t8" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="30" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c8_2" value="key TEXT NOT NULL" parent="t8" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;strokeWidth=1;">
+          <mxGeometry x="0" y="60" width="260" height="30" as="geometry" />
+        </mxCell>
+        <!-- Relationships -->
+        <mxCell id="r1" value="1:N symbols &#8594; body_embeddings" edge="1" parent="1" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#F57F17;strokeWidth=2;exitX=1;exitY=0.29;entryX=0;entryY=0.39;labelBackgroundColor=#ffffff;" source="t1" target="t2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" value="1:N files &#8594; modules" edge="1" parent="1" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#3F51B5;strokeWidth=2;exitX=0.35;exitY=1;entryX=0.35;entryY=0;labelBackgroundColor=#ffffff;" source="t3" target="t4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" value="1:N symbols &#8594; relationships" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#3F51B5;strokeWidth=2;exitX=1;exitY=0.105;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" source="t1" target="t5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="405" y="90" />
+              <mxPoint x="405" y="20" />
+              <mxPoint x="1105" y="20" />
+              <mxPoint x="1105" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r4" value="1:N symbols &#8594; embeddings" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#3F51B5;strokeWidth=2;exitX=1;exitY=0.184;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" source="t1" target="t6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="405" y="120" />
+              <mxPoint x="405" y="455" />
+              <mxPoint x="1105" y="455" />
+              <mxPoint x="1105" y="350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

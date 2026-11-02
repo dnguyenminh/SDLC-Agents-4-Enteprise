@@ -16,6 +16,7 @@ import { createApiRoute } from './routes/api.js';
 import { createProjectTypeRoutes } from './routes/project-type-routes.js';
 import { createEnrichmentStatusRoutes } from './routes/enrichment-status-routes.js';
 import { createAdminRoute } from './routes/admin.js';
+import { createEnrichmentRoutes } from './routes/enrichment.js';
 import { createEntraAuthRoutes } from './routes/auth/entra.js';
 import { createUnifiedAuthRoutes } from './routes/auth/unified.js';
 import { createSsoDynamicRoutes } from './routes/auth/sso-dynamic.js';
@@ -38,8 +39,7 @@ import { getDbAdapter } from '../admin/db/core.js';
 import { createPegaSyncToKbRoutes } from './routes/pega-sync-to-kb.js';
 import { createPegaReferenceRoutes } from './routes/pega-references.js';
 import { createKnowledgeApiRoutes } from '../knowledge/routes.js';
-import { getMcpServer, registerTransport } from './mcpServer.js';
-import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
+import { mountMcpEndpoint, registerMcpConfigRoutes } from './mcp-endpoint.js';
 
 export interface HttpServerOptions {
   port: number;
@@ -90,10 +90,14 @@ function registerMiddleware(app: Hono, logger: Logger): void {
   // Require login session for all Pega APIs except login itself.
   // Dev-friendly: use jwtAuth to allow anonymous when CODE_INTEL_REQUIRE_AUTH is false
   app.use('/api/v1/pega/*', jwtAuth);
-  // Enforce login session for all /api/v1/* endpoints except login itself
+  // Enforce login session for all /api/v1/* endpoints except login itself and enrichment (public for testing)
   app.use('/api/v1/*', async (c, next) => {
     const path = c.req.path;
     if (path === '/api/v1/auth/login' || path.startsWith('/api/v1/auth/login/')) {
+      return next();
+    }
+    // Allow public access to enrichment endpoints for SA4E-387 UAT
+    if (path.startsWith('/api/v1/enrich')) {
       return next();
     }
     return jwtAuthStrict(c, next);
@@ -118,10 +122,10 @@ function mountCoreRoutes(app: Hono, options: HttpServerOptions, toolRouter: Tool
   registerMcpConfigRoutes(app, options);
 }
 
-/** Versioned business API route groups (mounted at /api/v1 or /api/tools). */
-function mountApiRoutes(app: Hono, options: HttpServerOptions): void {
+/** Versioned business API route groups (mounted at /api/v1 or /api/tools). */function mountApiRoutes(app: Hono, options: HttpServerOptions): void {
   // SA4E-217: Rate limit config API
   app.route('/api/v1', createRateLimitConfigRoutes(options.logger));
+  app.route('/api/v1', createEnrichmentRoutes(options.logger, options.registry));
 
   app.route('/api/v1', createKbApiRoutes(options.registry, options.logger));
   app.route('/api/v1', createPegaApiRoutes(options.registry, options.logger));
@@ -160,38 +164,3 @@ function mountApiRoutes(app: Hono, options: HttpServerOptions): void {
   app.route('/api/v1', createEnrichmentStatusRoutes(options.registry, options.logger));
 }
 
-/** SA4E-85: MCP streamable HTTP endpoint with per-project tenant context. */
-function mountMcpEndpoint(app: Hono, options: HttpServerOptions): void {
-  app.all('/mcp', async (c) => {
-    const transport = new WebStandardStreamableHTTPServerTransport();
-    registerTransport(transport);
-    // Extract project context from HTTP headers for multi-tenant scope isolation
-    const projectId = c.req.header('X-Project-Id') || '';
-    const projectContext = projectId ? { projectId, userId: 'mcp-client' } : undefined;
-    const server = getMcpServer(options.registry, options.logger, projectContext);
-    await server.connect(transport);
-    return transport.handleRequest(c.req.raw);
-  });
-}
-
-/** DIP: MCP config REST API (skipped when orchestration module is absent). */
-function registerMcpConfigRoutes(app: Hono, options: HttpServerOptions): void {
-  const orchestration = options.registry.getModule('orchestration');
-  if (!orchestration || !('getClientManager' in orchestration)) {
-    options.logger.warn('OrchestrationModule not found, skipping MCP config routes');
-    return;
-  }
-  const clientManager = (orchestration as { getClientManager: () => import('../modules/orchestration/McpClientManager.js').McpClientManager }).getClientManager?.();
-  if (!clientManager) {
-    options.logger.warn('McpClientManager not available, skipping MCP config routes');
-    return;
-  }
-  // DIP: use injected McpConfigService or create default
-  const configService = options.mcpConfigService ?? new McpConfigService(
-    process.env.CODE_INTEL_WORKSPACE || process.cwd(),
-    process.env.CODE_INTEL_DATA_DIR || '.code-intel',
-    options.logger,
-  );
-  app.route('/', createMcpConfigRoutes(configService, clientManager, options.logger));
-  options.logger.info('MCP Config REST API registered at /api/mcp-servers');
-}

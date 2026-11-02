@@ -47,83 +47,6 @@ export interface ProviderTurnConfig {
   fallbackModelIds: string[];
 }
 
-/** In-memory cache of the resolved active profile config, keyed by a
- *  fingerprint of the raw settings it was derived from — a settings change
- *  (or a test changing the mocked config) always produces a fresh resolve. */
-let cacheFingerprint = "";
-let cachedActiveProfileConfig: ProviderTurnConfig | null = null;
-
-/** Fingerprint of every raw key resolveActiveProfileConfig() reads. */
-function configFingerprint(): string {
-  const config = vscode.workspace.getConfiguration("sdlcAgents");
-  return JSON.stringify([
-    config.get<any[]>("llm.profiles", []),
-    config.get<string>("llm.activeProfileId"),
-    config.get<string>("llm.provider"),
-    config.get<string>("llm.model"),
-  ]);
-}
-
-/**
- * Invalidate the cached config — defensive escape hatch for settings
- * changes outside the fingerprinted keys.
- */
-export function invalidateProviderTurnConfigCache(): void {
-  cacheFingerprint = "";
-  cachedActiveProfileConfig = null;
-}
-
-/**
- * Resolve the active profile's provider config from VS Code settings.
- * Reads `sdlcAgents.llm.activeProfileId` and finds the matching profile in
- * `sdlcAgents.llm.profiles`. Falls back to legacy flat keys if no profiles exist
- * (backward compatibility for pre-migration users).
- * This is the SINGLE SOURCE OF TRUTH for provider/model/baseUrl resolution.
- */
-function resolveActiveProfileConfig(): ProviderTurnConfig {
-  const config = vscode.workspace.getConfiguration("sdlcAgents");
-
-  // Try new multi-profile config first
-  const profiles = (config.get<any[]>("llm.profiles", []) ?? []);
-  let activeProfileId = config.get<string>("llm.activeProfileId");
-
-  // If activeProfileId is not set or doesn't match any profile, fall back to providerId
-  if (!activeProfileId || !profiles.find((p) => p.id === activeProfileId)) {
-    activeProfileId = config.get<string>("llm.provider");
-  }
-
-  if (activeProfileId) {
-    const activeProfile = profiles.find((p: any) => p.id === activeProfileId);
-    if (activeProfile) {
-      const providerId = activeProfile.provider; // real provider id for model registry lookup
-      const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
-      const baseUrl = activeProfile.useDefaultUrl
-        ? undefined
-        : (activeProfile.baseUrl || (baseUrlKey ? getSetting<string>(baseUrlKey, baseUrlKey, '') : '') || undefined);
-
-      return {
-        providerId,
-        baseUrl,
-        configuredModelId: activeProfile.model || '',
-        fallbackModelIds: getSetting<string[]>('llm.fallbackModels', 'llm.fallbackModels', []),
-      };
-    }
-  }
-
-  // Fallback: legacy flat config (pre-migration or no profiles yet)
-  const providerId = getSetting<string>('llm.provider', 'llm.provider', 'anthropic') || 'anthropic';
-  const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
-  const baseUrl = (
-    baseUrlKey
-      ? getSetting<string>(baseUrlKey, baseUrlKey, '')
-      : ''
-  ) || undefined;
-  const configuredModelId = getSetting<string>('llm.model', 'llm.model', '') || '';
-  const fallbackModelIds = getSetting<string[]>('llm.fallbackModels', 'llm.fallbackModels', []);
-
-  return { providerId, baseUrl, configuredModelId, fallbackModelIds };
-}
-
 /**
  * SA4E-369 UAT root-cause fix — ONE config-read path for BOTH turn paths.
  * Session (trySessionTurn / selectAgent) and legacy (configureEngineProvider)
@@ -133,18 +56,18 @@ function resolveActiveProfileConfig(): ProviderTurnConfig {
  * the dot keys only — silently missing users who still hold the flat keys
  * (e.g. llmProvider=lmstudio + lmstudioBaseUrl). Every provider-config read
  * now goes through this function (single source of truth).
- *
- * Now reads from the ACTIVE PROFILE (multi-profile) with legacy fallback.
- * Uses in-memory cache for performance; invalidated on settings change.
  */
 export function readProviderTurnConfig(): ProviderTurnConfig {
-  const fingerprint = configFingerprint();
-  if (cachedActiveProfileConfig && fingerprint === cacheFingerprint) {
-    return cachedActiveProfileConfig;
-  }
-  cacheFingerprint = fingerprint;
-  cachedActiveProfileConfig = resolveActiveProfileConfig();
-  return cachedActiveProfileConfig;
+  const providerId = getSetting<string>('llm.provider', 'llm.provider', 'anthropic') || 'anthropic';
+  const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
+  const baseUrl = (
+    baseUrlKey
+      ? getSetting<string>(baseUrlKey, baseUrlKey, '')
+      : ''
+  ) || undefined;
+  const configuredModelId = getSetting<string>('llm.model', 'llm.model', '') || '';
+  const fallbackModelIds = getSetting<string[]>('llm.fallbackModels', 'llm.fallbackModels', []);
+  return { providerId, baseUrl, configuredModelId, fallbackModelIds };
 }
 
 /**
@@ -181,6 +104,13 @@ export function hintLocalEndpointError(
 /** Back-compat alias. */
 export function bridgeProviderConfig(input: ProviderBridgeInput): ProviderBridgeResult {
   return { credentialResolver: buildCredentialResolver(input.secrets) };
+}
+
+let providerTurnConfigCache: ProviderTurnConfig | null = null;
+
+/** Invalidate the cached provider turn config so next read re-reads settings. */
+export function invalidateProviderTurnConfigCache(): void {
+  providerTurnConfigCache = null;
 }
 
 let cachedExtensionVersion: string | undefined;

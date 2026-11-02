@@ -3,7 +3,7 @@
  */
 import * as vscode from "vscode";
 import { readLlmApiKey } from "../config/llm-secret-keys";
-import { readProviderTurnConfig } from "../pi-workflow/pi-provider-config-bridge.js";
+import { getSetting } from "../config/settings-migration";
 
 export type ServerStatus = "starting" | "running" | "crashed" | "stopped";
 
@@ -92,7 +92,7 @@ export async function checkLlmAvailability(
   // SA4E-370: provider read via fallback helper (new `llm.provider` + legacy
   // `llmProvider`); configKey kept for signature stability.
   void configKey;
-  const { providerId: providerType } = readProviderTurnConfig();
+  const providerType = getSetting<string>("llm.provider","llm.provider", "anthropic");
   switch (providerType) {
     case "ollama":
       // health probe — intentional: any error = service unavailable

@@ -1,0 +1,88 @@
+<mxfile host="65bd71144e">
+    <diagram name="Deployment" id="SA4E-387-Deployment">
+        <mxGraphModel dx="1247" dy="1181" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="env-prod" parent="1" style="swimlane;html=1;startSize=30;fillColor=#FFEBEE;strokeColor=#C62828;fontColor=#B71C1C;fontSize=14;fontStyle=1;strokeWidth=3;" value="Production Environment" vertex="1">
+                    <mxGeometry height="220" width="1220" x="40" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="prod-lb" parent="env-prod" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="Load Balancer (Traefik/Nginx)" vertex="1">
+                    <mxGeometry height="60" width="170" x="50" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="prod-app1" parent="env-prod" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontColor=#1B5E20;fontSize=11;fontStyle=1;strokeWidth=2;" value="SA4E-387 App Container #1" vertex="1">
+                    <mxGeometry height="60" width="180" x="240" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="prod-app2" parent="env-prod" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#388E3C;fontColor=#1B5E20;fontSize=11;fontStyle=1;strokeWidth=2;" value="SA4E-387 App Container #2" vertex="1">
+                    <mxGeometry height="60" width="180" x="440" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="prod-sqlite" parent="env-prod" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=2;" value="SQLite Database&#xa;symbols / body_embeddings / files / relationships" vertex="1">
+                    <mxGeometry height="100" width="180" x="640" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="prod-mon" parent="env-prod" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECEFF1;strokeColor=#546E7A;fontColor=#263238;fontSize=11;fontStyle=1;strokeWidth=2;" value="Prometheus + Grafana" vertex="1">
+                    <mxGeometry height="60" width="170" x="840" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="prod-ollama" parent="env-prod" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=11;fontStyle=1;strokeWidth=2;" value="Ollama Server" vertex="1">
+                    <mxGeometry height="60" width="170" x="1030" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="pc1" edge="1" parent="env-prod" source="prod-lb" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#C62828;strokeWidth=2;" target="prod-app1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="pc2" edge="1" parent="env-prod" source="prod-lb" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#C62828;strokeWidth=2;" target="prod-app2">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="135" y="180"/>
+                            <mxPoint x="530" y="180"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="pc3" edge="1" parent="env-prod" source="prod-app1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#388E3C;strokeWidth=2;" target="prod-sqlite">
+                    <mxGeometry relative="1" x="0.125" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="330" y="40"/>
+                            <mxPoint x="730" y="40"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="pc4" edge="1" parent="env-prod" source="prod-app2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#388E3C;strokeWidth=2;" target="prod-sqlite">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="pc5" edge="1" parent="env-prod" source="prod-app1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#546E7A;strokeWidth=2;" target="prod-mon">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="pc6" edge="1" parent="env-prod" source="prod-app1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#43A047;strokeWidth=2;" target="prod-ollama">
+                    <mxGeometry relative="1" x="0.2824" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="330" y="200"/>
+                            <mxPoint x="1115" y="200"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="env-staging" parent="1" style="swimlane;html=1;startSize=30;fillColor=#FFF3E0;strokeColor=#F57C00;fontColor=#E65100;fontSize=14;fontStyle=1;strokeWidth=3;" value="Staging Environment" vertex="1">
+                    <mxGeometry height="220" width="1220" x="40" y="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="stg-lb" parent="env-staging" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#F57C00;fontColor=#E65100;fontSize=11;fontStyle=1;strokeWidth=2;" value="Load Balancer" vertex="1">
+                    <mxGeometry height="60" width="170" x="50" y="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="stg-app" parent="env-staging" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=2;" value="SA4E-387 App Container (single)" vertex="1">
+                    <mxGeometry height="60" width="180" x="240" y="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="stg-sqlite" parent="env-staging" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=2;" value="SQLite Database" vertex="1">
+                    <mxGeometry height="100" width="180" x="440" y="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="stg-ollama" parent="env-staging" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=11;fontStyle=1;strokeWidth=2;" value="Ollama Server" vertex="1">
+                    <mxGeometry height="60" width="170" x="640" y="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="sc1" edge="1" parent="env-staging" source="stg-lb" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#F57C00;strokeWidth=2;" target="stg-app">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="sc2" edge="1" parent="env-staging" source="stg-app" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#3F51B5;strokeWidth=2;" target="stg-sqlite">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="sc3" edge="1" parent="env-staging" source="stg-app" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#43A047;strokeWidth=2;" target="stg-ollama">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

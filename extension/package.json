@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.55.12",
+  "version": "1.55.13",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -527,7 +527,7 @@
     "@types/sinon": "^17.0.3",
     "@types/uuid": "^10.0.0",
     "@types/vscode": "^1.85.0",
-    "@vitest/coverage-v8": "4.1.8",
+    "@vitest/coverage-v8": "4.1.12",
     "@vscode/vsce": "^2.24.0",
     "esbuild": "0.28.2",
     "fast-check": "^4.9.0",
@@ -541,7 +541,7 @@
     "typescript": "^5.4.0",
     "typescript-eslint": "^8.67.0",
     "uuid": "^14.0.1",
-    "vitest": "4.1.8"
+    "vitest": "4.1.12"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
@@ -567,7 +567,7 @@
     "diff": "^5.2.2",
     "pi-subagents": "^0.76.1",
     "pi-web-access": "0.41.0",
-    "puppeteer-core": "^25.12.0",
+    "puppeteer-core": "^25.16.0",
     "semver": "^7.7.4",
     "typebox": "^1.1.38",
     "undici": "^6.29.1",

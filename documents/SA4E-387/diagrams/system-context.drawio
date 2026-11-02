@@ -1,0 +1,176 @@
+<mxfile host="65bd71144e">
+    <diagram name="System Context" id="SA4E-387-System-Context">
+        <mxGraphModel dx="697" dy="661" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1520" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="system" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=14;fontStyle=1;strokeWidth=3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;" value="SA4E-387 — Enrichment Runtime (backend/)" vertex="1">
+                    <mxGeometry x="280" y="60" width="890" height="720" as="geometry"/>
+                </mxCell>
+                <mxCell id="actor-dev" parent="1" style="shape=umlActor;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=12;fontStyle=1;strokeWidth=2;" value="Developer /&#xa;API Consumer" vertex="1">
+                    <mxGeometry x="40" y="190" width="90" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="actor-admin" parent="1" style="shape=umlActor;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=12;fontStyle=1;strokeWidth=2;" value="System Admin" vertex="1">
+                    <mxGeometry x="40" y="430" width="90" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-http" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=11;fontStyle=1;strokeWidth=2;" value="HttpRouteRegistrar (Hono)&#xa;mount /api/v1" vertex="1">
+                    <mxGeometry x="310" y="100" width="230" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-task" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=11;fontStyle=1;strokeWidth=2;" value="TaskWorker&#xa;dispatch CODE_ENRICHMENT" vertex="1">
+                    <mxGeometry x="310" y="200" width="230" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-handler" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="CodeEnrichmentHandler&#xa;enrichSymbol() / callLLMWithTimeout()" vertex="1">
+                    <mxGeometry x="310" y="300" width="230" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-budget" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=2;" value="BudgetGuard&#xa;computeInputBudget / check&#xa;(mới wiring — SA4E-387)" vertex="1">
+                    <mxGeometry x="600" y="80" width="230" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-ctx" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#8E24AA;fontColor=#4A148C;fontSize=11;fontStyle=1;strokeWidth=2;" value="ContextWindowDiscovery&#xa;getContextWindow / invalidate&#xa;(mới TTL + per-model)" vertex="1">
+                    <mxGeometry x="600" y="170" width="230" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-prompt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=2;" value="CodeEnrichmentPromptBuilder&#xa;build() / capTotalPrompt()" vertex="1">
+                    <mxGeometry x="600" y="280" width="230" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-llmsvc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=2;" value="LLMService&#xa;complete() — per-call model (mới)" vertex="1">
+                    <mxGeometry x="600" y="390" width="230" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-parser" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=2;" value="enrichment-response-parser&#xa;+ enrichment-result-store&#xa;parse / store" vertex="1">
+                    <mxGeometry x="600" y="500" width="230" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-reduction" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="ReductionPipeline&#xa;reduce() — STUB → cần implement" vertex="1">
+                    <mxGeometry x="600" y="610" width="230" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-ollama" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=11;fontStyle=1;strokeWidth=2;" value="OllamaAdapter&#xa;/api/chat + num_ctx (mới)" vertex="1">
+                    <mxGeometry x="880" y="390" width="230" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-openai" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00897B;fontColor=#004D40;fontSize=11;fontStyle=1;strokeWidth=2;" value="OpenAIAdapter (compat)&#xa;Anthropic / Gemini / LM Studio&#xa;/ Copilot / OpenCode" vertex="1">
+                    <mxGeometry x="880" y="560" width="230" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="db-sqlite" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=2;" value="SQLite (index DB)&#xa;symbols / files / modules&#xa;embeddings / body_embeddings&#xa;relationships / file_index" vertex="1">
+                    <mxGeometry x="1270" y="760" width="190" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="ext-ollama" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=12;fontStyle=1;strokeWidth=2;" value="Ollama Server (local)" vertex="1">
+                    <mxGeometry x="1270" y="395" width="190" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="ext-openai" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00897B;fontColor=#004D40;fontSize=12;fontStyle=1;strokeWidth=2;" value="OpenAI / Anthropic API" vertex="1">
+                    <mxGeometry x="1270" y="575" width="190" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="ext-other" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00897B;fontColor=#004D40;fontSize=11;fontStyle=1;strokeWidth=2;" value="Gemini / LM Studio /&#xa;Copilot / OpenCode" vertex="1">
+                    <mxGeometry x="1270" y="660" width="190" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" parent="1" edge="1" source="actor-dev" target="comp-http" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#1976D2;strokeWidth=2;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;fontSize=10;" value="POST /enrich (thiết kế)">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="200" y="246"/>
+                            <mxPoint x="200" y="130"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e2" parent="1" edge="1" source="actor-admin" target="comp-http" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#1976D2;strokeWidth=2;exitX=1;exitY=0.35;exitDx=0;exitDy=0;entryX=0;entryY=0.83;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;fontSize=10;" value="model swap (mới)">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="240" y="479"/>
+                            <mxPoint x="240" y="150"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e3" parent="1" edge="1" source="comp-http" target="comp-task" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#1976D2;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" parent="1" edge="1" source="comp-task" target="comp-handler" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#1976D2;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" parent="1" edge="1" source="comp-handler" target="comp-budget" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=10;strokeColor=#FBC02D;strokeWidth=2;exitX=1;exitY=0.08;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="544" y="306"/>
+                            <mxPoint x="544" y="115"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e6" parent="1" edge="1" source="comp-handler" target="comp-ctx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=10;strokeColor=#8E24AA;strokeWidth=2;exitX=1;exitY=0.24;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="552" y="317"/>
+                            <mxPoint x="552" y="205"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e7" parent="1" edge="1" source="comp-handler" target="comp-prompt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=10;strokeColor=#3F51B5;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="588" y="335"/>
+                            <mxPoint x="588" y="315"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e8" parent="1" edge="1" source="comp-handler" target="comp-llmsvc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=10;strokeColor=#F57F17;strokeWidth=2;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="578" y="342"/>
+                            <mxPoint x="578" y="425"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e9" parent="1" edge="1" source="comp-handler" target="comp-parser" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=10;strokeColor=#3F51B5;strokeWidth=2;exitX=1;exitY=0.86;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="570" y="360"/>
+                            <mxPoint x="570" y="535"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e10" parent="1" edge="1" source="comp-handler" target="comp-reduction" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=10;strokeColor=#E53935;strokeWidth=2;exitX=1;exitY=0.97;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="560" y="368"/>
+                            <mxPoint x="560" y="645"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e11" parent="1" edge="1" source="comp-llmsvc" target="comp-ollama" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#43A047;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" parent="1" edge="1" source="comp-llmsvc" target="comp-openai" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#00897B;strokeWidth=2;exitX=0.9;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="807" y="540"/>
+                            <mxPoint x="995" y="540"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e13" parent="1" edge="1" source="comp-ollama" target="ext-ollama" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#43A047;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e14" parent="1" edge="1" source="comp-openai" target="ext-openai" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#00897B;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e15" parent="1" edge="1" source="comp-openai" target="ext-other" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#00897B;strokeWidth=2;exitX=1;exitY=0.85;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1200" y="636"/>
+                            <mxPoint x="1200" y="695"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e16" parent="1" edge="1" source="comp-parser" target="db-sqlite" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;endSize=10;strokeColor=#3F51B5;strokeWidth=2;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;fontSize=10;" value="kết quả enrich (UPDATE symbols)">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="855" y="552"/>
+                            <mxPoint x="855" y="740"/>
+                            <mxPoint x="1365" y="740"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e17" parent="1" edge="1" source="comp-task" target="db-sqlite" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=1;endSize=10;strokeColor=#1976D2;strokeWidth=2;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;fontSize=10;" value="task queue (poll)">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="295" y="230"/>
+                            <mxPoint x="295" y="844"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
