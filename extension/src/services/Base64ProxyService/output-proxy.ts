@@ -57,8 +57,17 @@ export function proxyToolOutput(
       const buf = Buffer.from(output.output_base64, "base64");
       ensureDir(path.dirname(outputPath));
       // I-7 guard for the proxy write (re-resolve is idempotent — PBT-02).
+      // SEC-03 (CWE-283): forward the per-call base_dir/workspace_root so the
+      // re-resolve validates against the SAME effective root as the derivation
+      // above — with a VS Code workspace open and base_dir = a sibling
+      // worktree, validating against the default root failed every write-back
+      // with PROXY_WRITE_FAILED (and under cwd_fallback the second containment
+      // silently disappeared). Non-string base_dir still fails closed via
+      // pickBaseDir's INVALID_BASE_DIR typed error.
       const outResolution = resolveWorkspacePath(outputPath, {
         rootProvider: () => ctx.resolveRoot(),
+        baseDir: args.base_dir,
+        workspaceRoot: args.workspace_root,
       });
       if (!outResolution.ok) throw new PathResolverError(outResolution.message);
       const guardError = checkSymlinkGuard(outResolution, sanitizeLogText(outputPath));
