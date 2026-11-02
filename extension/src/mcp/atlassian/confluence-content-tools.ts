@@ -10,7 +10,27 @@ import {
   formatFsError,
   FILE_PATH_SCHEMA_DESCRIPTION,
 } from "../../services/PathResolver";
+import { extractBaseDirArg } from "../../services/base-dir-resolution";
 import { AtlassianHttpClient, toResult, toErrorResult } from "./atlassian-http-client";
+
+/** SA4E-394 — shared base_dir/workspace_root schema (BR-08/BR-22, AC5). */
+const BASE_DIR_SCHEMA = (pathArg: string) => ({
+  base_dir: {
+    type: "string",
+    description:
+      `Optional workspace root to resolve relative ${pathArg} against. Must be ` +
+      "registered in the server allowlist (MCP_WORKSPACE_ROOTS). Relative values " +
+      "are normalized to absolute. Example: /home/user/project-worktree-B",
+  },
+  workspace_root: {
+    type: "string",
+    description:
+      `Deprecated alias of base_dir (same semantics — optional workspace root to ` +
+      `resolve relative ${pathArg} against; must be in the MCP_WORKSPACE_ROOTS ` +
+      "allowlist). Ignored when base_dir is present. " +
+      "Example: /home/user/project-worktree-B",
+  },
+});
 
 /** Register Confluence content and comment tools (7 tools) */
 export function registerConfluenceContentTools(client: AtlassianHttpClient): void {
@@ -27,11 +47,13 @@ export function registerConfluenceContentTools(client: AtlassianHttpClient): voi
     properties: {
       page_id: { type: "string" },
       file_path: { type: "string", description: FILE_PATH_SCHEMA_DESCRIPTION },
+      ...BASE_DIR_SCHEMA("file_path"),
     },
     required: ["page_id", "file_path"],
   }, async (a) => {
     // SA4E-356: resolve FIRST — before FormData/HTTP (I-1, I-3).
-    const resolution = resolveWorkspacePath(a.file_path);
+    // SA4E-394: per-call base_dir/workspace_root becomes the effective root.
+    const resolution = resolveWorkspacePath(a.file_path, { baseDir: extractBaseDirArg(a) });
     if (!resolution.ok) {
       console.warn(`[confluence-content-tools] confluence_add_attachment resolve failed: ${resolution.message}`);
       return toErrorResult(new Error(resolution.message));

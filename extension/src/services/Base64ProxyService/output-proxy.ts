@@ -16,7 +16,8 @@ import { checkSymlinkGuard } from "../../backend-local-tools";
 
 /** Instance-backed context injected by Base64ProxyService. */
 export interface OutputProxyContext {
-  resolvePath: (filePath: string) => string;
+  /** SA4E-394: optional per-call base_dir forwarded into resolution. */
+  resolvePath: (filePath: string, baseDir?: unknown) => string;
   resolveRoot: () => string | undefined;
 }
 
@@ -131,16 +132,18 @@ function resolveOutputPath(
   artifactName: unknown,
   multi: boolean,
 ): string | null {
+  // SA4E-394: per-call base_dir/workspace_root honored for both branches.
+  const baseDir = args.base_dir !== undefined ? args.base_dir : args.workspace_root;
   const suggested = suggestedFileName(artifactName);
   if (args.output_path) {
-    const resolved = ctx.resolvePath(args.output_path as string);
+    const resolved = ctx.resolvePath(args.output_path as string, baseDir);
     // Multi-file results keep the directory but must use each artifact's own name.
     if (!multi) return resolved;
     return suggested ? path.join(path.dirname(resolved), suggested) : null;
   }
   const fp = args.file_path as string | undefined;
   if (!fp) return null;
-  const resolved = ctx.resolvePath(fp);
+  const resolved = ctx.resolvePath(fp, baseDir);
   // Backend-suggested artifact name (e.g. export_docx → "BRD-v1.docx") keeps the
   // real extension and drops the output next to the source file.
   if (suggested) return path.join(path.dirname(resolved), suggested);
