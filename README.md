@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.13.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.14.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,17 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.14 (2026-11-02)
+
+**KSA-298 — Restore markitdown + markdown-exporter MCP child servers in backend image**
+
+- 🐳 **Docker regression fix** — v1.55.13 switched the backend image to `node:22-alpine` and dropped the Python runtime + both `/opt` venvs, so the orchestration layer could no longer spawn the `markitdown-mcp` and `markdown-exporter-mcp-local` stdio child servers (ENOENT) — losing DOCX export + document conversion
+- 🔧 **Base back to `node:22-slim` (glibc)** — required because native node modules (`bcrypt`, `sqlite3`) need a matching libc across build/runtime, and `markitdown[all]` pulls `onnxruntime`/`magika` which ship manylinux wheels only (no musllinux)
+- 📦 **New `mcp-python` stage** — builds both venvs with `uv` (Python 3.12) and copies them + the uv-managed interpreter into `production`; child servers spawn via bare command name
+- 🪶 **Still lighter than v1.55.12 (5.09GB)** — drops the 1.14GB `chown -R` layer and the 135MB baked models-cache
+- 🛡️ **Trivy SEC-04 gate** — force-upgrade `pillow` 12.1.1 → 13.0.0 in the markdown-exporter venv (40 HIGH/CRITICAL CVEs); strip bundled `pip` from the uv CPython to remove vendored `msgpack` 1.1.2 (5 HIGH CVEs); result 45 → 0 CRITICAL/HIGH
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.14`
 
 ### v1.55.13 (2026-11-02)
 

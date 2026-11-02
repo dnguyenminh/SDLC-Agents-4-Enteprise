@@ -1,6 +1,6 @@
 {
   "name": "sdlc-agents-4-enterprise-monorepo",
-  "version": "1.55.13",
+  "version": "1.55.14",
   "private": true,
   "workspaces": [
     "backend",
