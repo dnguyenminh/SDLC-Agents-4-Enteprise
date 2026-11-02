@@ -38,10 +38,15 @@ ENV NODE_ENV=production
 # SEC-04 supply-chain hardening: the stock node:22-alpine bundles npm/yarn
 # whose trees carry HIGH CVEs (undici 6.29.0 inside npm's make-fetch-happen,
 # 2026-11). Runtime never uses yarn — strip it; patch global npm to current
-# and bump its bundled undici so the image's tooling is clean for the Trivy gate.
+# and hot-swap its bundled undici (in-tree `npm install` fails on npm's own
+# unpublished @npmcli/docs dep, so replace the package folder directly).
 RUN npm install -g npm@latest \
- && cd /usr/local/lib/node_modules/npm \
- && npm install --no-save undici@6.29.1 \
+ && cd /tmp \
+ && npm pack undici@6.29.1 \
+ && rm -rf /usr/local/lib/node_modules/npm/node_modules/undici \
+ && mkdir -p /usr/local/lib/node_modules/npm/node_modules/undici \
+ && tar -xzf undici-6.29.1.tgz -C /usr/local/lib/node_modules/npm/node_modules/undici --strip-components=1 \
+ && rm -f /tmp/undici-6.29.1.tgz \
  && rm -rf /opt/yarn*
 
 COPY --from=build /usr/src/app/package*.json ./
