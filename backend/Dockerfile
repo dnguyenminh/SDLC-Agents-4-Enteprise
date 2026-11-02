@@ -93,12 +93,23 @@ RUN uv venv --python "${PYTHON_VERSION}" /opt/markitdown-venv \
 # markdown-exporter-mcp-local venv. `mcp<2` constraint: upstream declares
 # `mcp>=1.27.0` (unbounded) but imports `mcp.server.fastmcp` — an API removed in
 # mcp 2.x. The import probe below fails the build on exactly this class of drift.
+#
+# SEC-04 Trivy gate: this venv's transitive deps resolve pillow to 12.1.1, which
+# carries 40 HIGH/CRITICAL CVEs (RCE/DoS via crafted images), all fixed in 13.0.0
+# — the latest release. Force-upgrade pillow AFTER install (same force-upgrade
+# pattern as the prior builds for pillow/certifi/pypdf). A PEP-440 conflict
+# warning is EXPECTED and harmless; the version probe fails the build on drift.
+# (markitdown-venv already resolves pillow 13.0.0, so it needs no override.)
+ARG PILLOW_VERSION=13.0.0
 RUN uv venv --python "${PYTHON_VERSION}" /opt/markdown-exporter-venv \
  && VIRTUAL_ENV=/opt/markdown-exporter-venv uv pip install --no-cache \
       "markdown-exporter-mcp-local @ git+https://github.com/Zac-Chen-2001/markdown-exporter-mcp-local@${MARKDOWN_EXPORTER_MCP_REF}" \
       "mcp>=1.27.0,<2.0.0" \
+ && VIRTUAL_ENV=/opt/markdown-exporter-venv uv pip install --no-cache \
+      "pillow==${PILLOW_VERSION}" \
  && test -x /opt/markdown-exporter-venv/bin/markdown-exporter-mcp-local \
- && /opt/markdown-exporter-venv/bin/python -c "import markdown_exporter_mcp.server, md_exporter"
+ && /opt/markdown-exporter-venv/bin/python -c "import markdown_exporter_mcp.server, md_exporter" \
+ && /opt/markdown-exporter-venv/bin/python -c "import PIL, sys; assert PIL.__version__ == '${PILLOW_VERSION}', 'pillow drift: '+PIL.__version__"
 
 # ---------- Stage: production ----------
 FROM node:22-slim AS production
