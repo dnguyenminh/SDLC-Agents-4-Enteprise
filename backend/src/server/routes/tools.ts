@@ -1,5 +1,5 @@
 /**
- * MCP Tools endpoints — GET /mcp/tools/list, POST /mcp/tools/call
+ * MCP tools endpoints — GET /mcp/tools/list, POST /mcp/tools/call
  * Implements: UC-2, UC-7, BR-6, BR-7, BR-8, BR-9, BR-11
  */
 
@@ -18,16 +18,12 @@ const RESERVED_SCOPE_KEYS = ['__projectId', '__userId', '__workspaceRoot'] as co
 
 const ToolCallSchema = z.object({
   tool_name: z.string().min(1, 'Missing required field: tool_name'),
-  arguments: z.record(z.unknown()).default({}),
+  arguments: z.record(z.string(), z.unknown()).default({}),
 });
 
 type Args = Record<string, unknown>;
 
-/**
- * SEC: Resolve caller identity from request.
- * Returns { userId, apiKey: true } for API key callers,
- * { userId, apiKey: false } for session callers, or null if unauthenticated.
- */
+/** Resolve caller identity: { userId, apiKey: true } for API keys, { userId, apiKey:false } for valid admin sessions or JWTs, null otherwise (unauthenticated). */
 async function resolveCallerIdentity(c: Context): Promise<{ userId: string; apiKey: boolean } | null> {
   const authHeader = c.req.header('Authorization') || '';
   const apiKeyHeader = c.req.header('X-API-Key') || '';
@@ -75,11 +71,9 @@ async function stampUserId(c: Context, args: Args, logger: Logger): Promise<void
 }
 
 /**
- * SEC-03: bind X-Project-Id to the authenticated principal. When the caller
- * presents a valid JWT carrying a project/workspace grant, the requested project
- * must be inside that grant; otherwise reject. Shared-API-key/opaque principals
- * have no per-tenant grant, so we keep current behavior but log a warning.
- * Returns an error message when the binding must be rejected (HTTP 403).
+ * SEC-03: bind X-Project-Id to the authenticated principal. A valid JWT with a
+ * project grant must contain the requested project, else reject (403). JWTs
+ * (or admin sessions) without a grant keep the prior shared-key behavior.
  */
 async function verifyProjectBinding(c: Context, projectId: string | undefined, logger: Logger): Promise<string | null> {
   const authHeader = c.req.header('Authorization');

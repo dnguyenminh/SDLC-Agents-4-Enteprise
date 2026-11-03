@@ -5,7 +5,7 @@ const JSON_SCHEMA_TYPE_MAP: Record<string, z.ZodType> = {
   string: z.string(),
   number: z.number(),
   boolean: z.boolean(),
-  object: z.record(z.unknown()),
+  object: z.record(z.string(), z.unknown()),
   array: z.array(z.unknown()),
 };
 
@@ -20,7 +20,7 @@ export class ToolValidator {
       return null;
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
+        return err.issues.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
       }
       return 'Invalid arguments';
     }

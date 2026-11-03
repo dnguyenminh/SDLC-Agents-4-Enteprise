@@ -35,13 +35,13 @@ export const CreateIssueSchema = z.object({
   priority: z.string().optional(),
   labels: z.array(z.string()).optional(),
   components: z.array(z.string()).optional(),
-  custom_fields: z.record(z.unknown()).optional(),
+  custom_fields: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const UpdateIssueSchema = z.object({
   issue_key: IssueKeySchema,
   /** Fields object to update. Must be an object (NOT a JSON string). Example: {"parent":{"id":"12345"}} */
-  fields: z.record(z.unknown()).describe('Fields object to update (NOT a JSON string). Example: {"summary":"New title","parent":{"id":"12345"}}'),
+  fields: z.record(z.string(), z.unknown()).describe('Fields object to update (NOT a JSON string). Example: {"summary":"New title","parent":{"id":"12345"}}'),
 });
 
 export const DeleteIssueSchema = z.object({
@@ -69,14 +69,14 @@ export const TransitionSchema = z.object({
   issue_key: IssueKeySchema,
   transition_id: z.string().min(1),
   comment: z.string().optional(),
-  fields: z.record(z.unknown()).optional(),
+  fields: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const TransitionByNameSchema = z.object({
   issue_key: IssueKeySchema,
   transition_name: z.string().min(1),
   comment: z.string().optional(),
-  fields: z.record(z.unknown()).optional(),
+  fields: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const GetTransitionsSchema = z.object({

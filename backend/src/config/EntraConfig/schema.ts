@@ -67,7 +67,7 @@ export const EntraConfigSchema = z.object({
 export const EntraSurfaceSchema = z.object({
   ssoEnabled: z.boolean(),
   config: EntraConfigSchema.nullable().default(null),
-}) as unknown as z.ZodType<EntraSurface, z.ZodTypeDef, unknown>;
+}) as unknown as z.ZodType<EntraSurface, unknown>;
 
 export { GUID_REGEX };
 
