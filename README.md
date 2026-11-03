@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.14.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.16.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,18 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.16 (2026-11-04)
+
+**SA4E-407 — SDLC Chat panel: OpenCode renderer, multimodal images, peer collaboration, model & export fixes**
+
+- 🎨 **OpenCode-style flat renderer** — rewrote the chat message renderer (user / thinking / tool / answer blocks); fixed stream routing (host now stamps the real active-tab id so assistant responses render), thinking whitespace/markdown/duplication, click-to-expand tool results, right sidebar (Context tokens + MCP list)
+- 🧠 **Model selection** — per-tab model memory; fixed the model-picker click; fixed the false "Finishing previous message" notice; "auto" is offered only when the LLM server advertises it (`Auto (server-routed)` label + tooltip), stale "auto" coerced to a real model; new tab inherits the current tab's model
+- 🔌 **MCP live tools** — the agent now receives the server's live `tools/list` instead of a frozen static catalog
+- 🤝 **Peer collaboration** — tabs register as peers on open/restore/create; general capability advertisement (`capabilities` tags + `advertise` blurb per agent file surfaced in `peer_list`); receiving tab shows inbound/reply blocks
+- 🖼️ **Multimodal images** — compact attachment chip + in-bubble thumbnail; images reach the model via `prompt({images})` (disabled the bundler-incompatible resize worker that dropped them); non-vision tab auto-delegates image reading to a vision peer; image recall across history & reload (persisted state sanitized)
+- 📤 **Export conversation** — fixed export (DataCloneError, then `S is not defined`); images embedded inline as base64 in Markdown/JSON
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.16`
 
 ### v1.55.14 (2026-11-02)
 

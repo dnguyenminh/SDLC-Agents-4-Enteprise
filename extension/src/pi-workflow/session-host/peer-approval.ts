@@ -10,6 +10,7 @@ import type { InlineExtension } from '@earendil-works/pi-coding-agent';
 import type { PeerBus } from '../peer/bus.js';
 import { createPeerApprovalExtension } from '../peer/approval.js';
 import { ensurePeerRuntimeForTab } from '../peer/runtime.js';
+import { capabilitiesForModel, mergeCapabilities } from '../peer/model-capabilities.js';
 import { buildPeerTools, type PeerToolDefinition } from '../peer/tools.js';
 import type { PeerToolApprovalHandler, TurnOriginTracker } from '../peer/types.js';
 import type { SessionHostOptions } from './types.js';
@@ -35,7 +36,13 @@ function ensurePeerIdentity(opts: SessionHostOptions, providerId: string): PeerB
       activeAgentId: opts.activeAgentId ?? '',
       agentName: opts.activeAgentId ?? 'Chat',
       role: opts.role ?? '',
-      capabilities: [],
+      // SA4E-391: publish BOTH the agent-declared capability tags (from the
+      // agent file, e.g. ['design','architecture']) AND the model-derived
+      // ones (e.g. 'vision' from a vision model) so a delegating agent can
+      // pick the right collaborator for ANY task, not just images.
+      capabilities: mergeCapabilities(opts.capabilities, capabilitiesForModel(opts.configuredModelId)),
+      // Free-form blurb so a peer understands HOW to ask this agent for help.
+      advertise: opts.advertise,
       model: opts.configuredModelId ?? 'auto',
       status: 'idle',
     },

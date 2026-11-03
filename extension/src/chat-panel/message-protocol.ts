@@ -61,7 +61,7 @@ export interface ChatModelEntry {
 // === Webview → Extension Messages ===
 
 export type ChatWebviewToExtMessage =
-  | { type: "chat:userMessage"; text: string; context?: ContextItem[]; attachments?: AttachmentItem[] }
+  | { type: "chat:userMessage"; text: string; tabId?: string; context?: ContextItem[]; attachments?: AttachmentItem[] }
   | { type: "chat:approvalAction"; decision: ApprovalDecision; feedback?: string }
   | { type: "chat:graphNodeClick"; nodeId: string }
   | { type: "chat:cancelStream"; streamId?: string }
@@ -70,11 +70,11 @@ export type ChatWebviewToExtMessage =
   | { type: "chat:startFresh" }
   | { type: "chat:pickContext"; contextType: "file" | "folder" | "problems" | "gitDiff" | "terminal" | "spec" | "currentFile" | "steering" | "mcp" }
   | { type: "chat:pickAttachment" }
-  | { type: "chat:setModel"; model: string }
+  | { type: "chat:setModel"; model: string; explicit?: boolean }
   | { type: "chat:setMode"; mode: AutopilotMode }
   | { type: "chat:applyCode"; code: string; filePath?: string }
   | { type: "chat:insertCode"; code: string }
-  | { type: "tab:create" }
+  | { type: "tab:create"; payload?: { tabId: string; name?: string; model?: string } }
   | { type: "tab:switch"; payload: { tabId: string } }
   | { type: "tab:close"; payload: { tabId: string } }
   | { type: "tab:rename"; payload: { tabId: string; newName: string } }
@@ -123,4 +123,6 @@ export type ChatExtToWebviewMessage =
   | { type: "chat:hookTriggered"; hook: { name: string; type: string; status: "running" | "completed" | "skipped" } }
   | { type: "chat:contextUsage"; payload: ContextUsagePayload }
   | { type: "chat:agentSwitched"; agentId: string | null; agentName: string; success: boolean; tabId?: string; sessionRole?: string; sessionPhase?: string; error?: string }
+  /** SA4E-391: MCP server list for the OpenCode-style sidebar. */
+  | { type: "chat:mcpServers"; servers: Array<{ name: string; status: "connected" | "disconnected" | "failed" | "unknown" }> }
   | { type: "serverStatus"; status: "connected" | "disconnected" | "failed" };

@@ -12,6 +12,26 @@
   var sendBtn = S.sendBtn;
   var welcomeEl = S.welcomeEl;
 
+  // === History recall (SA4E-391: text + attached images) ===
+  // A history entry is either a legacy plain string (text only) or
+  // { text, images:[{name,dataUrl}] }. These helpers read both shapes.
+  function historyText(entry) {
+    return (entry && typeof entry === "object") ? (entry.text || "") : (entry || "");
+  }
+  /** Replace the pasted-attachment list with the recalled entry's images. */
+  function restoreHistoryImages(entry) {
+    var imgs = (entry && typeof entry === "object" && entry.images) ? entry.images : [];
+    S.pastedAttachments = imgs.map(function (im) {
+      return { type: "image", name: im.name, dataUrl: im.dataUrl };
+    });
+    if (S.renderAttachments) S.renderAttachments();
+  }
+  /** Recall a history entry: restore its text AND its attached images. */
+  function recallHistory(entry) {
+    S.setInputText(historyText(entry));
+    restoreHistoryImages(entry);
+  }
+
   // === Contenteditable Input Helpers ===
   S.getInputText = function () {
     var clone = inputEl.cloneNode(true);
@@ -95,7 +115,10 @@
   }
 
   // === Send ===
-  sendBtn.addEventListener("click", S.sendMessage);
+  // Lazy lookup: chat-input.js loads BEFORE chat-send.js defines S.sendMessage,
+  // so binding the reference directly would attach `undefined` (dead button).
+  // The wrapper resolves S.sendMessage at click time, matching the Enter path.
+  sendBtn.addEventListener("click", function () { S.sendMessage(); });
 
   inputEl.addEventListener("keydown", function (e) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -106,8 +129,12 @@
       e.preventDefault();
       S.toggleContextMenu();
     }
-    // Up/Down arrow history navigation
-    if (e.key === "ArrowUp" && S.isInputEmpty() && S.messageHistory.length > 0) {
+    // Up/Down arrow history navigation.
+    // ArrowUp opens history when the input is empty; once navigating
+    // (historyIndex !== -1) the input holds a recalled command (not empty),
+    // so keep responding to ArrowUp to walk further back — gating on
+    // isInputEmpty() alone would stop after the first recall.
+    if (e.key === "ArrowUp" && (S.isInputEmpty() || S.historyIndex !== -1) && S.messageHistory.length > 0) {
       e.preventDefault();
       if (S.historyIndex === -1) {
         S.pendingInput = S.getInputText();
@@ -115,7 +142,7 @@
       } else if (S.historyIndex > 0) {
         S.historyIndex--;
       }
-      S.setInputText(S.messageHistory[S.historyIndex]);
+      recallHistory(S.messageHistory[S.historyIndex]);
       inputEl.style.height = "auto";
       inputEl.style.height = Math.min(inputEl.scrollHeight, 300) + "px";
     }
@@ -123,10 +150,11 @@
       e.preventDefault();
       if (S.historyIndex < S.messageHistory.length - 1) {
         S.historyIndex++;
-        S.setInputText(S.messageHistory[S.historyIndex]);
+        recallHistory(S.messageHistory[S.historyIndex]);
       } else {
         S.historyIndex = -1;
         S.setInputText(S.pendingInput);
+        restoreHistoryImages(undefined); // leaving history → drop recalled images
       }
       inputEl.style.height = "auto";
       inputEl.style.height = Math.min(inputEl.scrollHeight, 300) + "px";

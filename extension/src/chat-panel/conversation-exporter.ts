@@ -30,12 +30,20 @@ export interface ExportToolEntry {
   timestamp?: string;
 }
 
+/** SA4E-391: one attached image on a user message (base64 data URL). */
+export interface ExportImage {
+  name?: string;
+  dataUrl: string;
+}
+
 export interface ExportMessageEntry {
   kind: "user" | "assistant" | "error";
   content: string;
   nodeId?: string;
   thinking?: string;
   timestamp?: string;
+  /** SA4E-391 multimodal: images the user attached to this message. */
+  images?: ExportImage[];
 }
 
 export type ExportEntry = ExportToolEntry | ExportMessageEntry;
@@ -72,6 +80,18 @@ function strOrU(v: unknown): string | undefined {
   return typeof v === "string" && v ? v : undefined;
 }
 
+/** SA4E-391: normalize attached images (keep only entries with a data URL). */
+function normalizeImages(v: unknown): ExportImage[] | undefined {
+  if (!Array.isArray(v)) return undefined;
+  const out: ExportImage[] = [];
+  for (const raw of v) {
+    const im = (raw ?? {}) as Record<string, unknown>;
+    const dataUrl = strOrU(im.dataUrl) ?? strOrU(im.uri);
+    if (dataUrl) out.push({ name: strOrU(im.name), dataUrl });
+  }
+  return out.length > 0 ? out : undefined;
+}
+
 /**
  * Normalize one webview tab-message into an export entry.
  * Unknown roles map to assistant (the tab model only stores the four kinds,
@@ -97,6 +117,7 @@ function normalizeMessage(m: Record<string, unknown>): ExportEntry {
       kind: role,
       content: str(m.content),
       timestamp: strOrU(m.timestamp),
+      ...(normalizeImages(m.images) ? { images: normalizeImages(m.images) } : {}),
     };
   }
   return {

@@ -71,15 +71,25 @@
     for (var i = 0; i < S.pastedAttachments.length; i++) {
       var att = S.pastedAttachments[i];
       if (att.type === "image" && att.dataUrl) {
+        // SA4E-391: compact chip (small thumbnail + name + remove) like Kiro,
+        // instead of a large 120x80 preview that crowded the input.
         var wrapper = document.createElement("div");
-        wrapper.className = "input-attachment";
-        var img = document.createElement("img");
-        img.src = att.dataUrl;
-        img.alt = att.name;
-        wrapper.appendChild(img);
+        wrapper.className = "input-attachment-chip";
+        var thumb = document.createElement("img");
+        thumb.className = "chip-thumb";
+        thumb.src = att.dataUrl;
+        thumb.alt = att.name || "image";
+        thumb.title = att.name || "image";
+        wrapper.appendChild(thumb);
+        var nameEl = document.createElement("span");
+        nameEl.className = "chip-name";
+        nameEl.textContent = att.name || "image";
+        wrapper.appendChild(nameEl);
         var removeBtn = document.createElement("button");
-        removeBtn.className = "attach-remove";
+        removeBtn.className = "chip-remove";
+        removeBtn.type = "button";
         removeBtn.textContent = "\u00D7";
+        removeBtn.title = "Remove";
         removeBtn.setAttribute("data-idx", i.toString());
         removeBtn.addEventListener("click", function () {
           var idx = parseInt(this.getAttribute("data-idx"));
@@ -107,6 +117,14 @@
   };
 
   S.addFileReference = function (item) {
+    // SA4E-391 multimodal: a picked image arrives with a base64 data URL —
+    // store it as an image attachment so it renders as a thumbnail AND is sent
+    // to a vision model. Plain files keep the name-only reference.
+    if (item.type === "image" && item.dataUrl) {
+      S.pastedAttachments.push({ type: "image", name: item.label, dataUrl: item.dataUrl });
+      S.renderAttachments();
+      return;
+    }
     if (item.type === "file" || item.type === "folder") {
       S.pastedAttachments.push({ type: "file", name: item.label, dataUrl: null });
       S.renderAttachments();

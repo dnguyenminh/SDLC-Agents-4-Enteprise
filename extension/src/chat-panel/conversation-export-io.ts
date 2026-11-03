@@ -42,8 +42,6 @@ const FILE_FILTERS: Record<ExportFormat, { [name: string]: string[] }> = {
  */
 export async function exportConversationToFile(req: ExportConversationRequest): Promise<void> {
   const cx = buildConversationExport(req.tab, { model: req.model, mode: req.mode });
-  const content =
-    req.format === "json" ? renderConversationJson(cx) : renderConversationMarkdown(cx);
 
   const defaultName = defaultExportFileName(req.tab?.name || "chat", req.format);
   const folder = vscode.workspace.workspaceFolders?.[0];
@@ -58,9 +56,17 @@ export async function exportConversationToFile(req: ExportConversationRequest): 
   });
   if (!target) return; // cancelled — not an error
 
+  // SA4E-391: both formats embed images INLINE as base64 data URLs so the
+  // single export file is fully self-contained (user requirement) — no
+  // sidecar asset files. The default renderer already inlines the data URL.
+  const content =
+    req.format === "json" ? renderConversationJson(cx) : renderConversationMarkdown(cx);
+
   await vscode.workspace.fs.writeFile(target, Buffer.from(content, "utf8"));
   vscode.window.setStatusBarMessage(`$(check) Conversation exported: ${defaultName}`, 5000);
 }
+
+
 
 /**
  * Copy ONE message (user / assistant / error / tool call) as Markdown.

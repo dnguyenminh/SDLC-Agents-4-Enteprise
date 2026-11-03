@@ -36,6 +36,13 @@ export interface SessionHostOptions {
   personaBody?: string;
   /** SA4E-370 S2/S4: id of the agent driving this session (for history tagging + badge). */
   activeAgentId?: string;
+  /** SA4E-391 peer collaboration: structured capability tags from the agent
+   *  file (e.g. ['design','architecture']). Published in peer_list so peers
+   *  can filter on who can help with what. */
+  capabilities?: string[];
+  /** SA4E-391 peer collaboration: free-form "what I do / ask me for …" blurb
+   *  from the agent file. Published in peer_list for peer selection. */
+  advertise?: string;
   /**
    * SA4E-369: owning chat tab id (registry key workspaceRoot+tabId). Optional
    * here because the session-host registry requires it at its own boundary.
@@ -48,12 +55,22 @@ export interface SessionHostOptions {
   peerApprovalGate?: PeerToolApprovalHandler;
 }
 
+/** SA4E-391 multimodal: one image attached to a user turn (pi-ai ImageContent). */
+export interface TurnImage {
+  /** base64 data WITHOUT the `data:<mime>;base64,` prefix. */
+  data: string;
+  /** e.g. "image/png", "image/jpeg". */
+  mimeType: string;
+}
+
 /**
  * SA4E-369 SEC-01/C1 L2: per-turn options — `turnOrigin` tags the executing
  * turn ('user' default keeps every existing caller unchanged, FR-10/AC8).
+ * SA4E-391: `images` carries user-attached images into the model prompt.
  */
 export interface SessionTurnOptions {
   turnOrigin?: PeerTurnOrigin;
+  images?: TurnImage[];
 }
 
 export interface SessionTurnResult {

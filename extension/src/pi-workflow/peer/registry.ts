@@ -87,6 +87,8 @@ export class PeerRegistry {
       agentName: entry.agentName,
       role: entry.role,
       capabilities: [...entry.capabilities],
+      // SA4E-391: surface the capability blurb so peers choose the right one.
+      ...(entry.advertise ? { advertise: entry.advertise } : {}),
       model: entry.model,
       status: entry.status,
       self: entry.tabId === callerTabId,

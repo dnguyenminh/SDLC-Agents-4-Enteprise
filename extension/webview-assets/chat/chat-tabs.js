@@ -16,12 +16,19 @@
   S.createNewTab = function () {
     if (S.tabs.length >= S.MAX_TABS) return;
     S.tabCounter++;
-    var newTab = { id: crypto.randomUUID(), name: "Chat " + S.tabCounter, messages: [], tokenCount: 0, maxTokens: 128000 };
+    // SA4E-391: a new tab INHERITS the current tab's model (not "auto"), so the
+    // user's model choice carries over consistently instead of resetting to a
+    // server-routed default they can't see.
+    var inheritedModel = (S.currentModel && S.currentModel !== "auto") ? S.currentModel : undefined;
+    var newTab = { id: crypto.randomUUID(), name: "Chat " + S.tabCounter, messages: [], tokenCount: 0, maxTokens: 128000, model: inheritedModel };
     S.tabs.push(newTab);
     S.switchToTab(newTab.id);
     S.renderTabBar();
     S.saveStateToDisk();
-    vscode.postMessage({ type: "tab:create" });
+    // SA4E-369: carry the new tab's id + name so the host registers it as a
+    // peer immediately. SA4E-391: also carry the inherited model so the new
+    // tab's peer capability (e.g. vision) is set from the start.
+    vscode.postMessage({ type: "tab:create", payload: { tabId: newTab.id, name: newTab.name, model: inheritedModel } });
   };
 
   S.switchToTab = function (tabId) {
@@ -48,96 +55,35 @@
       if (!wasStreaming) tab.streaming = false;
     }
 
-    // Clear message area and re-render target tab messages
+    // SA4E-391: flat replay — rebuild the whole transcript from tab.messages.
+    // Live (streaming) entries are already IN tab.messages (appendBlock pushes
+    // immediately), so replay shows the in-progress turn too; renderChatHistory
+    // re-binds each entry's _el so further stream deltas keep updating in place.
     messagesEl.innerHTML = "";
-    S.activeToolContainer = null; // Reset container on tab switch
-    S.activeTrace = null; // Reset trace on tab switch
-    // SA4E-381 routing: the target tab may have an OPEN streaming cycle
-    // (turn started there, user switched away mid-stream). Detach it for
-    // the replay below so replay-time seals (finalizeToolContainer →
-    // closeCycle "seal") can't close the live cycle, then re-attach its
-    // buffered DOM in place and restore it as the open cycle afterwards.
-    var liveCycle = tab ? tab.currentCycle : null;
-    if (liveCycle) tab.currentCycle = null;
     if (tab && tab.messages && tab.messages.length > 0) {
-      S.showMessages();
-      for (var i = 0; i < tab.messages.length; i++) {
-        var msg = tab.messages[i];
-        if (liveCycle && msg === liveCycle.entry) {
-          // The open cycle owns its own DOM — re-attach buffered thinking
-          // + the partial answer here (chronological position) instead of
-          // replaying a duplicate partial bubble. Further deltas continue
-          // appending to this DOM once the cycle is restored below.
-          // SA4E-381 Issue 3: adopt live-cycle thinking into the open trace.
-          if (!S.activeTrace) S.openTrace(S.activeTabId);
-          if (liveCycle.thinkingText && String(liveCycle.thinkingText).trim()) {
-            S.ensureThinking(liveCycle);
-            if (liveCycle.thinkingEl && liveCycle.thinkingEl.parentNode === messagesEl) {
-              var tb = S.activeTrace.querySelector(".trace-body");
-              if (tb) tb.appendChild(liveCycle.thinkingEl);
-            }
-          }
-          if (liveCycle.content) {
-            S.ensureBubble(liveCycle);
-            liveCycle.contentEl.innerHTML = MarkdownRenderer.render(liveCycle.content);
-            S.addCodeActions(liveCycle.contentEl);
-          }
-          continue;
-        }
-        if (msg.role === "user") {
-          // User message seals any open trace → new turn boundary.
-          if (S.activeTrace) {
-            S.closeTrace("turn-boundary");
-            S.activeTrace = null;
-          }
-          S.finalizeToolContainer();
-          S.appendMessage(msg.role, msg.content, msg.nodeId, msg);
-        } else if (msg.role === "tool" && msg.toolData) {
-          // Tool entry: ensure a trace is open, render block, adopt into trace body.
-          if (!S.activeTrace) S.openTrace(S.activeTabId);
-          S.finalizeToolContainer();
-          S.renderToolCall(msg.toolData, true, undefined, S.activeTabId);
-          if (S.activeToolContainer && S.activeTrace &&
-              S.activeTrace.querySelector(".trace-body")) {
-            S.activeTrace.querySelector(".trace-body").appendChild(S.activeToolContainer);
-          }
-        } else {
-          // Non-tool, non-user message: seal container + trace, render at root.
-          S.finalizeToolContainer();
-          if (S.activeTrace) {
-            S.closeTrace("turn-boundary");
-            S.activeTrace = null;
-          }
-          S.appendMessage(msg.role, msg.content, msg.nodeId, msg);
-        }
-      }
-      // Seal any trace left open at end of history.
-      if (S.activeTrace) {
-        S.closeTrace("end-of-history");
-        S.activeTrace = null;
-      }
-      S.finalizeToolContainer();
-      // Restore scroll position — unless the tab is still streaming (jump to bottom instead).
+      S.hasMessages = false;
+      S.renderChatHistory(tab.messages);
       if (!wasStreaming && tab.scrollPosition) {
         messagesEl.scrollTop = tab.scrollPosition;
-      } else if (wasStreaming) {
+      } else {
         S.scrollToBottom();
       }
     } else {
       // Empty tab — show welcome state
       messagesEl.classList.add("hidden");
-      welcomeEl.classList.remove("hidden");
+      if (welcomeEl) welcomeEl.classList.remove("hidden");
       S.hasMessages = false;
     }
-    // Restore the live cycle as this tab's open cycle + remirror the
-    // active pointer (the mirror always tracks the ACTIVE tab's cycle).
-    if (liveCycle && tab) tab.currentCycle = liveCycle;
-    S.currentCycle = liveCycle;
 
     if (tab) {
       // Update context icon for this tab
       S.updateContextIcon(tab.tokenCount, tab.maxTokens, tab.breakdown);
       S.lastThreshold = "safe"; // Reset to avoid false pulse
+      if (S.updateSidebarTitle) S.updateSidebarTitle(tab.name);
+      if (S.updateSidebarContext) S.updateSidebarContext(tab.tokenCount || 0, tab.maxTokens || 0);
+      // SA4E-391 per-tab model: restore THIS tab's model in the UI and drive
+      // the single host engine config so the viewed tab's model is used.
+      if (S.applyTabModel) S.applyTabModel(tab);
     }
     S.renderTabBar();
     vscode.postMessage({ type: "tab:switch", payload: { tabId: tabId } });
@@ -154,11 +100,6 @@
       var newIdx = idx > 0 ? idx - 1 : 0;
       S.activeTabId = S.tabs[newIdx].id;
     }
-    // SA4E-381 routing: the active-cycle mirror tracks the NEW active tab
-    // (the closed tab's open cycle, if any, dies with the tab).
-    S.currentCycle = null;
-    var newActive = S.getTab(S.activeTabId);
-    if (newActive && newActive.currentCycle) S.currentCycle = newActive.currentCycle;
     S.renderTabBar();
     S.saveStateToDisk();
     vscode.postMessage({ type: "tab:close", payload: { tabId: tabId } });

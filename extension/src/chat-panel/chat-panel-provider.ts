@@ -131,11 +131,14 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   }
 
   private routeMessage(msg: ChatWebviewToExtMessage): void {
-    // SA4E-381 Issue 1: capture the active tab id when a user message starts a
-    // new turn — all subsequent stream/tool events in that turn will carry
-    // originTabId so the receiving tab can attribute them correctly.
+    // SA4E-381 Issue 1 / SA4E-391 Issue 2: capture the REAL active tab id when a
+    // user message starts a new turn — all subsequent stream/tool events in that
+    // turn carry originTabId so the receiving tab attributes them correctly.
+    // The webview stamps its activeTabId (a UUID) on the user message; a missing
+    // tabId means a legacy/single-tab client, so fall back to undefined (the
+    // webview then treats events as belonging to the viewed tab).
     if (msg.type === "chat:userMessage") {
-      this.turnTabId = "default";
+      this.turnTabId = msg.tabId;
     }
 
     if (handleBuiltinChatMessage(msg, {

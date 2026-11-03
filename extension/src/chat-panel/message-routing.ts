@@ -45,7 +45,12 @@ export async function routeUserMessage(
   enrichedText: string,
   getEngine: () => PiWorkflowAdapter,
   sendToWebview: (msg: ChatExtToWebviewMessage) => void,
-  onTurnComplete?: () => void
+  onTurnComplete?: () => void,
+  // SA4E-391 multimodal: user-attached images for the plain-chat turn.
+  images?: Array<{ data: string; mimeType: string }>,
+  // SA4E-391: when true, images are ONLY for peer_send delegation (this tab's
+  // model is non-vision) — they must NOT be fed to this model's own prompt.
+  imagesForDelegationOnly?: boolean
 ): Promise<void> {
   const textTrimmed = text.trim().toLowerCase();
 
@@ -64,7 +69,7 @@ export async function routeUserMessage(
     const [, , agentTask] = agentMatch;
     debugLog(` handleUserMessage: routed to AGENT (prefix retired, persona drives turn)`);
     sendToWebview({ type: "chat:workingStatus", working: true, label: "Agent turn --- working..." });
-    await getEngine().invokeChat(agentTask);
+    await getEngine().invokeChat(agentTask, images, imagesForDelegationOnly);
     if (onTurnComplete) { onTurnComplete(); }
     sendToWebview({ type: "chat:workingStatus", working: false });
     return;
@@ -86,7 +91,7 @@ export async function routeUserMessage(
 
   // All other -> chat
   debugLog(` handleUserMessage: routed to CHAT (invokeChat)`);
-  await getEngine().invokeChat(enrichedText);
+  await getEngine().invokeChat(enrichedText, images, imagesForDelegationOnly);
   debugLog(` handleUserMessage: invokeChat RETURNED`);
 
   // Fire agentStop hooks

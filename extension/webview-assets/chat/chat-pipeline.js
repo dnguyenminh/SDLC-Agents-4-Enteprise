@@ -119,21 +119,9 @@
   // === Error ===
   S.renderError = function (msg) {
     S.showMessages();
-    // SA4E-371: a failed turn may end without streamComplete — seal any
-    // dangling response cycle + container first so the transcript stays
-    // chronological (assistant entry precedes the standalone error bubble).
-    S.finalizeToolContainer();
-    // SA4E-369: errors are diagnostic gold for external AI analysis —
-    // persist them into the tab model (they previously vanished on reload)
-    // and let the user copy them per-message.
-    var entry = { role: "error", content: msg.message, timestamp: new Date().toISOString() };
-    S.appendMessage("error", msg.message, undefined, entry);
-    var currentTab = S.getTab(S.activeTabId);
-    if (currentTab) {
-      if (!currentTab.messages) currentTab.messages = [];
-      currentTab.messages.push(entry);
-      S.saveStateToDisk();
-    }
+    // SA4E-391: errors persist as an "error" block (diagnostic gold for export)
+    // via the single flat-renderer append — no manual push (avoids double-add).
+    S.appendBlock(S.activeTabId, { role: "error", content: msg.message, timestamp: new Date().toISOString() });
   };
 
   // === Server Status ===

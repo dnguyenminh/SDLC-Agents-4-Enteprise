@@ -12,52 +12,31 @@
 (function () {
   "use strict";
   var S = window.ChatState;
-  var messagesEl = S.messagesEl;
 
-  /** Renders one tinted transcript row (prefix or reply). */
-  function renderPeerRow(tabId, role, text) {
-    if (tabId !== S.activeTabId) return; // passive tab: rows render on switch
-    var tab = S.getTab(tabId);
-    if (!tab) return;
-    if (role === "peer-inbound") {
-      messagesEl.appendChild(buildPeerRowEl(role, text));
-      S.scrollToBottom();
-    } else {
-      // Reply rows reuse the standard pipeline (markdown + code actions + scroll).
-      S.appendMessage(role, text);
-    }
-  }
+  /**
+   * SA4E-391: append a peer row through the FLAT renderer (appendBlock) so it
+   * (a) pushes to tab.messages AND renders when the tab is active, (b) replays
+   * correctly on tab switch/restore, and (c) is export-safe. The old
+   * appendMessage/.message API was removed in the OpenCode rewrite, which is
+   * why the receiving tab showed NOTHING when it helped a peer.
+   */
 
-  function buildPeerRowEl(role, text) {
-    var el = document.createElement("div");
-    el.className = "message " + role;
-    var contentEl = document.createElement("span");
-    contentEl.innerHTML = role === "peer-inbound"
-      ? S.escapeHtml(text) // prefix line is structural text, never Markdown-rendered
-      : MarkdownRenderer.render(text);
-    if (role !== "peer-inbound") S.addCodeActions(contentEl);
-    el.appendChild(contentEl);
-    return el;
-  }
-
-  /** chat:peerInbound — badge + prefix row. */
+  /** chat:peerInbound — badge + inbound banner block on the receiving tab. */
   S.handlePeerInbound = function (msg) {
     var tab = S.getTab(msg.tabId);
     if (!tab) return;
     // AC4 §5.2: badge increments once per inbound task; clears on focus.
     tab.peerUnread = (tab.peerUnread || 0) + 1;
-    // AC4 §5.3: prefix row + preview, persisted with the tab transcript.
+    // AC4 §5.3: inbound banner + preview, persisted with the tab transcript.
     var prefix =
-      "[Peer inbound] from tab \u2026" + String(msg.fromTabId || "").slice(0, 8) +
+      "\u2193 Peer task from tab \u2026" + String(msg.fromTabId || "").slice(0, 8) +
       (msg.fromAgentName ? " (" + msg.fromAgentName + ")" : "") +
-      " \u2014 task " + msg.taskId + (msg.preview ? ": " + msg.preview : "");
-    tab.messages.push({ role: "peer-inbound", content: prefix, peerTaskId: msg.taskId });
-    renderPeerRow(msg.tabId, "peer-inbound", prefix);
+      " \u2014 " + (msg.preview || ("task " + msg.taskId));
+    S.appendBlock(msg.tabId, { role: "peer-inbound", content: prefix, peerTaskId: msg.taskId, timestamp: new Date().toISOString() });
     S.renderTabBar(); // badge dot
-    S.saveStateToDisk();
   };
 
-  /** chat:peerTurnSettled — reply (or curated failure) below the prefix row. */
+  /** chat:peerTurnSettled — reply (or curated failure) block on the receiving tab. */
   S.handlePeerTurnSettled = function (msg) {
     var tab = S.getTab(msg.tabId);
     if (!tab) return;
@@ -67,9 +46,7 @@
     } else {
       text = "[Peer task failed \u2014 " + (msg.error ? msg.error.code + ": " + msg.error.message : "unknown error") + "]";
     }
-    tab.messages.push({ role: "peer-reply", content: text, peerTaskId: msg.taskId });
-    renderPeerRow(msg.tabId, "peer-reply", text);
-    S.saveStateToDisk();
+    S.appendBlock(msg.tabId, { role: "peer-reply", content: text, peerTaskId: msg.taskId, timestamp: new Date().toISOString() });
   };
 
   /** Badge dot on the tab pill (renderTabBar in chat-tabs.js calls this). */

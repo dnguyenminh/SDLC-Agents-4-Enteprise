@@ -55,10 +55,14 @@ export function createSessionPromptTurn(
     if (turnOrigin) turnOrigin.current = turnOriginTag;
     if (turnOriginTag === 'peer') logger.debug('peer turn started', { turnOrigin: turnOriginTag });
     const hooks: SessionTurnHooks = { onToken, onToolEvent, onThinking };
-    const runOnce = async (promptText: string): Promise<string> => {
+    // SA4E-391 multimodal: user-attached images for THIS turn, forwarded to the
+    // model via AgentSession.prompt(text, { images }). Only the first (single)
+    // prompt of a turn carries the images — a chunked/synthesis pass is text.
+    const images = opts?.images;
+    const runOnce = async (promptText: string, withImages?: boolean): Promise<string> => {
       const localCollector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
       const localTracker = new ToolEventTracker();
-      await promptSession(session, promptText, localCollector, localTracker, hooks);
+      await promptSession(session, promptText, localCollector, localTracker, hooks, withImages ? images : undefined);
       return localCollector.text;
     };
 
@@ -69,9 +73,9 @@ export function createSessionPromptTurn(
       const shouldChunk = shouldAutoChunk(tier, promptTokens, DEFAULT_AUTO_CHUNK_CONFIG, chunkThreshold());
       approxHistoryTokens += promptTokens; // this prompt joins the session history
       if (shouldChunk) {
-        return await runChunkedTurn(session, hooks, text, runOnce, recordHistoryGrowth, getFile);
+        return await runChunkedTurn(session, hooks, text, runOnce, recordHistoryGrowth, getFile, images);
       }
-      return await runSingleTurn(session, hooks, text, recordHistoryGrowth, getFile);
+      return await runSingleTurn(session, hooks, text, recordHistoryGrowth, getFile, images);
     } finally {
       if (turnOrigin) turnOrigin.current = 'user'; // reset — never leaks across turns
     }
@@ -114,14 +118,16 @@ async function runChunkedTurn(
   session: unknown,
   hooks: SessionTurnHooks,
   text: string,
-  runOnce: (promptText: string) => Promise<string>,
+  runOnce: (promptText: string, withImages?: boolean) => Promise<string>,
   recordHistoryGrowth: (turnText: string, replyText: string) => void,
-  getFile: () => string | undefined
+  getFile: () => string | undefined,
+  images?: import('./types.js').TurnImage[]
 ): Promise<SessionTurnResult> {
   const chunks = chunkPrompt(text, DEFAULT_AUTO_CHUNK_CONFIG.maxTokensPerChunk);
   const parts: string[] = [];
-  for (const ch of chunks) {
-    const part = await runOnce(ch);
+  // Images ride with the FIRST chunk only (they are the user's turn input).
+  for (let i = 0; i < chunks.length; i++) {
+    const part = await runOnce(chunks[i], i === 0 && !!images);
     parts.push(part);
   }
   const combined = synthesizeChunks(parts);
@@ -140,11 +146,12 @@ async function runSingleTurn(
   hooks: SessionTurnHooks,
   text: string,
   recordHistoryGrowth: (turnText: string, replyText: string) => void,
-  getFile: () => string | undefined
+  getFile: () => string | undefined,
+  images?: import('./types.js').TurnImage[]
 ): Promise<SessionTurnResult> {
   const collector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
   const tracker = new ToolEventTracker();
-  await promptSession(session, text, collector, tracker, hooks);
+  await promptSession(session, text, collector, tracker, hooks, images);
   const replyText = collector.text;
   recordHistoryGrowth(text, replyText); // SA4E-355 UAT fix #2: track history growth
   return {
@@ -169,7 +176,8 @@ async function promptSession(
   promptText: string,
   collector: EventCollector,
   tracker: ToolEventTracker,
-  hooks: SessionTurnHooks
+  hooks: SessionTurnHooks,
+  images?: import('./types.js').TurnImage[]
 ): Promise<void> {
   // Circuit breaker (see ./turn-guards.ts): stops the request loop when the
   // model keeps re-issuing output-limit-truncated tool calls. Runs FIRST so
@@ -192,7 +200,16 @@ async function promptSession(
     }
   );
   try {
-    await (session as { prompt: (t: string) => Promise<void> }).prompt(promptText);
+    // SA4E-391 multimodal: when the user attached images, pass them via the
+    // native AgentSession.prompt options ({ images: ImageContent[] }) so a
+    // vision model receives them. Text-only turns keep the one-arg call.
+    if (images && images.length > 0) {
+      const imageContent = images.map((im) => ({ type: 'image' as const, data: im.data, mimeType: im.mimeType }));
+      await (session as { prompt: (t: string, o?: { images?: unknown[] }) => Promise<void> })
+        .prompt(promptText, { images: imageContent });
+    } else {
+      await (session as { prompt: (t: string) => Promise<void> }).prompt(promptText);
+    }
   } finally {
     try { unsub(); } catch {}
   }

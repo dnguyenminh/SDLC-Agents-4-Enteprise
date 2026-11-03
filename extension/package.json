@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.55.15",
+  "version": "1.55.16",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -321,6 +321,29 @@
           "type": "string",
           "default": ".code-intel/orchestration.json",
           "description": "Path to orchestration config file (relative to workspace root)"
+        },
+        "sdlcAgents.llm.profiles": {
+          "type": "array",
+          "default": [],
+          "description": "SA4E-390: configured LLM provider profiles (id, label, provider, model, baseUrl, useDefaultUrl, lastTestStatus). Managed by the Settings panel's provider table — do not edit by hand.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "provider": { "type": "string" },
+              "model": { "type": "string" },
+              "baseUrl": { "type": "string" },
+              "useDefaultUrl": { "type": "boolean" },
+              "lastTestStatus": { "type": "string" },
+              "lastTestedAt": { "type": "number" }
+            }
+          }
+        },
+        "sdlcAgents.llm.activeProfileId": {
+          "type": "string",
+          "default": "",
+          "description": "SA4E-390: id of the active LLM provider profile (drives the chat model/provider). Managed by the Settings panel."
         },
         "sdlcAgents.llm.provider": {
           "type": "string",

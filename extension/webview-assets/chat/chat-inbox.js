@@ -56,11 +56,22 @@
         }
         break;
       case "chat:contextPicked":
-        S.addContextChip(msg.item);
-        S.addFileReference(msg.item);
+        // SA4E-391 multimodal: an image picked from the file dialog is an
+        // attachment (pixels for a vision model), NOT a text context chip —
+        // adding it as a context chip would send its path as text. Route
+        // images only to the attachment list; everything else keeps both.
+        if (msg.item && msg.item.type === "image" && msg.item.dataUrl) {
+          S.addFileReference(msg.item);
+        } else {
+          S.addContextChip(msg.item);
+          S.addFileReference(msg.item);
+        }
         break;
       case "chat:configUpdate":
-        S.setModel(msg.model);
+        // System-driven (config): update label/global only. Seed the active
+        // tab's model if it has none yet, but never clobber a tab's own choice.
+        S.setModel(msg.model, false);
+        S.seedActiveTabModel(msg.model);
         if (msg.mode) {
           S.currentMode = msg.mode;
           autopilotToggle.classList.toggle("on", msg.mode === "autopilot");
@@ -70,12 +81,31 @@
         S.availableModels = Array.isArray(msg.models) ? msg.models : [];
         S.supportsAuto = msg.supportsAuto !== false;
         S.renderModelDropdown();
-        if (msg.selected) {
-          S.setModel(msg.selected);
+        // SA4E-390 AC6: keep the Model Picker popup in sync when it exists.
+        if (S.modelPicker && S._modelPickerCreated && S.buildPickerModels) {
+          S.modelPicker.setModels(S.buildPickerModels());
+        }
+        // SA4E-391: the server now dictates whether "auto" exists. If a tab
+        // was saved with model "auto" (stale, or from before the server
+        // dropped auto) but the server does NOT advertise "auto", coerce the
+        // tab to the first real model so it never shows a phantom "auto".
+        var firstReal = S.availableModels.length > 0 ? S.availableModels[0].id : null;
+        if (!S.supportsAuto && firstReal) {
+          for (var ti = 0; ti < S.tabs.length; ti++) {
+            if (S.tabs[ti].model === "auto") S.tabs[ti].model = firstReal;
+          }
+        }
+        // Prefer the active tab's own model; otherwise fall back to the host's
+        // selection / auto / first model. System-driven → do NOT clobber tabs.
+        var activeTab = S.getTab(S.activeTabId);
+        if (activeTab && activeTab.model) {
+          S.setModel(activeTab.model, false);
+        } else if (msg.selected) {
+          S.setModel(msg.selected, false); S.seedActiveTabModel(msg.selected);
         } else if (S.supportsAuto) {
-          S.setModel("auto");
+          S.setModel("auto", false); S.seedActiveTabModel("auto");
         } else if (S.availableModels.length > 0) {
-          S.setModel(S.availableModels[0].id);
+          S.setModel(S.availableModels[0].id, false); S.seedActiveTabModel(S.availableModels[0].id);
         }
         break;
       case "chat:workingStatus":
@@ -100,6 +130,11 @@
         break;
       case "serverStatus":
         S.updateServerStatus(msg.status);
+        if (S.updateSidebarServerStatus) S.updateSidebarServerStatus(msg.status);
+        break;
+      case "chat:mcpServers":
+        // SA4E-391: full MCP server list for the sidebar.
+        if (S.renderMcpServers) S.renderMcpServers(msg.servers);
         break;
       case "tab:updated":
         S.handleTabsUpdated(msg.payload);

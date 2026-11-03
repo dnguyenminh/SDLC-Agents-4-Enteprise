@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.14-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.16-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -244,6 +244,18 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.16 (2026-11-04)
+
+**SA4E-407 — SDLC Chat panel: OpenCode renderer, multimodal images, peer collaboration, model & export fixes**
+
+- **OpenCode-style flat renderer** — rewrote the chat message renderer to flat user / thinking / tool / answer blocks (removed the cycle/trace machinery). Fixed stream routing (host now stamps the real active-tab id so assistant responses render), thinking whitespace/markdown/duplication, click-to-expand tool results, and the right sidebar (Context tokens + MCP list).
+- **Model selection** — per-tab model memory; fixed the model-picker click (dialog `stopPropagation` swallowed it); fixed the false "Finishing previous message" notice (single-flight guard never cleared `turnInFlight`); `"auto"` is offered only when the LLM server advertises it (`Auto (server-routed)` label + tooltip), stale `"auto"` is coerced to a real model; a new tab inherits the current tab's model.
+- **MCP live tools** — the agent now receives the server's live `tools/list` instead of a frozen static catalog (startup-race retry + static fallback).
+- **Peer collaboration** — tabs register as peers on open/restore/create; general capability advertisement (`capabilities` tags + an `advertise` blurb per agent file, surfaced in `peer_list`) so an agent can pick the right collaborator for ANY task; the receiving tab shows inbound/reply blocks.
+- **Multimodal images** — compact attachment chip + in-bubble thumbnail; images reach the model via `AgentSession.prompt({images})` (disabled the bundler-incompatible resize worker that silently dropped them); a non-vision tab auto-delegates image reading to a vision-capable peer via `peer_send`; image recall across Up/Down history and reload (persisted state sanitized to strip DOM refs).
+- **Export conversation** — fixed export doing nothing (`DataCloneError` on DOM nodes, then `S is not defined` in `export-ui.js`); attached images embedded inline as base64 in Markdown/JSON.
+- **Version sync** — root/`backend`/`extension` → `1.55.16`.
 
 ### v1.55.11 (2026-10-29)
 

@@ -19,6 +19,7 @@ import {
   createSteeringWatcher,
 } from "./ChatStateManager/dir-watchers";
 import { collectSteeringRules, readAgentInfos, readSkillInfos } from "./ChatStateManager/fs-helpers";
+import { syncPeerTabNames } from "../pi-workflow/peer/lifecycle";
 
 const STATE_KEY = "chatPanel.state";
 
@@ -92,6 +93,20 @@ export class ChatStateManager implements vscode.Disposable {
     debugLog(` restoreChatState: state=${state ? "found" : "null"}`);
 
     if (!state || !state.tabs || state.tabs.length === 0) { return; }
+
+    // SA4E-369: tabs restored on first open bypass tab:create / tab:switch, so
+    // NONE of them were registered as peers — peer_list then saw only the tab
+    // that happened to run a turn (self). Register EVERY restored tab here (the
+    // one place all tabs are known at startup) so a freshly opened panel shows
+    // all tabs to peer_list without the user having to switch into each one.
+    try {
+      syncPeerTabNames(
+        state.tabs as ReadonlyArray<{ id?: unknown; name?: unknown }>,
+        this.workspaceRoot,
+      );
+    } catch (e) {
+      debugError("[ChatPanel] restore peer registration failed (non-fatal)", e as Error);
+    }
 
     this.sendToWebview({
       type: "tab:updated",

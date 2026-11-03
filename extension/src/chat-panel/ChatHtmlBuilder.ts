@@ -29,10 +29,15 @@ export class ChatHtmlBuilder {
     "graph-viz.js", "export-ui.js",
     "chat-core.js", "chat-tabroute.js", "chat-context-usage.js", "chat-tabs.js", "chat-tabs-ui.js",
     "chat-input.js", "chat-attachments.js", "chat-toolbar.js", "chat-model.js",
-    "chat-inbox.js", "chat-send.js", "chat-messages.js", "chat-thinking.js",
-    "chat-cycle.js", "chat-stream.js",
-    "chat-tools.js", "chat-tool-helpers.js", "chat-toolcall.js", "chat-toolupdate.js",
-    "chat-trace.js", "chat-peer-ui.js", "chat-chips.js", "chat-pipeline.js", "chat-codeactions.js", "chat-tabsync.js",
+    "chat-inbox.js", "chat-send.js", "chat-messages.js",
+    // SA4E-391: flat OpenCode-style renderer replaces the per-cycle/work-trace
+    // machinery (chat-cycle/chat-thinking/chat-trace/chat-toolcall/chat-toolupdate/chat-tools).
+    "chat-render.js", "chat-render-tool.js", "chat-stream.js",
+    "chat-peer-ui.js", "chat-chips.js", "chat-pipeline.js", "chat-codeactions.js", "chat-tabsync.js",
+    // SA4E-390 AC6: full Model Picker popup (Search / Recent / grouped list /
+    // Free badge / Esc·Ctrl+A·Ctrl+F) — loads before chat-model.js so the
+    // model button opens the popup instead of the legacy dropdown.
+    "model-picker-popup.js", "chat-sidebar.js",
     "chat-jump-pill.js", "chat-steering.js", "chat-slash.js", "chat-slash-ui.js", "chat-init.js",
   ];
 
@@ -69,10 +74,27 @@ export class ChatHtmlBuilder {
         ${ChatHtmlBuilder.welcomeHtml()}
         <div id="chat-messages" class="hidden"></div>
         ${ChatHtmlBuilder.inputAreaHtml()}
+        ${ChatHtmlBuilder.sidebarHtml()}
     </div>
     ${scriptTags}
 </body>
 </html>`;
+  }
+
+  /** SA4E-391: right sidebar — Context tokens + MCP server list (OpenCode). */
+  private static sidebarHtml(): string {
+    return `<div id="oc-sidebar">
+      <div class="oc-sb-title" id="oc-sb-session">SDLC Pipeline</div>
+      <div class="oc-sb-section" id="oc-sb-context">
+        <div class="oc-sb-head">Context</div>
+        <div class="oc-sb-row" id="oc-ctx-tokens">0 tokens</div>
+        <div class="oc-sb-row" id="oc-ctx-pct">0% used</div>
+      </div>
+      <div class="oc-sb-section" id="oc-sb-mcp">
+        <div class="oc-sb-head">MCP</div>
+        <div id="oc-mcp-list"><div class="oc-sb-row">—</div></div>
+      </div>
+    </div>`;
   }
 
   private static headerHtml(): string {

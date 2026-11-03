@@ -22,12 +22,59 @@
    * .md/.json file via the save dialog. Model/mode are included so the
    * exported transcript is self-describing for external AI analysis.
    */
+  /**
+   * Strip non-serializable fields from a message entry before postMessage.
+   * The flat renderer stores a live DOM reference on `entry._el`; structured
+   * clone (used by postMessage) throws DataCloneError on DOM nodes, which
+   * silently dropped the whole export message — so export "did nothing".
+   * We also carry the thinking block's `text` so reasoning is not lost.
+   */
+  function serializeEntry(m) {
+    if (!m || typeof m !== "object") return m;
+    var out = {
+      role: m.role,
+      content: m.content,
+      timestamp: m.timestamp,
+      nodeId: m.nodeId
+    };
+    // SA4E-391 multimodal: carry attached images (base64 data URLs) so the
+    // exported transcript includes the picture, not just the prompt text.
+    if (m.images && m.images.length) {
+      out.images = m.images.map(function (im) {
+        return { name: im.name, dataUrl: im.dataUrl || im.uri };
+      });
+    }
+    if (m.role === "thinking") {
+      // The exporter's assistant branch renders `thinking` in a fenced block
+      // AND `content` as the reply body. A thinking entry has NO reply body —
+      // set only `thinking` and keep `content` empty, otherwise the reasoning
+      // is printed twice (once fenced, once as plain text). Normalize the text
+      // the same way the UI does so the export has no giant blank-line gaps.
+      // NOTE: this file is its own IIFE — it has NO `S` alias (that's
+      // window.ChatState, set in chat-core.js). Use the global directly;
+      // referencing a bare `S` here throws "S is not defined" and kills export.
+      var CS = window.ChatState;
+      out.thinking = (CS && CS.normalizeThinking) ? CS.normalizeThinking(m.text) : m.text;
+      out.content = "";
+    }
+    if (m.role === "tool" && m.toolData) {
+      out.toolData = {
+        id: m.toolData.id, name: m.toolData.name, args: m.toolData.args,
+        status: m.toolData.status, result: m.toolData.result,
+        error: m.toolData.error, duration: m.toolData.duration,
+        timestamp: m.toolData.timestamp
+      };
+    }
+    return out;
+  }
+
   function requestExport(format, tab, model, mode) {
     if (!tab) return;
+    var messages = (tab.messages || []).map(serializeEntry);
     post({
       type: "chat:exportConversation",
       format: format === "json" ? "json" : "markdown",
-      tab: { id: tab.id, name: tab.name, messages: tab.messages || [] },
+      tab: { id: tab.id, name: tab.name, messages: messages },
       model: model,
       mode: mode
     });
@@ -48,7 +95,7 @@
     btn.textContent = "\u29C9";
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
-      post({ type: "chat:copyMessage", entry: entry });
+      post({ type: "chat:copyMessage", entry: serializeEntry(entry) });
     });
     el.appendChild(btn);
   }
@@ -79,7 +126,7 @@
           }
         }
       }
-      if (entry) post({ type: "chat:copyMessage", entry: entry });
+      if (entry) post({ type: "chat:copyMessage", entry: serializeEntry(entry) });
     });
     header.appendChild(btn);
   }
@@ -106,6 +153,7 @@
     exportMenu.addEventListener("click", function (e) {
       var btn = e.target.closest ? e.target.closest("button[data-format]") : null;
       if (!btn) return;
+      e.stopPropagation();
       requestExport(btn.getAttribute("data-format"), getTab(), getModel(), getMode());
       exportMenu.classList.add("hidden");
     });

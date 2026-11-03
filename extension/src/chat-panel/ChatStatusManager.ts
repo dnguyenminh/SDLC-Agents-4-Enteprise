@@ -31,6 +31,12 @@ export class ChatStatusManager {
     const mcpStatus = this.mcpManager.status;
     const webviewStatus = mapServerStatusToWebview(mcpStatus);
 
+    // SA4E-391: feed the sidebar MCP list (currently the single code-intel server).
+    this.sendToWebview?.({
+      type: "chat:mcpServers",
+      servers: [{ name: "code-intel", status: webviewStatus }],
+    });
+
     if (webviewStatus !== "connected") {
       this.sendToWebview?.({ type: "serverStatus", status: webviewStatus });
       return;

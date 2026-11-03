@@ -1,14 +1,9 @@
 /**
- * Chat Panel — Per-Tab Stream Routing (SA4E-381 Issue 2+3)
- * Single choke point: S.routeStreamEvent(msg).
- *   - Active tab (originTabId === activeTabId): existing live handlers unchanged.
- *   - Background tab: data-only — mutate the origin tab's model (entries +
- *     thinking/text buffers) + tab.streaming/tab.unread pill counters.
- *     ZERO DOM writes to the viewed tab's transcript.
- * Depends on chat-core.js (S.activeTabId, S.getMessageTargetTabId).
- * All functions are runtime-called (postMessage dispatch), so load order
- * only needs to be after chat-core.js; renderTabBar/saveStateToDisk are
- * guarded for modules that load later.
+ * Chat Panel — Per-Tab Stream Routing (SA4E-391 flat renderer)
+ * Single choke point S.routeStreamEvent(msg): every tab-scoped stream event
+ * (streamChunk / streamComplete / toolCall / toolCallUpdate) is dispatched to
+ * the flat renderer, which always updates the OWNING tab's model and renders
+ * DOM only while that tab is active. Background turns bump the unread pill.
  */
 (function () {
   "use strict";
@@ -16,42 +11,23 @@
 
   S.routeStreamEvent = function (msg) {
     var targetTabId = S.getMessageTargetTabId(msg);
-    var render = targetTabId === S.activeTabId;
-
-    if (render) {
-      switch (msg.type) {
-        case "chat:streamChunk":
-          S.handleStreamChunk(msg, targetTabId);
-          break;
-        case "chat:streamComplete":
-          S.handleStreamComplete(msg, targetTabId);
-          break;
-        case "chat:toolCall":
-          S.renderToolCall(msg.toolCall, false, msg.requiresApproval, targetTabId);
-          break;
-        case "chat:toolCallUpdate":
-          S.updateToolCall(msg, targetTabId);
-          break;
-      }
-      return;
-    }
-
-    // Background tab — data-only path.
     var tab = S.getTab(targetTabId);
     if (!tab) return;
+    var isActive = targetTabId === S.activeTabId;
 
     switch (msg.type) {
       case "chat:streamChunk":
-        tab.streaming = true;
+        if (!isActive) tab.streaming = true;
         S.handleStreamChunk(msg, targetTabId);
         break;
       case "chat:streamComplete":
         S.handleStreamComplete(msg, targetTabId);
-        tab.streaming = false;
-        tab.unread = (tab.unread || 0) + 1;
+        if (!isActive) { tab.streaming = false; tab.unread = (tab.unread || 0) + 1; }
         break;
       case "chat:toolCall":
-        tab.streaming = true;
+        if (!isActive) tab.streaming = true;
+        // Count the tool against the live turn so turn-meta can show "N tools".
+        if (tab.live) tab.live.toolCount = (tab.live.toolCount || 0) + 1;
         S.renderToolCall(msg.toolCall, false, msg.requiresApproval, targetTabId);
         break;
       case "chat:toolCallUpdate":
@@ -59,7 +35,9 @@
         break;
     }
 
-    if (S.renderTabBar) S.renderTabBar();
-    S.saveStateToDisk();
+    if (!isActive) {
+      if (S.renderTabBar) S.renderTabBar();
+      S.saveStateToDisk();
+    }
   };
 })();

@@ -54,6 +54,22 @@ export class AdapterCore {
   protected contextProbeState: ContextProbeState = { probeDone: false };
   /** CONCURRENCY-FIX: serializes turns and reports busy instead of overlapping agent runs. */
   protected turnInFlight: Promise<void> | undefined;
+  /**
+   * SA4E-391 multimodal: images attached to the CURRENT turn. Turns are
+   * single-flight (turnInFlight), so a transient per-turn field is safe —
+   * runTurn sets it before dispatch, trySessionTurn reads it for promptTurn,
+   * and it is cleared when the turn settles. Avoids threading `images` through
+   * the abstract runTurnOnce signature and the legacy path.
+   */
+  protected pendingTurnImages?: import('../session-host/types.js').TurnImage[];
+  /**
+   * Cancel signal for the in-flight turn. cancel() rejects this so an awaited
+   * turn stuck BEFORE/INSIDE promptTurn (dead endpoint, half-open socket,
+   * pre-prompt probe) releases immediately — otherwise abortSessionHost alone
+   * cannot free the single-flight chain and every later message stays queued
+   * behind the zombie turn ("Finishing previous message" forever).
+   */
+  protected turnCancelReject: ((reason: Error) => void) | undefined;
 
   public readonly hookEngine = {
     firePromptSubmit: async (_text: string, _streamHandler?: StreamHandler) => {},
@@ -244,7 +260,7 @@ export class AdapterCore {
       return { agentId: previousAgentId, agentName: previousAgentName, success: false, tabId, error: msg };
     }
 
-    let parsed: { name: string; description: string; role?: string; phase?: string; model?: string; personaBody: string };
+    let parsed: { name: string; description: string; role?: string; phase?: string; model?: string; capabilities?: string[]; advertise?: string; personaBody: string };
     try {
       parsed = parseAgentFrontmatter(content, agentId);
     } catch (err) {
@@ -276,6 +292,10 @@ export class AdapterCore {
         phase: parsed.phase,    // FR-07: phase from agent definition
         personaBody: parsed.personaBody, // FR-01/FR-06: persona injected as system prompt
         activeAgentId: agentId,  // S4: track driving agent for badge + history
+        // SA4E-391 peer collaboration: carry the agent's advertised capability
+        // tags + blurb so peer_list can tell other agents what this tab can do.
+        capabilities: parsed.capabilities,
+        advertise: parsed.advertise,
         mcpBridge: this.mcpBridge,
         nCtxDetected: this.getDetectedContextWindow(),
         // SA4E-369 S-02 (a): user-path host creation carries the fail-closed
@@ -328,6 +348,13 @@ export class AdapterCore {
     if (tabId) {
       void import('../session-host/registry.js').then(m => m.abortSessionHost(this.workspaceRoot, tabId)).catch(() => {});
     }
+    // Release the single-flight turn chain even when the host abort cannot
+    // settle a stuck prompt (dead endpoint). runTurn races runTurnOnce against
+    // this rejection, so rejecting here makes the current turn settle → its
+    // .finally clears turnInFlight → the NEXT message is no longer queued.
+    const reject = this.turnCancelReject;
+    this.turnCancelReject = undefined;
+    if (reject) { reject(new Error('PI_TURN_CANCELLED')); }
   }
 
   dispose(): void {

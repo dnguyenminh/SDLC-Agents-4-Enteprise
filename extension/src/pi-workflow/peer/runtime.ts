@@ -29,6 +29,27 @@ export interface PeerRuntime {
 
 let runtime: PeerRuntime | undefined;
 
+/**
+ * SA4E-391 multimodal: per-tab "images attached to the CURRENT user turn".
+ * The turn-executor publishes a tab's images when a USER turn with images
+ * starts; peer_send (from that same tab, inside that same turn) reads them so
+ * the delegated task forwards the pixels to the target vision tab. Cleared
+ * when the user turn settles so images never leak into a later turn.
+ */
+const currentTurnImages = new Map<string, import('../session-host/types.js').TurnImage[]>();
+
+/** Publish the images of the tab's in-flight USER turn (turn-executor calls). */
+export function setCurrentTurnImages(tabId: string, images?: import('../session-host/types.js').TurnImage[]): void {
+  if (!tabId) return;
+  if (images && images.length > 0) currentTurnImages.set(tabId, images);
+  else currentTurnImages.delete(tabId);
+}
+
+/** Read (and KEEP) the tab's current-turn images — peer_send forwards them. */
+export function getCurrentTurnImages(tabId: string): import('../session-host/types.js').TurnImage[] | undefined {
+  return tabId ? currentTurnImages.get(tabId) : undefined;
+}
+
 /** Idempotent accessor — initializes with the real session-host gateway. */
 export function initPeerRuntime(gateway: PeerSessionGateway = sessionHostGateway): PeerRuntime {
   if (runtime) return runtime;

@@ -60,11 +60,48 @@ export async function insertCodeToEditor(code: string): Promise<void> {
   else { await vscode.window.showTextDocument(await vscode.workspace.openTextDocument({ content: code })); }
 }
 
-/** Let the user pick files and forward each as a chat:contextPicked message. */
+/** Image extensions that are read into a base64 data URL for vision models. */
+const IMAGE_EXT_MIME: Record<string, string> = {
+  ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+  ".gif": "image/gif", ".webp": "image/webp", ".bmp": "image/bmp",
+};
+
+/** Max image bytes read inline (8 MB) — avoids ballooning the webview message. */
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+/**
+ * Let the user pick files and forward each as a chat:contextPicked message.
+ * SA4E-391 multimodal: when a picked file is an image, read its bytes into a
+ * base64 `data:` URL and send it as an image attachment so a vision model
+ * actually receives the pixels (previously only the path was sent, so the
+ * model got a filename string and replied "I can't read the image").
+ */
 export async function pickAttachmentFiles(sendToWebview: (msg: ChatExtToWebviewMessage) => void): Promise<void> {
   const uris = await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, canSelectMany: true, title: "Attach Files", filters: { "All Files": ["*"] } });
   if (!uris) { return; }
-  for (const uri of uris) { sendToWebview({ type: "chat:contextPicked", item: { type: "file", label: vscode.workspace.asRelativePath(uri), path: uri.fsPath } }); }
+  const path = require("path") as typeof import("path");
+  for (const uri of uris) {
+    const ext = path.extname(uri.fsPath).toLowerCase();
+    const mime = IMAGE_EXT_MIME[ext];
+    const label = vscode.workspace.asRelativePath(uri);
+    if (mime) {
+      try {
+        const bytes = await vscode.workspace.fs.readFile(uri);
+        if (bytes.byteLength <= MAX_IMAGE_BYTES) {
+          const b64 = Buffer.from(bytes).toString("base64");
+          sendToWebview({
+            type: "chat:contextPicked",
+            item: { type: "image", label: path.basename(uri.fsPath), path: uri.fsPath, dataUrl: `data:${mime};base64,${b64}` } as any,
+          });
+          continue;
+        }
+        vscode.window.showWarningMessage(`Image too large to attach inline (> 8 MB): ${label}`);
+      } catch (err) {
+        console.warn(`[ChatPanelProvider] read image for attach failed: ${(err as Error).message}`);
+      }
+    }
+    sendToWebview({ type: "chat:contextPicked", item: { type: "file", label, path: uri.fsPath } });
+  }
 }
 
 /** Open the chat context picker for the given context type. */

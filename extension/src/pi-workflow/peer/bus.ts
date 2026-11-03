@@ -65,8 +65,8 @@ export class PeerBus extends EventEmitter {
   }
 
   /** UC-2/UC-3: peer_send — Tick 1 atomic, delivery on the next tick (§5.3). */
-  async send(fromTabId: string, targetTabId: string, message: string, mode: PeerTaskMode, origin: 'agent' | 'user'): Promise<SendResult> {
-    const task = this.beginSend(fromTabId, targetTabId, message, mode, origin);
+  async send(fromTabId: string, targetTabId: string, message: string, mode: PeerTaskMode, origin: 'agent' | 'user', images?: import('../session-host/types.js').TurnImage[]): Promise<SendResult> {
+    const task = this.beginSend(fromTabId, targetTabId, message, mode, origin, images);
     logger.info('peer send accepted', { taskId: task.taskId, fromTabId, toTabId: targetTabId, mode });
     if (mode === 'async') return { taskId: task.taskId, state: 'queued' };
     return this.deps.tasks.awaitTerminal(task.taskId, BLOCKING_TIMEOUT_MS);
@@ -105,7 +105,7 @@ export class PeerBus extends EventEmitter {
 
   // --- Tick 1 (§5.3) — NO await between check and commit (I-2, I-7) ---
 
-  private beginSend(fromTabId: string, targetTabId: string, message: string, mode: PeerTaskMode, origin: 'agent' | 'user'): PeerTask {
+  private beginSend(fromTabId: string, targetTabId: string, message: string, mode: PeerTaskMode, origin: 'agent' | 'user', images?: import('../session-host/types.js').TurnImage[]): PeerTask {
     this.assertSendable(fromTabId, targetTabId, message);
     const verdict = this.deps.guards.evaluate(fromTabId, targetTabId, origin);
     if (!verdict.pass) throw verdict.error; // PEER_004/005 — zero state (I-2)
@@ -119,6 +119,8 @@ export class PeerBus extends EventEmitter {
       fromTabId,
       toTabId: targetTabId,
       message,
+      // SA4E-391 multimodal: forward the sender's turn images to the peer.
+      ...(images && images.length > 0 ? { images } : {}),
       mode,
       state: 'queued',
       turnOrigin: 'peer',

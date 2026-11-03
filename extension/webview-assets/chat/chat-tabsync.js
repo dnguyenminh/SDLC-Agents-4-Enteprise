@@ -30,13 +30,16 @@
     if (payload.messageHistory && Array.isArray(payload.messageHistory)) {
       S.messageHistory = payload.messageHistory;
     } else {
-      // Fallback: rebuild history from user messages in all tabs
+      // Fallback: rebuild history from user messages in all tabs. SA4E-391:
+      // keep the attached images on the recalled entry so Up/Down restores
+      // the picture too (entry = { text, images }).
       S.messageHistory = [];
       for (var ti = 0; ti < S.tabs.length; ti++) {
         var tabMsgs = S.tabs[ti].messages || [];
         for (var mi = 0; mi < tabMsgs.length; mi++) {
-          if (tabMsgs[mi].role === "user" && tabMsgs[mi].content) {
-            S.messageHistory.push(tabMsgs[mi].content);
+          var um = tabMsgs[mi];
+          if (um.role === "user" && (um.content || (um.images && um.images.length))) {
+            S.messageHistory.push({ text: um.content || "", images: (um.images && um.images.length) ? um.images : undefined });
           }
         }
       }
@@ -72,17 +75,75 @@
     }
     // Always update icon for active tab when data arrives
     S.updateContextIcon(payload.tokenCount, payload.maxTokens, payload.breakdown);
+    // SA4E-391: mirror into the OpenCode sidebar Context section.
+    if (S.updateSidebarContext) S.updateSidebarContext(payload.tokenCount, payload.maxTokens);
   };
 
   // === State Persistence (KSA-240) ===
   var saveTimer = null;
+
+  /**
+   * SA4E-391: produce a CLEAN, structured-clone-safe copy of the tabs for
+   * persistence. The flat renderer stamps a live DOM node on each entry
+   * (`entry._el`); postMessage structured-clone throws DataCloneError on DOM
+   * nodes, which can silently drop the save (losing attached images on
+   * reload). Strip `_el` and keep only the serializable fields — including
+   * `images` so a recalled/restored message keeps its picture.
+   */
+  function sanitizeTabsForSave(tabs) {
+    return (tabs || []).map(function (t) {
+      var msgs = (t.messages || []).map(function (m) {
+        var out = {
+          role: m.role,
+          content: m.content,
+          text: m.text,
+          nodeId: m.nodeId,
+          durationMs: m.durationMs,
+          toolCount: m.toolCount,
+          timestamp: m.timestamp,
+          peerTaskId: m.peerTaskId,
+        };
+        if (m.images && m.images.length) {
+          out.images = m.images.map(function (im) { return { name: im.name, dataUrl: im.dataUrl || im.uri }; });
+        }
+        if (m.toolData) {
+          out.toolData = {
+            id: m.toolData.id, name: m.toolData.name, args: m.toolData.args,
+            status: m.toolData.status, result: m.toolData.result,
+            error: m.toolData.error, duration: m.toolData.duration, timestamp: m.toolData.timestamp,
+          };
+        }
+        return out;
+      });
+      return {
+        id: t.id, name: t.name, messages: msgs,
+        tokenCount: t.tokenCount, maxTokens: t.maxTokens,
+        model: t.model, scrollPosition: t.scrollPosition,
+        peerUnread: t.peerUnread, breakdown: t.breakdown,
+      };
+    });
+  }
+
+  /** History entries may carry base64 images — copy only serializable fields. */
+  function sanitizeHistoryForSave(history) {
+    return (history || []).map(function (h) {
+      if (h && typeof h === "object") {
+        return { text: h.text || "", images: (h.images && h.images.length) ? h.images.map(function (im) { return { name: im.name, dataUrl: im.dataUrl || im.uri }; }) : undefined };
+      }
+      return h; // legacy plain-string entry
+    });
+  }
 
   S.saveStateToDisk = function () {
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(function() {
       vscode.postMessage({
         type: "chat:saveState",
-        payload: { tabs: S.tabs, activeTabId: S.activeTabId, messageHistory: S.messageHistory }
+        payload: {
+          tabs: sanitizeTabsForSave(S.tabs),
+          activeTabId: S.activeTabId,
+          messageHistory: sanitizeHistoryForSave(S.messageHistory),
+        }
       });
     }, 500);
   };

@@ -38,8 +38,18 @@ export class ChatModelManager {
       }
     }
 
+    // SA4E-391: "auto" is offered ONLY when the LLM server actually advertises
+    // an "auto" model in /v1/models. We never fabricate "auto" ourselves — a
+    // server that doesn't route "auto" would otherwise leave the user picking a
+    // phantom model whose concrete resolution they can't see or control.
+    const serverHasAuto = models.some((m) => m.id.toLowerCase() === "auto");
+
     let selected = llmModel;
-    if (selected && !models.some((m) => m.id === selected)) {
+    if (selected && selected.toLowerCase() === "auto" && !serverHasAuto) {
+      // A stale "auto" from a previous session but the server no longer offers
+      // it → fall back to the first real model so the tab runs a known model.
+      selected = models.length > 0 ? models[0].id : getDefaultModel(provider);
+    } else if (selected && !models.some((m) => m.id === selected)) {
       models = [...models, { id: selected, name: selected }];
     } else if (!selected) {
       selected = models.length > 0 ? models[0].id : getDefaultModel(provider);
@@ -50,7 +60,7 @@ export class ChatModelManager {
       provider,
       models,
       selected,
-      supportsAuto: true,
+      supportsAuto: serverHasAuto,
     });
   }
 }
