@@ -16,11 +16,10 @@ const MAPPINGS = [
     { src: ".code-intel/agents", dst: ".code-intel/agents" },
     { src: ".kiro/hooks", dst: ".kiro/hooks" },
     { src: ".kiro/steering", dst: ".kiro/steering" },
-    { src: ".opencode/skills", dst: ".code-intel/skills" },
-    // .code-intel/skills is the maintained source of truth for skills (30+ skills
-    // such as sm-core, drawio, orchestration, patterns-* exist ONLY here). It is
-    // listed AFTER .opencode/skills so that on any name clash the .code-intel
-    // version wins. Without this mapping those skills never reached the package.
+    // .code-intel/skills is the version-controlled source of truth for skills
+    // (sm-core, drawio, orchestration, patterns-*, ...). NOTE: the old mapping
+    // pointed at .opencode/skills, which is .gitignored machine-local state —
+    // absent on a clean CI checkout, so skills shipped empty there. Removed.
     { src: ".code-intel/skills", dst: ".code-intel/skills" },
     { src: ".code-intel/hooks", dst: ".code-intel/hooks" },
     { src: ".code-intel/steering", dst: ".code-intel/steering" },
