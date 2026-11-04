@@ -83,7 +83,7 @@ async function localRepairPath(
 ): Promise<string> {
   try {
     const plan = planLocalRepair(graph, issues, normalized.spacing);
-    let xml = applyRepairPlan(rawXml, plan);
+    const xml = applyRepairPlan(rawXml, plan);
     if (xml === rawXml) {
       // Repair could not act (e.g. router found no detour) — escalate to ELK
       return await elkRelayout(rawXml, graph, issues, normalized, filePath);
