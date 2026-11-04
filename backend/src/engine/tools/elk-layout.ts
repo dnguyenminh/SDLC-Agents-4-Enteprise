@@ -26,14 +26,13 @@ export function buildElkGraph(graph: DiagramGraph, args: NormalizedArgs): ElkNod
   const nodeMap = new Map<string, ElkNode>();
   const containerIds = new Set(graph.containers.map(c => c.id));
 
-  // Build ELK nodes — containers get layoutOptions + padding for compound layout
+  // Build ELK nodes — containers get padding + inner spacing. With
+  // INCLUDE_CHILDREN the ROOT algorithm drives the whole hierarchy, so
+  // per-container algorithm/direction would conflict and are not set.
   for (const n of [...graph.nodes, ...graph.containers]) {
     const elkNode: ElkNode = { id: n.id, width: n.width, height: n.height };
     if (containerIds.has(n.id)) {
-      // Compound node: ELK must layout children INSIDE this node
       elkNode.layoutOptions = {
-        'elk.algorithm': mapAlgorithm(args.algorithm),
-        'elk.direction': args.direction,
         'elk.spacing.nodeNode': Math.max(args.spacing * 0.6, 30),
         'elk.padding': '[top=40,left=20,bottom=20,right=20]',
       };
@@ -76,6 +75,11 @@ export function buildElkGraph(graph: DiagramGraph, args: NormalizedArgs): ElkNod
     'elk.direction': args.direction,
     'elk.spacing.nodeNode': args.spacing,
     'elk.layered.spacing.nodeNodeBetweenLayers': args.spacing * 2,
+    // Keep connectors orthogonal and away from shapes they pass
+    'elk.edgeRouting': 'ORTHOGONAL',
+    'elk.layered.spacing.edgeNodeBetweenLayers': 20,
+    'elk.layered.spacing.edgeEdgeBetweenLayers': 20,
+    'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
     'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
   };
   return root;
@@ -113,14 +117,6 @@ export function flatten(root: ElkNode): ElkNode[] {
     const node = stack.pop()!;
     out.push(node);
     if (node.children) stack.push(...node.children);
-  }
-  return out;
-}
-
-export function collectEdges(root: ElkNode): ElkEdge[] {
-  const out: ElkEdge[] = [];
-  for (const node of flatten(root)) {
-    if (node.edges) out.push(...node.edges);
   }
   return out;
 }

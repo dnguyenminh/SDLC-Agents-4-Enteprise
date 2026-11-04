@@ -83,7 +83,6 @@ function mergeModuleLanguages(
 
 /** Rebuild the modules table for a single tenant from its files (SA4E-41). */
 export async function updateModules(adapter: DatabaseAdapter, projectId: string): Promise<void> {
-  await adapter.runAsync('DELETE FROM modules WHERE project_id = ?', [projectId]);
   const rows = await adapter.allAsync<{ module: string; language: string; file_count: number; symbol_count: number }>(
     `SELECT module, language, COUNT(*) as file_count,
             (SELECT COUNT(*) FROM symbols WHERE project_id = ? AND file_id IN (SELECT id FROM files WHERE module = f.module AND project_id = ?)) as symbol_count
@@ -92,13 +91,19 @@ export async function updateModules(adapter: DatabaseAdapter, projectId: string)
      GROUP BY module, language`,
     [projectId, projectId, projectId],
   );
-
-  for (const m of mergeModuleLanguages(rows)) {
-    await adapter.runAsync(
-      'INSERT INTO modules (project_id, name, root_path, language, file_count, symbol_count) VALUES (?, ?, ?, ?, ?, ?)',
-      [projectId, m.name, m.name, m.language, m.file_count, m.symbol_count],
-    );
-  }
+  const modules = mergeModuleLanguages(rows);
+  // Atomic rebuild: DELETE + INSERTs from two concurrent full indexes of the same
+  // project could interleave and duplicate rows, breaking the
+  // UNIQUE(project_id, name) arbiter (idx_modules_project_name).
+  await adapter.transactionAsync(async () => {
+    await adapter.runAsync('DELETE FROM modules WHERE project_id = ?', [projectId]);
+    for (const m of modules) {
+      await adapter.runAsync(
+        'INSERT INTO modules (project_id, name, root_path, language, file_count, symbol_count) VALUES (?, ?, ?, ?, ?, ?)',
+        [projectId, m.name, m.name, m.language, m.file_count, m.symbol_count],
+      );
+    }
+  });
 }
 
 /** Process pattern detection for a single module (async). */

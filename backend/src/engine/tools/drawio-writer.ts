@@ -1,28 +1,124 @@
+/**
+ * Serialize ELK layout results back into draw.io XML.
+ *
+ * Key invariants:
+ * - draw.io child geometry is relative to the parent cell; ELK returns child
+ *   coordinates relative to their containing node, so nested positions are
+ *   written as-is while ROOT-level positions get the global normalize shift.
+ *   (Shifting both would double-move nested nodes.)
+ * - Edge sections live in the coordinate space of the ELK node that owns them
+ *   (root or container), which matches the draw.io edge-parent space.
+ */
+
 import type { ElkNode, ElkEdge, RepositionedNode } from './drawio-layout-models.js';
-import { flatten, collectEdges } from './elk-layout.js';
+import { setEdgePointsXml, upsertEdgeStyleKeys, replaceCellGeometryXy } from './drawio-xml-utils.js';
 
 export interface XmlWriteResult {
   xml: string;
   repositionedNodes: RepositionedNode[];
 }
 
+interface Positioned { x: number; y: number; w: number; h: number; }
+interface EdgeRoute { edge: ElkEdge; ownerIsRoot: boolean; }
+
+/** Apply ELK output to the raw XML: node positions, edge waypoints, ports. */
 export function applyLayoutToXml(rawXml: string, laidOut: ElkNode): XmlWriteResult {
-  const newPosRaw = collectNewPos(laidOut);
+  const rootPos = collectRootPositions(laidOut);
+  const { dx, dy } = normalizeOffset(rootPos);
+  const shiftedRoot = shiftBy(rootPos, dx, dy);
+  const positions = collectPositions(laidOut, shiftedRoot);
   const oldPos = readCurrentPositions(rawXml);
-  const { dx, dy } = normalizeOffset(newPosRaw);
-  const newPos = shiftBy(newPosRaw, dx, dy);
+
   let xml = rawXml;
-  for (const [id, pos] of newPos) xml = replaceCellGeometry(xml, id, pos.x, pos.y);
-  for (const edge of collectEdges(laidOut)) xml = replaceEdgeWaypoints(xml, edge, dx, dy);
-  return { xml, repositionedNodes: buildRepositioned(oldPos, newPos) };
+  for (const [id, p] of positions) xml = replaceCellGeometryXy(xml, id, p.x, p.y);
+  for (const route of collectEdgeRoutes(laidOut)) xml = writeEdgeRoute(xml, route, positions, dx, dy);
+  return { xml, repositionedNodes: buildRepositioned(oldPos, positions) };
 }
 
-function collectNewPos(laidOut: ElkNode): Map<string, { x: number; y: number }> {
-  const map = new Map<string, { x: number; y: number }>();
-  for (const node of flatten(laidOut)) {
-    if (node.x !== undefined && node.y !== undefined) map.set(node.id, { x: node.x, y: node.y });
+/** Root-level positions only (children keep parent-relative coordinates). */
+function collectRootPositions(laidOut: ElkNode): Map<string, Positioned> {
+  const map = new Map<string, Positioned>();
+  for (const node of laidOut.children ?? []) {
+    if (node.x !== undefined && node.y !== undefined) {
+      map.set(node.id, { x: node.x, y: node.y, w: node.width, h: node.height });
+    }
   }
   return map;
+}
+
+/** All nodes: root-level shifted, nested untouched (already parent-relative). */
+function collectPositions(laidOut: ElkNode, shiftedRoot: Map<string, Positioned>): Map<string, Positioned> {
+  const map = new Map<string, Positioned>();
+  for (const node of flattenAll(laidOut)) {
+    if (node.id === 'root' || node.x === undefined || node.y === undefined) continue;
+    const base = shiftedRoot.get(node.id) ?? { x: node.x, y: node.y };
+    map.set(node.id, { x: base.x, y: base.y, w: node.width, h: node.height });
+  }
+  return map;
+}
+
+/** All ELK edges with the coordinate space they live in (root vs container). */
+function collectEdgeRoutes(laidOut: ElkNode): EdgeRoute[] {
+  const routes: EdgeRoute[] = [];
+  for (const edge of laidOut.edges ?? []) routes.push({ edge, ownerIsRoot: true });
+  for (const node of flattenAll(laidOut)) {
+    for (const edge of node.edges ?? []) routes.push({ edge, ownerIsRoot: false });
+  }
+  return routes;
+}
+
+/**
+ * Write one edge route: bend points (clearing stale ones) plus fixed
+ * exit/entry anchors derived from ELK section endpoints, so draw.io honors
+ * the routed ports and first/last segments stop cutting through shapes.
+ */
+function writeEdgeRoute(xml: string, route: EdgeRoute, pos: Map<string, Positioned>, dx: number, dy: number): string {
+  const section = route.edge.sections?.[0];
+  if (!section) return xml;
+  const shift = route.ownerIsRoot ? { x: dx, y: dy } : { x: 0, y: 0 };
+  const bends = (section.bendPoints ?? []).map(b => ({ x: b.x + shift.x, y: b.y + shift.y }));
+  let out = setEdgePointsXml(xml, route.edge.id, bends);
+  if (bends.length > 0 && section.startPoint && section.endPoint) {
+    out = writeAnchors(out, route.edge, section, pos, shift);
+  }
+  return out;
+}
+
+/** Convert absolute section endpoints to exitX/exitY and entryX/entryY fractions. */
+function writeAnchors(
+  xml: string, edge: ElkEdge,
+  section: NonNullable<ElkEdge['sections']>[number],
+  pos: Map<string, Positioned>, shift: { x: number; y: number },
+): string {
+  const src = pos.get(edge.sources[0]);
+  const tgt = pos.get(edge.targets[0]);
+  if (!src || !tgt || !section.startPoint || !section.endPoint) return xml;
+  const start = { x: section.startPoint.x + shift.x, y: section.startPoint.y + shift.y };
+  const end = { x: section.endPoint.x + shift.x, y: section.endPoint.y + shift.y };
+  const keys: Record<string, string | number> = {};
+  if (src.w > 0 && src.h > 0) {
+    keys.exitX = clamp((start.x - src.x) / src.w);
+    keys.exitY = clamp((start.y - src.y) / src.h);
+  }
+  if (tgt.w > 0 && tgt.h > 0) {
+    keys.entryX = clamp((end.x - tgt.x) / tgt.w);
+    keys.entryY = clamp((end.y - tgt.y) / tgt.h);
+  }
+  return upsertEdgeStyleKeys(xml, edge.id, keys);
+}
+
+function clamp(v: number): number { return Math.round(Math.min(1, Math.max(0, v)) * 100) / 100; }
+
+function normalizeOffset(pos: Map<string, Positioned>): { dx: number; dy: number } {
+  let minX = 0, minY = 0;
+  for (const p of pos.values()) { minX = Math.min(minX, p.x); minY = Math.min(minY, p.y); }
+  return { dx: minX < 0 ? -minX : 0, dy: minY < 0 ? -minY : 0 };
+}
+
+function shiftBy(pos: Map<string, Positioned>, dx: number, dy: number): Map<string, Positioned> {
+  const out = new Map<string, Positioned>();
+  for (const [id, p] of pos) out.set(id, { ...p, x: p.x + dx, y: p.y + dy });
+  return out;
 }
 
 function readCurrentPositions(xml: string): Map<string, { x: number; y: number }> {
@@ -40,47 +136,9 @@ function readCurrentPositions(xml: string): Map<string, { x: number; y: number }
   return map;
 }
 
-function replaceCellGeometry(xml: string, id: string, x: number, y: number): string {
-  const cellRegex = new RegExp(`(<mxCell\\b[^>]*\\bid="${escapeRegex(id)}"[^>]*>)([\\s\\S]*?)(</mxCell>)`);
-  return xml.replace(cellRegex, (whole, open: string, body: string, close: string) => {
-    const geomRegex = /(<mxGeometry\b[^>]*)(\sx="[^"]*")(\sy="[^"]*")(\s[^>]*?)(\/>|>)/;
-    const fixed = body.replace(geomRegex, (_g, head: string, _x: string, _y: string, tail: string, end: string) =>
-      `${head} x="${round(x)}" y="${round(y)}"${tail}${end}`);
-    return fixed === body ? whole : `${open}${fixed}${close}`;
-  });
-}
-
-function replaceEdgeWaypoints(xml: string, edge: ElkEdge, dx: number, dy: number): string {
-  const bends = edge.sections?.flatMap(s => s.bendPoints ?? []) ?? [];
-  if (bends.length === 0) return xml;
-  const cellRegex = new RegExp(`(<mxCell\\b[^>]*\\bid="${escapeRegex(edge.id)}"[^>]*edge="1"[^>]*>)([\\s\\S]*?)(</mxCell>)`);
-  return xml.replace(cellRegex, (whole, open: string, body: string, close: string) => {
-    const parent = /parent="([^"]+)"/.exec(open)?.[1] ?? '1';
-    if (parent !== '1') return whole;
-    const pointsXml = bends.map(b => `<mxPoint x="${round(b.x + dx)}" y="${round(b.y + dy)}"/>`).join('');
-    const withPoints = body.replace(
-      /(<mxGeometry\b[^>]*relative="1"[^>]*>)([\s\S]*?)(<\/mxGeometry>)/,
-      (_g, head: string, inner: string, tail: string) => `${head}${inner.replace(/<Array as="points">[\s\S]*?<\/Array>/, '')}<Array as="points">${pointsXml}</Array>${tail}`,
-    );
-    return withPoints === body ? whole : `${open}${withPoints}${close}`;
-  });
-}
-
-function normalizeOffset(pos: Map<string, { x: number; y: number }>): { dx: number; dy: number } {
-  let minX = 0, minY = 0;
-  for (const p of pos.values()) { minX = Math.min(minX, p.x); minY = Math.min(minY, p.y); }
-  return { dx: minX < 0 ? -minX : 0, dy: minY < 0 ? -minY : 0 };
-}
-
-function shiftBy(pos: Map<string, { x: number; y: number }>, dx: number, dy: number): Map<string, { x: number; y: number }> {
-  const out = new Map<string, { x: number; y: number }>();
-  for (const [id, p] of pos) out.set(id, { x: p.x + dx, y: p.y + dy });
-  return out;
-}
-
 function buildRepositioned(
   oldPos: Map<string, { x: number; y: number }>,
-  newPos: Map<string, { x: number; y: number }>,
+  newPos: Map<string, Positioned>,
 ): RepositionedNode[] {
   const out: RepositionedNode[] = [];
   for (const [id, p] of newPos) {
@@ -93,8 +151,14 @@ function buildRepositioned(
   return out;
 }
 
-function round(v: number): number { return Math.round(v * 10) / 10; }
-
-function escapeRegex(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** Root itself + all descendants (unlike elk-layout.flatten which skips root). */
+function flattenAll(root: ElkNode): ElkNode[] {
+  const out: ElkNode[] = [root];
+  const stack = [...(root.children ?? [])];
+  while (stack.length > 0) {
+    const node = stack.pop()!;
+    out.push(node);
+    if (node.children) stack.push(...node.children);
+  }
+  return out;
 }

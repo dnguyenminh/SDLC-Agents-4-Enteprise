@@ -61,6 +61,17 @@ async function searchCodePortable(
   return searchCodeLike(adapter, scope, tsTerms, limit);
 }
 
+/**
+ * Build a safe to_tsquery fragment from one search term. Only word characters
+ * survive — a path like `c:\Users\...\settings.json` splits into its name
+ * tokens joined with AND. to_tsquery syntax characters (& | ! ( ) : ' \ *) can
+ * therefore never come from user input, so arbitrary terms can neither raise a
+ * syntax error nor inject tsquery operators.
+ */
+function toSafeTsQueryTerm(term: string): string {
+  return (term.toLowerCase().match(/[\p{L}\p{N}_]+/gu) ?? []).join(' & ');
+}
+
 /** PostgreSQL tsvector full-text search ranked by ts_rank. */
 async function searchCodePostgresFts(
   adapter: DatabaseAdapter,
@@ -68,7 +79,8 @@ async function searchCodePostgresFts(
   terms: string,
   limit: number,
 ): Promise<SearchResult[]> {
-  const tsQuery = terms.split(/\s+/).filter(Boolean).join(' | ');
+  const tsQuery = terms.split(/\s+/).filter(Boolean).map(toSafeTsQueryTerm).filter(Boolean).join(' | ');
+  if (!tsQuery) return []; // no word-like tokens → caller falls back to ILIKE
   return adapter.allAsync<SearchResult>(
     `SELECT s.name, s.kind, s.signature, f.relative_path as filePath,
             s.start_line as startLine, s.end_line as endLine,

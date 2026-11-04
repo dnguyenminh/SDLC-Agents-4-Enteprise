@@ -27,6 +27,8 @@ export function autoIncPk(engine: DatabaseEngine): string {
 export function schemaSql(engine: DatabaseEngine): string {
   const now = nowExpr(engine);
   const idPk = autoIncPk(engine);
+  // TEXT-typed timestamp default for both engines (PG: now() is timestamptz and must be cast to text).
+  const nowText = engine === 'postgresql' ? 'now()::text' : `(datetime('now'))`;
   return `
     CREATE TABLE IF NOT EXISTS users (
       user_id TEXT PRIMARY KEY,
@@ -106,6 +108,18 @@ export function schemaSql(engine: DatabaseEngine): string {
       changed_by TEXT NOT NULL,
       changed_at TEXT NOT NULL,
       requires_restart INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS config_entries (
+      section TEXT NOT NULL,
+      key TEXT NOT NULL,
+      value TEXT NOT NULL DEFAULT '',
+      type TEXT NOT NULL DEFAULT 'json',
+      requires_restart INTEGER NOT NULL DEFAULT 0,
+      workspace_id TEXT NOT NULL DEFAULT 'default',
+      last_modified TEXT NOT NULL DEFAULT ${nowText},
+      modified_by TEXT,
+      UNIQUE(section, key)
     );
 
     CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);

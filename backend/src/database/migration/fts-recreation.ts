@@ -76,13 +76,33 @@ async function recreatePostgresFts(adapter: DatabaseAdapter): Promise<void> {
       BEFORE INSERT OR UPDATE ON knowledge_entries
       FOR EACH ROW EXECUTE FUNCTION ke_tsvector_update()
     `);
-    await adapter.runAsync(`
-      UPDATE knowledge_entries SET tsvector_content =
-        setweight(to_tsvector('english', COALESCE(summary, '')), 'A') ||
-        setweight(to_tsvector('english', COALESCE(tags, '')), 'B') ||
-        setweight(to_tsvector('english', COALESCE(content, '')), 'C')
-      WHERE archived = 0
-    `);
+    // SA4E-45 backfill — ONLY rows the trigger hasn't covered (tsvector_content
+    // IS NULL, i.e. rows predating the trigger). Recomputing the whole table on
+    // every boot wasted minutes and produced pg_log FATALs ("could not send
+    // data to client: Broken pipe") whenever a restart dropped the connection
+    // mid-statement. Batches keep each statement short so partial progress
+    // survives disconnects; in steady state this is a single cheap no-op query.
+    const BATCH_SIZE = 200;
+    let backfilled = 0;
+    for (;;) {
+      const result = await adapter.runAsync(`
+        UPDATE knowledge_entries SET tsvector_content =
+          setweight(to_tsvector('english', COALESCE(summary, '')), 'A') ||
+          setweight(to_tsvector('english', COALESCE(tags, '')), 'B') ||
+          setweight(to_tsvector('english', COALESCE(content, '')), 'C')
+        WHERE id IN (
+          SELECT id FROM knowledge_entries
+          WHERE archived = 0 AND tsvector_content IS NULL
+          LIMIT ${BATCH_SIZE}
+        )
+      `, []);
+      const updated = result?.changes ?? 0;
+      backfilled += updated;
+      if (updated < BATCH_SIZE) break;
+    }
+    if (backfilled > 0) {
+      logger.info(`[fts] PostgreSQL tsvector backfilled for ${backfilled} entries`);
+    }
     logger.info('[fts] PostgreSQL tsvector infrastructure created');
   } catch (err) {
     logger.error({ err }, '[fts] Failed to create PostgreSQL FTS');

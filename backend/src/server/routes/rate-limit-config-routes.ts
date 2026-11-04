@@ -64,7 +64,7 @@ export function createRateLimitConfigRoutes(logger: Logger): Hono {
          VALUES ('rateLimit', 'maxRpm', ?, 'json', 0, ?)
          ON CONFLICT(section, key) DO UPDATE SET
          value = excluded.value,
-         last_modified = datetime('now'),
+         last_modified = current_timestamp,
          modified_by = NULL,
          workspace_id = excluded.workspace_id`,
         [JSON.stringify({ maxRPM: body.maxRPM, hardCap }), workspaceId],
@@ -75,7 +75,7 @@ export function createRateLimitConfigRoutes(logger: Logger): Hono {
          VALUES ('rateLimit', 'hardCap', ?, 'json', 0, ?)
          ON CONFLICT(section, key) DO UPDATE SET
          value = excluded.value,
-         last_modified = datetime('now'),
+         last_modified = current_timestamp,
          modified_by = NULL,
          workspace_id = excluded.workspace_id`,
         [JSON.stringify({ hardCap }), workspaceId],
