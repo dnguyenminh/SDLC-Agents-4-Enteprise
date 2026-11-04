@@ -148,6 +148,62 @@ export function buildMcpBridgeAgentTools(
 }
 
 /**
+ * SA4E-391 (MCP live tools): fetch the RUNNING server's `tools/list` and map
+ * EVERY tool into a directly-callable AgentTool. The static `buildMcpBridgeAgentTools`
+ * above only exposes a frozen 6-tool catalog, so the agent never saw the server's
+ * real tools (drawio_*, get_curated_context, mem_graph, find_tools, …) even when
+ * the sidebar showed "Connected". This builder closes that gap by exposing the
+ * live catalog directly — no `execute_dynamic_tool` two-step needed.
+ *
+ * Each live tool executes via `bridge.callTool(name, args)` (same transport +
+ * timeout + base64 interception as the static path). The server's `inputSchema`
+ * becomes the tool parameters so the model calls them with correct arguments.
+ *
+ * Fail-safe: if the server is down / `listTools` throws, returns [] and the
+ * caller falls back to the static concrete tools (degraded, never crashes).
+ * Approval policy still applies at call time via the shared execute handler.
+ */
+export async function buildMcpBridgeAgentToolsLive(
+  bridge: McpBridge,
+  options?: BridgeToolOptions,
+): Promise<AgentTool[]> {
+  let defs: Array<{ name: string; description?: string; inputSchema?: Record<string, unknown> }> = [];
+  try {
+    defs = await bridge.listTools();
+  } catch (err) {
+    console.warn(`[Pi Extension] live tools/list failed — falling back to static catalog: ${(err as Error).message}`);
+    return [];
+  }
+
+  const audit = options?.auditLog ?? defaultAuditLog;
+  const out: AgentTool[] = [];
+  const seen = new Set<string>(); // BR-1: tool names unique within a session
+  for (const def of defs) {
+    if (!def || typeof def.name !== "string" || !def.name) continue;
+    if (seen.has(def.name)) continue;
+    // Default to an object schema when the server omits one so the SDK accepts
+    // the tool and the model can pass free-form arguments.
+    const parameters = (def.inputSchema && typeof def.inputSchema === "object")
+      ? def.inputSchema
+      : { type: "object", properties: {} };
+    out.push({
+      name: def.name,
+      label: def.name,
+      description: def.description || def.name,
+      parameters,
+      execute: createExecuteHandler(
+        bridge,
+        def.name,
+        parameters,
+        { ...options, audit } as unknown as BridgeOptions,
+      ),
+    } as unknown as AgentTool);
+    seen.add(def.name);
+  }
+  return out;
+}
+
+/**
  * Export for testing
  */
 export { TOOLS };
