@@ -1,20 +1,19 @@
 ---
 name: context-compaction
-description: Context Compaction & Model Tiering
+description: Context compaction / context-window management rules for long SDLC sessions
 ---
-
 
 # Context Compaction & Model Tiering
 
-## Mục đích
+## Purpose
 
-Quản lý context window thông minh thay vì ước tính token tĩnh. SM theo dõi usage theo phase, compact tại breakpoints hợp lý, và chọn model phù hợp cho từng task.
+Manage the context window intelligently instead of static token estimation. SM tracks usage by phase, compacts at sensible breakpoints, and selects the right model for each task.
 
 ---
 
-## 1. Quy tắc giám sát context
+## 1. Context Monitoring Rules
 
-SM PHẢI track token usage ước tính theo phase trong STATUS.json:
+SM MUST track estimated token usage by phase in STATUS.json:
 
 ```json
 {
@@ -27,48 +26,48 @@ SM PHẢI track token usage ước tính theo phase trong STATUS.json:
 }
 ```
 
-### Ngưỡng cảnh báo
+### Warning thresholds
 
-| Mức | % Context Window | Hành động |
-|-----|-----------------|-----------|
-| `normal` | 0–60% | Tiếp tục bình thường |
-| `warn` | 60–80% | ⚠️ Báo user, suggest compact |
-| `critical` | 80–90% | 🟠 Force compact trước khi tiếp tục |
-| `emergency` | 90%+ | 🔴 Force compact ngay, chỉ giữ essential context |
+| Level | % Context Window | Action |
+|-------|-----------------|--------|
+| `normal` | 0–60% | Continue normally |
+| `warn` | 60–80% | Warn user, suggest compact |
+| `critical` | 80–90% | Force compact before continuing |
+| `emergency` | 90%+ | Force compact immediately, keep only essential context |
 
 ---
 
-## 2. Breakpoints — Khi nào compact
+## 2. Breakpoints — When to compact
 
-### Sau mỗi phase hoàn thành (MANDATORY)
+### After each completed phase (MANDATORY)
 
-| Phase vừa xong | Context cần giữ | Context compact (tóm tắt) |
-|---------------|-----------------|---------------------------|
-| BRD done | User stories IDs, NFRs | Bỏ Jira raw, intermediate reasoning |
-| FSD done | Use case IDs, BR-IDs, API contracts | Bỏ BRD full text (đã ingest KB) |
-| TDD done | Architecture decisions, API specs | Bỏ FSD full text (đã ingest KB) |
-| STP/STC done | Test case IDs, coverage matrix | Bỏ TDD full text |
-| Code done | File paths changed, commit hash | Bỏ full source code context |
+| Phase just finished | Context to keep | Context to compact (summarize) |
+|--------------------|-----------------|--------------------------------|
+| BRD done | User story IDs, NFRs | Drop Jira raw, intermediate reasoning |
+| FSD done | Use case IDs, BR-IDs, API contracts | Drop BRD full text (already ingested into KB) |
+| TDD done | Architecture decisions, API specs | Drop FSD full text (already ingested into KB) |
+| STP/STC done | Test case IDs, coverage matrix | Drop TDD full text |
+| Code done | Changed file paths, commit hash | Drop full source code context |
 
 ### Compact template
 
-Sau mỗi phase, SM tạo summary block:
+After each phase, SM creates a summary block:
 
 ```
-📋 Phase Summary — {PHASE_NAME}
+Phase Summary — {PHASE_NAME}
 - Key decisions: {list 3-5 decisions}
 - Artifacts: {file list}
 - Open issues: {if any}
 - Next: {what comes next}
 ```
 
-Rồi drop intermediate context (reasoning, drafts, failed attempts).
+Then drop intermediate context (reasoning, drafts, failed attempts).
 
 ---
 
-## 3. Model Tiering — Chọn model theo task complexity
+## 3. Model Tiering — Choose model by task complexity
 
-### Bảng phân loại
+### Classification
 
 | Task Type | Complexity | Model Recommendation | Sub-agent |
 |-----------|-----------|---------------------|-----------|
@@ -83,30 +82,30 @@ Rồi drop intermediate context (reasoning, drafts, failed attempts).
 | DOCX export, attach | Low | Lighter/faster model | `general-task-execution` |
 | Test execution (run commands) | Low | Lighter/faster model | `general-task-execution` |
 
-### Quy tắc chọn sub-agent
+### Sub-agent selection rules
 
 ```
-IF task chỉ cần:
-  - Đọc file + trả về nội dung
-  - Chạy command đơn giản
-  - Transition Jira
-  - Export DOCX
-→ Dùng general-task-execution (lighter model)
+IF task only needs:
+  - Read file + return content
+  - Run simple command
+  - Jira transition
+  - DOCX export
+→ Use general-task-execution (lighter model)
 
-IF task cần:
-  - Phân tích, reasoning phức tạp
-  - Viết document mới (BRD/FSD/TDD)
-  - Code review có judgment
+IF task needs:
+  - Analysis, complex reasoning
+  - Write new document (BRD/FSD/TDD)
+  - Code review with judgment
   - Security audit
   - Code implementation
-→ Dùng specialized agent (full model)
+→ Use specialized agent (full model)
 ```
 
 ---
 
-## 4. Budget Advisor — Cảnh báo proactive
+## 4. Budget Advisor — Proactive warnings
 
-### Pre-invoke estimation (cập nhật từ experience thực tế)
+### Pre-invoke estimation (updated from real experience)
 
 | Action | Estimated Tokens | Confidence |
 |--------|-----------------|-----------|
@@ -124,7 +123,7 @@ IF task cần:
 ### Advisor messages
 
 ```
-💡 Context Advisor:
+Context Advisor:
 - Estimated next action: ~{N}k tokens
 - Current usage: {used}/{cap} ({percent}%)
 - Recommendation: {proceed / compact first / switch to lighter model}
@@ -134,34 +133,35 @@ IF task cần:
 
 ## 5. Tool Count Awareness
 
-### Quy tắc khi tool count cao
+Tools are available directly in the session in OpenCode; note that every loaded tool's description consumes prompt context.
 
-| Điều kiện | Hành động |
-|-----------|-----------|
-| >30 tools loaded | Suggest `toggle_tool` để disable unused |
-| >50 tools loaded | ⚠️ WARN: tool descriptions chiếm significant context |
-| Session chỉ cần subset | List tools cần thiết, disable rest |
+### Rules when tool count is high
 
-### Tool groups theo phase
+| Condition | Action |
+|-----------|--------|
+| >30 tools loaded | Suggest disabling unused tools to free context |
+| >50 tools loaded | WARN: tool descriptions consume significant context |
+| Session only needs subset | List needed tools, disable the rest |
 
-| Phase | Tools cần thiết | Có thể disable |
-|-------|----------------|----------------|
+### Tool groups by phase
+
+| Phase | Needed tools | May disable |
+|-------|--------------|-------------|
 | Requirements | jira_*, mem_*, find_tools | drawio_*, code_* |
-| Design | mem_*, code_*, find_tools | jira_* (trừ transitions) |
+| Design | mem_*, code_*, find_tools | jira_* (except transitions) |
 | Implementation | code_*, mem_*, git | drawio_*, jira_* |
 | Testing | code_*, test runners | drawio_*, jira_* |
 | Deployment | jira_*, mem_*, git | code_search |
 
 ---
 
-## 6. Anti-patterns — Tránh lãng phí context
+## 6. Anti-patterns — Avoid wasting context
 
-| ❌ Anti-pattern | ✅ Cách đúng |
-|----------------|-------------|
-| Gửi full file khi chỉ cần snippet | Dùng line range hoặc grep trước |
-| Load tất cả tools khi chỉ cần 3 | Toggle off unused tools |
-| Giữ full BRD trong context khi đang code | Compact sau phase, reference KB |
-| Retry cùng prompt 3 lần không thay đổi | Diagnose root cause, thay đổi approach |
-| Include full RUN-LOG trong mỗi invoke | Chỉ include latest 5 entries |
-| Đọc toàn bộ TDD khi chỉ cần 1 section | Đọc specific section bằng line range |
-
+| Anti-pattern | Correct way |
+|--------------|-------------|
+| Send full file when only snippet needed | Use line range or grep first |
+| Load all tools when only 3 needed | Toggle off unused tools |
+| Keep full BRD in context while coding | Compact after phase, reference KB |
+| Retry same prompt 3 times unchanged | Diagnose root cause, change approach |
+| Include full RUN-LOG in every invoke | Only include latest 5 entries |
+| Read entire TDD when only 1 section needed | Read specific section by line range |

@@ -1,10 +1,7 @@
 ---
 name: phase-4-test-planning
-description: Phase 4: Test Planning (QA → STP/STC → SM Review)
+description: Phase 4 workflow — QA creates STP/STC, SM reviews, finalize with Jira attachment
 ---
-
-
-# Phase 4: Test Planning (QA → STP/STC → SM Review)
 
 ## Prerequisites
 
@@ -21,8 +18,8 @@ description: Phase 4: Test Planning (QA → STP/STC → SM Review)
 ```
 invokeSubAgent(
   name: "qa-agent",
-  prompt: "Tạo STP và STC cho {TICKET}. PHẢI tạo draw.io diagrams (test-coverage.drawio + test-execution-flow.drawio) và export PNG.",
-  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+  prompt: "Create STP and STC for {TICKET}. MUST create draw.io diagrams (test-coverage.drawio + test-execution-flow.drawio) and export PNG.",
+  contextFiles: [{ "path": ".opencode/skills/drawio-diagrams/SKILL.md" }]
 )
 ```
 
@@ -30,13 +27,13 @@ invokeSubAgent(
 
 ### Step 4b: SM Reviews STP/STC
 
-**SM tự review** với các tiêu chí:
+**SM self-review** with these criteria:
 
-| # | Tiêu chí | Severity |
+| # | Criteria | Severity |
 |---|----------|----------|
-| 1 | Completeness — RTM coverage = 100%? | Critical |
+| 1 | Completeness — RTM coverage = 100% | Critical |
 | 2 | 6 Test Levels (PBT, UT, IT, E2E-API, E2E-UI, SIT) | Critical |
-| 3 | E2E Classification — SIT maximized automation? | High |
+| 3 | E2E Classification — SIT maximized automation | High |
 | 4 | Consistency — counts, IDs match between STP/STC | High |
 | 5 | Test Case Quality — steps reproducible, data specific | High |
 | 6 | E2E-API Coverage — CRUD lifecycle, auth, errors | High |
@@ -53,22 +50,6 @@ invokeSubAgent(
 5. Verify SIT only has visual/UX tests
 6. Check consistency (counts, IDs)
 7. Generate review report
-
-**Report Format:**
-```
-📋 STP/STC Review — {TICKET}
-
-✅ Điểm tốt:
-- ...
-
-⚠️ Cần cải thiện:
-- ...
-
-❌ Lỗi cần sửa:
-- ...
-
-Verdict: {Approve / Approve with conditions / Reject}
-```
 
 **Outcomes:**
 - **Approve** → proceed to finalize
@@ -98,8 +79,8 @@ Verdict: {Approve / Approve with conditions / Reject}
 ```
 invokeSubAgent(
   name: "qa-agent",
-  prompt: "Fix các issues sau trong STP/STC cho {TICKET}: {list}",
-  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+  prompt: "Fix the following issues in STP/STC for {TICKET}: {list}",
+  contextFiles: [{ "path": ".opencode/skills/drawio-diagrams/SKILL.md" }]
 )
 ```
 
@@ -121,11 +102,11 @@ jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/STC-v1-{T
 
 3. Report:
 ```
-✅ Phase 4 done — STP.md + STC.md created and reviewed.
+Phase 4 done — STP.md + STC.md created and reviewed.
 - {N} test cases across 6 levels
 - RTM coverage: 100%
 - Review: Approved
-Chuyển sang Phase 5 (Implementation)?
+Proceed to Phase 5 (Implementation)?
 ```
 
 4. Wait for user confirmation.
@@ -146,5 +127,3 @@ Chuyển sang Phase 5 (Implementation)?
 
 **QA reads:** KB (BRD + FSD + TDD)
 **QA writes:** STP.md, STC.md → KB
-
-

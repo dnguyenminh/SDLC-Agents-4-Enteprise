@@ -17,6 +17,11 @@ const MAPPINGS = [
     { src: ".kiro/hooks", dst: ".kiro/hooks" },
     { src: ".kiro/steering", dst: ".kiro/steering" },
     { src: ".opencode/skills", dst: ".code-intel/skills" },
+    // .code-intel/skills is the maintained source of truth for skills (30+ skills
+    // such as sm-core, drawio, orchestration, patterns-* exist ONLY here). It is
+    // listed AFTER .opencode/skills so that on any name clash the .code-intel
+    // version wins. Without this mapping those skills never reached the package.
+    { src: ".code-intel/skills", dst: ".code-intel/skills" },
     { src: ".code-intel/hooks", dst: ".code-intel/hooks" },
     { src: ".code-intel/steering", dst: ".code-intel/steering" },
     { src: "documents/templates", dst: "documents/templates" },
