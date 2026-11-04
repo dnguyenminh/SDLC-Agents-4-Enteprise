@@ -1,1 +1,0 @@
-backend/src/index.ts(104,66): error TS7016: Could not find a declaration file for module './database/migration/ensure-pega-category-counters.js'. 'C:/projects/kiro/SDLC-Agents-4-Enterprise/backend/src/database/migration/ensure-pega-category-counters.js' implicitly has an 'any' type.
