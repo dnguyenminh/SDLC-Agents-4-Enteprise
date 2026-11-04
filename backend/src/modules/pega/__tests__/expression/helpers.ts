@@ -11,8 +11,10 @@ export const isSimpleString = (s: string): boolean =>
   !s.includes('"') && !s.includes("'") && !s.includes('\\') && !s.includes('\n') && !s.includes('\t');
 
 // `true`/`false` lex as TRUE/FALSE constants, so they cannot be bare identifiers.
-const RESERVED = new Set(['true', 'false']);
-export const isValidIdentifier = (s: string): boolean => /^[a-zA-Z_]\w*$/.test(s) && !RESERVED.has(s);
+// Pega keywords (.AND. .OR. .NOT. .ISNULL) cannot appear as identifier segments
+// because the lexer matches them as operators (e.g. `.OR.A.A` tokenizes as `.OR.` + `A.A`).
+const RESERVED = new Set(['true', 'false', 'and', 'or', 'not', 'isnull']);
+export const isValidIdentifier = (s: string): boolean => /^[a-zA-Z_]\w*$/.test(s) && !RESERVED.has(s.toLowerCase());
 
 export const evaluator = new PegaExpressionEvaluator();
 
