@@ -6,7 +6,7 @@
 import * as vscode from "vscode";
 import { getNonce } from "../../mcp-server-manager";
 import { SettingsMessageHandler } from "./SettingsMessageHandler";
-import { getProvidersByCategory } from "../../mcp/providers/provider-registry";
+import { PROVIDER_REGISTRY } from "../../mcp/providers/provider-registry";
 
 export class SettingsPanel {
   public static readonly viewType = "sdlcAgentsSettingsPanel";
@@ -18,7 +18,8 @@ export class SettingsPanel {
 
   private constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly secrets: vscode.SecretStorage
+    private readonly secrets: vscode.SecretStorage,
+    private readonly globalState?: vscode.Memento
   ) {
     this.panel = vscode.window.createWebviewPanel(
       SettingsPanel.viewType,
@@ -38,7 +39,8 @@ export class SettingsPanel {
 
     this.messageHandler = new SettingsMessageHandler(
       this.secrets,
-      (msg) => this.panel.webview.postMessage(msg)
+      (msg) => this.panel.webview.postMessage(msg),
+      this.globalState
     );
 
     this.panel.webview.onDidReceiveMessage(
@@ -58,12 +60,12 @@ export class SettingsPanel {
   }
 
   /** Open or reveal the settings panel (singleton). */
-  public static open(extensionUri: vscode.Uri, secrets: vscode.SecretStorage): void {
+  public static open(extensionUri: vscode.Uri, secrets: vscode.SecretStorage, globalState?: vscode.Memento): void {
     if (SettingsPanel.instance) {
       SettingsPanel.instance.panel.reveal();
       return;
     }
-    SettingsPanel.instance = new SettingsPanel(extensionUri, secrets);
+    SettingsPanel.instance = new SettingsPanel(extensionUri, secrets, globalState);
   }
 
   public dispose(): void {
@@ -75,18 +77,32 @@ export class SettingsPanel {
     this.disposables = [];
   }
 
-  private buildProviderOptions(): string {
-    const byCategory = getProvidersByCategory();
-    const labels: Record<string, string> = { cloud: "☁️ Cloud", enterprise: "🏢 Enterprise", gateway: "🔀 Gateways", local: "💻 Local" };
-    let html = "";
-    for (const cat of ["cloud", "enterprise", "gateway", "local"] as const) {
-      const providers = byCategory[cat];
-      if (providers.length === 0) { continue; }
-      html += `<optgroup label="${labels[cat]}">`;
-      for (const p of providers) { html += `<option value="${p.id}">${p.label}</option>`; }
-      html += `</optgroup>`;
+  /**
+   * SA4E-390 UX fix: the Edit Provider modal regressed to a 5-item hardcoded
+   * dropdown. Restore the FULL provider registry (~130 providers) as a
+   * combobox: <input list> + <datalist> lets the user type OR pick, grouped by
+   * category via option labels. Returns the <option> markup for the datalist.
+   */
+  private buildProviderDatalistOptions(): string {
+    const catLabel: Record<string, string> = {
+      cloud: "Cloud", gateway: "Gateway", local: "Local", enterprise: "Enterprise",
+    };
+    return PROVIDER_REGISTRY
+      .map((p) => `<option value="${p.id}" label="${p.label} — ${catLabel[p.category] || p.category}"></option>`)
+      .join("");
+  }
+
+  /**
+   * Inject per-provider metadata (default base URL + whether it is a keyless
+   * local server) so the modal can prefill Base URL and hide the API key field
+   * for ANY registry provider, not just the 5 it used to hardcode.
+   */
+  private buildProviderMetaScript(nonce: string): string {
+    const meta: Record<string, { baseUrl: string; local: boolean }> = {};
+    for (const p of PROVIDER_REGISTRY) {
+      meta[p.id] = { baseUrl: p.baseUrl, local: !p.requiresApiKey };
     }
-    return html;
+    return `<script nonce="${nonce}">window.__providerMeta = ${JSON.stringify(meta)};</script>`;
   }
 
   private getHtml(webview: vscode.Webview): string {
@@ -107,8 +123,15 @@ export class SettingsPanel {
     //                              the settings modules)
     //  7. proxy-tab.js           — proxy form bindings (window.ProxyTab)
     //  8. proxy-tab-handlers.js  — proxy message handlers + init
+    // SA4E-390: the single-provider UI modules (settings-provider.js,
+    // settings-inputs.js) were replaced by the multi-provider table trio
+    // (edit-provider-modal.js, provider-table.js, save-all-controller.js).
+    // edit-provider-modal.js loads before provider-table.js so SS.editProviderModal
+    // exists when a row's Edit/Add handler fires. settings-apply.js +
+    // settings-messages.js stay for the Server/Pega/Atlassian tabs + Test LLM.
     const scripts = [
-      "settings-core.js", "settings-provider.js", "settings-inputs.js",
+      "settings-core.js",
+      "edit-provider-modal.js", "provider-table.js", "save-all-controller.js",
       "settings-connections.js", "settings-apply.js", "settings-messages.js",
       "proxy-tab.js", "proxy-tab-handlers.js",
     ];
@@ -140,10 +163,69 @@ export class SettingsPanel {
             <button class="tab-btn" id="tab-proxy" data-tab="pane-proxy" role="tab" aria-selected="false">&#128274; Proxy</button>
         </div>
         <div class="tab-pane active" id="pane-llm" role="tabpanel">
-            <section class="card" id="provider-section"><h2>&#129302; LLM Provider</h2><div class="provider-select-group"><label for="provider-select">Choose provider</label><select id="provider-select">${this.buildProviderOptions()}</select></div></section>
-            <section class="card" id="api-section" style="display:none;"><h2>&#128273; API Configuration</h2><div class="form-group"><label for="api-key-input">API Key</label><div class="input-with-toggle"><input type="password" id="api-key-input" placeholder="Enter API key..." autocomplete="off"><button class="icon-btn" id="toggle-key-visibility" title="Show/Hide" aria-label="Toggle API key visibility">&#128065;</button></div><div id="key-status" class="status-indicator"></div></div><div class="form-group"><label for="base-url-input">Base URL <span style="opacity:0.6">(optional)</span></label><div class="checkbox-group" style="margin-bottom:6px;"><label><input type="checkbox" id="use-default-url-chk" checked> Use default URL for this provider</label></div><input type="text" id="base-url-input" placeholder="Leave empty for official API" disabled></div><div class="form-group"><label for="model-input">Model</label><input type="text" id="model-input" list="model-datalist" autocomplete="off" placeholder="Chọn hoặc gõ model id (vd: free-tier-models, auto/best-free)"><datalist id="model-datalist"></datalist><div class="field-hint" id="model-description-info"></div></div><div class="btn-row"><button id="save-key-btn" class="btn primary" disabled>Save API Key</button><button id="clear-key-btn" class="btn danger-outline">Clear Key</button></div></section>
-            <section class="card" id="ollama-section" style="display:none;"><h2>&#129433; Ollama Configuration</h2><div class="form-group"><label for="ollama-url-input">Server URL</label><input type="text" id="ollama-url-input" value="http://localhost:11434"></div><div class="form-group"><label for="ollama-model-input">Model</label><select id="ollama-model-input"><option value="">— Select model —</option></select></div><div class="btn-row"><button id="test-ollama-btn" class="btn secondary">Test Connection</button></div><div id="ollama-status" class="status-indicator"></div></section>
+            <!-- SA4E-390: multi-provider table (AC1/AC2/AC5). The legacy single
+                 "Choose provider" dropdown + single API key form were replaced
+                 by this table + Edit Provider modal + Save All. -->
+            <section class="card" id="provider-table-section">
+                <div class="provider-table-header">
+                    <h2>&#129302; LLM Providers</h2>
+                    <div class="btn-row">
+                        <button id="add-profile-btn" class="btn primary">&#10133; Add Provider</button>
+                        <button id="save-all-btn" class="btn secondary" disabled>Save All</button>
+                    </div>
+                </div>
+                <p class="card-desc">Configure one or more LLM providers. Each row shows connection status; use Test to verify and Save All to persist.</p>
+                <div id="provider-table-root"></div>
+            </section>
             <section class="card" id="test-section"><h2>&#129514; Connection Test</h2><p class="card-desc">Send a test prompt to verify your LLM configuration works end-to-end.</p><div class="btn-row"><button id="test-llm-btn" class="btn primary">Test LLM</button></div><div id="test-result" class="test-result" style="display:none;"></div></section>
+        </div>
+        <!-- SA4E-390: Edit Provider modal (AC2/AC3). Hidden until Add/Edit. -->
+        <div id="provider-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="provider-modal-title">
+            <div class="modal-backdrop"></div>
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3 id="provider-modal-title">Add Provider</h3>
+                    <button class="modal-close icon-btn" aria-label="Close">&#10005;</button>
+                </div>
+                <form id="provider-form">
+                    <div class="modal-body">
+                        <div class="form-group" id="provider-form-provider-group">
+                            <label for="provider-form-provider">Provider <span class="required">*</span></label>
+                            <input type="text" id="provider-form-provider" name="provider" list="provider-form-provider-list" autocomplete="off" placeholder="Type or pick a provider (e.g. lmstudio, anthropic, openrouter)">
+                            <datalist id="provider-form-provider-list">${this.buildProviderDatalistOptions()}</datalist>
+                            <div class="field-hint">${PROVIDER_REGISTRY.length} providers available — type to filter or pick from the list.</div>
+                            <div class="field-error" id="provider-form-provider-error" hidden></div>
+                        </div>
+                        <div class="form-group" id="provider-form-api-key-group">
+                            <label for="provider-form-api-key">API Key <span class="required">*</span></label>
+                            <div class="input-with-toggle">
+                                <input type="password" id="provider-form-api-key" name="apiKey" placeholder="Enter API key..." autocomplete="off">
+                                <button type="button" class="icon-btn" id="provider-toggle-key-visibility" title="Show/Hide" aria-label="Toggle API key visibility">&#128065;</button>
+                            </div>
+                            <div class="field-hint" id="provider-form-api-key-hint">Stored securely in VS Code SecretStorage. Never displayed in plain text.</div>
+                            <div class="field-error" id="provider-form-api-key-error" hidden></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Base URL</label>
+                            <div class="checkbox-group" style="margin-bottom:6px;"><label><input type="checkbox" id="provider-form-use-default-url" checked> Use default URL for this provider</label></div>
+                            <input type="text" id="provider-form-base-url" name="baseUrl" placeholder="Leave empty for default" disabled>
+                            <div class="field-error" id="provider-form-base-url-error" hidden></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="provider-form-model">Model <span class="required">*</span></label>
+                            <input type="text" id="provider-form-model" name="model" list="provider-form-model-list" autocomplete="off" placeholder="e.g. qwen-text, claude-3-sonnet, gpt-4o">
+                            <datalist id="provider-form-model-list"></datalist>
+                            <div class="field-hint" id="provider-form-model-hint"></div>
+                            <div class="field-error" id="provider-form-model-error" hidden></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="provider-test-btn" class="btn secondary">Test Connection</button>
+                        <button type="button" id="provider-cancel-btn" class="btn danger-outline">Cancel</button>
+                        <button type="submit" id="provider-save-btn" class="btn primary" disabled>Save</button>
+                    </div>
+                </form>
+            </div>
         </div>
         <div class="tab-pane" id="pane-server" role="tabpanel">
             <section class="card" id="pega-config-section"><h2>&#127970; Pega Platform Connection</h2><p class="card-desc">Configure Pega REST API credentials for rule indexing.</p><div class="form-group"><label for="pega-endpoint-input">Pega Endpoint URL</label><input type="text" id="pega-endpoint-input" placeholder="http://localhost:8080/prweb"></div><div class="form-group"><label for="pega-username-input">Operator ID (Username)</label><input type="text" id="pega-username-input" placeholder="admin@jira"></div><div class="form-group"><label for="pega-password-input">Password / Token</label><div class="input-with-toggle"><input type="password" id="pega-password-input" placeholder="Enter Pega password..." autocomplete="off"><button class="icon-btn" id="toggle-pega-password-visibility" title="Show/Hide" aria-label="Toggle Pega password visibility">&#128065;</button></div></div><div class="btn-row"><button id="save-pega-btn" class="btn primary">Save Pega Config</button><button id="test-pega-btn" class="btn secondary">Test Connection</button><button id="fetch-pega-btn" class="btn secondary">Fetch Pega Context</button></div><div id="pega-test-result" class="status-indicator"></div></section>
@@ -158,6 +240,7 @@ export class SettingsPanel {
             <section class="card" id="proxy-test-section"><h2>&#129514; Test Connection</h2><p class="card-desc">Test proxy connectivity by connecting to an external URL.</p><div class="form-group"><label for="proxy-test-url-input">Test URL</label><input type="text" id="proxy-test-url-input" placeholder="https://httpbin.org/get" value="https://httpbin.org/get"></div><div class="btn-row"><button id="test-proxy-btn" class="btn primary">Test Proxy</button><button id="detect-proxy-btn" class="btn secondary">Detect System Proxy</button></div><div id="proxy-test-result" class="status-indicator"></div></section>
         </div>
     </div>
+    ${this.buildProviderMetaScript(nonce)}
     ${scriptTags}
 </body>
 </html>`;

@@ -5,7 +5,8 @@
 (function () {
   "use strict";
 
-  var vscode = acquireVsCodeApi();
+  // Reuse the single VS Code API instance (see provider-table.js note).
+  var vscode = window.__vscodeApi || (window.__vscodeApi = acquireVsCodeApi());
   var SS = window.SettingsShared = window.SettingsShared || {};
 
   // Modal state
@@ -23,15 +24,33 @@
     { id: "ollama", label: "Ollama (Local)", category: "local" },
   ];
 
+  // SA4E-390 UX fix: the full provider registry (~130 providers) is injected by
+  // the host as window.__providerMeta ({ id: { baseUrl, local } }). These small
+  // hardcoded maps are only a fallback for the handful of well-known providers.
+  var PROVIDER_META = window.__providerMeta || {};
+
   var PROVIDER_DEFAULTS = {
-    anthropic: { baseUrl: "https://api.anthropic.com", model: "claude-3-sonnet" },
-    openai: { baseUrl: "https://api.openai.com/v1", model: "gpt-4o" },
-    lmstudio: { baseUrl: "http://localhost:1234/v1", model: "qwen2-7b-instruct" },
-    openrouter: { baseUrl: "https://openrouter.ai/api/v1", model: "openrouter-mixtral" },
-    ollama: { baseUrl: "http://localhost:11434", model: "llama3" },
+    anthropic: { baseUrl: "https://api.anthropic.com" },
+    openai: { baseUrl: "https://api.openai.com/v1" },
+    lmstudio: { baseUrl: "http://localhost:1234/v1" },
+    openrouter: { baseUrl: "https://openrouter.ai/api/v1" },
+    ollama: { baseUrl: "http://localhost:11434" },
   };
 
-  var LOCAL_PROVIDERS = ["lmstudio", "ollama", "onnx"];
+  /** Default base URL for any provider id (registry first, then fallback). */
+  function defaultBaseUrl(providerId) {
+    var meta = PROVIDER_META[providerId];
+    if (meta && meta.baseUrl) { return meta.baseUrl; }
+    var fb = PROVIDER_DEFAULTS[providerId];
+    return fb ? fb.baseUrl : "";
+  }
+
+  /** A provider is "local/keyless" when the registry says it needs no API key. */
+  function isLocalProvider(providerId) {
+    var meta = PROVIDER_META[providerId];
+    if (meta) { return !!meta.local; }
+    return ["lmstudio", "ollama", "onnx", "llamacpp", "vllm"].indexOf(providerId) !== -1;
+  }
 
   /** Create the modal DOM structure. */
   function createModal() {
@@ -66,26 +85,50 @@
       validateForm();
     });
 
-    // API key input
-    apiKeyInput?.addEventListener("input", validateForm);
+    // API key input — revalidate, and refetch models for cloud providers once
+    // a key is entered (gateways need the key to return /v1/models).
+    var apiKeyModelsTimer = null;
+    apiKeyInput?.addEventListener("input", function () {
+      validateForm();
+      if (apiKeyModelsTimer) { clearTimeout(apiKeyModelsTimer); }
+      apiKeyModelsTimer = setTimeout(function () {
+        var pid = providerSelect && providerSelect.value;
+        if (pid && apiKeyInput.value.trim().length > 0) {
+          // Force a refetch: the key may unlock the provider's model list.
+          lastModelsKey = null;
+          requestProviderModels(pid);
+        }
+      }, 600);
+    });
 
     // Use default URL checkbox
     useDefaultUrlChk?.addEventListener("change", function () {
       if (useDefaultUrlChk.checked) {
         baseUrlInput.disabled = true;
-        var providerId = providerSelect.value;
-        var defaults = PROVIDER_DEFAULTS[providerId];
-        baseUrlInput.value = defaults?.baseUrl || "";
+        baseUrlInput.value = defaultBaseUrl(providerSelect.value);
       } else {
         baseUrlInput.disabled = false;
         baseUrlInput.value = "";
         baseUrlInput.focus();
       }
       validateForm();
+      // Base URL changed → refetch the model list from the new target server.
+      lastModelsKey = null;
+      requestProviderModels(providerSelect.value);
     });
 
-    // Base URL input
-    baseUrlInput?.addEventListener("input", validateForm);
+    // Base URL input — refetch models when the user points at another server
+    // (debounced so we don't fetch on every keystroke).
+    var baseUrlModelsTimer = null;
+    baseUrlInput?.addEventListener("input", function () {
+      validateForm();
+      if (baseUrlModelsTimer) { clearTimeout(baseUrlModelsTimer); }
+      baseUrlModelsTimer = setTimeout(function () {
+        if (providerSelect && providerSelect.value) {
+          requestProviderModels(providerSelect.value);
+        }
+      }, 600);
+    });
 
     // Model input
     modelInput?.addEventListener("input", validateForm);
@@ -141,10 +184,10 @@
     var modelInput = modalEl.querySelector("#provider-form-model");
     var useDefaultUrlChk = modalEl.querySelector("#provider-form-use-default-url");
 
-    var isLocal = LOCAL_PROVIDERS.includes(providerId);
-    var defaults = PROVIDER_DEFAULTS[providerId];
+    var isLocal = isLocalProvider(providerId);
+    var baseUrl = defaultBaseUrl(providerId);
 
-    // Show/hide API key for local providers
+    // Show/hide API key for local (keyless) providers
     if (isLocal) {
       apiKeyGroup.style.display = "none";
       if (apiKeyRequired) { apiKeyRequired.textContent = ""; }
@@ -154,25 +197,71 @@
     }
 
     // Update hints
-    if (providerId === "lmstudio") {
-      apiKeyHint.textContent = "Optional for LM Studio (local server typically doesn't require auth)";
-    } else if (providerId === "ollama") {
-      apiKeyHint.textContent = "Not required for Ollama (local server)";
+    if (isLocal) {
+      apiKeyHint.textContent = "Not required for local/keyless providers.";
     } else {
       apiKeyHint.textContent = "Stored securely in VS Code SecretStorage. Never displayed in plain text.";
     }
 
-    // Update defaults
-    if (defaults) {
-      if (useDefaultUrlChk.checked) {
-        baseUrlInput.value = defaults.baseUrl;
-      }
-      if (!modelInput.value) {
-        modelInput.value = defaults.model;
-      }
+    // Prefill the default base URL when "use default" is on. Model has no
+    // registry default (varies per server), so leave whatever the user typed.
+    if (useDefaultUrlChk.checked && baseUrl) {
+      baseUrlInput.value = baseUrl;
     }
 
+    // SA4E-390 UX: auto-fill the Model combobox from the provider's live model
+    // list (/v1/models). Ask the host; the providerModels listener populates
+    // the datalist and selects the first model when the field is empty.
+    requestProviderModels(providerId);
+
     validateForm();
+  }
+
+  /**
+   * Ask the host for the provider's model list. Keyed by provider + baseUrl so
+   * the list is refetched when EITHER changes — the combobox must reflect the
+   * exact server the Base URL points at (not a saved setting).
+   */
+  var lastModelsKey = null;
+  function requestProviderModels(providerId) {
+    if (!providerId || !modalEl) { return; }
+    var baseUrlInput = modalEl.querySelector("#provider-form-base-url");
+    var useDefaultChk = modalEl.querySelector("#provider-form-use-default-url");
+    // When "use default" is on, send no override (host resolves the default);
+    // otherwise send the typed Base URL so the fetch targets that server.
+    var baseUrl = (useDefaultChk && useDefaultChk.checked)
+      ? (baseUrlInput ? baseUrlInput.value.trim() : "")
+      : (baseUrlInput ? baseUrlInput.value.trim() : "");
+    var key = providerId + "|" + baseUrl;
+    if (key === lastModelsKey) { return; }
+    lastModelsKey = key;
+    var hint = modalEl.querySelector("#provider-form-model-hint");
+    if (hint) { hint.textContent = "Loading models\u2026"; }
+    vscode.postMessage({ type: "getProviderModels", provider: providerId, baseUrl: baseUrl });
+  }
+
+  /** Populate the Model datalist and auto-select when empty. */
+  function applyProviderModels(models) {
+    if (!modalEl) { return; }
+    var datalist = modalEl.querySelector("#provider-form-model-list");
+    var modelInput = modalEl.querySelector("#provider-form-model");
+    var hint = modalEl.querySelector("#provider-form-model-hint");
+    var list = Array.isArray(models) ? models : [];
+    if (datalist) {
+      datalist.innerHTML = list
+        .map(function (m) { return '<option value="' + (m.id || m) + '"></option>'; })
+        .join("");
+    }
+    if (hint) {
+      hint.textContent = list.length
+        ? (list.length + " model(s) found \u2014 type or pick one")
+        : "No models reported by the server \u2014 type the model id manually";
+    }
+    // Auto-fill: only when the user has not typed a model yet.
+    if (modelInput && !modelInput.value.trim() && list.length) {
+      modelInput.value = list[0].id || list[0];
+      validateForm();
+    }
   }
 
   /** Validate form and enable/disable save button. */
@@ -186,7 +275,7 @@
     var saveBtn = modalEl.querySelector("#provider-save-btn");
 
     var providerId = providerSelect.value;
-    var isLocal = LOCAL_PROVIDERS.includes(providerId);
+    var isLocal = isLocalProvider(providerId);
     var hasProvider = !!providerId;
     var hasApiKey = isLocal || (apiKeyInput.value.trim().length > 0);
     var hasModel = modelInput.value.trim().length > 0;
@@ -232,38 +321,42 @@
 
     var providerSelect = modalEl.querySelector("#provider-form-provider");
     var baseUrlInput = modalEl.querySelector("#provider-form-base-url");
+    var modelInput = modalEl.querySelector("#provider-form-model");
     var testBtn = modalEl.querySelector("#provider-test-btn");
     var statusEl = modalEl.querySelector(".modal-status") || createStatusEl();
 
     var providerId = providerSelect.value;
     var baseUrl = baseUrlInput.value.trim() || undefined;
+    var model = modelInput ? modelInput.value.trim() : "";
 
     if (!providerId) {
       showStatus("Please select a provider first", "error");
+      return;
+    }
+    // The end-to-end probe sends a real completion, so the model is required —
+    // without it a local server (LM Studio / llama-server) returns 400
+    // "No models loaded" (param: model).
+    if (!model) {
+      showStatus("Enter a Model id before testing", "error");
       return;
     }
 
     testInProgress = true;
     testBtn.disabled = true;
     testBtn.classList.add("loading");
+    // Keep "Testing..." until the host replies with profileTested — the
+    // message listener (below) writes the real success/failure result.
     showStatus("Testing connection...", "info");
 
-    try {
-      vscode.postMessage({
-        type: "testProfileConnection",
-        profileId: "modal-test-" + Date.now(),
-        provider: providerId,
-        baseUrl: baseUrl,
-        isTemp: true,
-      });
-      showStatus("✅ Connection test sent", "success");
-    } catch (err) {
-      showStatus("❌ " + (err.message || "Connection test failed"), "error");
-    } finally {
-      testInProgress = false;
-      testBtn.disabled = false;
-      testBtn.classList.remove("loading");
-    }
+    // The profileTested listener resets testInProgress/testBtn on reply.
+    vscode.postMessage({
+      type: "testProfileConnection",
+      profileId: "modal-test-" + Date.now(),
+      provider: providerId,
+      baseUrl: baseUrl,
+      model: model,
+      isTemp: true,
+    });
   }
 
   /** Handle Save button click. */
@@ -281,7 +374,7 @@
     var baseUrl = baseUrlInput.value.trim();
     var model = modelInput.value.trim();
 
-    if (!providerId || (!LOCAL_PROVIDERS.includes(providerId) && !apiKey) || !model) {
+    if (!providerId || (!isLocalProvider(providerId) && !apiKey) || !model) {
       validateForm();
       return;
     }
@@ -422,8 +515,7 @@
     } else {
       useDefaultUrlChk.checked = true;
       baseUrlInput.disabled = true;
-      var defaults = PROVIDER_DEFAULTS[formData.providerId || ""];
-      baseUrlInput.value = defaults?.baseUrl || "";
+      baseUrlInput.value = defaultBaseUrl(formData.providerId || "");
     }
 
     onProviderChange(formData.providerId || "");
@@ -439,9 +531,16 @@
 
   /** Show the modal. */
   function show() {
+    // Allow the Model list to refetch for whatever provider is shown next.
+    lastModelsKey = null;
     modalEl?.classList.remove("hidden");
+    // If a provider is already selected (edit mode / prefilled add), fetch its
+    // models now so the Model combobox is populated on open.
+    var providerSelect = modalEl?.querySelector("#provider-form-provider");
+    if (providerSelect && providerSelect.value) {
+      requestProviderModels(providerSelect.value);
+    }
     setTimeout(function () {
-      var providerSelect = modalEl?.querySelector("#provider-form-provider");
       providerSelect?.focus();
     }, 50);
   }
@@ -456,6 +555,55 @@
   function isVisible() {
     return !modalEl?.classList.contains("hidden");
   }
+
+  /** Reset the Save button out of its loading state. */
+  function resetSaveButton() {
+    if (!modalEl) { return; }
+    var saveBtn = modalEl.querySelector("#provider-save-btn");
+    if (saveBtn) {
+      saveBtn.classList.remove("loading");
+      // Re-validate so Save re-enables only when the form is still valid.
+      validateForm();
+    }
+  }
+
+  // Handle host responses. handleSave() posts saveProfile and leaves the Save
+  // button spinning — WITHOUT this listener the button spun forever (the UAT
+  // "Save does nothing" bug). Close on success, surface the error otherwise.
+  window.addEventListener("message", function (event) {
+    var msg = event.data || {};
+    switch (msg.type) {
+      case "profileAdded":
+      case "profileEdited":
+        resetSaveButton();
+        if (msg.success) {
+          hide();
+        } else if (isVisible()) {
+          showStatus("\u274C " + (msg.error || "Save failed"), "error");
+        }
+        break;
+      case "providerModels":
+        // SA4E-390 UX: fill the Model combobox from the provider's live list.
+        applyProviderModels(msg.models);
+        break;
+      case "profileTestStarted":
+        // Host acknowledged the test began — keep the spinner (handled below).
+        break;
+      case "profileTested": {
+        // Ad-hoc test result for the modal's own Test Connection button.
+        testInProgress = false;
+        var tBtn = modalEl && modalEl.querySelector("#provider-test-btn");
+        if (tBtn) { tBtn.disabled = false; tBtn.classList.remove("loading"); }
+        if (isVisible()) {
+          showStatus(
+            msg.success ? "\u2705 Connection OK" : ("\u274C " + (msg.error || msg.message || "Connection failed")),
+            msg.success ? "success" : "error"
+          );
+        }
+        break;
+      }
+    }
+  });
 
   // Expose to SettingsShared for other modules
   SS.editProviderModal = {

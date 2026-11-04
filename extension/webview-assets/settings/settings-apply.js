@@ -35,31 +35,35 @@
     savedState.hasAnthropicKey = msg.hasAnthropicKey;
     savedState.hasOpenaiKey = msg.hasOpenaiKey;
 
-    providerSelect.value = msg.provider;
+    // SA4E-390: the legacy single-provider LLM controls were removed from the
+    // LLM tab (replaced by the Provider Table). Guard every legacy-DOM write so
+    // the shared "state" message still restores Server/Pega/Atlassian fields.
+    if (providerSelect) {
+      providerSelect.value = msg.provider;
+      if (SS.updateModelOptions) { SS.updateModelOptions(msg.provider); }
+      if (msg.model && modelInput) { modelInput.value = msg.model; }
+      if (msg.model && ollamaModelInput) { ollamaModelInput.value = msg.model; }
 
-    SS.updateModelOptions(msg.provider);
-    if (msg.model) { modelInput.value = msg.model; }
-    if (msg.model) { ollamaModelInput.value = msg.model; }
-
-    baseUrlInput.value = msg.baseUrl || "";
-    // Set checkbox state — checked if URL matches default or is empty
-    var defUrl = defaultUrls[msg.provider] || "";
-    if (!msg.baseUrl || msg.baseUrl === defUrl) {
-      useDefaultUrlChk.checked = true;
-      baseUrlInput.value = defUrl;
-      baseUrlInput.disabled = true;
-    } else {
-      useDefaultUrlChk.checked = false;
-      baseUrlInput.value = msg.baseUrl;
-      baseUrlInput.disabled = false;
+      if (baseUrlInput) {
+        baseUrlInput.value = msg.baseUrl || "";
+        var defUrl = defaultUrls[msg.provider] || "";
+        if (!msg.baseUrl || msg.baseUrl === defUrl) {
+          useDefaultUrlChk.checked = true;
+          baseUrlInput.value = defUrl;
+          baseUrlInput.disabled = true;
+        } else {
+          useDefaultUrlChk.checked = false;
+          baseUrlInput.value = msg.baseUrl;
+          baseUrlInput.disabled = false;
+        }
+        var s = SS.getProviderState(msg.provider);
+        s.useDefaultUrl = useDefaultUrlChk.checked;
+        s.baseUrl = baseUrlInput.value;
+        s.model = msg.model || "";
+      }
     }
-    // Initialize per-provider state from loaded config
-    var s = SS.getProviderState(msg.provider);
-    s.useDefaultUrl = useDefaultUrlChk.checked;
-    s.baseUrl = baseUrlInput.value;
-    s.model = msg.model || "";
 
-    ollamaUrlInput.value = msg.ollamaUrl || "http://localhost:11434";
+    if (ollamaUrlInput) { ollamaUrlInput.value = msg.ollamaUrl || "http://localhost:11434"; }
 
     if (msg.backendUrl !== undefined) {
       backendUrlInput.value = msg.backendUrl;
@@ -101,7 +105,8 @@
       if (radio) { radio.checked = true; }
     }
 
-    SS.updateSections(msg.provider);
+    // SA4E-390: updateSections belonged to the removed single-provider module.
+    if (SS.updateSections) { SS.updateSections(msg.provider); }
   }
 
   function handleModels(msg) {
@@ -109,16 +114,18 @@
     if (typeof msg.defaultModel === "string") {
       defaultModelByProvider[msg.provider] = msg.defaultModel;
     }
-    if (msg.provider === SS.currentProvider) {
+    // SA4E-390: legacy single-provider model catalog UI removed — the Provider
+    // Table owns model display now. Guard so a stray "models" message is a no-op.
+    if (msg.provider === SS.currentProvider && SS.updateModelOptions) {
       SS.updateModelOptions(msg.provider);
       if (msg.selected) {
         var input = document.getElementById("model-input");
         if (input) {
           input.value = msg.selected;
-          SS.updateModelDescription(msg.selected, msg.models || []);
+          if (SS.updateModelDescription) { SS.updateModelDescription(msg.selected, msg.models || []); }
         }
       }
-      if (SS.currentProvider !== "ollama") {
+      if (SS.currentProvider !== "ollama" && modelInput) {
         modelInput.placeholder = SS.defaultModelFor(SS.currentProvider);
       }
     }

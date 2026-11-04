@@ -5,7 +5,8 @@
 (function () {
   "use strict";
 
-  var vscode = acquireVsCodeApi();
+  // Reuse the single VS Code API instance (see provider-table.js note).
+  var vscode = window.__vscodeApi || (window.__vscodeApi = acquireVsCodeApi());
   var SS = window.SettingsShared = window.SettingsShared || {};
 
   /** SaveAllController class. */
