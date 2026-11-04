@@ -40,8 +40,12 @@
         S.renderResumePrompt(msg);
         break;
       case "chat:error":
+        // SA4E-391 cross-tab routing: render into the origin tab's model; only
+        // clear the (shared, viewed-tab) working bar when the error belongs to
+        // the tab on screen — a background tab's error must not stop the active
+        // tab's spinner.
         S.renderError(msg);
-        S.setWorking(false);
+        if (S.getMessageTargetTabId(msg) === S.activeTabId) S.setWorking(false);
         break;
       case "chat:peerInbound":
         // SA4E-369 AC4: a peer task arrived in tab msg.tabId — badge + prefix row.

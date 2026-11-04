@@ -13,13 +13,37 @@ export class StreamHandler {
   private buffer: ChatExtToWebviewMessage[] = [];
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly DEBOUNCE_MS = 50;
-  private readonly originTabId: string | undefined;
+  private originTabId: string | undefined;
 
   constructor(private readonly emit: (msg: ChatExtToWebviewMessage) => void, originTabId?: string) {
     this.originTabId = originTabId;
   }
 
-  /** Add originTabId to message if set (stamp from turn start). */
+  /**
+   * SA4E-391: the origin tab id of the CURRENTLY running turn. Turns are
+   * single-flight (serialized), so the running turn owns this value for its
+   * whole lifetime; the adapter sets it at turn start and clears it at settle.
+   * This stamps every stream event with the tab that PRODUCED it — so a turn
+   * from another tab (queued/started after a switch) can never mislabel this
+   * turn's late events. Any buffered token already carries the origin via
+   * withOriginTabId at flush time.
+   */
+  setOriginTabId(tabId: string | undefined): void {
+    // Flush anything buffered under the previous origin BEFORE switching, so a
+    // pending chunk is never re-stamped with a different turn's tab.
+    this.flush();
+    this.originTabId = tabId;
+  }
+
+  /** SA4E-391: the origin tab of the currently running turn (or undefined
+   * between turns). Used to stamp side-channel events (live tool activity)
+   * that don't flow through this handler's emit path but must still route to
+   * the producing tab. */
+  getOriginTabId(): string | undefined {
+    return this.originTabId;
+  }
+
+  /** Add originTabId to message if set (stamp from the running turn). */
   private withOriginTabId(msg: ChatExtToWebviewMessage): ChatExtToWebviewMessage {
     if (this.originTabId) {
       // Runtime: all messages passed here (streamChunk, streamComplete, toolCall) support originTabId.

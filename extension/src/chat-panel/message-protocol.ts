@@ -100,7 +100,7 @@ export type ChatExtToWebviewMessage =
   | { type: "chat:pipelineStatus"; status: PipelineStatus; phase: SDLCPhase; ticketKey: string }
   | { type: "chat:nodeDetails"; node: PipelineGraphNode; recentOutputs: AgentOutput[] }
   | { type: "chat:resumePrompt"; threadId: string; ticketKey: string; phase: SDLCPhase; pausedAt: string }
-  | { type: "chat:error"; code: string; message: string; retryable: boolean }
+  | { type: "chat:error"; code: string; message: string; retryable: boolean; originTabId?: string }
   | { type: "chat:toolCall"; toolCall: ToolCallDisplay; originTabId?: string }
   | { type: "chat:toolCallUpdate"; id: string; status: ToolCallDisplay["status"]; result?: string; duration?: number; originTabId?: string }
   /** SA4E-369 AC4: a peer task arrived in tab `tabId` — receiving-tab badge

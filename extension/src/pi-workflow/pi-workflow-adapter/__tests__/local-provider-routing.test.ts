@@ -57,6 +57,9 @@ function makeAdapter() {
     emitThinking: vi.fn(),
     emitComplete: vi.fn(),
     emitError: vi.fn(),
+    // SA4E-391 cross-tab routing: the turn pins/reads the stream origin tab.
+    setOriginTabId: vi.fn(),
+    getOriginTabId: vi.fn(() => 'tab-uat'),
   };
   adapter.store = {
     activeTab: 'tab-uat',

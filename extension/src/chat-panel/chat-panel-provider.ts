@@ -191,12 +191,20 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       "chat:toolCallUpdate",
       "chat:toolApprovalPending"
     ];
-    if (this.turnTabId && protocolTypes.includes(msg.type)) {
-      // @ts-expectOriginTabId — the type already allows originTabId ?
-      // We'll spread it in via a cast since the type is widened at call site.
-      const typedMsg = msg as any;
-      typedMsg.originTabId = this.turnTabId;
-      msg = typedMsg as ChatExtToWebviewMessage;
+    // SA4E-391 cross-tab routing root-cause fix: the ADAPTER now stamps
+    // originTabId at the source of each turn (StreamHandler for stream events,
+    // postToolLiveEvent for live tool events, chat:error emits), pinned to the
+    // tab that PRODUCED the turn. That stamp is authoritative — NEVER overwrite
+    // it. `turnTabId` remains only as a last-resort fallback for any legacy
+    // event path that reaches here without an origin; using it to overwrite was
+    // the bug (tab 2's user message set turnTabId, so tab 1's in-flight events
+    // were restamped to tab 2).
+    if (protocolTypes.includes(msg.type)) {
+      const typedMsg = msg as unknown as { originTabId?: string };
+      if (!typedMsg.originTabId && this.turnTabId) {
+        typedMsg.originTabId = this.turnTabId;
+        msg = typedMsg as unknown as ChatExtToWebviewMessage;
+      }
     }
     if (this.view) {
       this.view.webview.postMessage(msg);

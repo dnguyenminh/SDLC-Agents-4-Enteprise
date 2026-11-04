@@ -92,15 +92,26 @@ export abstract class AdapterSessionTurns extends AdapterCore {
       this.turnCancelReject = undefined;
       this.pendingTurnImages = undefined; // SA4E-391: never leak images across turns
       try { setCurrentTurnImages(this.store.activeTab || 'CHAT', undefined); } catch { /* non-fatal */ }
+      // SA4E-391: clear the stream origin at settle so any event emitted
+      // BETWEEN turns is not stamped with the finished turn's tab. The next
+      // turn re-stamps its own origin at start (trySessionTurn/runTurnOnce).
+      try { this.streamHandler.setOriginTabId(undefined); } catch { /* non-fatal */ }
       if (this.turnInFlight === tracked) this.turnInFlight = undefined;
     });
     this.turnInFlight = tracked;
     return this.turnInFlight;
   }
 
-  /** Forward live tool activity to the sidebar tool-block UI (see ./tool-live-events.ts). */
+  /** Forward live tool activity to the sidebar tool-block UI (see ./tool-live-events.ts).
+   * SA4E-391: live tool events bypass the StreamHandler emit path, so stamp
+   * the running turn's origin tab here (read from the handler the turn just
+   * set) — otherwise the provider's fallback would route them to whichever
+   * tab is active now, not the tab that produced the turn. */
   protected postToolLiveEvent(e: ToolLiveEvent): void {
-    forwardToolLiveEvent(this.onEvent, e);
+    const originTabId = this.streamHandler.getOriginTabId();
+    forwardToolLiveEvent((msg) => {
+      this.onEvent(originTabId ? ({ ...msg, originTabId } as ChatExtToWebviewMessage) : msg);
+    }, e);
   }
 
   /**
@@ -126,6 +137,10 @@ export abstract class AdapterSessionTurns extends AdapterCore {
   ): Promise<boolean> {
     // One stable stream identity per turn (streaming-identity fix).
     const turnStart = Date.now();
+    // SA4E-391 cross-tab routing: capture the origin tab ONCE at turn start so
+    // both the success path and the outer budget-error catch stamp the SAME
+    // tab (store.activeTab can change under us if the user switches tabs).
+    const originTabId = this.store.activeTab || 'CHAT';
     try {
       // SA4E-369 UAT root-cause fix — ONE shared config read for both turn
       // paths (dot keys + legacy flat fallback; see readProviderTurnConfig).
@@ -144,7 +159,7 @@ export abstract class AdapterSessionTurns extends AdapterCore {
       // assembles static context — the resolver chain needs it first (UC-01).
       await this.detectContextWindowEarly();
       const { ensureSessionHost } = await import('../pi-agent-session-host.js');
-      const tabId = this.store.activeTab || 'CHAT';
+      const tabId = originTabId; // SA4E-391: pinned at turn start (above)
       const host = await ensureSessionHost({
         workspaceRoot: this.workspaceRoot,
         tabId, // SA4E-370 S3: per-tab session key workspaceRoot+tabId
@@ -169,6 +184,11 @@ export abstract class AdapterSessionTurns extends AdapterCore {
       // now ABORT the session (adapter cancel()/this timeout branch), so the
       // run settles and the next turn is never chained behind a zombie.
       const streamId = turnStreamId;
+      // SA4E-391 cross-tab routing: stamp THIS turn's tab id onto every stream
+      // event it produces (turns are single-flight, so the running turn owns
+      // the StreamHandler origin for its lifetime). Fixes tab 1's late output
+      // rendering in tab 2 after a mid-turn tab switch.
+      this.streamHandler.setOriginTabId(tabId);
       let live = true;
       // Track whether ANY answer token streamed. Some providers/models (local
       // llama-server / qwen via the session host) return the reply in one block
@@ -228,6 +248,7 @@ export abstract class AdapterSessionTurns extends AdapterCore {
             code: 'PI_SESSION_TIMEOUT',
             message: `Session turn timed out after ${Math.round(timeoutMs / 1000)}s. Narrow the scope and retry.`,
             retryable: true,
+            originTabId: tabId,
           } as ChatExtToWebviewMessage);
           return true;
         }
@@ -259,12 +280,16 @@ export abstract class AdapterSessionTurns extends AdapterCore {
       // actionable chat:error is the ONLY output and the legacy engine (hence
       // the provider) is NEVER invoked with the oversized prompt.
       if (isBudgetExceededError(err)) {
+        // SA4E-391: stamp origin so this late error renders in the tab that
+        // produced the turn, never in whichever tab is active now.
+        this.streamHandler.setOriginTabId(originTabId);
         this.streamHandler.emitComplete('pi', Date.now() - turnStart, turnStreamId);
         this.onEvent({
           type: 'chat:error',
           code: 'PI_CONTEXT_BUDGET_EXCEEDED',
           message: (err as Error).message,
           retryable: false,
+          originTabId,
         } as ChatExtToWebviewMessage);
         return true;
       }

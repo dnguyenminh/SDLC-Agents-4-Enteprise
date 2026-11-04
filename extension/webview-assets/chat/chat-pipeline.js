@@ -118,10 +118,17 @@
 
   // === Error ===
   S.renderError = function (msg) {
-    S.showMessages();
-    // SA4E-391: errors persist as an "error" block (diagnostic gold for export)
-    // via the single flat-renderer append — no manual push (avoids double-add).
-    S.appendBlock(S.activeTabId, { role: "error", content: msg.message, timestamp: new Date().toISOString() });
+    // SA4E-391 cross-tab routing: an error belongs to the tab that PRODUCED
+    // the turn (host stamps originTabId), not whichever tab is viewed now.
+    // Append to the owning tab's model always; only reveal the transcript when
+    // that tab is the one on screen (background errors stay data-only, exactly
+    // like background stream chunks — see chat-tabroute.js).
+    var targetTabId = S.getMessageTargetTabId(msg);
+    // Errors persist as an "error" block (diagnostic gold for export) via the
+    // single flat-renderer append — no manual push (avoids double-add).
+    // appendBlock handles the active-tab DOM gate (data-only for a background
+    // tab), so no separate showMessages() call is needed here.
+    S.appendBlock(targetTabId, { role: "error", content: msg.message, timestamp: new Date().toISOString() });
   };
 
   // === Server Status ===

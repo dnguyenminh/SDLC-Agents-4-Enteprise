@@ -255,6 +255,7 @@ MIT
 - **Peer collaboration** — tabs register as peers on open/restore/create; general capability advertisement (`capabilities` tags + an `advertise` blurb per agent file, surfaced in `peer_list`) so an agent can pick the right collaborator for ANY task; the receiving tab shows inbound/reply blocks.
 - **Multimodal images** — compact attachment chip + in-bubble thumbnail; images reach the model via `AgentSession.prompt({images})` (disabled the bundler-incompatible resize worker that silently dropped them); a non-vision tab auto-delegates image reading to a vision-capable peer via `peer_send`; image recall across Up/Down history and reload (persisted state sanitized to strip DOM refs).
 - **Export conversation** — fixed export doing nothing (`DataCloneError` on DOM nodes, then `S is not defined` in `export-ui.js`); attached images embedded inline as base64 in Markdown/JSON.
+- **Cross-tab stream routing** — fixed tab 1's in-flight output rendering in tab 2 after a mid-turn tab switch. The host now stamps `originTabId` at the SOURCE of each turn (the turn's `StreamHandler` origin, live tool events, and every `chat:error` emit), pinned to the tab that produced the turn; the provider only fills `originTabId` when absent and never overwrites that stamp (the old shared `turnTabId` overwrite was the root cause). The webview also routes `chat:error` to the origin tab and keeps the working bar on the viewed tab.
 - **Version sync** — root/`backend`/`extension` → `1.55.16`.
 
 ### v1.55.11 (2026-10-29)
