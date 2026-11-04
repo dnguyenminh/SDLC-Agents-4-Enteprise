@@ -1,0 +1,60 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="520" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="E1" value="<b>WorkspaceRootAllowlistEntry</b><br><br>PK root_path : string (absolute, normalized)<br>is_directory : boolean<br>exists_at_startup : boolean<br>source : env | config_file<br>display_order : int" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;spacingLeft=8;spacingTop=6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="80" width="320" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="E2" value="<b>LegacyPinnedRoot</b><br><br>PK root_path : string (absolute)<br>configured_at : server startup<br>fallback_when : allowlist empty (BR-16)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;spacingLeft=8;spacingTop=6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="360" width="320" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="E3" value="<b>ToolInvocation</b><br><br>PK invocation_id : uuid<br>tool_name : enum (8 tools, BR-21)<br>file_path : string<br>base_dir : string (nullable)<br>workspace_root_alias : string (nullable)<br>status : success | error" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;spacingLeft=8;spacingTop=6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="430" y="80" width="320" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="E4" value="<b>PathResolutionContext</b><br><br>PK resolution_id : uuid<br>FK invocation_id -> ToolInvocation<br>FK effective_root -> WorkspaceRoot<br>resolved_path : string (nullable)<br>validation_status : OK | REJECTED | FS_ERROR<br>error_code : string (nullable)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;spacingLeft=8;spacingTop=6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="830" y="80" width="340" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="E3" target="E4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1l" value="1 : 1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#ffffff;fontSize=10;" vertex="1" connectable="0" parent="r1">
+      <mxGeometry x="0" relative="1" as="geometry">
+        <mxPoint as="offset" x="0" y="-12"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="E1" target="E4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="280" y="300"/>
+          <mxPoint x="1000" y="300"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r2l" value="1 : 0..* authorizes (base_dir)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#ffffff;fontSize=10;" vertex="1" connectable="0" parent="r2">
+      <mxGeometry x="0" relative="1" as="geometry">
+        <mxPoint as="offset" x="0" y="-12"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="E2" target="E4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1220" y="415"/>
+          <mxPoint x="1220" y="160"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r3l" value="1 : 0..* authorizes (base_dir omitted)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#ffffff;fontSize=10;" vertex="1" connectable="0" parent="r3">
+      <mxGeometry x="0" relative="1" as="geometry">
+        <mxPoint as="offset" x="0" y="-12"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;endArrow=classic;endFill=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="E1" target="E2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4l" value="supersedes when non-empty" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=#ffffff;fontSize=10;" vertex="1" connectable="0" parent="r4">
+      <mxGeometry x="0" relative="1" as="geometry">
+        <mxPoint as="offset" x="60" y="-16"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

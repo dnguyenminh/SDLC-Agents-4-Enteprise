@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="system" value="SDLC Agents 4 Enterprise Extension" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;verticalAlign=middle;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="40" width="560" height="780" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc1" value="Integrate Impeccable Detection" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+      <mxGeometry x="60" y="60" width="260" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2" value="Static Source Detection" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+      <mxGeometry x="60" y="260" width="260" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3" value="Rendered Detection via localhost" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+      <mxGeometry x="60" y="460" width="260" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc4" value="Quality Gate Reporting" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+      <mxGeometry x="330" y="640" width="210" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="actorPipeline" value="SDLC Pipeline" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="90" width="60" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="actorDev" value="Developer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="390" width="60" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="actorQA" value="QA Engineer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="670" width="60" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="ePipe" edge="1" parent="1" source="actorPipeline" target="uc1" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eDev1" edge="1" parent="1" source="actorDev" target="uc1" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="135" y="408"/>
+          <mxPoint x="135" y="156"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eDev2" edge="1" parent="1" source="actorDev" target="uc2" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="165" y="435"/>
+          <mxPoint x="165" y="335"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eDev3" edge="1" parent="1" source="actorDev" target="uc3" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.42;entryY=1;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="70" y="600"/>
+          <mxPoint x="450" y="600"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eDev4" edge="1" parent="1" source="actorDev" target="uc4" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0.24;entryY=0;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="660" y="460"/>
+          <mxPoint x="660" y="680"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eQA4" edge="1" parent="1" source="actorQA" target="uc4" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eQA2" edge="1" parent="1" source="actorQA" target="uc2" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.2;exitDx=0;exitDy=0;entryX=0.15;entryY=1;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="20" y="688"/>
+          <mxPoint x="20" y="420"/>
+          <mxPoint x="379" y="420"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eInc" value="«include» triggerQualityGate" edge="1" parent="1" source="uc1" target="uc4" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;endArrow=open;endFill=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;whiteSpace=wrap;labelBackgroundColor=#ffffff;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="715" y="135"/>
+          <mxPoint x="715" y="680"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
