@@ -7,7 +7,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { flattenNestedCells, escapeAttr } from '../drawio-flatten.js';
+import { flattenNestedCells } from '../drawio-flatten.js';
+import { escapeAttr } from '../drawio-flatten-utils.js';
 
 const NESTED = `<?xml version="1.0" encoding="UTF-8"?>
 <mxfile><diagram name="Page-1" id="t">
