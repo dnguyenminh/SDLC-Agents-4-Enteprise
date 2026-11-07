@@ -1,0 +1,3 @@
+# Vendored supply-chain patches (SEC-07) must stay byte-exact - integrity manifest hashes depend on it
+scripts/vendor/** -text
+

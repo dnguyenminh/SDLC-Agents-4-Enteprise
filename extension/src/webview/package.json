@@ -17,6 +17,10 @@
     "vite": "^5.4.0"
   },
   "dependencies": {
-    "dompurify": "^3.4.16"
+    "dompurify": "^3.4.17"
+  },
+  "overrides": {
+    "esbuild": "0.25.5",
+    "deepmerge": "4.1.1"
   }
 }
