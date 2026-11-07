@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-"version": "1.55.16",
+  "version": "1.55.16",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -322,9 +322,11 @@
           "default": ".code-intel/orchestration.json",
           "description": "Path to orchestration config file (relative to workspace root)"
         },
-"sdlcAgents.workspace.workspaceRoots": {
+        "sdlcAgents.workspace.workspaceRoots": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "SA4E-394 allowlist mirror: workspace roots permitted as per-call base_dir for file_path tools. MUST mirror the backend MCP_WORKSPACE_ROOTS (backend remains source of truth). Falls back to the MCP_WORKSPACE_ROOTS env var when empty."
         },
@@ -335,14 +337,30 @@
           "items": {
             "type": "object",
             "properties": {
-              "id": { "type": "string" },
-              "label": { "type": "string" },
-              "provider": { "type": "string" },
-              "model": { "type": "string" },
-              "baseUrl": { "type": "string" },
-              "useDefaultUrl": { "type": "boolean" },
-              "lastTestStatus": { "type": "string" },
-              "lastTestedAt": { "type": "number" }
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "baseUrl": {
+                "type": "string"
+              },
+              "useDefaultUrl": {
+                "type": "boolean"
+              },
+              "lastTestStatus": {
+                "type": "string"
+              },
+              "lastTestedAt": {
+                "type": "number"
+              }
             }
           }
         },
@@ -547,7 +565,7 @@
     "lint:fix": "npx eslint src/ --fix"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^9.39.5",
     "@types/diff": "^5.2.3",
     "@types/express": "^5.0.6",
     "@types/glob": "^8.1.0",
@@ -557,18 +575,18 @@
     "@types/uuid": "^10.0.0",
     "@types/vscode": "^1.85.0",
     "@vitest/coverage-v8": "4.1.12",
-    "@vscode/vsce": "^2.24.0",
+    "@vscode/vsce": "^4.1.0",
     "esbuild": "0.28.2",
     "fast-check": "^4.9.0",
-    "glob": "^13.0.6",
+    "glob": "^14.0.4",
     "globals": "^17.7.0",
     "jsdom": "^29.1.1",
-    "mocha": "^10.7.3",
+    "mocha": "^11.4.0",
     "sinon": "^17.0.1",
     "svelte": "^5.56.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.0",
-    "typescript-eslint": "^8.67.0",
+    "typescript-eslint": "^8.36.0",
     "uuid": "^14.0.1",
     "vitest": "4.1.12"
   },
@@ -579,7 +597,7 @@
     "@earendil-works/pi-agent-core": "0.99.1",
     "@earendil-works/pi-ai": "0.99.1",
     "@earendil-works/pi-codemode": "0.99.1",
-    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-coding-agent": "^1.5.0",
     "@earendil-works/pi-mcp": "0.99.1",
     "@earendil-works/pi-tui": "0.99.1",
     "@juicesharp/rpiv-ask-user-question": "2.11.0",
@@ -594,10 +612,12 @@
     "core-js": "^3.49.0",
     "debug": "^4.4.3",
     "diff": "^5.2.2",
-    "pi-subagents": "^0.76.1",
+    "eslint": "9.39.5",
+    "pi-subagents": "^0.87.0",
     "pi-web-access": "0.41.0",
     "puppeteer-core": "^25.16.0",
     "semver": "^7.7.4",
+    "sharp": "0.35.5",
     "typebox": "^1.1.38",
     "undici": "^6.29.1",
     "urlpattern-polyfill": "^10.1.0",
@@ -629,6 +649,14 @@
     },
     "@modelcontextprotocol/sdk": {
       "zod": "4.6.6"
-    }
+    },
+    "pi-subagents": {
+      "@earendil-works/pi-ai": "0.99.1"
+    },
+    "minimatch@>=7.0.0 <11.0.1": "11.0.5",
+    "glob@>=9.0.0 <14.0.2": "14.0.4",
+    "diff@>=6.0.0 <8.0.3": "8.0.3",
+    "serialize-javascript@<7.1.3": "7.1.4",
+    "@hono/node-server@>=1.19.10 <2.1.3": "2.1.6"
   }
 }
