@@ -23,7 +23,9 @@ describe('ToolValidator.validate', () => {
     const err = validator.validate(t, {});
     expect(typeof err).toBe('string');
     expect(err).toContain('name');
-    expect(err).toContain('Required');
+    // zod v4 (SEC-04): missing-field message is "expected string, received undefined"
+    // (v3 said "Required" — same intent, different wording).
+    expect(err).toContain('received undefined');
   });
 
   it('describes a type mismatch', () => {

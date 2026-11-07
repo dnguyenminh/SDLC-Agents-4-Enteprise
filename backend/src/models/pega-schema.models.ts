@@ -39,9 +39,9 @@ export const EnrichedSchemaSchema = z.object({
   schema_version: z.number().int().min(1),
   created_at: z.string(),
   updated_at: z.string(),
-  identity_fields: z.record(FieldDescriptorSchema),
-  logic_fields: z.record(FieldDescriptorSchema),
-  connectivity_fields: z.record(FieldDescriptorSchema),
+  identity_fields: z.record(z.string(), FieldDescriptorSchema),
+  logic_fields: z.record(z.string(), FieldDescriptorSchema),
+  connectivity_fields: z.record(z.string(), FieldDescriptorSchema),
   extraction_hints: ExtractionHintsSchema,
   known_fields: z.array(z.string()),
   coverage: z.number().min(0).max(100),
@@ -54,7 +54,7 @@ export type EnrichedSchema = z.infer<typeof EnrichedSchemaSchema>;
 
 /** POST /pega/schema/analyze (TDD §3.2) */
 export const SchemaAnalyzeRequestSchema = z.object({
-  harnessJson: z.record(z.unknown()),
+  harnessJson: z.record(z.string(), z.unknown()),
   ruleType: z.string().min(1).max(200),
   depth: z.number().int().min(0).max(5).optional().default(0),
 });
@@ -72,7 +72,7 @@ export const SchemaUpdateRequestSchema = z.object({
 
 /** POST /pega/schema/generate (SA4E-214) */
 export const SchemaGenerateRequestSchema = z.object({
-  harnessJson: z.record(z.unknown()),
-  sectionJsons: z.record(z.record(z.unknown())).optional(),
+  harnessJson: z.record(z.string(), z.unknown()),
+  sectionJsons: z.record(z.string(), z.record(z.string(), z.unknown())).optional(),
   ruleType: z.string().min(1).max(200).optional(),
 });

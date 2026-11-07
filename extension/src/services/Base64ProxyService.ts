@@ -26,6 +26,7 @@ import {
   type PathResolutionOk,
   type WorkspaceRootProvider,
 } from "./PathResolver";
+import { extractBaseDirArg } from "./base-dir-resolution";
 import type { ToolSchema } from "./Base64ProxyService/types";
 import {
   hasBase64InputParam,
@@ -103,7 +104,8 @@ export class Base64ProxyService {
     const newArgs = { ...args };
     // resolvePath throws PathResolverError on resolution failure —
     // WrapperServer.routeToolCall converts it to a tool error result (§5.6).
-    const resolution = this.resolvePathOrThrow(filePath);
+    // SA4E-394: per-call base_dir/workspace_root forwarded into resolution.
+    const resolution = this.resolvePathOrThrow(filePath, args.base_dir, args.workspace_root);
     const resolvedPath = resolution.resolvedPath;
     // STC IT-05 step 3: the backend receives the RESOLVED ABSOLUTE path (same
     // contract as the chat path — backend dedup/scoping keys on absolute path).
@@ -141,7 +143,9 @@ export class Base64ProxyService {
   proxyOutput(toolName: string, args: Record<string, unknown>, result: any): any {
     return proxyToolOutput(
       {
-        resolvePath: (p) => this.resolvePath(p),
+        // SA4E-394: the output proxy honors the per-call base_dir so the
+        // write-back lands inside the effective root (TC-111, DISC-4).
+        resolvePath: (p, baseDir) => this.resolvePath(p, baseDir ?? extractBaseDirArg(args)),
         resolveRoot: () => this.resolveRoot(),
       },
       toolName, args, result,
@@ -168,13 +172,18 @@ export class Base64ProxyService {
    * Resolve a path against the workspace root via the shared helper.
    * Failures throw PathResolverError carrying the helper message verbatim
    * (C-5) — caught by WrapperServer.routeToolCall (§5.6).
+   * SA4E-394: optional per-call base_dir/workspace_root (BR-10 precedence).
    */
-  private resolvePath(filePath: string): string {
-    return this.resolvePathOrThrow(filePath).resolvedPath;
+  private resolvePath(filePath: string, baseDir?: unknown): string {
+    return this.resolvePathOrThrow(filePath, baseDir).resolvedPath;
   }
 
-  private resolvePathOrThrow(filePath: string): PathResolutionOk {
-    const r = resolveWorkspacePath(filePath, { rootProvider: () => this.resolveRoot() });
+  private resolvePathOrThrow(filePath: string, baseDir?: unknown, workspaceRoot?: unknown): PathResolutionOk {
+    const r = resolveWorkspacePath(filePath, {
+      rootProvider: () => this.resolveRoot(),
+      baseDir,
+      workspaceRoot,
+    });
     if (!r.ok) throw new PathResolverError(r.message);
     return r;
   }

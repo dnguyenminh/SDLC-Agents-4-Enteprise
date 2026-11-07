@@ -91,7 +91,9 @@ export const AttachmentsSchema = z.object({
 
 export const AddAttachmentSchema = z.object({
   page_id: z.string().min(1),
-  file_path: z.string().min(1),
+  file_path: z.string().min(1).describe('Relative or absolute path to the file to upload'),
+  base_dir: z.string().optional().describe('Optional workspace root to resolve relative file_path against. Must be registered in the server allowlist (MCP_WORKSPACE_ROOTS). Relative values are normalized to absolute. Example: /home/user/project-worktree-B'),
+  workspace_root: z.string().optional().describe('Deprecated alias of base_dir (same semantics — optional workspace root to resolve relative file_path against; must be in the MCP_WORKSPACE_ROOTS allowlist). Ignored when base_dir is present. Example: /home/user/project-worktree-B'),
 });
 
 export const MacrosSchema = z.object({ page_id: z.string().min(1) });

@@ -18,6 +18,8 @@ import { withErrorHandling, withTextResult } from '../../tool-router/ToolHandler
 import { OnboardingService } from './onboarding/OnboardingService.js';
 import { OnboardingToolHandler } from './onboarding/OnboardingToolHandler.js';
 import { ONBOARDING_TOOL_DEFINITIONS } from './onboarding/definitions.js';
+import { getSharedPathResolver } from '../../shared/path-resolver-provider.js';
+import type { MultiWorktreePathResolver } from '../../shared/multi-worktree-path-resolver.js';
 
 export class CodeIntelModule implements IModule {
   readonly name = 'codeIntel';
@@ -30,6 +32,8 @@ export class CodeIntelModule implements IModule {
   private queryLayer!: QueryLayer;
   private adapter!: DatabaseAdapter;
   private onboardingHandler!: OnboardingToolHandler;
+  /** SA4E-394 — shared multi-worktree path resolver (base_dir support). */
+  private pathResolver!: MultiWorktreePathResolver;
 
   constructor(logger: Logger) {
     this.logger = logger.child({ module: this.name });
@@ -44,6 +48,9 @@ export class CodeIntelModule implements IModule {
     try {
       const config = loadConfig();
       this.workspace = config.workspace;
+      // SA4E-394 — BR-13: shared resolver created once per process (index.ts
+      // installs it at boot; this is a no-op getter in production).
+      this.pathResolver = getSharedPathResolver(this.logger);
 
       // Resolve adapter — only opens SQLite file when engine is sqlite
       this.adapter = await resolveEngineAdapter(config.dataDir, config.dbPath);
@@ -86,7 +93,7 @@ export class CodeIntelModule implements IModule {
             return dispatchCodeIntelTool(
               def.name, args,
               this.queryLayer, this.adapter, this.dbManager,
-              this.indexer, this.workspace, projectId,
+              this.indexer, this.workspace, projectId, this.pathResolver,
             );
           },
         ),

@@ -1,33 +1,26 @@
 /** mem_ingest_file handler — file ingestion + stale cleanup + task creation (BR-18). */
-import * as fs from 'fs';
 import type { MemoryEngine } from '../engine/core.js';
 import type { KBScope, ScopeContext } from '../models.js';
 import type { ProjectContext } from '../ProjectContext.js';
+import type { ConvertToolResolver } from '../ingest/ConvertToolResolver.js';
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import { buildIngestFileDeleteClause, buildIngestFileStaleTaskDeleteClause } from '../IsolationLayer.js';
-import { tierForType, resolvePath } from './helpers.js';
-import { classifyFormat, normalizeExt } from '../ingest/FormatClassifier.js';
-import type { ConvertToolResolver } from '../ingest/ConvertToolResolver.js';
+import { tierForType, readFileContent, unconvertibleMessage, type IngestFileResponse } from './helpers.js';
 import { PendingTaskRepository } from '../task-queue/PendingTaskRepository.js';
 import { TaskType } from '../task-queue/models.js';
-import { getDbAdapter } from '../../../admin/db/core.js';
 import { EpochService } from '../evolution/EpochService.js';
 import { loadFileMetadata } from '../../../engine/indexer/file-scanner.js';
 import { extractAndInsertIngestEdges } from '../engine/edge-on-ingest.js';
 import { upsertGraphNode, logger } from './crud-shared.js';
+import { deleteStaleGraphNodes } from './graph-node-cleanup.js';
+import {
+  hasBaseDirArg,
+  type MultiWorktreePathResolver,
+} from '../../../shared/multi-worktree-path-resolver.js';
+import { getSharedPathResolver } from '../../../shared/path-resolver-provider.js';
+import { resolveLegacyRead } from '../../../shared/legacy-path-gate.js';
 
 type Args = Record<string, unknown>;
-
-export interface IngestFileResponse {
-  status: 'ingested' | 'unconvertible';
-  entries?: number;
-  file?: string;
-  reason?: string;
-}
-
-export function unconvertibleMessage(filePath: string, reason: string): string {
-  return JSON.stringify({ status: 'unconvertible', file: filePath, reason } satisfies IngestFileResponse);
-}
 
 export async function handleIngestFile(
   engine: MemoryEngine,
@@ -37,9 +30,30 @@ export async function handleIngestFile(
   resolver?: ConvertToolResolver,
   dbAdapter?: DatabaseAdapter,
   embeddingAvailable?: boolean,
+  pathResolver?: MultiWorktreePathResolver,
 ): Promise<string> {
-  const filePath = a.file_path as string;
+  let filePath = a.file_path as string;
   if (!filePath) return 'Error: file_path required';
+  // SA4E-394 — base_dir/workspace_root present → resolve the ingest source via
+  // the shared resolver BEFORE any read/dedup (BR-02/05/07); omitted → legacy.
+  if (hasBaseDirArg(a)) {
+    const resolution = (pathResolver ?? getSharedPathResolver(logger)).resolve({
+      filePath, baseDir: a.base_dir, workspaceRoot: a.workspace_root,
+    });
+    if (!resolution.ok) return `Error: ${resolution.message}`;
+    filePath = resolution.resolvedPath;
+  } else {
+    // SEC-01 — legacy (base_dir omitted) reads stay contained (C-3 pinned
+    // workspace root + allowlist roots); rejections reuse the base_dir typed
+    // error verbatim (BR-23 — zero side effects). `filePath` (the KB `source`
+    // key) is intentionally NOT rewritten on the legacy branch.
+    const gate = resolveLegacyRead({
+      pinnedRoot: workspace,
+      allowlistRoots: (pathResolver ?? getSharedPathResolver(logger)).allowlistRoots(),
+      filePath,
+    });
+    if (!gate.ok) return `Error: ${gate.message}`;
+  }
   const type = (a.type as string) ?? 'CONTEXT';
   const scope = ((a.scope as string) ?? 'PROJECT').toUpperCase() as KBScope;
   const userId = (a.user_id as string) ?? scopeCtx?.userId ?? null;
@@ -114,38 +128,6 @@ export async function handleIngestFile(
   return JSON.stringify({ status: 'ingested', entries: 1, file: filePath } satisfies IngestFileResponse);
 }
 
-type ReadOutcome = { ok: true; text: string } | { ok: false; response: string };
-
-/** Resolve + read file content (markdown/text/base64/converter), or an early-return response. */
-async function readFileContent(
-  a: Args, filePath: string, workspace: string, resolver?: ConvertToolResolver,
-): Promise<ReadOutcome> {
-  const format = classifyFormat({ filePath });
-  const providedContent = a.content as string | undefined;
-  const contentBase64 = a.content_base64 as string | undefined;
-
-  if (format === 'markdown' || format === 'text') {
-    const text = contentBase64 ? Buffer.from(contentBase64, 'base64').toString('utf-8') : providedContent;
-    if (!text) {
-      const resolved = resolvePath(filePath, workspace);
-      if (!fs.existsSync(resolved)) return { ok: false, response: `Error: file not found — ${resolved}` };
-      return { ok: true, text: await fs.promises.readFile(resolved, 'utf-8') };
-    }
-    return { ok: true, text };
-  } else if (contentBase64 && contentBase64.trim().length > 0) {
-    return { ok: true, text: Buffer.from(contentBase64, 'base64').toString('utf-8') };
-  } else if (providedContent && providedContent.trim().length > 0) {
-    return { ok: true, text: providedContent };
-  } else {
-    const resolved = resolvePath(filePath, workspace);
-    if (!fs.existsSync(resolved)) return { ok: false, response: unconvertibleMessage(filePath, 'no-tool') };
-    if (!resolver) return { ok: false, response: unconvertibleMessage(filePath, 'no-tool') };
-    const res = await resolver.resolve({ filePath: resolved, ext: normalizeExt(filePath) });
-    if (!res.ok) return { ok: false, response: unconvertibleMessage(filePath, res.reason) };
-    return { ok: true, text: res.markdown };
-  }
-}
-
 /**
  * Delete stale KB entries + graph nodes + pending tasks for a re-ingested file.
  * Graph nodes are removed BEFORE entries (while IDs still exist); pending_tasks
@@ -170,23 +152,4 @@ async function deleteStaleIngestFileData(engine: MemoryEngine, scopeCtx: ScopeCo
     } catch (err) { logger.debug({ err }, '[ingest-file] Failed to delete stale pending tasks (non-fatal)'); }
     await engine.getAdapter().runAsync('DELETE FROM knowledge_entries WHERE source = ?', [filePath]);
   }
-}
-
-async function deleteStaleGraphNodes(engine: MemoryEngine, filePath: string, projectId: string | null): Promise<void> {
-  try {
-    const adminAdapter = getDbAdapter();
-    const oldIds = projectId === null
-      ? await engine.getAdapter().allAsync<{ id: number }>(
-          'SELECT id FROM knowledge_entries WHERE source = $1',
-          [filePath],
-        )
-      : await engine.getAdapter().allAsync<{ id: number }>(
-          'SELECT id FROM knowledge_entries WHERE source = $1 AND project_id = $2',
-          [filePath, projectId],
-        );
-    if (oldIds.length > 0) {
-      const idList = oldIds.map(r => `'doc-${r.id}'`).join(',');
-      await adminAdapter.runAsync(`DELETE FROM graph_nodes WHERE entry_id IN (${idList})`, []);
-    }
-  } catch (err) { logger.debug({ err }, '[ingest-file] Failed to delete stale graph nodes (non-fatal)'); }
 }

@@ -1,9 +1,12 @@
 ﻿/**
  * SA4E-110 - Confluence content tools (5 tools).
  * attachments, add_attachment, macros, history, version.
+ * SA4E-394 — the legacy ALLOWED_BASES/validateFilePath containment is REPLACED
+ * by the shared multi-worktree resolver (TDD §6.4); base_dir/workspace_root
+ * select a registered workspace root per call.
  */
-import { readFile, realpath } from 'node:fs/promises';
-import { basename, extname, resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { basename, extname } from 'node:path';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ConfluenceApiClient } from '../clients/confluence-client.js';
 import { AttachmentsSchema, AddAttachmentSchema, MacrosSchema, HistorySchema, VersionSchema } from '../models/confluence-schemas.js';
@@ -11,8 +14,7 @@ import { createSuccessResult, createErrorResult } from '../models/error-schemas.
 import { AtlassianErrorCode } from '../models/types.js';
 import { AtlassianApiError } from '../clients/base-client.js';
 import { getMimeType } from '../utils/mime-types.js';
-
-const ALLOWED_BASES = [process.cwd()];
+import { resolveAttachmentPath, finalizeAttachmentPath } from './path-resolution.js';
 
 /** Register Confluence content and attachment tools */
 export function registerConfluenceContentTools(server: McpServer, client: ConfluenceApiClient): void {
@@ -27,10 +29,12 @@ export function registerConfluenceContentTools(server: McpServer, client: Conflu
     const parsed = AddAttachmentSchema.safeParse(args);
     if (!parsed.success) return createErrorResult(AtlassianErrorCode.VALIDATION_ERROR, parsed.error.message);
     try {
-      const validPath = await validateFilePath(parsed.data.file_path);
-      if (!validPath.valid) return createErrorResult(AtlassianErrorCode.VALIDATION_ERROR, validPath.error!);
-      const fileBuffer = await readFile(validPath.resolved!);
-      const fileName = basename(validPath.resolved!);
+      const resolution = resolveAttachmentPath(parsed.data);
+      if (!resolution.ok) return createErrorResult(AtlassianErrorCode.VALIDATION_ERROR, resolution.message);
+      const finalPath = await finalizeAttachmentPath(resolution.resolved);
+      if (finalPath === null) return createErrorResult(AtlassianErrorCode.VALIDATION_ERROR, 'File not found or inaccessible');
+      const fileBuffer = await readFile(finalPath);
+      const fileName = basename(finalPath);
       const blob = new Blob([fileBuffer], { type: getMimeType(extname(fileName)) });
       const formData = new FormData();
       formData.append('file', blob, fileName);
@@ -62,16 +66,7 @@ export function registerConfluenceContentTools(server: McpServer, client: Conflu
   });
 }
 
-async function validateFilePath(filePath: string): Promise<{ valid: boolean; resolved?: string; error?: string }> {
-  try {
-    const resolved = await realpath(resolve(filePath));
-    const isContained = ALLOWED_BASES.some(base => resolved.startsWith(base));
-    if (!isContained) return { valid: false, error: 'File path outside allowed directory' };
-    return { valid: true, resolved };
-  } catch {
-    return { valid: false, error: 'File not found or inaccessible' };
-  }
-}
+/** SA4E-394: path validation moved to tools/path-resolution.ts (shared resolver). */
 
 function handleError(e: unknown) {
   if (e instanceof AtlassianApiError) return createErrorResult(e.code, e.message);

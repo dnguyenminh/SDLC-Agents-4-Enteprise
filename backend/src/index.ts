@@ -17,6 +17,9 @@ import { Container } from './di/Container.js';
 import { bus, Events } from './shared/EventBus.js';
 import { ingestToolsAfterModulesReady } from './bootstrap/tool-ingestion.js';
 import { migrateGraphNodesTypes } from './bootstrap/graph-nodes-migration.js';
+import { MultiWorktreePathResolver } from './shared/multi-worktree-path-resolver.js';
+import { setSharedPathResolver } from './shared/path-resolver-provider.js';
+import { WorkspaceAllowlist } from './shared/workspace-allowlist.js';
 
 const VERSION = '1.0.0';
 const rootLogger = pino({ name: 'backend' });
@@ -36,6 +39,23 @@ async function main() {
   container.registerInstance('config', config);
   container.registerInstance('logger', logger);
   container.registerInstance('version', VERSION);
+
+  // --- SA4E-394: workspace allowlist + shared multi-worktree path resolver ---
+  // Loaded ONCE at startup (BR-13); restart required to change (BR-17).
+  const allowlist = WorkspaceAllowlist.load(config.workspace, logger, process.env);
+  logger.info(
+    {
+      roots: allowlist.snapshot(),
+      source: allowlist.source,
+      legacyMode: allowlist.isLegacyMode(),
+      count: allowlist.size,
+    },
+    'MCP workspace allowlist loaded',
+  );
+  const pathResolver = new MultiWorktreePathResolver(allowlist, config.workspace, logger);
+  setSharedPathResolver(pathResolver);
+  container.registerInstance('workspaceAllowlist', allowlist);
+  container.registerInstance('multiWorktreePathResolver', pathResolver);
 
   // --- Init DB adapters first ---
   await initAdapters();

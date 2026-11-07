@@ -5,6 +5,11 @@
  */
 import * as path from "path";
 import { sanitizeLogText } from "./path-format";
+import {
+  INVALID_BASE_DIR,
+  pickBaseDir,
+  resolveWithBaseDir,
+} from "./base-dir-resolution";
 
 // ── Types (TDD §3.2) ────────────────────────────────────────────────────
 
@@ -19,7 +24,10 @@ export type PathResolutionCode =
   | "PATH_EMPTY"
   | "PATH_INVALID"
   | "PATH_NO_WORKSPACE"
-  | "PATH_REJECTED_OUTSIDE_WORKSPACE";
+  | "PATH_REJECTED_OUTSIDE_WORKSPACE"
+  // SA4E-394 — base_dir not in the allowlist, or resolved path escapes the
+  // effective root (same code as the backend multi-worktree resolver).
+  | "PATH_REJECTED_OUTSIDE_ALLOWLIST";
 
 export interface PathResolutionOk {
   ok: true;
@@ -82,8 +90,32 @@ export class PathResolverError extends Error {
 // ── Core API ─────────────────────────────────────────────────────────────
 export function resolveWorkspacePath(
   rawPath: unknown,
-  opts?: { rootProvider?: WorkspaceRootProvider },
+opts?: { 
+    rootProvider?: WorkspaceRootProvider,
+    /** SA4E-394 — per-call workspace root (alias: workspaceRoot). */
+    baseDir?: unknown,
+    workspaceRoot?: unknown,
+    /** SA4E-394 — extension allowlist mirror (default: settings/env). */
+    allowlist?: ReadonlySet<string>,
+  },
 ): PathResolutionResult {
+  // SA4E-394 — a per-call base_dir/workspace_root becomes the EFFECTIVE root:
+  // same normative pipeline (normalize → allowlist → resolve → containment).
+  const baseDir = pickBaseDir(opts);
+  if (baseDir === INVALID_BASE_DIR) {
+    return {
+      ok: false,
+      code: "PATH_REJECTED_OUTSIDE_ALLOWLIST",
+      message: "PATH_REJECTED_OUTSIDE_ALLOWLIST: base_dir must be a non-empty string workspace root.",
+      rawPath: "",
+      resolvedPath: "",
+      rootSource: null,
+      rootPath: "",
+    };
+  }
+  if (baseDir !== undefined) {
+    return resolveWithBaseDir(rawPath, baseDir, { allowlist: opts?.allowlist });
+  }
   // Step 1 — validate (UC-01 EF-3): fail-loud BEFORE resolving.
   if (typeof rawPath !== "string" || rawPath.trim() === "") {
     return {

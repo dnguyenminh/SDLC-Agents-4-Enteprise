@@ -41,10 +41,10 @@ function toEnvVarName(field: string): string {
   return `ENTRA_${field.replace(/([A-Z])/g, '_$1').toUpperCase()}`;
 }
 
-function toEnvVarPath(path: (string | number)[]): string {
+function toEnvVarPath(path: PropertyKey[]): string {
   const [first, ...rest] = path;
   const field = toEnvVarName(String(first));
-  return rest.length ? `${field}.${rest.join('.')}` : field;
+  return rest.length ? `${field}.${rest.map(String).join('.')}` : field;
 }
 
 function flattenIssues(error: z.ZodError): Array<{ path: string; message: string }> {

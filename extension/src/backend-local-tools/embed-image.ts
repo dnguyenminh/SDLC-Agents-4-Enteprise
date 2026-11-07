@@ -16,6 +16,7 @@ import {
   formatFsError,
   type PathResolutionOk,
 } from "../services/PathResolver";
+import { extractBaseDirArg } from "../services/base-dir-resolution";
 import { checkSymlinkGuard, ensureDir } from "./fs-guards";
 
 /** MIME types by image extension for data-URI embedding. */
@@ -31,12 +32,14 @@ export function handleEmbedImage(args: Record<string, unknown>): any {
   // Alias `path` kept per AD-22 (same helper — no bypass).
   const rawInput = (args.file_path ?? args.path) as unknown;
   const rawDisplay = sanitizeLogText(String((args.file_path ?? args.path) ?? ""));
-  const resolution = resolveWorkspacePath(rawInput);
+  // SA4E-394: per-call base_dir/workspace_root becomes the effective root.
+  const baseDir = extractBaseDirArg(args);
+  const resolution = resolveWorkspacePath(rawInput, { baseDir });
   if (!resolution.ok) {
     console.warn(`[backend-local-tools] embed_image resolve failed: ${resolution.message}`);
     return { isError: true, content: [{ type: "text", text: resolution.message }] };
   }
-  const output = resolveOutputTarget(args, resolution);
+  const output = resolveOutputTarget(args, resolution, baseDir);
   if ("error" in output) { return output.error; }
   // I-7 guards BEFORE any fs touch (input read + output write).
   const inputGuardError = checkSymlinkGuard(resolution, rawDisplay);
@@ -51,10 +54,12 @@ export function handleEmbedImage(args: Record<string, unknown>): any {
 function resolveOutputTarget(
   args: Record<string, unknown>,
   resolution: PathResolutionOk,
+  baseDir?: string,
 ): { outputPath: string; outputResolution: PathResolutionOk } | { error: any } {
   const rawOutput = args.output_path as unknown;
   if (typeof rawOutput === "string" && rawOutput.trim() !== "") {
-    const outRes = resolveWorkspacePath(rawOutput);
+    // SA4E-394: output_path honors the same per-call base_dir (TDD §3.3).
+    const outRes = resolveWorkspacePath(rawOutput, { baseDir });
     if (!outRes.ok) {
       console.warn(`[backend-local-tools] embed_image output resolve failed: ${outRes.message}`);
       return { error: { isError: true, content: [{ type: "text", text: outRes.message }] } };

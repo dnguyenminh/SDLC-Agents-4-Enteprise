@@ -4,6 +4,7 @@
  */
 
 import type { ToolDefinition } from '../../../types/tool.js';
+import { baseDirSchemaProperties } from '../../../shared/base-dir-schema.js';
 
 export const SANDBOX_TOOL_DEFINITIONS: ToolDefinition[] = [
   {
@@ -72,11 +73,12 @@ export const SANDBOX_TOOL_DEFINITIONS: ToolDefinition[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        file: { type: 'string', description: 'Path to the file inside the sandbox' },
+        file: { type: 'string', description: 'Path to the file inside the sandbox. With base_dir: resolved host-side against the registered workspace root before mount.' },
         runtime: { type: 'string', enum: ['node', 'python', 'tsx', 'java', 'sh'] },
         args: { type: 'array', items: { type: 'string' } },
         sessionId: { type: 'string', pattern: '^sess_[a-f0-9]{12}$' },
         timeout: { type: 'number', default: 300, minimum: 1, maximum: 600 },
+        ...baseDirSchemaProperties('file'),
       },
       required: ['file', 'runtime', 'sessionId'],
     },
