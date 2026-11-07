@@ -14,7 +14,7 @@ import { buildElkGraph, runElkLayout } from './elk-layout.js';
 import { applyLayoutToXml } from './drawio-writer.js';
 import { planLocalRepair } from './drawio-repair.js';
 import { applyRepairPlan, applyPortDistribution } from './drawio-patch.js';
-import type { LayoutIssue } from './drawio-detect.js';
+import type { LayoutIssue } from './drawio-detection.js';
 
 /**
  * Parse an integer from environment variable with bounds validation (SEC-02).
