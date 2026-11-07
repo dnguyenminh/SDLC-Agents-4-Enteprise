@@ -18,6 +18,11 @@ import { handleIngestFile } from '../../modules/memory/dispatchers/crud-ingest-f
 const ALLOWLIST_MSG = 'is not registered in the allowlist. Configure MCP_WORKSPACE_ROOTS';
 const CONTAINMENT_MSG = 'is outside workspace root';
 
+/** Cross-platform source key helper — uses platform separator. */
+function sourceKey(...parts: string[]): string {
+  return path.join(...parts);
+}
+
 let fx: MultiWorktreeFixture;
 let resolver: MultiWorktreePathResolver;
 
@@ -54,7 +59,7 @@ describe('TC-308 — mem_ingest_file (backend fallback path, real pipeline)', ()
       file_path: 'documents/SA4E-394/BRD.md', base_dir: fx.wtB,
     }, undefined, undefined, false, resolver);
     expect(JSON.parse(out)).toMatchObject({ status: 'ingested' });
-    const source = `${fx.wtB}\\documents\\SA4E-394\\BRD.md`;
+    const source = sourceKey(fx.wtB, 'documents', 'SA4E-394', 'BRD.md');
     const rows = await rowsForSource(source);
     expect(rows).toHaveLength(1);
     expect(rows[0].content).toContain('# BRD wt-b');
@@ -74,7 +79,7 @@ describe('TC-308 — mem_ingest_file (backend fallback path, real pipeline)', ()
       file_path: path.join(fx.main, 'notes.txt'),
     });
     expect(JSON.parse(out)).toMatchObject({ status: 'ingested' });
-    const rows = await rowsForSource(fx.main + path.sep + 'notes.txt');
+    const rows = await rowsForSource(sourceKey(fx.main, 'notes.txt'));
     expect(rows).toHaveLength(1);
   });
 
@@ -116,7 +121,7 @@ describe('TC-308 — mem_ingest_file (backend fallback path, real pipeline)', ()
       file_path: path.join(fx.wtB, 'documents', 'SA4E-394', 'BRD.md'),
     });
     expect(JSON.parse(out)).toMatchObject({ status: 'ingested' });
-    const source = path.join(fx.wtB, 'documents', 'SA4E-394', 'BRD.md') as string;
+    const source = sourceKey(fx.wtB, 'documents', 'SA4E-394', 'BRD.md');
     const rows = await rowsForSource(source);
     expect(rows).toHaveLength(1);
     expect(rows[0].content).toContain('# BRD wt-b');
