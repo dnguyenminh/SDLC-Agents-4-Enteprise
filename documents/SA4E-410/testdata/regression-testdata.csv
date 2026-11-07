@@ -1,0 +1,11 @@
+test_case_id,originalTestId,maxTokens,usageFraction,messagesCount,shouldCompact,expectedBehavior,description
+TC-800,STC-339-06,128000,0.95,3,compact,compaction triggers,Regression: Large-context auto-compact at 95%
+TC-801,STC-339-07,128000,0.96,5,compact,quality scoring works,Regression: Compaction quality scoring preserved
+TC-802,STC-339-08,95,0.95,3,compact,fraction=0.95,Regression: normalizeUsageToFraction SEC-330-02
+TC-802,STC-339-08,97,0.97,3,compact,fraction=0.97,Regression: normalizeUsageToFraction SEC-330-02
+TC-802,STC-339-08,150,1,3,compact,fraction=1 clamped,Regression: normalizeUsageToFraction clamps
+TC-803,STC-339-09,128000,0.95,3,compact,shouldCompact=compact,Regression: SessionMonitor.compact
+TC-803,STC-339-09,128000,0.80,3,warn,shouldCompact=warn,Regression: SessionMonitor.warn
+TC-803,STC-339-09,128000,0.50,3,none,shouldCompact=none,Regression: SessionMonitor.none
+TC-804,STC-339-10,128000,0.95,3,compact,steering tokens counted,Regression: Steering tokens in compaction
+TC-805,STC-339-11,128000,0.95,3,compact,mcp tool tokens counted,Regression: MCP tool tokens in compaction

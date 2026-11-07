@@ -1,0 +1,12 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.12 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+
+
+ Test Files  88 passed (88)
+      Tests  623 passed (623)
+   Start at  18:03:38
+   Duration  90.46s (transform 8.81s, setup 0ms, import 46.25s, tests 28.34s, environment 5ms)
+

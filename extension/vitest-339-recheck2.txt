@@ -1,0 +1,542 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.12 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+
+stderr | src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > one-time migration lifts legacy workspaceState keys into the file and clears them
+[StateManager] Migration failed: SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Object.<anonymous> (C:/projects/kiro/SDLC-Agents-4-Enterprise/extension/src/__tests__/chat/persist-restore-contract.test.ts:81:27)
+    at Object.Mock [as update] (file:///C:/projects/kiro/SDLC-Agents-4-Enterprise/node_modules/@vitest/spy/dist/index.js:332:34)
+    at StateManager.migrateFromWorkspaceState (C:/projects/kiro/SDLC-Agents-4-Enterprise/extension/src/chat-panel/StateManager.ts:82:30)
+
+stderr | src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > one-time migration lifts legacy workspaceState keys into the file and clears them
+[StateManager] Migration failed: SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Object.<anonymous> (C:/projects/kiro/SDLC-Agents-4-Enterprise/extension/src/__tests__/chat/persist-restore-contract.test.ts:81:27)
+    at Object.Mock [as update] (file:///C:/projects/kiro/SDLC-Agents-4-Enterprise/node_modules/@vitest/spy/dist/index.js:332:34)
+    at StateManager.migrateFromWorkspaceState (C:/projects/kiro/SDLC-Agents-4-Enterprise/extension/src/chat-panel/StateManager.ts:82:30)
+
+stderr | src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > one-time migration lifts legacy workspaceState keys into the file and clears them
+[StateManager] Migration failed: SyntaxError: "undefined" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Object.<anonymous> (C:/projects/kiro/SDLC-Agents-4-Enterprise/extension/src/__tests__/chat/persist-restore-contract.test.ts:81:27)
+    at Object.Mock [as update] (file:///C:/projects/kiro/SDLC-Agents-4-Enterprise/node_modules/@vitest/spy/dist/index.js:332:34)
+    at StateManager.migrateFromWorkspaceState (C:/projects/kiro/SDLC-Agents-4-Enterprise/extension/src/chat-panel/StateManager.ts:82:30)
+
+ ❯ src/__tests__/chat/persist-restore-contract.test.ts (4 tests | 1 failed) 435ms
+     × one-time migration lifts legacy workspaceState keys into the file and clears them 185ms (retry x2)
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts (6 tests | 1 failed) 29411ms
+     × STC-339-11: AC-05 Regression — pre-existing chat suite passes with 0 failures 29397ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-11: AC-05 Regression — pre-existing chat suite passes with 0 failures
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-11: AC-05 Regression — pre-existing chat suite passes with 0 failures
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-11: AC-05 Regression — pre-existing chat suite passes with 0 failures
+AssertionError:      "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-8",
+          "name": "control_pwsh",
+          "result": "r8",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-9",
+          "name": "control_pwsh",
+          "result": "r9",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-10",
+          "name": "control_pwsh",
+          "result": "r10",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-11",
+          "name": "control_pwsh",
+          "result": "r11",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-12",
+          "name": "control_pwsh",
+          "result": "r12",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-13",
+          "name": "control_pwsh",
+          "result": "r13",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-14",
+          "name": "control_pwsh",
+          "result": "r14",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-15",
+          "name": "control_pwsh",
+          "result": "r15",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-16",
+          "name": "control_pwsh",
+          "result": "r16",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-17",
+          "name": "control_pwsh",
+          "result": "r17",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-18",
+          "name": "control_pwsh",
+          "result": "r18",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-19",
+          "name": "control_pwsh",
+          "result": "r19",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "## answer",
+        "nodeId": "pi:c1",
+        "role": "assistant",
+        "thinking": "line one
+line two",
+        "thinkingUser": true,
+        "timestamp": "2026-01-01T00:00:00.000Z",
+      },
+    ],
+    "name": "T1",
+    "tokenCount": 22,
+  },
+]
+
+ ❯ src/__tests__/chat/persist-restore-contract.test.ts:209:38
+    207|
+    208|     // Legacy keys cleared after successful migration.
+    209|     expect(memento.get('chat.tabs')).toBeUndefined();
+       |                                      ^
+    210|     expect(memento.get('chat.activeTabId')).toBeUndefined();
+    211|     expect(memento.get('chat.messageHistory')).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts:177:33
+    175|     ).toBeUndefined();
+    176|     // Exit code 0 = the chat suite completed with zero failures.
+    177|     expect(result.status, tail).toBe(0);
+       |                                 ^
+    178|
+    179|     // The suite must actually have run tests (not silently matched no…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > one-time migration lifts legacy workspaceState keys into the file and clears them
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > one-time migration lifts legacy workspaceState keys into the file and clears them
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > one-time migration lifts legacy workspaceState keys into the file and clears them
+AssertionError: expected [ { id: 'tab-1', name: 'T1', …(3) } ] to be undefined
+
+- Expected:
+undefined
+
++ Received:
+[
+  {
+    "id": "tab-1",
+    "maxTokens": 128000,
+    "messages": [
+      {
+        "content": "hello",
+        "role": "user",
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-0",
+          "name": "control_pwsh",
+          "result": "r0",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-1",
+          "name": "control_pwsh",
+          "result": "r1",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-2",
+          "name": "control_pwsh",
+          "result": "r2",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-3",
+          "name": "control_pwsh",
+          "result": "r3",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-4",
+          "name": "control_pwsh",
+          "result": "r4",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-5",
+          "name": "control_pwsh",
+          "result": "r5",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-6",
+          "name": "control_pwsh",
+          "result": "r6",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-7",
+          "name": "control_pwsh",
+          "result": "r7",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-8",
+          "name": "control_pwsh",
+          "result": "r8",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-9",
+          "name": "control_pwsh",
+          "result": "r9",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-10",
+          "name": "control_pwsh",
+          "result": "r10",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-11",
+          "name": "control_pwsh",
+          "result": "r11",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-12",
+          "name": "control_pwsh",
+          "result": "r12",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-13",
+          "name": "control_pwsh",
+          "result": "r13",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-14",
+          "name": "control_pwsh",
+          "result": "r14",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-15",
+          "name": "control_pwsh",
+          "result": "r15",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-16",
+          "name": "control_pwsh",
+          "result": "r16",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-17",
+          "name": "control_pwsh",
+          "result": "r17",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-18",
+          "name": "control_pwsh",
+          "result": "r18",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "",
+        "role": "tool",
+        "toolData": {
+          "args": {
+            "action": "start",
+          },
+          "id": "tc-19",
+          "name": "control_pwsh",
+          "result": "r19",
+          "status": "completed",
+        },
+      },
+      {
+        "content": "## answer",
+        "nodeId": "pi:c1",
+        "role": "assistant",
+        "thinking": "line one
+line two",
+        "thinkingUser": true,
+        "timestamp": "2026-01-01T00:00:00.000Z",
+      },
+    ],
+    "name": "T1",
+    "tokenCount": 22,
+  },
+]
+
+ ❯ src/__tests__/chat/persist-restore-contract.test.ts:209:38
+    207|
+    208|     // Legacy keys cleared after successful migration.
+    209|     expect(memento.get('chat.tabs')).toBeUndefined();
+       |                                      ^
+    210|     expect(memento.get('chat.activeTabId')).toBeUndefined();
+    211|     expect(memento.get('chat.messageHistory')).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  2 failed | 122 passed (124)
+      Tests  2 failed | 866 passed (868)
+   Start at  00:46:17
+   Duration  115.05s (transform 6.92s, setup 0ms, import 50.32s, tests 45.22s, environment 8ms)
+

@@ -1,0 +1,5 @@
+<mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0"><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<mxCell id="title" value="Test" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;fillColor=none;strokeColor=none;" vertex="1" parent="1"><mxGeometry x="20" y="20" width="300" height="40" as="geometry"/></mxCell>
+<mxCell id="cell1" value="A" style="swimlane;html=1;fillColor=#1b5e20;strokeColor=#2e7d32;fontColor=white;fontSize=11;fontStyle=1;startSize=30;" vertex="1" parent="1"><mxGeometry x="20" y="80" width="100" height="40" as="geometry"/></mxCell>
+<mxCell id="cell2" value="B" style="swimlane;html=1;fillColor=#1565c0;strokeColor=#1976d2;fontColor=white;fontSize=11;fontStyle=1;startSize=30;" vertex="1" parent="1"><mxGeometry x="140" y="80" width="100" height="40" as="geometry"/></mxCell>
+</root></mxGraphModel>

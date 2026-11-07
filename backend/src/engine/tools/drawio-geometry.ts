@@ -100,11 +100,17 @@ export function segsCross(a1: Point, a2: Point, b1: Point, b2: Point): boolean {
   const d3 = cross(a1, a2, b1), d4 = cross(a1, a2, b2);
   if (d1 * d2 < 0 && d3 * d4 < 0) return true;
   // Collinear overlap: needs an endpoint strictly inside the other segment,
-  // or two identical segments (both endpoints shared)
-  if (d1 === 0 && (strictlyOn(b1, b2, a1) || identicalSeg(a1, a2, b1, b2))) return true;
-  if (d2 === 0 && strictlyOn(b1, b2, a2)) return true;
-  if (d3 === 0 && strictlyOn(a1, a2, b1)) return true;
-  if (d4 === 0 && strictlyOn(a1, a2, b2)) return true;
+  // or two identical segments (both endpoints shared).
+  // SA4E-410 (DISC-9): the candidate point is the FIRST argument and the two
+  // segment endpoints are args 2-3. The previous calls passed them in the
+  // order (b1, b2, a1) — testing "b1 inside segment (b2→a1)" instead of
+  // "a1 inside segment (b1→b2)". On a shared axis (e.g. two UML self-message
+  // bumps both routed at x=470) that bbox containment trivially holds for
+  // disjoint segments, faking stacked_edges / phantom crossings.
+  if (d1 === 0 && (strictlyOn(a1, b1, b2) || identicalSeg(a1, a2, b1, b2))) return true;
+  if (d2 === 0 && strictlyOn(a2, b1, b2)) return true;
+  if (d3 === 0 && strictlyOn(b1, a1, a2)) return true;
+  if (d4 === 0 && strictlyOn(b2, a1, a2)) return true;
   return false;
 }
 

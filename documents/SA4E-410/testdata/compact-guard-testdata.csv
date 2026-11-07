@@ -1,0 +1,41 @@
+test_case_id,maxTokens,usageFraction,messagesCount,shouldCompact,expectedCompactTriggered,expectedThreshold,expectedMsgThreshold,description
+TC-001,8192,0.96,7,compact,true,0.97,6,Small-context: 8k at 96% with 7 messages triggers compaction
+TC-002,32768,0.95,3,compact,true,0.95,2,Large-context: 32k at 95% with 3 messages triggers compaction
+TC-010,8192,0.97,5,compact,false,0.97,6,Small-context: 8k at 97% with 5 messages — below msg threshold
+TC-011,8192,0.96,7,compact,false,0.97,6,Small-context: 8k at 96% — below 97% threshold
+TC-012,16384,0.95,2,compact,true,0.95,2,Boundary: 16k at 95% with 2 messages triggers (large-context)
+TC-015,0,0.96,3,compact,true,0.95,2,Fail-safe: maxTokens=0 defaults to large-context behavior
+TC-100,8192,0.98,7,warn,false,0.97,6,AF-3: shouldCompact=warn skips compaction
+TC-101,8192,0.99,10,none,false,0.97,6,AF-3: shouldCompact=none skips compaction
+TC-200,8192,0.98,7,compact,error,false,0.97,6,EF-1: compact() throws — non-fatal, returns original
+TC-201,8192,0.98,7,compact,error,false,0.97,6,EF-2: setChatHistory() fails — non-fatal
+TC-300,4096,0.97,7,compact,true,0.97,6,BR-410-01: 4k is small-context
+TC-300,8192,0.97,7,compact,true,0.97,6,BR-410-01: 8k is small-context
+TC-300,16383,0.97,7,compact,true,0.97,6,BR-410-01: 16383 is small-context
+TC-300,16384,0.95,3,compact,true,0.95,2,BR-410-01: 16384 is large-context
+TC-300,32768,0.95,3,compact,true,0.95,2,BR-410-01: 32k is large-context
+TC-300,0,0.95,3,compact,true,0.95,2,BR-410-01: 0 is large-context (fail-safe)
+TC-300,undefined,0.95,3,compact,true,0.95,2,BR-410-01: undefined is large-context (fail-safe)
+TC-301,8192,0.96,7,compact,true,0.97,6,BR-410-02: Small-context threshold 0.97
+TC-302,8192,0.97,6,compact,false,0.97,6,BR-410-03: 6 messages — no compaction (not >6)
+TC-302,8192,0.97,7,compact,true,0.97,6,BR-410-03: 7 messages — compaction allowed (>6)
+TC-303,16384,0.95,2,compact,true,0.95,2,BR-410-04: Large-context threshold 0.95, msg 2
+TC-303,128000,0.95,2,compact,true,0.95,2,BR-410-04: Large-context threshold 0.95, msg 2
+TC-304,0,0.96,3,compact,true,0.95,2,BR-410-05: maxTokens=0 -> large-context
+TC-304,undefined,0.96,3,compact,true,0.95,2,BR-410-05: maxTokens=undefined -> large-context
+TC-305,95,0.95,3,compact,true,0.95,2,BR-410-06: percentage=95 -> fraction=0.95
+TC-305,97,0.97,3,compact,true,0.97,2,BR-410-06: percentage=97 -> fraction=0.97
+TC-305,0,0,3,compact,false,0,2,BR-410-06: percentage=0 -> fraction=0
+TC-305,100,1,3,compact,true,1,2,BR-410-06: percentage=100 -> fraction=1
+TC-305,150,1,3,compact,true,1,2,BR-410-06: percentage=150 -> fraction=1 (clamped)
+TC-400,16383,0.97,7,compact,true,0.97,6,Boundary: 16383 small-context
+TC-400,16384,0.95,2,compact,true,0.95,2,Boundary: 16384 large-context
+TC-401,-1,0.95,3,compact,true,0.95,2,Negative maxTokens -> large-context
+TC-402,2000000,0.95,3,compact,true,0.95,2,Large maxTokens handled normally
+TC-408,NaN,0,3,compact,false,0,2,NaN percentage -> fraction=0
+TC-410,500,0.97,7,compact,true,0.97,6,Security: 500 clamped to 1024 -> small-context
+TC-410,1024,0.97,7,compact,true,0.97,6,Security: 1024 boundary -> small-context
+TC-410,2000000,0.95,3,compact,true,0.95,2,Security: 2M boundary -> large-context
+TC-410,5000000,0.95,3,compact,true,0.95,2,Security: 5M clamped to 2M -> large-context
+TC-800,128000,0.95,3,compact,true,0.95,2,Regression: STC-339-06 large-context compaction
+TC-802,95,0.95,3,compact,true,0.95,2,Regression: STC-339-08 normalizeUsageToFraction

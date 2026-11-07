@@ -1,0 +1,10 @@
+id,name,maxTokens,description
+model-4k,Small Model 4k,4096,Small-context model for testing guard at 4k boundary
+model-8k,Small Model 8k,8192,Small-context model for testing guard at 8k
+model-16k-1,Boundary Model 16383,16383,Just below 16k boundary — small-context
+model-16k,Boundary Model 16384,16384,Exact 16k boundary — large-context
+model-32k,Large Model 32k,32768,Large-context model for standard compaction
+model-128k,Large Model 128k,128000,Default large-context model
+model-invalid-zero,Invalid Zero,0,Simulates maxTokens resolution failure
+model-invalid-negative,Invalid Negative,-1,Invalid maxTokens value
+model-huge,Very Large Model,5000000,Above MAX_REASONABLE_TOKENS for security test

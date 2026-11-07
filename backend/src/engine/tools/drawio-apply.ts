@@ -137,6 +137,11 @@ export function violationRatio(graph: DiagramGraph, issues: LayoutIssue[]): numb
   if (total === 0) return 1;
   const involved = new Set<string>();
   for (const issue of issues) {
+    // SA4E-410 (DISC-7): only high/medium findings drive the full-relayout
+    // decision — low-severity detectors (proximity, containment hints) are
+    // documented as cosmetic and must never scale a table-like diagram up
+    // through ELK.
+    if (issue.severity === 'low') continue;
     for (const key of ['node_a', 'node_b', 'child']) {
       if (typeof issue[key] === 'string') involved.add(issue[key] as string);
     }

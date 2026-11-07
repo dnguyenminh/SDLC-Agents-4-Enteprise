@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as os from 'os';
 import pino from 'pino';
 import { setCachedDrawioCliPath, exportWithCli, exportWithChrome, exportWithPuppeteer, findDrawioCli, hasUpstreamServer } from './drawio-renderers.js';
+import { flattenNestedCells } from './drawio-flatten.js';
 import {
   hasBaseDirArg,
   type MultiWorktreePathResolver,
@@ -84,7 +85,7 @@ export async function handleDrawioExportPng(
   const tmpPng = path.join(tmpDir, 'input.png');
 
   try {
-    const xml = wrapXmlIfNeeded(content);
+    const xml = normalizeForCli(content);
     fs.writeFileSync(tmpDrawio, xml, 'utf-8');
     const renderer = detectRenderer(orchestrationEngine);
     await renderWithEngine(renderer, tmpDrawio, tmpPng, workspace, orchestrationEngine);
@@ -103,10 +104,71 @@ function decodeBase64Content(b64: string): string {
   return Buffer.from(b64, 'base64').toString('utf-8');
 }
 
-function wrapXmlIfNeeded(content: string): string {
-  const trimmed = content.trim();
-  if (trimmed.startsWith('<mxfile') || trimmed.startsWith('<?xml') || trimmed.startsWith('<mxGraphModel')) return content;
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<mxfile host="app.diagrams.net">\n<diagram name="Page-1">\n${content}\n</diagram>\n</mxfile>`;
+/**
+ * SA4E-410 — full normalisation pipeline applied before the draw.io CLI runs.
+ *
+ * 1. `escapeAttributeValues` — raw `<` / `&` inside attribute values make the
+ *    document not well-formed AND corrupt flatten's tag scanning (DISC-3b).
+ * 2. `flattenNestedCells`  — nested `<mxCell>` elements crash the CLI.
+ * 3. `wrapXmlIfNeeded`      — the CLI only consumes a `<mxfile>` document.
+ */
+export function normalizeForCli(content: string): string {
+  // SA4E-410 (DISC-3b): escape runs FIRST. Raw `<` / `>` inside attribute
+  // values would corrupt flatten's own tag scanning (its regexes stop at the
+  // first `>` incl. ones inside quoted values) — with escaped entities the
+  // scanner sees clean tags, and escape is idempotent so re-escaping below
+  // (escapeAttr in flatten, escapeAttributeValues in wrapXmlIfNeeded) is a
+  // no-op.
+  return wrapXmlIfNeeded(flattenNestedCells(escapeAttributeValues(content)));
+}
+
+/**
+ * SA4E-410 (DISC-2): hand-authored diagrams frequently contain raw `<` and `&`
+ * inside attribute values (e.g. `value="Map<string, Tab>"`, `value="A & B"`).
+ * That is NOT well-formed XML — a strict parser rejects the whole document and
+ * draw.io CLI then aborts with "Export failed".
+ *
+ * Escape only inside quoted attribute values; already-valid entities are left
+ * alone so the function is idempotent.
+ */
+export function escapeAttributeValues(xml: string): string {
+  const AMP = '&' + 'amp;';
+  const LT = '&' + 'lt;';
+  const GT = '&' + 'gt;';
+  return xml.replace(/="([^"]*)"/g, (_match, value: string) => {
+    const escaped = value
+      .replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, AMP)
+      .replace(/</g, LT)
+      .replace(/>/g, GT);
+    return `="${escaped}"`;
+  });
+}
+
+/**
+ * SA4E-410 (DISC-1): draw.io CLI can only consume a *file* — `<mxfile>` with a
+ * `<diagram>` child. A bare `<mxGraphModel>` is only the model fragment; the
+ * CLI fails on it for any non-trivial diagram (nested cells, escaped chars)
+ * and reports "Export failed" while writing NO png at all.
+ *
+ * The previous implementation returned bare `<mxGraphModel>` content
+ * unchanged, so every hand-authored diagram whose root was `<mxGraphModel>`
+ * silently failed to export.
+ */
+export function wrapXmlIfNeeded(content: string): string {
+  // SA4E-410: strip the declaration FIRST — the wrapper emits its own, and a
+  // document that already carries `<?xml …?>\n<mxfile …>` must be recognised
+  // as wrapped and never wrapped a second time.
+  const trimmed = content.trim().replace(/^<\?xml[^>]*\?>\s*/i, '');
+  if (trimmed.startsWith('<mxfile')) {
+    // An <mxfile> passes through, but the declaration (if any) was stripped —
+    // re-emit it so the result is stable under repeated normalisation.
+    return `<?xml version="1.0" encoding="UTF-8"?>\n${escapeAttributeValues(trimmed)}`;
+  }
+
+  // Wrap as a single-page draw.io FILE. A bare <mxGraphModel> is only the
+  // model fragment and draw.io CLI refuses to render it.
+  const body = escapeAttributeValues(trimmed);
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<mxfile host="app.diagrams.net" agent="drawio" version="24.7.17" type="device">\n  <diagram id="sa4e-page-1" name="Page-1">\n${body}\n  </diagram>\n</mxfile>`;
 }
 
 async function renderWithEngine(

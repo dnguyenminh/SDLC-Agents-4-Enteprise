@@ -1,0 +1,35 @@
+test_case_id,tokenCount,maxTokens,breakdownConversation,breakdownMcpTools,breakdownSteering,expectedPct,expectedFourPct,expectedBreakdownShown,description
+TC-003,45231,128000,20,10,5,35,5120,true,Happy path: shows totals, 4% window, breakdown
+TC-004,45231,128000,20,10,5,35,5120,true,Breakdown available — shows all three categories
+TC-009,45231,128000,20,10,5,35,5120,true,Debounce: first click shows toast
+TC-009,45231,128000,20,10,5,35,5120,false,Debounce: second click same data — no new toast
+TC-010,0,0,0,0,0,0,0,false,maxTokens=0 — shows 0% and 0 fourPct
+TC-013,1000,0,,,0,0,false,maxTokens=0 graceful — no division by zero
+TC-014,45231,128000,,,35,5120,false,Missing breakdown — only totals + 4% window
+TC-102,1000,8192,10,5,2,12,328,true,First click with tokenCount=1000
+TC-102,2000,8192,15,8,3,24,328,true,Second click after data change — new toast
+TC-104,45231,128000,20,10,5,35,5120,true,EF-1: S.showToast undefined — no error
+TC-106,0,128000,,,0,5120,false,EF-2: getTab null — fallback values
+TC-308,128000,,,,100,5120,false,BR-410-09: 128k -> fourPct=5120
+TC-308,8192,,,,100,328,false,BR-410-09: 8k -> fourPct=328
+TC-308,4096,,,,100,164,false,BR-410-09: 4k -> fourPct=164
+TC-308,32768,,,,100,1311,false,BR-410-09: 32k -> fourPct=1311
+TC-308,0,,,,0,0,false,BR-410-09: 0 -> fourPct=0
+TC-309,1000,8192,,,12,328,true,BR-410-10: First click caches data
+TC-309,1000,8192,,,12,328,false,BR-410-10: Second click same data — cache hit
+TC-309,2000,8192,,,24,328,true,BR-410-10: Third click different data — cache miss
+TC-310,45231,128000,,,35,,false,BR-410-11: 45231/128000=35.3% -> 35
+TC-310,1234,8192,,,15,,false,BR-410-11: 1234/8192=15.0% -> 15
+TC-310,8192,8192,,,100,,false,BR-410-11: 8192/8192=100% -> 100
+TC-310,8200,8192,,,100,,false,BR-410-11: 8200/8192=100.1% -> 100 (capped)
+TC-403,150000,128000,,,100,5120,false,tokenCount > maxTokens — capped at 100%
+TC-404,1000,0,,,0,0,false,maxTokens=0 — no division by zero
+TC-405,45231,128000,"<script>",null,undefined,35,5120,true,Security: XSS in breakdown — escaped
+TC-409,45231,9007199254740991,,,0,360287970189640,false,Large maxTokens — Math.round handles
+TC-500,45231,128000,20,10,5,35,5120,true,UI: Arc gauge renders with breakdown
+TC-501,45231,128000,20,10,5,35,5120,true,UI: Tooltip shows breakdown on hover
+TC-504,45231,128000,20,10,5,35,5120,true,UI: Toast formatting correct
+TC-600,45231,128000,20,10,5,35,5120,true,Perf: Click-to-toast < 50ms
+TC-602,45231,128000,"<script>alert(1)</script>",10,5,35,5120,true,Security #2: Tooltip XSS escaped
+TC-603,45231,128000,20,"<img src=x onerror=alert(1)>",5,35,5120,true,Security #3: Click toast XSS escaped
+TC-604,45231,128000,20,10,5,35,5120,true,Security #1: showToast implemented

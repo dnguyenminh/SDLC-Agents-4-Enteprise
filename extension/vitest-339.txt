@@ -1,0 +1,259 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.12 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts (0 test)
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts (0 test)
+ ❯ src/chat-panel/__tests__/ui-truthfulness.test.ts (5 tests | 3 failed) 13ms
+     × TC-006: tracks active agent per tab; different tabs can have different agents 7ms (retry x2)
+     × TC-317: badge shows currently wired agent, not a pending one 2ms (retry x2)
+     × clears badge when agentId is null 2ms (retry x2)
+ ❯ src/pi-workflow/__tests__/pi-workflow-adapter.e2e.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/adapter-legacy-governance.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-provider-runtime-smoke.test.ts (0 test)
+ ❯ src/pi-workflow/pi-workflow-adapter/__tests__/selectAgent.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-local-providers.test.ts (0 test)
+ ❯ src/pi-workflow/pi-workflow-adapter/__tests__/session-turn-stream-loop.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-model-ordering.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-provider-registration.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/bridge-wiring-legacy-pbt.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-provider-intra-turn-gate.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-provider-runtime-smoke-guards.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-workflow-e2e.integration.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-model-fallback.test.ts (0 test)
+stdout | src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > REJECT: error carries the nCtx of the resolved budget (BR-01 chain)
+{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-11-05T16:00:22.112Z"}
+{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"qwen-text","nCtx":65536,"usable":58293,"historyMessages":2,"totalTokens":71876,"timestamp":"2026-11-05T16:00:22.113Z"}
+stderr | src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > BR-01 chain: no detection and unknown model fall back to the terminal default (8192)
+{"level":"warn","msg":"PI_CONTEXT_DETECT_FALLBACK","modelId":"unknown-model","timestamp":"2026-11-05T16:00:22.120Z"}
+{"level":"warn","msg":"PI_CONTEXT_DETECT_DEFAULT","modelId":"unknown-model","timestamp":"2026-11-05T16:00:22.120Z"}
+
+stdout | src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > REJECT: error carries the nCtx of the resolved budget (BR-01 chain)
+{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-11-05T16:00:22.116Z"}
+{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"qwen-text","nCtx":65536,"usable":58293,"historyMessages":2,"totalTokens":71876,"timestamp":"2026-11-05T16:00:22.117Z"}
+
+stdout | src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > REJECT: error carries the nCtx of the resolved budget (BR-01 chain)
+
+stderr | src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > BR-01 chain: no detection and unknown model fall back to the terminal default (8192)
+{"level":"warn","msg":"PI_CONTEXT_DETECT_FALLBACK","modelId":"unknown-model","timestamp":"2026-11-05T16:00:22.121Z"}
+{"level":"warn","msg":"PI_CONTEXT_DETECT_DEFAULT","modelId":"unknown-model","timestamp":"2026-11-05T16:00:22.121Z"}
+
+stderr | src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > BR-01 chain: no detection and unknown model fall back to the terminal default (8192)
+{"level":"warn","msg":"PI_CONTEXT_DETECT_FALLBACK","modelId":"unknown-model","timestamp":"2026-11-05T16:00:22.122Z"}
+{"level":"warn","msg":"PI_CONTEXT_DETECT_DEFAULT","modelId":"unknown-model","timestamp":"2026-11-05T16:00:22.122Z"}
+
+{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-11-05T16:00:22.118Z"}
+{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"qwen-text","nCtx":65536,"usable":58293,"historyMessages":2,"totalTokens":71876,"timestamp":"2026-11-05T16:00:22.118Z"}
+
+stdout | src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > BR-01 chain: no detection and unknown model fall back to the terminal default (8192)
+{"level":"info","msg":"Context budget resolved","modelId":"unknown-model","source":"default","nCtx":8192,"reserveOutput":2000,"safetyMargin":656,"staticBudget":3875,"historyBudget":1661,"timestamp":"2026-11-05T16:00:22.120Z"}
+{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"unknown-model","nCtx":8192,"usable":5536,"historyMessages":2,"totalTokens":71876,"timestamp":"2026-11-05T16:00:22.120Z"}
+
+stdout | src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > BR-01 chain: no detection and unknown model fall back to the terminal default (8192)
+{"level":"info","msg":"Context budget resolved","modelId":"unknown-model","source":"default","nCtx":8192,"reserveOutput":2000,"safetyMargin":656,"staticBudget":3875,"historyBudget":1661,"timestamp":"2026-11-05T16:00:22.121Z"}
+{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"unknown-model","nCtx":8192,"usable":5536,"historyMessages":2,"totalTokens":71876,"timestamp":"2026-11-05T16:00:22.121Z"}
+
+stdout | src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > BR-01 chain: no detection and unknown model fall back to the terminal default (8192)
+{"level":"info","msg":"Context budget resolved","modelId":"unknown-model","source":"default","nCtx":8192,"reserveOutput":2000,"safetyMargin":656,"staticBudget":3875,"historyBudget":1661,"timestamp":"2026-11-05T16:00:22.122Z"}
+{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"unknown-model","nCtx":8192,"usable":5536,"historyMessages":2,"totalTokens":71876,"timestamp":"2026-11-05T16:00:22.122Z"}
+
+ ❯ src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts (9 tests | 2 failed) 23ms
+     × REJECT: error carries the nCtx of the resolved budget (BR-01 chain) 7ms (retry x2)
+     × BR-01 chain: no detection and unknown model fall back to the terminal default (8192) 3ms (retry x2)
+ ❯ src/pi-workflow/__tests__/pi-provider.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-session-routing.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-gateway-model.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/bridge-wiring-legacy-tools.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-workflow.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-agent-executor.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/adapter-wiring-session.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/pi-context-pipeline.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/remote-checkpointer-store.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/intra-turn-budget-gate.test.ts (6 tests | 1 failed) 12ms
+     × logs PI_CONTEXT_BUDGET_EXCEEDED before throwing (BR-09 observability) 5ms (retry x2)
+ ❯ src/pi-workflow/__tests__/tool-event-threading.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/adapter-wiring-gate.test.ts (0 test)
+ ❯ src/pi-workflow/pi-provider/__tests__/turn-runner-loop-continuation.test.ts (0 test)
+ ❯ src/pi-workflow/pi-workflow-adapter/__tests__/local-provider-routing.test.ts (0 test)
+ ❯ src/pi-workflow/pi-workflow-adapter/__tests__/local-provider-routing.debug-scratch.test.ts (0 test)
+ ❯ src/pi-workflow/__tests__/stream-loop-continuation.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 30 ⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts [ src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts ]
+Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Unterminated string
+    ╭─[ src/pi-workflow/stream-loop-continuation.ts:60:37 ]
+    │
+ 60 │     'Do NOT repeat that ' + where + '. If the task is too large for one response, break it into smaller steps and complete ONLY the next concrete action now — do not try to finish everything.
+    │                                     ──────────────────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────  
+    │                                                                                                                   ╰─────────────────────────────────────────────────────────────────────────────── 
+────╯
+
+  Plugin: vite:oxc
+  File: C:/projects/kiro/SDLC-Agents-4-Enterprise/extension/src/pi-workflow/stream-loop-continuation.ts
+ ❯ transformWithOxc ../node_modules/vite/dist/node/chunks/node.js:7618:19
+ ❯ TransformPluginContext.transform ../node_modules/vite/dist/node/chunks/node.js:7690:26
+ ❯ EnvironmentPluginContainer.transform ../node_modules/vite/dist/node/chunks/node.js:8582:51
+ ❯ loadAndTransform ../node_modules/vite/dist/node/chunks/node.js:20155:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/48]⎯
+
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts [ src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts ]
+ FAIL  src/pi-workflow/__tests__/adapter-legacy-governance.test.ts [ src/pi-workflow/__tests__/adapter-legacy-governance.test.ts ]
+ FAIL  src/pi-workflow/__tests__/adapter-wiring-gate.test.ts [ src/pi-workflow/__tests__/adapter-wiring-gate.test.ts ]
+ FAIL  src/pi-workflow/__tests__/adapter-wiring-session.test.ts [ src/pi-workflow/__tests__/adapter-wiring-session.test.ts ]
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-legacy-pbt.test.ts [ src/pi-workflow/__tests__/bridge-wiring-legacy-pbt.test.ts ]
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-legacy-tools.test.ts [ src/pi-workflow/__tests__/bridge-wiring-legacy-tools.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-agent-executor.test.ts [ src/pi-workflow/__tests__/pi-agent-executor.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-context-pipeline.test.ts [ src/pi-workflow/__tests__/pi-context-pipeline.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-gateway-model.test.ts [ src/pi-workflow/__tests__/pi-gateway-model.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-local-providers.test.ts [ src/pi-workflow/__tests__/pi-local-providers.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-model-fallback.test.ts [ src/pi-workflow/__tests__/pi-model-fallback.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-model-ordering.test.ts [ src/pi-workflow/__tests__/pi-model-ordering.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-provider-intra-turn-gate.test.ts [ src/pi-workflow/__tests__/pi-provider-intra-turn-gate.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-provider-registration.test.ts [ src/pi-workflow/__tests__/pi-provider-registration.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-provider-runtime-smoke-guards.test.ts [ src/pi-workflow/__tests__/pi-provider-runtime-smoke-guards.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-provider-runtime-smoke.test.ts [ src/pi-workflow/__tests__/pi-provider-runtime-smoke.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-provider.test.ts [ src/pi-workflow/__tests__/pi-provider.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-session-routing.test.ts [ src/pi-workflow/__tests__/pi-session-routing.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-workflow-adapter.e2e.test.ts [ src/pi-workflow/__tests__/pi-workflow-adapter.e2e.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-workflow-e2e.integration.test.ts [ src/pi-workflow/__tests__/pi-workflow-e2e.integration.test.ts ]
+ FAIL  src/pi-workflow/__tests__/pi-workflow.test.ts [ src/pi-workflow/__tests__/pi-workflow.test.ts ]
+ FAIL  src/pi-workflow/__tests__/remote-checkpointer-store.test.ts [ src/pi-workflow/__tests__/remote-checkpointer-store.test.ts ]
+ FAIL  src/pi-workflow/__tests__/stream-loop-continuation.test.ts [ src/pi-workflow/__tests__/stream-loop-continuation.test.ts ]
+ FAIL  src/pi-workflow/__tests__/tool-event-threading.test.ts [ src/pi-workflow/__tests__/tool-event-threading.test.ts ]
+ FAIL  src/pi-workflow/pi-provider/__tests__/turn-runner-loop-continuation.test.ts [ src/pi-workflow/pi-provider/__tests__/turn-runner-loop-continuation.test.ts ]
+ FAIL  src/pi-workflow/pi-workflow-adapter/__tests__/local-provider-routing.debug-scratch.test.ts [ src/pi-workflow/pi-workflow-adapter/__tests__/local-provider-routing.debug-scratch.test.ts ]
+ FAIL  src/pi-workflow/pi-workflow-adapter/__tests__/local-provider-routing.test.ts [ src/pi-workflow/pi-workflow-adapter/__tests__/local-provider-routing.test.ts ]
+ FAIL  src/pi-workflow/pi-workflow-adapter/__tests__/selectAgent.test.ts [ src/pi-workflow/pi-workflow-adapter/__tests__/selectAgent.test.ts ]
+ FAIL  src/pi-workflow/pi-workflow-adapter/__tests__/session-turn-stream-loop.test.ts [ src/pi-workflow/pi-workflow-adapter/__tests__/session-turn-stream-loop.test.ts ]
+Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Unterminated string
+    ╭─[ src/pi-workflow/stream-loop-continuation.ts:60:37 ]
+    │
+ 60 │     'Do NOT repeat that ' + where + '. If the task is too large for one response, break it into smaller steps and complete ONLY the next concrete action now — do not try to finish everything.
+    │                                     ──────────────────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────  
+    │                                                                                                                   ╰─────────────────────────────────────────────────────────────────────────────── 
+────╯
+
+  Plugin: vite:oxc
+  File: C:/projects/kiro/SDLC-Agents-4-Enterprise/extension/src/pi-workflow/stream-loop-continuation.ts
+ ❯ transformWithOxc ../node_modules/vite/dist/node/chunks/node.js:7618:19
+ ❯ TransformPluginContext.transform ../node_modules/vite/dist/node/chunks/node.js:7690:26
+ ❯ EnvironmentPluginContainer.transform ../node_modules/vite/dist/node/chunks/node.js:8582:51
+ ❯ loadAndTransform ../node_modules/vite/dist/node/chunks/node.js:20155:26
+ ❯ fetchModule ../node_modules/vite/dist/node/chunks/node.js:36298:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/48]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/chat-panel/__tests__/ui-truthfulness.test.ts > ChatStateManager per-tab agent badge (S4) > TC-006: tracks active agent per tab; different tabs can have different agents
+ FAIL  src/chat-panel/__tests__/ui-truthfulness.test.ts > ChatStateManager per-tab agent badge (S4) > TC-006: tracks active agent per tab; different tabs can have different agents
+ FAIL  src/chat-panel/__tests__/ui-truthfulness.test.ts > ChatStateManager per-tab agent badge (S4) > TC-006: tracks active agent per tab; different tabs can have different agents
+TypeError: Cannot read properties of undefined (reading 'fsPath')
+ ❯ new StateManager src/chat-panel/StateManager.ts:26:42
+     24|   constructor(context: vscode.ExtensionContext) {
+     25|     // globalStorageUri: persistent across workspace reloads, no 3MB l…
+     26|     const dir = context.globalStorageUri.fsPath;
+       |                                          ^
+     27|     this.filePath = path.join(dir, 'chat-state.json');
+     28|     this.ensureDir();
+ ❯ new ChatStateManager src/chat-panel/ChatStateManager.ts:53:25
+ ❯ src/chat-panel/__tests__/ui-truthfulness.test.ts:30:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/48]⎯
+
+ FAIL  src/chat-panel/__tests__/ui-truthfulness.test.ts > ChatStateManager per-tab agent badge (S4) > TC-317: badge shows currently wired agent, not a pending one
+ FAIL  src/chat-panel/__tests__/ui-truthfulness.test.ts > ChatStateManager per-tab agent badge (S4) > TC-317: badge shows currently wired agent, not a pending one
+ FAIL  src/chat-panel/__tests__/ui-truthfulness.test.ts > ChatStateManager per-tab agent badge (S4) > TC-317: badge shows currently wired agent, not a pending one
+TypeError: Cannot read properties of undefined (reading 'fsPath')
+ ❯ new StateManager src/chat-panel/StateManager.ts:26:42
+     24|   constructor(context: vscode.ExtensionContext) {
+     25|     // globalStorageUri: persistent across workspace reloads, no 3MB l…
+     26|     const dir = context.globalStorageUri.fsPath;
+       |                                          ^
+     27|     this.filePath = path.join(dir, 'chat-state.json');
+     28|     this.ensureDir();
+ ❯ new ChatStateManager src/chat-panel/ChatStateManager.ts:53:25
+ ❯ src/chat-panel/__tests__/ui-truthfulness.test.ts:42:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/48]⎯
+
+ FAIL  src/chat-panel/__tests__/ui-truthfulness.test.ts > ChatStateManager per-tab agent badge (S4) > clears badge when agentId is null
+ FAIL  src/chat-panel/__tests__/ui-truthfulness.test.ts > ChatStateManager per-tab agent badge (S4) > clears badge when agentId is null
+ FAIL  src/chat-panel/__tests__/ui-truthfulness.test.ts > ChatStateManager per-tab agent badge (S4) > clears badge when agentId is null
+TypeError: Cannot read properties of undefined (reading 'fsPath')
+ ❯ new StateManager src/chat-panel/StateManager.ts:26:42
+     24|   constructor(context: vscode.ExtensionContext) {
+     25|     // globalStorageUri: persistent across workspace reloads, no 3MB l…
+     26|     const dir = context.globalStorageUri.fsPath;
+       |                                          ^
+     27|     this.filePath = path.join(dir, 'chat-state.json');
+     28|     this.ensureDir();
+ ❯ new ChatStateManager src/chat-panel/ChatStateManager.ts:53:25
+ ❯ src/chat-panel/__tests__/ui-truthfulness.test.ts:54:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/48]⎯
+
+ FAIL  src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > REJECT: error carries the nCtx of the resolved budget (BR-01 chain)
+ FAIL  src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > REJECT: error carries the nCtx of the resolved budget (BR-01 chain)
+ FAIL  src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > REJECT: error carries the nCtx of the resolved budget (BR-01 chain)
+AssertionError: expected undefined to be 65536 // Object.is equality
+
+- Expected:
+65536
+
++ Received:
+undefined
+
+ ❯ src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts:152:58
+    150|       expect.fail('expected PiContextBudgetExceededError');
+    151|     } catch (err) {
+    152|       expect((err as PiContextBudgetExceededError).nCtx).toBe(65536);
+       |                                                          ^
+    153|     }
+    154|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/48]⎯
+
+ FAIL  src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > BR-01 chain: no detection and unknown model fall back to the terminal default (8192)
+ FAIL  src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > BR-01 chain: no detection and unknown model fall back to the terminal default (8192)
+ FAIL  src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts > governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09) > BR-01 chain: no detection and unknown model fall back to the terminal default (8192)
+AssertionError: expected function to throw an error, but it didn't
+ ❯ src/pi-workflow/__tests__/intra-turn-budget-gate-compaction.test.ts:176:82
+    174|     // 70k tokens over an 8192 window → usable floor → REJECT, error n…
+    175|     const messages: Message[] = [systemMsg('sys'), userMsg(textOfToken…
+    176|     expect(() => governIntraTurnRequest({ messages, modelId: 'unknown-…
+       |                                                                                  ^
+    177|       PiContextBudgetExceededError
+    178|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/48]⎯
+
+ FAIL  src/pi-workflow/__tests__/intra-turn-budget-gate.test.ts > governIntraTurnRequest — immutability + observability > logs PI_CONTEXT_BUDGET_EXCEEDED before throwing (BR-09 observability)
+ FAIL  src/pi-workflow/__tests__/intra-turn-budget-gate.test.ts > governIntraTurnRequest — immutability + observability > logs PI_CONTEXT_BUDGET_EXCEEDED before throwing (BR-09 observability)
+ FAIL  src/pi-workflow/__tests__/intra-turn-budget-gate.test.ts > governIntraTurnRequest — immutability + observability > logs PI_CONTEXT_BUDGET_EXCEEDED before throwing (BR-09 observability)
+AssertionError: expected function to throw an error, but it didn't
+ ❯ src/pi-workflow/__tests__/intra-turn-budget-gate.test.ts:131:71
+    129|   it('logs PI_CONTEXT_BUDGET_EXCEEDED before throwing (BR-09 observabi…
+    130|     const messages: Message[] = [systemMsg('sys'), userMsg(textOfToken…
+    131|     expect(() => governIntraTurnRequest({ messages, ...QWEN_INPUT })).…
+       |                                                                       ^
+    132|     expect(errorSpy.mock.calls.some((c) => c[0] === 'PI_CONTEXT_BUDGET…
+    133|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/48]⎯
+
+
+ Test Files  33 failed | 63 passed (96)
+      Tests  6 failed | 526 passed (532)
+   Start at  22:59:37
+   Duration  76.43s (transform 6.32s, setup 0ms, import 16.84s, tests 10.03s, environment 6ms)
+

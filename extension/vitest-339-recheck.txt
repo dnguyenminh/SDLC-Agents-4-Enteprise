@@ -1,0 +1,179 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.12 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+
+ ❯ src/__tests__/chat/persist-restore-contract.test.ts (3 tests | 3 failed) 26ms
+     × saveChatState writes the FULL payload under the workspaceState STATE_KEY (spy update) 13ms (retry x2)
+     × restoreChatState re-emits ALL active-tab messages via tab:updated (tools never filtered/sliced) 4ms (retry x2)
+     × tool toolData and assistant thinking shapes survive save→restore intact 7ms (retry x2)
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts (6 tests | 6 failed) 12ms
+     × STC-339-06: Exactly 2 messages, usage >=95% 6ms (retry x2)
+     × STC-339-07: Engine is null 1ms (retry x2)
+     × STC-339-08: compact() returns action != compact 1ms (retry x2)
+     × STC-339-09: SEC-330-01 Role validation 1ms (retry x2)
+     × STC-339-10: SEC-330-02 Usage normalization 1ms (retry x2)
+     × STC-339-11: AC-05 Regression — pre-existing chat suite passes with 0 failures 1ms (retry x2)
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts (5 tests | 5 failed) 11ms
+     × STC-339-01: Safe Usage (< 80%) No Compaction 6ms (retry x2)
+     × STC-339-02: High Usage (>= 95%) Triggers Compaction 1ms (retry x2)
+     × STC-339-03: Webview Context Meter Broadcast 1ms (retry x2)
+     × STC-339-04: Error Resilience 1ms (retry x2)
+     × STC-339-05: Boundary 94.5% usage rounds to 0.95 and triggers compaction 1ms (retry x2)
+ ❯ src/__tests__/chat/chat.pbt.stream.test.ts (6 tests | 1 failed) 36ms
+     × locked files never appear in prune suggestions 4ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 15 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-06: Exactly 2 messages, usage >=95%
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-06: Exactly 2 messages, usage >=95%
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-06: Exactly 2 messages, usage >=95%
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-07: Engine is null
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-07: Engine is null
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-07: Engine is null
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-08: compact() returns action != compact
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-08: compact() returns action != compact
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-08: compact() returns action != compact
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-09: SEC-330-01 Role validation
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-09: SEC-330-01 Role validation
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-09: SEC-330-01 Role validation
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-10: SEC-330-02 Usage normalization
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-10: SEC-330-02 Usage normalization
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-10: SEC-330-02 Usage normalization
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-11: AC-05 Regression — pre-existing chat suite passes with 0 failures
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-11: AC-05 Regression — pre-existing chat suite passes with 0 failures
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-11: AC-05 Regression — pre-existing chat suite passes with 0 failures
+TypeError: Cannot read properties of undefined (reading 'globalStorageUri')
+ ❯ new StateManager src/chat-panel/StateManager.ts:26:25
+     24|   constructor(context: vscode.ExtensionContext) {
+     25|     // globalStorageUri: persistent across workspace reloads, no 3MB l…
+     26|     const dir = context.globalStorageUri.fsPath;
+       |                         ^
+     27|     this.filePath = path.join(dir, 'chat-state.json');
+     28|     this.ensureDir();
+ ❯ new ChatStateManager src/chat-panel/ChatStateManager.ts:53:25
+ ❯ new ChatPanelProvider src/chat-panel/chat-panel-provider.ts:62:25
+ ❯ Module.createCompactionHarness src/chat-panel/__tests__/compaction-helpers.ts:22:20
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts:45:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/45]⎯
+
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-01: Safe Usage (< 80%) No Compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-01: Safe Usage (< 80%) No Compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-01: Safe Usage (< 80%) No Compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-02: High Usage (>= 95%) Triggers Compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-02: High Usage (>= 95%) Triggers Compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-02: High Usage (>= 95%) Triggers Compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-03: Webview Context Meter Broadcast
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-03: Webview Context Meter Broadcast
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-03: Webview Context Meter Broadcast
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-04: Error Resilience
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-04: Error Resilience
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-04: Error Resilience
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-05: Boundary 94.5% usage rounds to 0.95 and triggers compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-05: Boundary 94.5% usage rounds to 0.95 and triggers compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-05: Boundary 94.5% usage rounds to 0.95 and triggers compaction
+TypeError: Cannot read properties of undefined (reading 'globalStorageUri')
+ ❯ new StateManager src/chat-panel/StateManager.ts:26:25
+     24|   constructor(context: vscode.ExtensionContext) {
+     25|     // globalStorageUri: persistent across workspace reloads, no 3MB l…
+     26|     const dir = context.globalStorageUri.fsPath;
+       |                         ^
+     27|     this.filePath = path.join(dir, 'chat-state.json');
+     28|     this.ensureDir();
+ ❯ new ChatStateManager src/chat-panel/ChatStateManager.ts:53:25
+ ❯ new ChatPanelProvider src/chat-panel/chat-panel-provider.ts:62:25
+ ❯ Module.createCompactionHarness src/chat-panel/__tests__/compaction-helpers.ts:22:20
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts:42:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/45]⎯
+
+ FAIL  src/__tests__/chat/chat.pbt.stream.test.ts > PBT-CTX-01: Pruning Never Removes Locked Files > locked files never appear in prune suggestions
+ FAIL  src/__tests__/chat/chat.pbt.stream.test.ts > PBT-CTX-01: Pruning Never Removes Locked Files > locked files never appear in prune suggestions
+ FAIL  src/__tests__/chat/chat.pbt.stream.test.ts > PBT-CTX-01: Pruning Never Removes Locked Files > locked files never appear in prune suggestions
+Error: fc.float constraints.min must be a 32-bit float - you can convert any double to a 32-bit float by using `Math.fround(myDouble)`
+ ❯ safeFloatToIndex ../node_modules/fast-check/lib/fast-check.js:6358:59
+ ❯ anyFloat ../node_modules/fast-check/lib/fast-check.js:6372:22
+ ❯ Proxy.float ../node_modules/fast-check/lib/fast-check.js:6410:37
+ ❯ src/__tests__/chat/chat.pbt.stream.test.ts:106:27
+    104|       pinnedAt: fc.integer({ min: 1000000, max: Date.now() }),
+    105|       relevanceScore: fc.float({ min: 0, max: 1, noNaN: true }),
+    106|       importanceScore: fc.float({ min: 0.05, max: 1, noNaN: true }),
+       |                           ^
+    107|       locked: fc.boolean(),
+    108|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/45]⎯
+
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > saveChatState writes the FULL payload under the workspaceState STATE_KEY (spy update)
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > saveChatState writes the FULL payload under the workspaceState STATE_KEY (spy update)
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > saveChatState writes the FULL payload under the workspaceState STATE_KEY (spy update)
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ src/__tests__/chat/persist-restore-contract.test.ts:111:28
+    109|     manager.saveChatState(state as any);
+    110|
+    111|     expect(memento.update).toHaveBeenCalledTimes(1);
+       |                            ^
+    112|     const [key, stored] = memento.update.mock.calls[0];
+    113|     expect(key).toBe(STATE_KEY);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/45]⎯
+
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > restoreChatState re-emits ALL active-tab messages via tab:updated (tools never filtered/sliced)
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > restoreChatState re-emits ALL active-tab messages via tab:updated (tools never filtered/sliced)
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > restoreChatState re-emits ALL active-tab messages via tab:updated (tools never filtered/sliced)
+AssertionError: expected undefined to be defined
+ ❯ src/__tests__/chat/persist-restore-contract.test.ts:129:20
+    127|
+    128|     const tabMsg = sent.find((m) => m.type === 'tab:updated');
+    129|     expect(tabMsg).toBeDefined();
+       |                    ^
+    130|     expect(tabMsg.payload.activeTabId).toBe(TAB_ID);
+    131|     const active = tabMsg.payload.tabs.find((t: any) => t.id === TAB_I…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/45]⎯
+
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > tool toolData and assistant thinking shapes survive save→restore intact
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > tool toolData and assistant thinking shapes survive save→restore intact
+ FAIL  src/__tests__/chat/persist-restore-contract.test.ts > ChatStateManager persist/restore contract (AC10e, SA4E-372) > tool toolData and assistant thinking shapes survive save→restore intact
+TypeError: Cannot read properties of undefined (reading 'payload')
+ ❯ src/__tests__/chat/persist-restore-contract.test.ts:156:27
+    154|
+    155|     const tabMsg = sent.find((m) => m.type === 'tab:updated');
+    156|     const active = tabMsg.payload.tabs.find((t: any) => t.id === TAB_I…
+       |                           ^
+    157|
+    158|     // Deep-tail look-up: a NON-first entry must survive the round-tri…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/45]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+Error: ENOENT: no such file or directory, open 'C:\Users\ASUS\AppData\Local\Temp\ac10e-persist-ZeAQqN\chat-state.json'
+ ❯ open node:internal/fs/promises:642:25
+ ❯ Object.writeFile node:internal/fs/promises:1249:14
+ ❯ StateManager.save src/chat-panel/StateManager.ts:52:5
+     50|   async save(state: ChatState): Promise<void> {
+     51|     this.ensureDir();
+     52|     await fs.promises.writeFile(this.filePath, JSON.stringify(state), …
+       |     ^
+     53|   }
+     54|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errno: -4058, code: 'ENOENT', syscall: 'open', path: 'C:\Users\ASUS\AppData\Local\Temp\ac10e-persist-ZeAQqN\chat-state.json' }
+This error originated in "src/__tests__/chat/persist-restore-contract.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  4 failed | 120 passed (124)
+      Tests  15 failed | 852 passed (867)
+     Errors  1 error
+   Start at  00:16:42
+   Duration  129.48s (transform 6.01s, setup 0ms, import 64.61s, tests 45.23s, environment 7ms)
+

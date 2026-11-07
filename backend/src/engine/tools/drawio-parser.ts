@@ -56,8 +56,13 @@ function extractGraph(xml: string): DiagramGraph {
   const containers: DiagramNode[] = [];
   const looseEdges: DiagramEdge[] = [];
 
-  // Match all mxCell elements (self-closing or with children)
-  const cellRegex = /<mxCell\s([^>]*?)(?:\/>|>([\s\S]*?)<\/mxCell>)/g;
+  // Match all mxCell elements (self-closing or with children).
+  // SA4E-410 (DISC-6): the open-tag attribute segment must be quote-aware —
+  // `[^>]*?` stops at the first `>` including ones inside a quoted attribute
+  // value (e.g. value="Map<string, Tab>"), truncating the tag so style/parent
+  // attributes AFTER the value are dropped and the mis-parsed cell drifts to
+  // the wrong parent in layout.
+  const cellRegex = /<mxCell\s((?:"[^"]*"|'[^']*'|[^"'>])*?)(?:\/>|>([\s\S]*?)<\/mxCell>)/g;
   const cells: Array<{ attrs: Record<string, string>; body: string }> = [];
   let match: RegExpExecArray | null;
 
@@ -100,8 +105,9 @@ function extractGraph(xml: string): DiagramGraph {
 }
 
 function parseGeometry(body: string, _cellAttrs: Record<string, string>): { x: number; y: number; w: number; h: number } | null {
-  // Look for mxGeometry in body or as sibling in raw XML
-  const geomRegex = /<mxGeometry\s([^>]*?)(?:\/>|>)/;
+  // Look for mxGeometry in body or as sibling in raw XML (quote-aware attr
+  // segment — see DISC-6 note in extractGraph).
+  const geomRegex = /<mxGeometry\s((?:"[^"]*"|'[^']*'|[^"'>])*?)(?:\/>|>)/;
   const geomMatch = body.match(geomRegex);
   if (!geomMatch) return null;
   const attrs = parseAttrs(geomMatch[1]);
@@ -129,7 +135,7 @@ function parseWaypoints(body: string): Array<{ x: number; y: number }> {
   const arr = /<Array\s+as="points">([\s\S]*?)<\/Array>/.exec(body);
   if (!arr) return [];
   const points: Array<{ x: number; y: number }> = [];
-  const pointRegex = /<mxPoint\s([^>]*?)\/?>/g;
+  const pointRegex = /<mxPoint\s((?:"[^"]*"|'[^']*'|[^"'>])*?)(?:\/>|>)/g;
   let m: RegExpExecArray | null;
   while ((m = pointRegex.exec(arr[1])) !== null) {
     const attrs = parseAttrs(m[1]);
@@ -148,7 +154,7 @@ function parseStyleAnchor(style: string, kind: 'exit' | 'entry'): { x: number; y
 
 /** Extract a stored terminal hint point (as="sourcePoint"|"targetPoint"). */
 function parseTerminalPoint(body: string, kind: 'sourcePoint' | 'targetPoint'): { x: number; y: number } | null {
-  const tagRe = /<mxPoint\s([^>]*?)\/?>/g;
+  const tagRe = /<mxPoint\s((?:"[^"]*"|'[^']*'|[^"'>])*?)(?:\/>|>)/g;
   let m: RegExpExecArray | null;
   while ((m = tagRe.exec(body)) !== null) {
     if (!m[1].includes(`as="${kind}"`)) continue;

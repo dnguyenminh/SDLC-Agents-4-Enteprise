@@ -1,0 +1,16 @@
+test_case_id,attackVector,payload,expectedBehavior,description
+TC-405,breakdown_conversation,"<script>alert(1)</script>",escaped in toast,XSS via breakdown.conversation string
+TC-405,breakdown_mcpTools,null,handled gracefully,null value in breakdown
+TC-405,breakdown_steering,undefined,handled gracefully,undefined value in breakdown
+TC-406,server_name,"<img src=x onerror=alert(1)>",escaped in list and toast,XSS via MCP server name
+TC-407,server_status,"<script>alert(1)</script>",normalized to Unknown,XSS via MCP server status
+TC-501,tooltip_breakdown,"<script>alert(1)</script>",escaped in tooltip,Security #2: Tooltip XSS
+TC-602,tooltip_breakdown,"<script>alert(1)</script>",textContent/escapeHtml used,Security #2: updateContextIcon fix
+TC-603,click_toast_breakdown,"<img src=x onerror=alert(1)>",escapeHtml applied,Security #3: Click handler fix
+TC-604,missing_showToast,undefined,function exists,Security #1: showToast implemented
+TC-605,maxTokens_bounds,500,clamped to 1024,Security #4: Below MIN_REASONABLE
+TC-605,maxTokens_bounds,5000000,clamped to 2000000,Security #4: Above MAX_REASONABLE
+TC-606,escapeHtml_consistency,all innerHTML sites,all use escapeHtml/textContent,Security #7: Consistent usage
+TC-607,csp_nonce,script-src 'nonce-{nonce}',present and unique per load,Security #8: CSP configured
+TC-410,maxTokens_manipulation,500,clamped prevents aggressive compaction,Security #4: DoS prevention
+TC-410,maxTokens_manipulation,5000000,clamped prevents compaction disable,Security #4: DoS prevention

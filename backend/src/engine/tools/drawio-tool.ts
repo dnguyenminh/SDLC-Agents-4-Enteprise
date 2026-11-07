@@ -98,10 +98,21 @@ async function layoutOn(filePath: string, args: Record<string, unknown>): Promis
     const nodeCount = graph.nodes.length + graph.containers.length;
     if (nodeCount === 0) return error('No nodes found in diagram');
     const issues = detectAllIssues(graph);
-    // No issues → already_good, don't modify file
-    if (issues.length === 0) return alreadyGood();
+    // SA4E-410 (DISC-7): auto-fix gates on high/medium severity only. Low
+    // findings (proximity, containment hints, diagonal edges, edge-over-band)
+    // are cosmetic by contract; fixing on them rewrote grid tables and other
+    // dense but intentional layouts through ELK.
+    const fixable = issues.filter(i => i.severity === 'high' || i.severity === 'medium');
+    if (fixable.length === 0) {
+      if (issues.length === 0) return alreadyGood();
+      return JSON.stringify({
+        status: 'already_good',
+        message: `Diagram is good — ${issues.length} cosmetic finding(s) reported, none auto-fixable.`,
+        cosmetic_findings: issues.length,
+      });
+    }
     // Issues found → always fix (no mode parameter)
-    return await handleApply(raw, graph, issues, nodeCount, args, filePath);
+    return await handleApply(raw, graph, fixable, nodeCount, args, filePath);
   } catch (e: any) {
     return error(`Analysis failed: ${e.message ?? e}`);
   }

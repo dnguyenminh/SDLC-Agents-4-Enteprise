@@ -21,8 +21,8 @@ jobs:
         run: |
           rm -rf node_modules backend/node_modules extension/node_modules
           npm cache clean --force
-          npm install --force --no-audit --no-fund
-          npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
+          npm install --force --no-audit --no-fund --include=optional
+          npm install --force --no-audit --no-fund --include=optional --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
         working-directory: .
 
       - name: Lint (eslint)
@@ -53,8 +53,8 @@ jobs:
         run: |
           rm -rf node_modules backend/node_modules extension/node_modules
           npm cache clean --force
-          npm install --force --no-audit --no-fund
-          npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
+          npm install --force --no-audit --no-fund --include=optional
+          npm install --force --no-audit --no-fund --include=optional --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
         working-directory: .
 
       - name: Lint (eslint)
@@ -82,8 +82,8 @@ jobs:
         run: |
           rm -rf node_modules backend/node_modules extension/node_modules
           npm cache clean --force
-          npm install --force --no-audit --no-fund
-          npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
+          npm install --force --no-audit --no-fund --include=optional
+          npm install --force --no-audit --no-fund --include=optional --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
         working-directory: .
 
       - run: npm run build --workspace=backend
@@ -107,8 +107,8 @@ jobs:
         run: |
           rm -rf node_modules backend/node_modules extension/node_modules
           npm cache clean --force
-          npm install --force --no-audit --no-fund
-          npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
+          npm install --force --no-audit --no-fund --include=optional
+          npm install --force --no-audit --no-fund --include=optional --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
         working-directory: .
 
       - run: npm run build --workspace=backend
@@ -142,8 +142,8 @@ jobs:
         run: |
           rm -rf node_modules backend/node_modules extension/node_modules
           npm cache clean --force
-          npm install --force --no-audit --no-fund
-          npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
+          npm install --force --no-audit --no-fund --include=optional
+          npm install --force --no-audit --no-fund --include=optional --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
 
       # A second `npm install` above may skip the root postinstall; re-run the
       # patch so npm audit (reads package-lock.json) sees the vendored fixes.

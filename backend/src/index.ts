@@ -61,11 +61,9 @@ async function main() {
   await initAdapters();
 
   // --- SA4E-215: ensure owned tables exist (mcp_servers, decisions) ---
-  try {
-    await ensureSa4e215Tables();
-  } catch (err) {
-    logger.error({ err }, 'Failed to ensure SA4E-215 tables; continuing startup');
-  }
+  // MUST succeed - required for McpServerConfigRepository / McpClientManager
+  await ensureSa4e215Tables();
+  logger.info('SA4E-215 tables (mcp_servers, decisions) ensured');
 
   // --- SA4E-237: Pega rule-to-rule reference resolution table ---
   // Never created before this: stageRuleReferences failed with

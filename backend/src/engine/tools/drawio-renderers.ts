@@ -45,10 +45,37 @@ export function findDrawioCli(): string | null {
   return null;
 }
 
+/**
+ * SA4E-410 (DISC-4) — scale factors tried in order by the CLI exporter.
+ *
+ * draw.io Desktop renders through a GPU-backed compositor. When the diagram
+ * canvas is very large (tens of thousands of pixels) the GPU process aborts
+ * with "GPU process exited unexpectedly" and the CLI then exits with code 0
+ * while writing NO png at all. Retrying the very same command reproduces the
+ * crash, so the exporter degrades the render scale until the canvas fits.
+ */
+const CLI_SCALE_FALLBACKS = [1, 0.75, 0.5, 0.25];
+
 export async function exportWithCli(inputPath: string, outputPath: string): Promise<void> {
   if (!_cachedDrawioCliPath) throw new Error('draw.io CLI path not cached');
-  const cmd = `"${_cachedDrawioCliPath}" --export --format png --border 10 --output "${outputPath}" "${inputPath}"`;
-  execSync(cmd, { timeout: 30000, stdio: 'pipe' });
+
+  let lastError = '';
+  for (const scale of CLI_SCALE_FALLBACKS) {
+    const scaleArg = scale === 1 ? '' : ` --scale ${scale}`;
+    const cmd = `"${_cachedDrawioCliPath}" --export --format png --border 10${scaleArg} --output "${outputPath}" "${inputPath}"`;
+    try {
+      execSync(cmd, { timeout: 30000, stdio: 'pipe' });
+    } catch (err) {
+      lastError = (err as Error).message;
+    }
+    if (fs.existsSync(outputPath) && fs.statSync(outputPath).size > 0) return;
+    // The CLI exited without producing an image — drop any empty artifact
+    // before the next attempt.
+    try { fs.unlinkSync(outputPath); } catch { /* no artifact to remove */ }
+  }
+  throw new Error(
+    `draw.io CLI produced no PNG at any scale (${CLI_SCALE_FALLBACKS.join(', ')})${lastError ? `: ${lastError}` : ''}`
+  );
 }
 
 export async function exportWithChrome(

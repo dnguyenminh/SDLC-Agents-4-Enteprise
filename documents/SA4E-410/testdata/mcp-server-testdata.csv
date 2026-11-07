@@ -1,0 +1,29 @@
+test_case_id,serverName,serverStatus,expectedStatusLabel,expectedBadgeColor,description
+TC-005,code-intel,connected,Connected,green,Happy path: connected server
+TC-006,filesystem,disconnected,Disconnected,gray,Happy path: disconnected server
+TC-007,git,failed,Failed,red,Happy path: failed server
+TC-008,custom,weird-status,Unknown,gray,Unrecognized status -> Unknown
+TC-103,old-server,,Unknown,gray,AF-1: Stale DOM — server not in array
+TC-105,code-intel,connected,Connected,green,EF-1: S.showToast undefined — no error
+TC-307,code-intel,connected,Connected,green,BR-410-13: Toast auto-dismisses 4s
+TC-311,code-intel,connected,Connected,green,BR-410-12: Click purely client-side
+TC-312,filesystem,disconnected,Disconnected,gray,BR-410-13: Toast auto-dismisses 4s
+TC-313,CONNECTED,connected,Connected,green,BR-410-14: Uppercase normalized
+TC-313,Disconnected,disconnected,Disconnected,gray,BR-410-14: Mixed case normalized
+TC-313,FAILED,failed,Failed,red,BR-410-14: Uppercase normalized
+TC-313,unknown,unknown,Unknown,gray,BR-410-14: Lowercase as-is
+TC-313,WeIrD,weird,Unknown,gray,BR-410-14: Weird case -> Unknown
+TC-314,connected,connected,Connected,green,BR-410-15: Connected badge green
+TC-314,failed,failed,Failed,red,BR-410-15: Failed badge red
+TC-314,disconnected,disconnected,Disconnected,gray,BR-410-15: Disconnected badge gray
+TC-314,unknown,unknown,Unknown,gray,BR-410-15: Unknown badge gray
+TC-406,"<img src=x onerror=alert(1)>",connected,Connected,green,Security #7: XSS in server name escaped
+TC-407,custom,"<script>alert(1)</script>",Unknown,gray,Security #7: XSS in status -> Unknown
+TC-505,code-intel,connected,Connected,green,UI: Connected badge visual
+TC-505,filesystem,disconnected,Disconnected,gray,UI: Disconnected badge visual
+TC-505,git,failed,Failed,red,UI: Failed badge visual
+TC-505,unknown,unknown,Unknown,gray,UI: Unknown badge visual
+TC-600,code-intel,connected,Connected,green,Perf: MCP click-to-toast < 50ms
+TC-701,code-intel,connected,Connected,green,Integration: chat:mcpServers renders list
+TC-701,fs,disconnected,Disconnected,gray,Integration: chat:mcpServers renders list
+TC-702,code-intel,failed,Failed,red,Integration: serverStatus event updates badge

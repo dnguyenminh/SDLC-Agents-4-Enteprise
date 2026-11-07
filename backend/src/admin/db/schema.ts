@@ -18,19 +18,19 @@ import { seedAccessGroups, ensureAdminPermissions, seedAdminUser } from './schem
 /**
  * Idempotent ADD COLUMN. PostgreSQL supports `ADD COLUMN IF NOT EXISTS` natively,
  * so re-running the migration stays silent in pg_log on every boot. SQLite has no
- * IF NOT EXISTS for ADD COLUMN — fall back to try/catch (pre-existing behavior).
+ * IF NOT EXISTS for ADD COLUMN — check column existence via PRAGMA first.
  */
 async function ensureColumn(db: DatabaseAdapter, engine: DatabaseEngine, table: string, column: string, definition: string): Promise<void> {
-  const sql = engine === 'postgresql'
-    ? `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${column} ${definition}`
-    : `ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`;
   if (engine === 'postgresql') {
-    await db.execAsync(sql);
+    await db.execAsync(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${column} ${definition}`);
     return;
   }
-  try {
-    await db.execAsync(sql);
-  } catch (err) { console.debug('[schema] column already exists :', (err as Error).message); }
+  // SQLite: check if column exists before attempting to add
+  const existing = await db.allAsync<{ name: string }>(`PRAGMA table_info('${table}')`);
+  if (existing.some(r => r.name === column)) {
+    return; // column already exists, nothing to do
+  }
+  await db.execAsync(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
 }
 
 export async function initSchema(db: DatabaseAdapter): Promise<void> {

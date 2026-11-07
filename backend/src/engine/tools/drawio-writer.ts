@@ -11,7 +11,7 @@
  */
 
 import type { ElkNode, ElkEdge, RepositionedNode } from './drawio-layout-models.js';
-import { setEdgePointsXml, upsertEdgeStyleKeys, replaceCellGeometryXy } from './drawio-xml-utils.js';
+import { setEdgePointsXml, upsertEdgeStyleKeys, replaceCellGeometryXy, replaceCellSize } from './drawio-xml-utils.js';
 
 export interface XmlWriteResult {
   xml: string;
@@ -30,7 +30,16 @@ export function applyLayoutToXml(rawXml: string, laidOut: ElkNode): XmlWriteResu
   const oldPos = readCurrentPositions(rawXml);
 
   let xml = rawXml;
-  for (const [id, p] of positions) xml = replaceCellGeometryXy(xml, id, p.x, p.y);
+  for (const [id, p] of positions) {
+    xml = replaceCellGeometryXy(xml, id, p.x, p.y);
+    // SA4E-410 (DISC-5): ELK resizes a container so that it can hold its
+    // children. Writing only x/y keeps the OLD container size in the XML
+    // while the children are placed at the positions ELK computed for the
+    // NEW size — the children then end up outside their parent border and
+    // the effective canvas (parent offset + child offset) grows without
+    // bound. Writing the new size keeps the geometry self-consistent.
+    if (p.w > 0 && p.h > 0) xml = replaceCellSize(xml, id, p.w, p.h);
+  }
   for (const route of collectEdgeRoutes(laidOut)) xml = writeEdgeRoute(xml, route, positions, dx, dy);
   return { xml, repositionedNodes: buildRepositioned(oldPos, positions) };
 }
