@@ -44,10 +44,9 @@ export const EntraConfigSchema = z.object({
   authority: z.string().url().default(''),
   issuer: z.string().url().default(''),
   jwksUri: z.string().url().default(''),
-  scopes: z.string()
+  scopes: z.string().default('openid profile email offline_access')
     .transform(v => v.trim().split(/\s+/).filter(Boolean))
-    .pipe(z.array(z.string().regex(SCOPE_TOKEN_REGEX)).min(1))
-    .default('openid profile email offline_access'),
+    .pipe(z.array(z.string().regex(SCOPE_TOKEN_REGEX)).min(1)),
 }).superRefine((cfg, ctx) => {
   // BR-04: explicit issuer must match the tenant-derived value — no silent overwrite.
   if (cfg.issuer && GUID_REGEX.test(cfg.tenantId)) {
