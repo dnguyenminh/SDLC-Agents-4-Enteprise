@@ -61,7 +61,7 @@ export interface ChatModelEntry {
 // === Webview → Extension Messages ===
 
 export type ChatWebviewToExtMessage =
-  | { type: "chat:userMessage"; text: string; context?: ContextItem[]; attachments?: AttachmentItem[] }
+  | { type: "chat:userMessage"; text: string; context?: ContextItem[]; attachments?: AttachmentItem[]; tabId?: string }
   | { type: "chat:approvalAction"; decision: ApprovalDecision; feedback?: string }
   | { type: "chat:graphNodeClick"; nodeId: string }
   | { type: "chat:cancelStream"; streamId?: string }
@@ -123,4 +123,5 @@ export type ChatExtToWebviewMessage =
   | { type: "chat:hookTriggered"; hook: { name: string; type: string; status: "running" | "completed" | "skipped" } }
   | { type: "chat:contextUsage"; payload: ContextUsagePayload }
   | { type: "chat:agentSwitched"; agentId: string | null; agentName: string; success: boolean; tabId?: string; sessionRole?: string; sessionPhase?: string; error?: string }
-  | { type: "serverStatus"; status: "connected" | "disconnected" | "failed" };
+  | { type: "serverStatus"; status: "connected" | "disconnected" | "failed" }
+  | { type: "chat:mcpServers"; servers: Array<{ name: string; status: string }> };
