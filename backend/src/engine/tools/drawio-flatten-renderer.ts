@@ -2,12 +2,12 @@
  * SA4E-410 (DISC-3) — Rendering functions for draw.io flattening.
  */
 
-import { escapeAttr, serializeAttrs } from './drawio-flatten-utils.js';
+import { escapeAttr, parseAttrs, serializeAttrs } from './drawio-flatten-utils.js';
 import type { Cell } from './drawio-flatten-types.js';
 
 /** The root layer cells (`id="0"` and `id="1"`) anchor the default layer. */
 export function renderRootCell(cell: Cell): string {
-  const attrs = serializeAttrs(cell.attrs);
+  const attrs = serializeAttrs(parseAttrs(cell.attrs));
   return cell.ownInner
     ? `<mxCell ${attrs}>${cell.ownInner}</mxCell>`
     : `<mxCell ${attrs}/>`;
@@ -15,7 +15,7 @@ export function renderRootCell(cell: Cell): string {
 
 /** Render a non-root cell at root level, keeping its logical parent intact. */
 export function renderFlatCell(cell: Cell): string {
-  const attrs = serializeAttrs(cell.attrs);
+  const attrs = serializeAttrs(parseAttrs(cell.attrs));
   const leading = cell.leading.trim() ? cell.leading : '';
 
   if (cell.isEdge) {

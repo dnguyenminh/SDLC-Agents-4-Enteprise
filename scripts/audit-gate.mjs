@@ -39,6 +39,40 @@ const ALLOWLIST = new Map([
         "surface. Re-review when puppeteer-core/chromium-bidi adopt zod >= 4.6.6.",
     },
   ],
+  [
+    'GHSA-f88m-g3jw-g9cj',
+    {
+      pkg: 'sharp (0.x)',
+      reason:
+        "Sharp is a direct dependency for draw.io PNG export. Upstream sharp 0.33.x " +
+        "has high-severity vulnerabilities in libvips (buffer overflow, OOB read). " +
+        "No fixed version in 0.x line yet; 1.x would be breaking. We use sharp only " +
+        "for trusted diagram export (no untrusted image input). Re-review when 0.34+ or 1.x ships.",
+      risk:
+        "Low: sharp processes only internally-generated draw.io XML, not user-uploaded images. " +
+        "Attack surface is minimal. Monitor for sharp 0.34+ / 1.0 with fixes.",
+    },
+  ],
+  [
+    'GHSA-rgj7-g3m4-5g8c',
+    {
+      pkg: 'sharp (0.x)',
+      reason:
+        "Same sharp package, additional high-severity libvips advisory. " +
+        "No fixed version available yet. See GHSA-f88m-g3jw-g9cj for details.",
+      risk: "Low: same rationale — trusted input only.",
+    },
+  ],
+  [
+    'GHSA-wq5f-xc86-pv6w',
+    {
+      pkg: 'sharp (0.x)',
+      reason:
+        "Same sharp package, third high-severity libvips advisory. " +
+        "No fixed version available yet. See GHSA-f88m-g3jw-g9cj for details.",
+      risk: "Low: same rationale — trusted input only.",
+    },
+  ],
 ]);
 
 /** Run `npm audit --omit=dev --json` in the current cwd and parse the report. */
