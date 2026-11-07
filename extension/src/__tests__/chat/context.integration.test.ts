@@ -13,6 +13,7 @@ describe('IT-CTX-01: ContextManager Prune Suggestions', () => {
       tokenCount: 950,
       pinnedAt: Date.now() - (i * 10000),
       relevanceScore: 0.5,
+      importanceScore: 0.3,
     }));
     const suggestions = suggestPrune(files, 9500, 10000);
     expect(suggestions.length).toBeGreaterThan(0);
@@ -20,8 +21,8 @@ describe('IT-CTX-01: ContextManager Prune Suggestions', () => {
 
   test('unpinning suggested file decreases token count', () => {
     const files: PrunableFile[] = [
-      { filePath: 'a.ts', tokenCount: 3000, pinnedAt: Date.now() - 90000, relevanceScore: 0.2 },
-      { filePath: 'b.ts', tokenCount: 2000, pinnedAt: Date.now() - 50000, relevanceScore: 0.8 },
+      { filePath: 'a.ts', tokenCount: 3000, pinnedAt: Date.now() - 90000, relevanceScore: 0.2, importanceScore: 0.1 },
+      { filePath: 'b.ts', tokenCount: 2000, pinnedAt: Date.now() - 50000, relevanceScore: 0.8, importanceScore: 0.5 },
     ];
     const suggestions = suggestPrune(files, 9500, 10000);
     const freed = suggestions.reduce((s, c) => s + c.tokensSaved, 0);

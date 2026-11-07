@@ -159,6 +159,18 @@ export class AdapterCore {
     }
   }
 
+  /**
+   * SA4E-369 context-window bug fix: expose the resolved model's REAL context
+   * window (BR-01 chain link #2 — the runtime pi-ai model registry value).
+   * This is the authoritative source for the badge's maxTokens denominator.
+   * The probe (getDetectedContextWindow / meta.n_ctx) is unreliable and must
+   * NEVER be the primary value — only a fallback for providers that don't
+   * expose a context window in their registry.
+   */
+  getModelContextWindow(): number | undefined {
+    return this.engine.getProvider().getModelContextWindow?.();
+  }
+
   async detectContextWindowEarly(): Promise<void> {
     await detectContextWindowEarlyHelper(this.llmProvider, this.contextProbeState);
   }
@@ -343,7 +355,9 @@ export class AdapterCore {
    * single-flight turn chain releases.
    */
   cancel(): void {
-    for (const s of this.store.all()) { s.pipelineStatus = 'CANCELLED'; }
+    // Only cancel the ACTIVE tab's pipeline status — cancelling every tab's
+    // state made the Stop button in one tab kill all other tabs' chats.
+    this.store.setActiveTabPipelineStatus('CANCELLED');
     const tabId = this.store.activeTab;
     if (tabId) {
       void import('../session-host/registry.js').then(m => m.abortSessionHost(this.workspaceRoot, tabId)).catch(() => {});

@@ -32,6 +32,12 @@ export interface ContextUsageState {
   maxTokens: number;
   percentage: number;
   threshold: ContextThreshold;
+  /** SA4E-408: conversation/MCP/steering usage breakdown for the context tooltip. */
+  breakdown?: {
+    conversation: number;
+    mcpTools: number;
+    steering: number;
+  };
 }
 
 // Tab-related messages: Webview -> Extension Host

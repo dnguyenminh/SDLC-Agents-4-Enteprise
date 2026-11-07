@@ -25,9 +25,9 @@ describe('UT-CTX-01: Badge Pulse Animation at >80%', () => {
 describe('UT-CTX-02: Auto-Suggest Prune at >90%', () => {
   test('prune suggestions populated when at 92%', () => {
     const files: PrunableFile[] = [
-      { filePath: 'old.ts', tokenCount: 2000, pinnedAt: Date.now() - 100000, relevanceScore: 0.2 },
-      { filePath: 'new.ts', tokenCount: 1500, pinnedAt: Date.now() - 5000, relevanceScore: 0.9 },
-      { filePath: 'mid.ts', tokenCount: 1800, pinnedAt: Date.now() - 50000, relevanceScore: 0.5 },
+      { filePath: 'old.ts', tokenCount: 2000, pinnedAt: Date.now() - 100000, relevanceScore: 0.2, importanceScore: 0.1 },
+      { filePath: 'new.ts', tokenCount: 1500, pinnedAt: Date.now() - 5000, relevanceScore: 0.9, importanceScore: 0.8 },
+      { filePath: 'mid.ts', tokenCount: 1800, pinnedAt: Date.now() - 50000, relevanceScore: 0.5, importanceScore: 0.3 },
     ];
     const suggestions = suggestPrune(files, 9200, 10000);
     expect(suggestions.length).toBeGreaterThan(0);
@@ -35,8 +35,8 @@ describe('UT-CTX-02: Auto-Suggest Prune at >90%', () => {
 
   test('suggestions sorted by composite score descending', () => {
     const files: PrunableFile[] = [
-      { filePath: 'a.ts', tokenCount: 1000, pinnedAt: Date.now() - 200000, relevanceScore: 0.1 },
-      { filePath: 'b.ts', tokenCount: 500, pinnedAt: Date.now() - 1000, relevanceScore: 0.95 },
+      { filePath: 'a.ts', tokenCount: 1000, pinnedAt: Date.now() - 200000, relevanceScore: 0.1, importanceScore: 0.1 },
+      { filePath: 'b.ts', tokenCount: 500, pinnedAt: Date.now() - 1000, relevanceScore: 0.95, importanceScore: 0.9 },
     ];
     const suggestions = suggestPrune(files, 9500, 10000);
     if (suggestions.length >= 2) {

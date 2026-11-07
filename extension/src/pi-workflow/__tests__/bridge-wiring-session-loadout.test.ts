@@ -114,19 +114,17 @@ describe('Session path — SA4E-367 discovery-pair routing (AC-3/AC-5)', () => {
     expect(loadout.schemaTokens).toBeLessThanOrEqual(cap); // gate-measured (N-1)
   });
 
-  // Default session allowlist carries no pair names. (Host escalation composes
-  // the allowlist from baseTools only — code-verified in createHost
-  // `effectiveMinLoadout ? [...baseTools] : loadout.loadout`; gate-escalation
-  // behavior itself is covered by the existing session-budget-gate suites.)
-  it('default host allowlist carries no pair names', async () => {
+  // Opt-in wiring (SA4E-408 fix): the host now passes allowDynamicChaining: true,
+  // so the bridged discovery pair IS present in the session allowlist.
+  it('default host allowlist carries the opted-in discovery pair', async () => {
     clearSessionHostCache();
     mocks.sessionOpts = undefined;
     const host = await ensureSessionHost({
       tabId: 'tab-esc', workspaceRoot: 'C:/ws/sa4e367-esc', providerId: 'p', apiKey: 'k',
       mcpBridge: new McpBridge(runningManager()),
     });
-    // Default (non-escalated) session: allowlist mirrors the loadout — pair absent.
-    for (const name of DISCOVERY_PAIR) expect(sessionOpts().tools ?? []).not.toContain(name);
+    // Opted-in (non-escalated) session: allowlist mirrors the loadout — pair present.
+    for (const name of DISCOVERY_PAIR) expect(sessionOpts().tools ?? []).toContain(name);
     host.dispose();
   });
 });

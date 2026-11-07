@@ -49,11 +49,11 @@ describe('PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path', () 
     }
     // SDK isAllowedTool filters customTools by this allowlist — bridge names in.
     expect(opts.tools).toEqual(expect.arrayContaining([...BRIDGE_TOOL_NAMES]));
-    // AC-3 at the registry level: no discovery-pair tool registered as a custom tool.
-    for (const name of DISCOVERY_PAIR) expect(names).not.toContain(name);
-    expect(pairToolsIn(opts.customTools)).toHaveLength(0);
-    // AC-3 at the allowlist level: pair names absent (discoveryTools [] by default).
-    for (const name of DISCOVERY_PAIR) expect(opts.tools ?? []).not.toContain(name);
+    // SA4E-408 fix: wiring passes allowDynamicChaining: true — the opted-in pair
+    // (find_tools + execute_dynamic_tool) is registered as a custom tool AND rides
+    // the allowlist alongside the 4 concrete bridge names.
+    expect(pairToolsIn(opts.customTools)).toHaveLength(2);
+    for (const name of DISCOVERY_PAIR) expect(opts.tools ?? []).toContain(name);
     host.dispose();
   });
 

@@ -1,12 +1,16 @@
 /**
  * AC10e (SA4E-372): ChatStateManager persist/restore contract.
- * (1) saveChatState writes the FULL payload under workspaceState(STATE_KEY)
- *     — Memento.update is spied, nothing may be filtered or sliced.
- * (2) restoreChatState re-emits the ENTIRE active-tab messages via
- *     `tab:updated` — tool entries ride along untouched (only the engine
- *     history mirror slices its own last-20 user/assistant view).
+ * Persistence moved from workspaceState (3MB limit) to FILE storage
+ * (<globalStorageUri>/chat-state.json). Contract:
+ * (1) saveChatState writes the FULL payload to the state file — nothing
+ *     may be filtered or sliced; workspaceState is no longer written.
+ * (2) restoreChatState reads the file and re-emits the ENTIRE active-tab
+ *     messages via `tab:updated` — tool entries ride along untouched (only
+ *     the engine history mirror slices its own last-20 user/assistant view).
  * (3) Tool toolData {id,name,args,status,result} and assistant {thinking}
  *     shapes pass through a save→restore round-trip intact.
+ * (4) One-time migration lifts legacy workspaceState keys into the file
+ *     and clears them.
  *
  * Memento + sendToWebview mocked; watcher/RelativePattern mocking pattern
  * mirrors chat-panel/__tests__/chat-state-manager-skills.test.ts.
@@ -39,7 +43,7 @@ vi.mock('vscode', async (importOriginal) => {
 
 import { ChatStateManager } from '../../chat-panel/ChatStateManager';
 
-const STATE_KEY = 'chatPanel.state'; // must match ChatStateManager's private const
+const STATE_FILE = 'chat-state.json'; // must match StateManager's file name
 const TAB_ID = 'tab-1';
 
 function makeToolMessage(i: number) {
@@ -74,6 +78,9 @@ function makeMemento(initial: Record<string, unknown> = {}) {
     keys: () => [...store.keys()],
     get: vi.fn((key: string) => store.get(key)),
     update: vi.fn((key: string, value: unknown) => {
+      // Real vscode Memento.update(key, undefined) DELETES the key —
+      // JSON round-trip of undefined would throw, so mirror the delete.
+      if (value === undefined) { store.delete(key); return; }
       store.set(key, JSON.parse(JSON.stringify(value)));
     }),
   };
@@ -82,7 +89,7 @@ function makeMemento(initial: Record<string, unknown> = {}) {
 function createManager(root: string, memento: any) {
   const sent: any[] = [];
   const engine = { setChatHistory: vi.fn() };
-  const manager = new ChatStateManager(root, memento, (msg: any) => sent.push(msg), () => engine as any);
+  const manager = new ChatStateManager(root, memento, { globalStorageUri: { fsPath: root } } as any, (msg: any) => sent.push(msg), () => engine as any);
   return { manager, sent, engine };
 }
 
@@ -97,7 +104,7 @@ describe('ChatStateManager persist/restore contract (AC10e, SA4E-372)', () => {
     fs.rmSync(tmpRoot, { recursive: true, force: true });
   });
 
-  it('saveChatState writes the FULL payload under the workspaceState STATE_KEY (spy update)', () => {
+  it('saveChatState writes the FULL payload to the state file (nothing filtered/sliced)', async () => {
     const memento = makeMemento();
     const { manager } = createManager(tmpRoot, memento);
     const state = {
@@ -108,25 +115,31 @@ describe('ChatStateManager persist/restore contract (AC10e, SA4E-372)', () => {
 
     manager.saveChatState(state as any);
 
-    expect(memento.update).toHaveBeenCalledTimes(1);
-    const [key, stored] = memento.update.mock.calls[0];
-    expect(key).toBe(STATE_KEY);
+    await vi.waitFor(() => {
+      expect(fs.existsSync(path.join(tmpRoot, STATE_FILE))).toBe(true);
+    });
+    const stored = JSON.parse(fs.readFileSync(path.join(tmpRoot, STATE_FILE), 'utf8'));
     expect(stored).toEqual(state); // FULL payload — no filtering, no slicing
+    expect(memento.update).not.toHaveBeenCalled(); // file replaces workspaceState for saves
   });
 
-  it('restoreChatState re-emits ALL active-tab messages via tab:updated (tools never filtered/sliced)', () => {
+  it('restoreChatState re-emits ALL active-tab messages via tab:updated (tools never filtered/sliced)', async () => {
     const fullMessages = makeFullMessages();
     const state = {
       tabs: [{ id: TAB_ID, name: 'T1', messages: fullMessages, tokenCount: 22, maxTokens: 128000 }],
       activeTabId: TAB_ID,
     };
-    const memento = makeMemento({ [STATE_KEY]: state });
+    // Seed the state FILE directly — the new source of truth.
+    fs.writeFileSync(path.join(tmpRoot, STATE_FILE), JSON.stringify(state), 'utf8');
+    const memento = makeMemento();
     const { manager, sent, engine } = createManager(tmpRoot, memento);
 
     manager.restoreChatState();
 
+    await vi.waitFor(() => {
+      expect(sent.some((m) => m.type === 'tab:updated')).toBe(true);
+    });
     const tabMsg = sent.find((m) => m.type === 'tab:updated');
-    expect(tabMsg).toBeDefined();
     expect(tabMsg.payload.activeTabId).toBe(TAB_ID);
     const active = tabMsg.payload.tabs.find((t: any) => t.id === TAB_ID);
     expect(active).toBeDefined();
@@ -140,18 +153,25 @@ describe('ChatStateManager persist/restore contract (AC10e, SA4E-372)', () => {
     expect(mirrored.map((m: any) => m.role)).toEqual(['user', 'assistant']);
   });
 
-  it('tool toolData and assistant thinking shapes survive save→restore intact', () => {
+  it('tool toolData and assistant thinking shapes survive save→restore intact', async () => {
     const fullMessages = makeFullMessages();
     const state = {
       tabs: [{ id: TAB_ID, name: 'T1', messages: fullMessages, tokenCount: 22, maxTokens: 128000 }],
       activeTabId: TAB_ID,
     };
-    // Round-trip: save picks the stored copy up by key, restore reads it back.
+    // Round-trip: save writes the file copy, restore reads it back.
     const memento = makeMemento();
     const { manager, sent } = createManager(tmpRoot, memento);
     manager.saveChatState(state as any);
+    // Wait until the save has landed on disk before restoring (no races).
+    await vi.waitFor(() => {
+      expect(fs.existsSync(path.join(tmpRoot, STATE_FILE))).toBe(true);
+    });
     manager.restoreChatState();
 
+    await vi.waitFor(() => {
+      expect(sent.some((m) => m.type === 'tab:updated')).toBe(true);
+    });
     const tabMsg = sent.find((m) => m.type === 'tab:updated');
     const active = tabMsg.payload.tabs.find((t: any) => t.id === TAB_ID);
 
@@ -166,5 +186,32 @@ describe('ChatStateManager persist/restore contract (AC10e, SA4E-372)', () => {
     expect(assistant.nodeId).toBe('pi:c1');
     expect(assistant.thinking).toBe('line one\nline two');
     expect(assistant.thinkingUser).toBe(true);
+  });
+
+  it('one-time migration lifts legacy workspaceState keys into the file and clears them', async () => {
+    const legacy = {
+      tabs: [{ id: TAB_ID, name: 'T1', messages: makeFullMessages(), tokenCount: 22, maxTokens: 128000 }],
+      activeTabId: TAB_ID,
+      messageHistory: ['1'],
+    };
+    const memento = makeMemento({
+      'chat.tabs': legacy.tabs,
+      'chat.activeTabId': legacy.activeTabId,
+      'chat.messageHistory': legacy.messageHistory,
+    });
+    const { sent } = createManager(tmpRoot, memento);
+
+    await vi.waitFor(() => {
+      expect(fs.existsSync(path.join(tmpRoot, STATE_FILE))).toBe(true);
+    });
+    const stored = JSON.parse(fs.readFileSync(path.join(tmpRoot, STATE_FILE), 'utf8'));
+    expect(stored.tabs).toEqual(legacy.tabs);
+    expect(stored.activeTabId).toBe(TAB_ID);
+
+    // Legacy keys cleared after successful migration.
+    expect(memento.get('chat.tabs')).toBeUndefined();
+    expect(memento.get('chat.activeTabId')).toBeUndefined();
+    expect(memento.get('chat.messageHistory')).toBeUndefined();
+    void sent;
   });
 });

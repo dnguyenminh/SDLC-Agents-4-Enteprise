@@ -38,6 +38,8 @@ export interface PiRunResult {
   chunks: PiStreamChunk[];
   messages: AgentMessage[];
   errorMessage?: string;
+  /** CHAT-LOOP-CONT: stopReason from the terminal assistant message — "length" = output token limit. */
+  stopReason?: string;
 }
 
 export interface PiStreamChunk {

@@ -73,7 +73,7 @@ export async function buildSessionLoadout(
   let bridgeTools: AgentTool[] = [];
   if (opts.mcpBridge instanceof McpBridge) {
     const bridge = opts.mcpBridge;
-    bridgeTools = await buildMcpBridgeAgentToolsLive(bridge);
+    bridgeTools = await buildMcpBridgeAgentToolsLive(bridge, { allowDynamicChaining: true });
     // Startup race: a tab's first turn can build the session a moment before
     // the MCP server reports "running" / finishes loading its tool catalog, so
     // the first tools/list returns empty. Since the cached host is reused for
@@ -82,12 +82,12 @@ export async function buildSessionLoadout(
     // before giving up, so the live catalog is picked up on session build.
     for (let attempt = 0; attempt < 3 && bridgeTools.length === 0 && bridge.isAvailable(); attempt++) {
       await new Promise((r) => setTimeout(r, 400));
-      bridgeTools = await buildMcpBridgeAgentToolsLive(bridge);
+      bridgeTools = await buildMcpBridgeAgentToolsLive(bridge, { allowDynamicChaining: true });
     }
     if (bridgeTools.length > 0) {
       debugLog(`[PiSessionHost] mcp live tools: ${bridgeTools.length} from tools/list`);
     } else {
-      bridgeTools = buildMcpBridgeAgentTools(bridge);
+      bridgeTools = buildMcpBridgeAgentTools(bridge, { allowDynamicChaining: true });
       debugLog(`[PiSessionHost] mcp live tools unavailable — static fallback: ${bridgeTools.length}`);
     }
   }

@@ -163,10 +163,14 @@ export class PiProviderBase {
    */
   protected streamWithBudgetGate(...args: Parameters<StreamFn>): ReturnType<StreamFn> {
     const [model, context, options] = args;
+    // CHAT-LOOP-CONT: fetch gateway model's maxTokens for output reserve.
+    const modelMeta = this.models?.getModel?.(model.provider ?? '', model.id) as { maxTokens?: number } | undefined;
     const gated = governIntraTurnRequest({
       messages: context.messages,
       modelId: this.activeModelId ?? this.modelId ?? '',
       nCtxDetected: this.detectedContextWindow ?? this.getModelContextWindow(),
+      // CHAT-LOOP-CONT: pass gateway model's maxTokens (replaces hardcoded 16384).
+      reserveOutput: modelMeta?.maxTokens,
     });
     return this.models!.streamSimple(model, { ...context, messages: gated.messages }, options);
   }

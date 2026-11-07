@@ -81,7 +81,9 @@ export class ConversationManager {
       name: `Chat ${this.tabCounter}`,
       messages: [],
       tokenCount: 0,
-      maxTokens: 128000, // Default, updated per provider/model
+      // Transient placeholder — immediately overwritten by the resolved model's
+      // real context window (getModelContextWindow) via syncResolvedWindowIfAny.
+      maxTokens: 128000, // SA4E-369: never the real source; last-resort only
       isActive: true,
       createdAt: new Date().toISOString(),
       scrollPosition: 0,

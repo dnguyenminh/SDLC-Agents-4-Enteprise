@@ -179,18 +179,22 @@
     }
   };
 
-  /** Render a live tool call (host chat:toolCall) into the active tab. */
+  /** Render a live tool call (host chat:toolCall) into the target tab. */
   S.renderToolCall = function (tc, isReplay, _requiresApproval, targetTabId) {
     if (!tc || !tc.id || !tc.name) return;
     targetTabId = targetTabId || S.activeTabId;
     var entry = {
       role: "tool",
+      live: true,
       toolData: {
         id: tc.id, name: tc.name, args: tc.args,
         status: tc.status, result: tc.result, error: tc.error, duration: tc.duration,
         timestamp: new Date().toISOString(),
       },
     };
+    // SA4E-391 Bug 2: append SYNCHRONOUSLY. A deferred (requestAnimationFrame)
+    // append could land AFTER the next answer block, so the tool block would
+    // render after the response text it is supposed to sit between.
     S.appendBlock(targetTabId, entry);
   };
 })();

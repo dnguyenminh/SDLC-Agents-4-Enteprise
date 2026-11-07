@@ -12,7 +12,7 @@ export const IngestRuleRequestSchema = z.object({
   projectId: z.string().min(1).max(12).regex(/^[a-f0-9]{12}$/, {
     message: 'projectId must be a 12-character hex string',
   }).optional(),
-  ruleJson: z.record(z.unknown()).refine(
+  ruleJson: z.record(z.string(), z.unknown()).refine(
     (obj) => typeof obj.pxObjClass === 'string' && obj.pxObjClass.length > 0,
     { message: 'ruleJson.pxObjClass is required' },
   ),

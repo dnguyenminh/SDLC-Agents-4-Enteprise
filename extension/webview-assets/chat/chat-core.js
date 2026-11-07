@@ -112,4 +112,33 @@
   S.scrollToBottom = function () {
     messagesEl.scrollTop = messagesEl.scrollHeight;
   };
+
+  // Scroll-to-bottom button (floating, shows when user scrolls up)
+  S.initScrollToBottomButton = function () {
+    var messagesEl = S.messagesEl;
+    var btn = document.createElement("button");
+    btn.id = "scroll-to-bottom-btn";
+    btn.className = "scroll-to-bottom-btn";
+    btn.title = "Cuộn xuống cuối";
+    btn.innerHTML = "↓";
+    btn.setAttribute("aria-label", "Cuộn xuống cuối");
+    btn.style.display = "none";
+    btn.addEventListener("click", function () {
+      S.scrollToBottom();
+    });
+    document.body.appendChild(btn);
+
+    var hideTimer;
+    messagesEl.addEventListener("scroll", function () {
+      var gap = messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight;
+      if (gap > 100) {
+        btn.style.display = "flex";
+        clearTimeout(hideTimer);
+      } else {
+        // Delay hiding to avoid flicker
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(function () { btn.style.display = "none"; }, 300);
+      }
+    });
+  };
 })();

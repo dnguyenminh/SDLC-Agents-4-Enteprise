@@ -66,7 +66,7 @@ export async function initializeWorkspace(context: vscode.ExtensionContext, work
   // Tree view is already registered in activate(); bind it to the live manager.
   runtime.treeProvider?.attachMcpManager(runtime.mcpManager!);
 
-  const chatPanelProvider = new ChatPanelProvider(context.extensionUri, runtime.mcpManager, workspaceRoot, context.secrets, context.workspaceState);
+  const chatPanelProvider = new ChatPanelProvider(context.extensionUri, runtime.mcpManager, workspaceRoot, context.secrets, context.workspaceState, context);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(ChatPanelProvider.viewType, chatPanelProvider, { webviewOptions: { retainContextWhenHidden: true } }),
     chatPanelProvider

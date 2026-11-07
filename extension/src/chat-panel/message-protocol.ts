@@ -56,12 +56,14 @@ export interface ChatModelEntry {
   rateMultiplier?: number;
   /** Real context window (tokens) when the gateway's /v1/models reports it (context_length / meta.n_ctx). SA4E-369 */
   contextWindow?: number;
+  /** Model's max OUTPUT tokens (max_tokens / max_completion_tokens) when the gateway's /v1/models reports it. CHAT-LOOP-CONT: used by budget gates instead of hardcoded 16384. */
+  maxOutputTokens?: number;
 }
 
 // === Webview → Extension Messages ===
 
 export type ChatWebviewToExtMessage =
-  | { type: "chat:userMessage"; text: string; tabId?: string; context?: ContextItem[]; attachments?: AttachmentItem[] }
+  | { type: "chat:userMessage"; text: string; context?: ContextItem[]; attachments?: AttachmentItem[]; tabId?: string }
   | { type: "chat:approvalAction"; decision: ApprovalDecision; feedback?: string }
   | { type: "chat:graphNodeClick"; nodeId: string }
   | { type: "chat:cancelStream"; streamId?: string }
@@ -70,11 +72,11 @@ export type ChatWebviewToExtMessage =
   | { type: "chat:startFresh" }
   | { type: "chat:pickContext"; contextType: "file" | "folder" | "problems" | "gitDiff" | "terminal" | "spec" | "currentFile" | "steering" | "mcp" }
   | { type: "chat:pickAttachment" }
-  | { type: "chat:setModel"; model: string; explicit?: boolean }
+  | { type: "chat:setModel"; model: string }
   | { type: "chat:setMode"; mode: AutopilotMode }
   | { type: "chat:applyCode"; code: string; filePath?: string }
   | { type: "chat:insertCode"; code: string }
-  | { type: "tab:create"; payload?: { tabId: string; name?: string; model?: string } }
+  | { type: "tab:create" }
   | { type: "tab:switch"; payload: { tabId: string } }
   | { type: "tab:close"; payload: { tabId: string } }
   | { type: "tab:rename"; payload: { tabId: string; newName: string } }
@@ -100,7 +102,7 @@ export type ChatExtToWebviewMessage =
   | { type: "chat:pipelineStatus"; status: PipelineStatus; phase: SDLCPhase; ticketKey: string }
   | { type: "chat:nodeDetails"; node: PipelineGraphNode; recentOutputs: AgentOutput[] }
   | { type: "chat:resumePrompt"; threadId: string; ticketKey: string; phase: SDLCPhase; pausedAt: string }
-  | { type: "chat:error"; code: string; message: string; retryable: boolean; originTabId?: string }
+  | { type: "chat:error"; code: string; message: string; retryable: boolean }
   | { type: "chat:toolCall"; toolCall: ToolCallDisplay; originTabId?: string }
   | { type: "chat:toolCallUpdate"; id: string; status: ToolCallDisplay["status"]; result?: string; duration?: number; originTabId?: string }
   /** SA4E-369 AC4: a peer task arrived in tab `tabId` — receiving-tab badge
@@ -117,12 +119,11 @@ export type ChatExtToWebviewMessage =
   | { type: "chat:models"; provider: string; models: ChatModelEntry[]; selected: string; supportsAuto: boolean }
   | { type: "chat:workingStatus"; working: boolean; label?: string }
   | { type: "tab:updated"; payload: { tabs: Array<{ id: string; name: string; messages: unknown[]; tokenCount: number; maxTokens: number }>; activeTabId: string } }
-  | { type: "tab:contextUpdate"; payload: { tabId: string; tokenCount: number; maxTokens: number; percentage: number; threshold: string } }
+  | { type: "tab:contextUpdate"; payload: { tabId: string; tokenCount: number; maxTokens: number; percentage: number; threshold: string; breakdown?: { conversation: number; mcpTools: number; steering: number } } }
   | { type: "chat:steeringLoaded"; rules: Array<{ name: string; file: string }> }
   | { type: "chat:agentsLoaded"; agents: Array<{ id: string; name: string; description: string; role?: string; phase?: string; model?: string; personaBody: string }> }
   | { type: "chat:hookTriggered"; hook: { name: string; type: string; status: "running" | "completed" | "skipped" } }
   | { type: "chat:contextUsage"; payload: ContextUsagePayload }
   | { type: "chat:agentSwitched"; agentId: string | null; agentName: string; success: boolean; tabId?: string; sessionRole?: string; sessionPhase?: string; error?: string }
-  /** SA4E-391: MCP server list for the OpenCode-style sidebar. */
-  | { type: "chat:mcpServers"; servers: Array<{ name: string; status: "connected" | "disconnected" | "failed" | "unknown" }> }
-  | { type: "serverStatus"; status: "connected" | "disconnected" | "failed" };
+  | { type: "serverStatus"; status: "connected" | "disconnected" | "failed" }
+  | { type: "chat:mcpServers"; servers: Array<{ name: string; status: string }> };

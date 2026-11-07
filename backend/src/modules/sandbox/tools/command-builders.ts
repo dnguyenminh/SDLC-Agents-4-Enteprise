@@ -57,26 +57,47 @@ export function buildSessionConfig(args: Record<string, unknown>, defaults: Sand
   };
 }
 
+/**
+ * SA4E-394 SEC-02 (CWE-78) — quote a resolved host path for the run command
+ * string. LocalExecutor spawns through a full shell (cmd.exe on win32,
+ * /bin/bash otherwise) and DockerCommandRunner pipes through `bash -c`, so an
+ * UNQUOTED host path lets agent-writable directory names (e.g. `x;id&`,
+ * spaces) split or inject into the command, and Windows paths with spaces
+ * simply break the run.
+ *
+ *  - POSIX: single quotes keep every char literal; an embedded `'` becomes
+ *    the standard `'\''` sequence.
+ *  - win32 (cmd.exe): double quotes — a valid NTFS path cannot contain `"`,
+ *    and cmd.exe keeps every other metachar literal inside quotes. Residual
+ *    limitation: `%VAR%` pairs still expand in cmd.exe (argv-based executor
+ *    execution is the long-term fix — SECURITY-ASSESSMENT §SEC-02).
+ */
+export function quoteForShell(file: string, platform: NodeJS.Platform = process.platform): string {
+  if (platform === 'win32') return `"${file}"`;
+  return `'${file.replace(/'/g, `'\\''`)}'`;
+}
+
 export function buildRunCommand(runtime: string, file: string, args: string[]): string {
   const a = args.join(' ');
+  const q = quoteForShell(file);
   switch (runtime) {
     case 'node':
-      return `node ${file} ${a}`.trim();
+      return `node ${q} ${a}`.trim();
     case 'python':
-      return `python3 ${file} ${a}`.trim();
+      return `python3 ${q} ${a}`.trim();
     case 'tsx':
-      return `npx tsx ${file} ${a}`.trim();
+      return `npx tsx ${q} ${a}`.trim();
     case 'sh':
-      return `bash ${file} ${a}`.trim();
+      return `bash ${q} ${a}`.trim();
     case 'java': {
       if (file.endsWith('.java')) {
         const className = file.replace(/^.*[\\/]/, '').replace(/\.java$/, '');
-        return `javac ${file} && java ${className} ${a}`.trim();
+        return `javac ${q} && java ${quoteForShell(className)} ${a}`.trim();
       }
       return `gradle run ${a}`.trim();
     }
     default:
-      return `node ${file} ${a}`.trim();
+      return `node ${q} ${a}`.trim();
   }
 }
 

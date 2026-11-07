@@ -41,8 +41,15 @@ const CONFIG_SECTION = "sdlcAgents";
  * @returns The effective setting value.
  */
 export function getSetting<T>(newKey: string, _oldKey: string, defaultValue: T): T {
-  const config = vscode.workspace?.getConfiguration?.(CONFIG_SECTION);
-  if (!config?.get) { return defaultValue; }
-  // Post-migration: read ONLY the new key (old key handled by migration runner)
-  return config.get<T>(newKey, defaultValue);
+  try {
+    const config = vscode.workspace?.getConfiguration?.(CONFIG_SECTION);
+    if (!config?.get) { return defaultValue; }
+    // Post-migration: read ONLY the new key (old key handled by migration runner)
+    return config.get<T>(newKey, defaultValue);
+  } catch {
+    // CHAT-LOOP-CONT hardening: partial vscode mocks (unit tests) do not define
+    // the "workspace" export — accessing it throws. A configuration read must
+    // never break a turn: fail closed to the documented default.
+    return defaultValue;
+  }
 }

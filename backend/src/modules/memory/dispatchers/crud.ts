@@ -5,7 +5,8 @@
  * crud-ingest-file.ts, crud-pin.ts, crud-actions.ts.
  */
 export { handleIngest } from './crud-ingest.js';
-export { handleIngestFile, unconvertibleMessage } from './crud-ingest-file.js';
-export type { IngestFileResponse } from './crud-ingest-file.js';
+export { handleIngestFile } from './crud-ingest-file.js';
+export { unconvertibleMessage } from './helpers.js';
+export type { IngestFileResponse } from './helpers.js';
 export { handlePin, handleMap } from './crud-pin.js';
 export { handleCrud } from './crud-actions.js';

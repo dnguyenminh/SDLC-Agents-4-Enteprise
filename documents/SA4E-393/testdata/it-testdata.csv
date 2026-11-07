@@ -1,0 +1,9 @@
+test_case_id,detectionMode,threshold,sourcePath,localhostUrl,expected_http_code,expected_result,description
+IT-01,both,0.8,/workspace/src,http://localhost:5173,200,loadStatus success, Load detector integration success
+IT-02,both,0.8,, ,500,WASM incompatible error, Load detector integration WASM incompatible
+IT-03,static,0.8,/workspace/fixtures/small, ,200,findings returned, Static detect integration with valid source
+IT-04,static,0.8,/nonexistent/path, ,400,Invalid Path, Static detect integration invalid path
+IT-05,rendered,0.7,,http://localhost:5173,200,fetchStatus success, Rendered detect integration server up
+IT-06,rendered,0.7,,http://localhost:9999,503,Dev server unreachable, Rendered detect integration server down
+IT-07,both,0.8,, ,200,report with issues, Report retrieval integration — GET report/{runId}
+IT-08,both,0.8,/workspace/src,http://localhost:5173,200,pass/fail matches, Full flow load→static→report

@@ -14,7 +14,7 @@ import { buildElkGraph, runElkLayout } from './elk-layout.js';
 import { applyLayoutToXml } from './drawio-writer.js';
 import { planLocalRepair } from './drawio-repair.js';
 import { applyRepairPlan, applyPortDistribution } from './drawio-patch.js';
-import type { LayoutIssue } from './drawio-detect.js';
+import { detectAllIssues, type LayoutIssue } from './drawio-detect.js';
 
 /**
  * Parse an integer from environment variable with bounds validation (SEC-02).
@@ -66,9 +66,13 @@ async function elkRelayout(
     if (repositionedNodes.length === 0) return error('ELK layout produced no position changes');
     validateReparse(xml);
     fs.writeFileSync(filePath, xml, 'utf-8');
+    // Re-detect remaining issues after fix
+    const { graph: afterGraph } = parseDrawio(filePath);
+    const remainingIssues = detectAllIssues(afterGraph).filter(i => i.severity !== 'low').length;
     return JSON.stringify({
       status: 'fixed',
       message: `Fixed ${issues.length} issues with ELK ${normalized.algorithm} layout. ${repositionedNodes.length} nodes repositioned.`,
+      remaining_issues: remainingIssues,
     });
   } catch (e: unknown) {
     console.error('[drawio-apply] ELK layout error:', e);
@@ -90,9 +94,13 @@ async function localRepairPath(
     }
     validateReparse(xml);
     fs.writeFileSync(filePath, xml, 'utf-8');
+    // Re-detect remaining issues after fix
+    const { graph: afterGraph } = parseDrawio(filePath);
+    const remainingIssues = detectAllIssues(afterGraph).filter(i => i.severity !== 'low').length;
     return JSON.stringify({
       status: 'fixed',
       message: `Local repair: moved ${plan.moves.size} nodes, rerouted ${plan.routes.size} edges.`,
+      remaining_issues: remainingIssues,
     });
   } catch (e: unknown) {
     console.error('[drawio-apply] Local repair error:', e);
@@ -109,9 +117,13 @@ function handlePortsOnlyFix(rawXml: string, graph: DiagramGraph, issues: LayoutI
     }
     validateReparse(xml);
     fs.writeFileSync(filePath, xml, 'utf-8');
+    // Re-detect remaining issues after fix
+    const { graph: afterGraph } = parseDrawio(filePath);
+    const remainingIssues = detectAllIssues(afterGraph).filter(i => i.severity !== 'low').length;
     return JSON.stringify({
       status: 'fixed',
       message: `Fixed edge routing. ${issues.length} issues detected, ports distributed.`,
+      remaining_issues: remainingIssues,
     });
   } catch (e: unknown) {
     console.error('[drawio-apply] Edge-only fix error:', e);

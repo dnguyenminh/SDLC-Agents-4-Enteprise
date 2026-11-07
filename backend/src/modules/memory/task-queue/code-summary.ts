@@ -106,11 +106,34 @@ export async function processCodeSummaryTask(deps: CodeSummaryDeps, task: Pendin
 
 export async function processVectorEmbeddingTask(deps: CodeSummaryDeps, task: PendingTask, payload: any): Promise<void> {
   if (!deps.embeddingService) { deps.repo.resetForRetry(task.id); return; }
-  const vector = await deps.embeddingService.generateEmbedding(payload.text);
+  // SA4E-339: persist the embedding into `knowledge_vectors` — the DEDICATED
+  // vector store that kb-embeddings.ts reads (JOIN v.entry_id) and engine CRUD
+  // cleans (DELETE ... WHERE entry_id). The previous
+  // `UPDATE knowledge_entries SET vector = ?` targeted a column that does not
+  // exist (SQLITE_ERROR: no such column: vector), so embeddings were never
+  // persisted and vector search over the KB was silently broken.
+  const { vector, modelId } = await deps.embeddingService.generateEmbeddingDetailed(payload.text);
   const buf = Buffer.from(new Float32Array(vector).buffer);
-  await deps.engine.getAdapter().runAsync(
-    'UPDATE knowledge_entries SET vector = ? WHERE id = ?',
-    [buf, task.entry_id],
+  const adapter = deps.engine.getAdapter();
+  // Obsolete-task guard: the entry was deleted after the task was enqueued.
+  // FK (entry_id → knowledge_entries) would reject the insert; matching the
+  // old semantics, an obsolete embedding job completes instead of retrying.
+  const entry = await adapter.allAsync(
+    'SELECT id FROM knowledge_entries WHERE id = ?',
+    [task.entry_id],
+  );
+  if (!entry || entry.length === 0) {
+    await deps.repo.markCompleted(task.id);
+    return;
+  }
+  await adapter.runAsync(
+    `INSERT INTO knowledge_vectors (entry_id, vector, model, dimensions)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(entry_id) DO UPDATE SET
+       vector = excluded.vector,
+       model = excluded.model,
+       dimensions = excluded.dimensions`,
+    [task.entry_id, buf, modelId, vector.length],
   );
   await deps.repo.markCompleted(task.id);
 }

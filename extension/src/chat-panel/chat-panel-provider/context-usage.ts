@@ -46,7 +46,7 @@ export function sendContextUpdateMessage(sendToWebview: (msg: ChatExtToWebviewMe
 /**
  * SA4E-182: Send initial context usage on panel load.
  * Reads steering files from disk + estimates MCP tool definitions.
- * Syncs maxTokens from provider if engine already detected context window.
+ * Syncs maxTokens from the resolved model's real context window (SA4E-369).
  */
 export async function sendInitialContextUsage(deps: ContextUsageDeps): Promise<void> {
   const tabId = deps.getTabId();
@@ -71,20 +71,48 @@ export async function sendInitialContextUsage(deps: ContextUsageDeps): Promise<v
  * This is the single source of truth for local servers (llama-server -c flag).
  * Static model map is unreliable because user controls context size via CLI args.
  */
-async function detectInitialContextWindow(deps: ContextUsageDeps): Promise<void> {
-  const engine = deps.getOrCreateEngine();
-  const detectedWindow = engine.getDetectedContextWindow();
-  if (detectedWindow && detectedWindow > 0) {
-    deps.getTracker().setMaxTokens(detectedWindow);
-  } else {
-    // Provider hasn't detected yet — trigger detection now (fast: single HTTP call)
-    await engine.detectContextWindowEarly();
-    const freshWindow = engine.getDetectedContextWindow();
-    if (freshWindow && freshWindow > 0) {
-      deps.getTracker().setMaxTokens(freshWindow);
-    }
-    // If still 0 (provider offline), keep default 128000 — will sync on first invoke
+/**
+ * SA4E-369 context-window bug fix: resolve the maxTokens denominator from the
+ * RESOLVED model's real context window FIRST (getModelContextWindow — the
+ * runtime pi-ai model registry value). The probe (getDetectedContextWindow,
+ * meta.n_ctx) is unreliable — undefined until a probe runs, and 0 while the
+ * gateway is offline — which previously forced a hardcoded 128000 fallback and
+ * made every budget-gate % wrong for a smaller model (e.g. 65536 → 4% = 2621,
+ * not 5120).
+ *
+ * Resolution chain (the hardcoded 128000 default is never used as a source):
+ *   1) getModelContextWindow()  — resolved model's real context window (authoritative)
+ *   2) getDetectedContextWindow() — probe meta.n_ctx (fallback for providers that
+ *                                   don't expose a context window in their registry)
+ *   3) undefined                 — provider fully unreachable (keeps tracker default)
+ */
+export function resolveMaxTokensFromEngine(engine: PiWorkflowAdapter): number | undefined {
+  // Optional chaining so a bare engine mock (tests) without the method degrades
+  // to the probe value instead of throwing (SA4E-369 regression found 2026-11-06).
+  const registryWindow = engine.getModelContextWindow?.();
+  if (typeof registryWindow === "number" && registryWindow > 0) {
+    return Math.floor(registryWindow);
   }
+  const probeWindow = engine.getDetectedContextWindow?.();
+  return typeof probeWindow === "number" && probeWindow > 0 ? Math.floor(probeWindow) : undefined;
+}
+
+export function resolveMaxTokens(deps: ContextUsageDeps): number | undefined {
+  return resolveMaxTokensFromEngine(deps.getOrCreateEngine());
+}
+
+/**
+ * SA4E-369: eager one-time sync on panel open. Prefer the resolved model's real
+ * context window; only trigger the probe if the registry has no value yet. Never
+ * keeps the hardcoded 128000 default as a source.
+ */
+export async function detectInitialContextWindow(deps: ContextUsageDeps): Promise<void> {
+  const maxTokens = resolveMaxTokens(deps);
+  if (maxTokens) {
+    deps.getTracker().setMaxTokens(maxTokens);
+  }
+  // If undefined (registry empty + probe absent) the tracker keeps its constructor
+  // default until a later sync (saved-state / after-turn) picks up the registry value.
 }
 
 /**
@@ -145,8 +173,8 @@ export function updateContextUsageFromSavedState(deps: ContextUsageDeps, state: 
 
 /** Sync maxTokens + one-shot steering estimate, then send the tab:contextUpdate. */
 function finishSavedStateUsage(deps: ContextUsageDeps, tabId: string): void {
-  // SA4E-182: Sync maxTokens from detected context window
-  syncDetectedWindowIfAny(deps);
+  // SA4E-369: Sync maxTokens from the resolved model's real context window
+  syncResolvedWindowIfAny(deps);
 
   // Tool definitions are counted once by updateContextUsageAfterTurn or sendInitialContextUsage.
   // Don't overwrite mcpTools here — they represent constant tool schema tokens, not message content.
@@ -162,13 +190,13 @@ function finishSavedStateUsage(deps: ContextUsageDeps, tabId: string): void {
   sendContextUpdateMessage(deps.sendToWebview, tabId, payload);
 }
 
-/** Sync maxTokens from the provider's detected context window when available. */
-function syncDetectedWindowIfAny(deps: ContextUsageDeps): void {
-  const engine = deps.peekEngine();
-  if (engine) {
-    const detectedWindow = engine.getDetectedContextWindow();
-    if (detectedWindow && detectedWindow > 0) {
-      deps.getTracker().setMaxTokens(detectedWindow);
-    }
+/**
+ * SA4E-369: sync maxTokens from the resolved model's real context window when
+ * available (fallback: probe meta.n_ctx). Never keeps the hardcoded 128000 default.
+ */
+export function syncResolvedWindowIfAny(deps: ContextUsageDeps): void {
+  const maxTokens = resolveMaxTokens(deps);
+  if (maxTokens) {
+    deps.getTracker().setMaxTokens(maxTokens);
   }
 }

@@ -103,6 +103,7 @@ describe('PBT-CTX-01: Pruning Never Removes Locked Files', () => {
       tokenCount: fc.integer({ min: 100, max: 5000 }),
       pinnedAt: fc.integer({ min: 1000000, max: Date.now() }),
       relevanceScore: fc.float({ min: 0, max: 1, noNaN: true }),
+      importanceScore: fc.float({ min: Math.fround(0.05), max: 1, noNaN: true }),
       locked: fc.boolean(),
     });
 
@@ -114,6 +115,7 @@ describe('PBT-CTX-01: Pruning Never Removes Locked Files', () => {
           tokenCount: f.tokenCount,
           pinnedAt: f.pinnedAt,
           relevanceScore: f.relevanceScore,
+          importanceScore: f.importanceScore,
         }));
         const totalTokens = files.reduce((s, f) => s + f.tokenCount, 0);
         const candidates = suggestPrune(prunableFiles, totalTokens, totalTokens);

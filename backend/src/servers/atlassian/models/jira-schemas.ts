@@ -35,13 +35,13 @@ export const CreateIssueSchema = z.object({
   priority: z.string().optional(),
   labels: z.array(z.string()).optional(),
   components: z.array(z.string()).optional(),
-  custom_fields: z.record(z.unknown()).optional(),
+  custom_fields: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const UpdateIssueSchema = z.object({
   issue_key: IssueKeySchema,
   /** Fields object to update. Must be an object (NOT a JSON string). Example: {"parent":{"id":"12345"}} */
-  fields: z.record(z.unknown()).describe('Fields object to update (NOT a JSON string). Example: {"summary":"New title","parent":{"id":"12345"}}'),
+  fields: z.record(z.string(), z.unknown()).describe('Fields object to update (NOT a JSON string). Example: {"summary":"New title","parent":{"id":"12345"}}'),
 });
 
 export const DeleteIssueSchema = z.object({
@@ -69,14 +69,14 @@ export const TransitionSchema = z.object({
   issue_key: IssueKeySchema,
   transition_id: z.string().min(1),
   comment: z.string().optional(),
-  fields: z.record(z.unknown()).optional(),
+  fields: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const TransitionByNameSchema = z.object({
   issue_key: IssueKeySchema,
   transition_name: z.string().min(1),
   comment: z.string().optional(),
-  fields: z.record(z.unknown()).optional(),
+  fields: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const GetTransitionsSchema = z.object({
@@ -115,7 +115,9 @@ export const GetSingleCommentSchema = z.object({
 
 export const AttachFileSchema = z.object({
   issue_key: IssueKeySchema,
-  file_path: z.string().min(1),
+  file_path: z.string().min(1).describe('Relative or absolute path to the file to attach'),
+  base_dir: z.string().optional().describe('Optional workspace root to resolve relative file_path against. Must be registered in the server allowlist (MCP_WORKSPACE_ROOTS). Relative values are normalized to absolute. Example: /home/user/project-worktree-B'),
+  workspace_root: z.string().optional().describe('Deprecated alias of base_dir (same semantics — optional workspace root to resolve relative file_path against; must be in the MCP_WORKSPACE_ROOTS allowlist). Ignored when base_dir is present. Example: /home/user/project-worktree-B'),
 });
 
 export const GetAttachmentsSchema = z.object({

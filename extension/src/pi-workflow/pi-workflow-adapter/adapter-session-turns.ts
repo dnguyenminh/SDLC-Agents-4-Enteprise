@@ -13,32 +13,74 @@ import { AdapterCore } from './adapter-core.js';
 import { forwardToolLiveEvent } from './tool-live-events.js';
 import { notifyPeerUserActivity } from '../peer/lifecycle.js';
 import { peerApprovalGateOrUndefined, setCurrentTurnImages } from '../peer/runtime.js';
+import { getSetting } from '../../config/settings-migration.js';
+import {
+  DEFAULT_STREAM_LOOP_MAX_CONTINUES,
+  normalizeStreamLoopMaxContinues,
+} from '../stream-loop-continuation.js';
+import { runStreamLoopTurn, type LoopPromptTurnFn } from './session-turn-stream-loop.js';
+import type { SessionTurnResult } from '../session-host/types.js';
 
 export abstract class AdapterSessionTurns extends AdapterCore {
   /** Implemented by the legacy-path level (./adapter-legacy-turns.ts). */
-  protected abstract runTurnOnce(state: PipelineState, chatInput: string, ticketKey: string): Promise<void>;
+  protected abstract runTurnOnce(
+    state: PipelineState,
+    chatInput: string,
+    ticketKey: string,
+    originTabId: string
+  ): Promise<void>;
 
-  /** LangGraphEngine-compatible: invoke(ticketKey, phase, chatInput, intent?, autonomyLevel?) */
-  async invoke(ticketKey: string, phase: string, chatInput: string, _intent?: unknown, _autonomyLevel?: unknown): Promise<void> {
+  /** LangGraphEngine-compatible: invoke(ticketKey, phase, chatInput, intent?, autonomyLevel?, tabId?) */
+  async invoke(ticketKey: string, phase: string, chatInput: string, _intent?: unknown, _autonomyLevel?: unknown, tabId?: string): Promise<void> {
+    // SA4E-391 Bug 1 (cross-tab thinking leak): pin the turn's origin tab at
+    // SUBMIT time. `store.activeTab` is a single mutable field shared by every
+    // tab — reading it later (when a QUEUED turn finally starts) re-labels the
+    // turn with whatever tab the user happens to be looking at, so the turn's
+    // thinking/tool/answer blocks land in the WRONG tab.
+    const originTabId = tabId || this.store.activeTab || 'CHAT';
+    // SA4E-391 cross-tab routing: pin the store's active tab to the SUBMITTING
+    // tab (webview UUID) before the turn runs, so origin stamping and peer
+    // activity are keyed to the tab that produced the turn — not whichever tab
+    // the host last saw a tab:switch for.
+    if (tabId) this.store.switchTab(tabId);
     const state = this.store.stateFor(ticketKey);
+    this.store.setActiveTicketKey(ticketKey);
     state.currentPhase = phase || state.currentPhase;
     state.chatHistory = this.store.getHistory() || state.chatHistory;
-    await this.runTurn(state, chatInput, ticketKey);
+    await this.runTurn(state, chatInput, ticketKey, undefined, undefined, originTabId);
   }
 
   // SA4E-391 multimodal: optional user-attached images for this turn.
   // `delegationOnly` = images are for peer_send forwarding only (this tab's
   // model is non-vision), so they must NOT be fed to this model's own prompt.
-  async invokeChat(chatInput: string, images?: import('../session-host/types.js').TurnImage[], delegationOnly?: boolean): Promise<void> {
-    const tab = this.store.activeTab || 'CHAT';
+  async invokeChat(chatInput: string, images?: import('../session-host/types.js').TurnImage[], delegationOnly?: boolean, tabId?: string): Promise<void> {
+    // SA4E-391 Bug 1 (cross-tab thinking leak): capture the SUBMITTING tab
+    // before anything can mutate the shared `store.activeTab`. The value below
+    // is the turn's permanent origin — a later tab switch must never re-label
+    // this turn's output.
+    const originTabId = tabId || this.store.activeTab || 'CHAT';
+    // SA4E-391 cross-tab routing: the submitting tab is the single source of
+    // truth for this turn's origin. Pin it BEFORE deriving state/origin so
+    // store.activeTab matches the tab the user typed in (fixes tab A's output
+    // rendering in tab B after a mid-turn switch).
+    if (tabId) this.store.switchTab(tabId);
+    const tab = originTabId;
     const state = this.store.get(tab) || this.store.chatStateFor(tab);
-    await this.runTurn(state, chatInput, state.ticketKey, images, delegationOnly);
+    this.store.setActiveTicketKey(state.ticketKey);
+    await this.runTurn(state, chatInput, state.ticketKey, images, delegationOnly, originTabId);
   }
 
-  private async runTurn(state: PipelineState, chatInput: string, ticketKey: string, images?: import('../session-host/types.js').TurnImage[], delegationOnly?: boolean): Promise<void> {
+  private async runTurn(
+    state: PipelineState,
+    chatInput: string,
+    ticketKey: string,
+    images?: import('../session-host/types.js').TurnImage[],
+    delegationOnly?: boolean,
+    originTabId: string = this.store.activeTab || 'CHAT'
+  ): Promise<void> {
     // S-01(3)/BR-9: any user msg resets the anti-loop chains of the tab (both invoke + invokeChat
     // flows, keyed by the SAME tab key the peer registry uses). Wraps in try/catch — never throws.
-    notifyPeerUserActivity(this.store.activeTab || 'CHAT');
+    notifyPeerUserActivity(originTabId);
     // CONCURRENCY-FIX: serialize turns. A second invokeChat while one is still running is queued
     // (runs after the current one) and surfaced as a non-fatal notice — never dropped, never overlapped.
     if (this.turnInFlight) {
@@ -62,13 +104,14 @@ export abstract class AdapterSessionTurns extends AdapterCore {
       this.pendingTurnImages = delegationOnly ? undefined : images;
       // SA4E-391 multimodal peer: expose the images to peer_send for THIS tab
       // so the sender agent can delegate "read this image" to a vision peer.
-      try { setCurrentTurnImages(this.store.activeTab || 'CHAT', images); } catch { /* non-fatal */ }
+      // Keyed by the PINNED origin tab — never by the mutable store.activeTab.
+      try { setCurrentTurnImages(originTabId, images); } catch { /* non-fatal */ }
       const cancelled = new Promise<void>((_, reject) => { this.turnCancelReject = reject; });
       // Swallow the cancel rejection AFTER the race so the chain never prints
       // an unhandled rejection; the chat:workingStatus(false) is emitted below.
       cancelled.catch(() => {});
       return Promise.race([
-        this.runTurnOnce(state, chatInput, ticketKey),
+        this.runTurnOnce(state, chatInput, ticketKey, originTabId),
         cancelled,
       ]).catch((err) => {
         if ((err as Error)?.message === 'PI_TURN_CANCELLED') {
@@ -91,7 +134,9 @@ export abstract class AdapterSessionTurns extends AdapterCore {
       // a newer turn may have replaced it (queued message starting).
       this.turnCancelReject = undefined;
       this.pendingTurnImages = undefined; // SA4E-391: never leak images across turns
-      try { setCurrentTurnImages(this.store.activeTab || 'CHAT', undefined); } catch { /* non-fatal */ }
+      // SA4E-391 Bug 1: clear THIS turn's images under the PINNED origin tab —
+      // the mutable store.activeTab may already point at a different tab.
+      try { setCurrentTurnImages(originTabId, undefined); } catch { /* non-fatal */ }
       // SA4E-391: clear the stream origin at settle so any event emitted
       // BETWEEN turns is not stamped with the finished turn's tab. The next
       // turn re-stamps its own origin at start (trySessionTurn/runTurnOnce).
@@ -109,6 +154,10 @@ export abstract class AdapterSessionTurns extends AdapterCore {
    * tab is active now, not the tab that produced the turn. */
   protected postToolLiveEvent(e: ToolLiveEvent): void {
     const originTabId = this.streamHandler.getOriginTabId();
+    // SA4E-391 Bug 2: flush any buffered tokens BEFORE emitting the tool call,
+    // otherwise a debounced token that was produced BEFORE the tool starts
+    // could be delivered AFTER the tool block, breaking chronological order.
+    this.streamHandler.flush();
     forwardToolLiveEvent((msg) => {
       this.onEvent(originTabId ? ({ ...msg, originTabId } as ChatExtToWebviewMessage) : msg);
     }, e);
@@ -133,14 +182,15 @@ export abstract class AdapterSessionTurns extends AdapterCore {
     ticketKey: string,
     role: string,
     timeoutMs = 0,
-    turnStreamId: string
+    turnStreamId: string,
+    originTabId: string
   ): Promise<boolean> {
     // One stable stream identity per turn (streaming-identity fix).
     const turnStart = Date.now();
-    // SA4E-391 cross-tab routing: capture the origin tab ONCE at turn start so
-    // both the success path and the outer budget-error catch stamp the SAME
-    // tab (store.activeTab can change under us if the user switches tabs).
-    const originTabId = this.store.activeTab || 'CHAT';
+    // SA4E-391 Bug 1: the origin tab is PINNED by the caller at SUBMIT time.
+    // It must NOT be re-derived from `store.activeTab` here — that field is
+    // shared and mutable, so a tab switch between submit and turn-start
+    // re-labelled the turn and leaked its thinking/answer into the focused tab.
     try {
       // SA4E-369 UAT root-cause fix — ONE shared config read for both turn
       // paths (dot keys + legacy flat fallback; see readProviderTurnConfig).
@@ -189,90 +239,78 @@ export abstract class AdapterSessionTurns extends AdapterCore {
       // the StreamHandler origin for its lifetime). Fixes tab 1's late output
       // rendering in tab 2 after a mid-turn tab switch.
       this.streamHandler.setOriginTabId(tabId);
-      let live = true;
-      // Track whether ANY answer token streamed. Some providers/models (local
-      // llama-server / qwen via the session host) return the reply in one block
-      // without per-token deltas, so onToken never fires. The webview only
-      // builds the assistant bubble from token deltas — without this flag a
-      // non-streaming reply (e.g. a short "Hello") is produced by the model
-      // (log: text=NNNch) but NEVER rendered. We emit res.text as one token
-      // after the turn when nothing streamed (see below).
-      let sawToken = false;
-      // timeoutMs <= 0 → NO wall-clock backstop (product decision: stop only on
-      // repetition, never elapsed time). Only race a timeout when opt-in (>0).
-      const promptPromise = host.promptTurn(
-        chatInput,
-        (token) => {
-          if (!live) return;
-          sawToken = true;
-          this.streamHandler.emitToken('pi', token, streamId);
-        },
-        (e) => {
-          if (!live) return;
-          this.postToolLiveEvent(e);
-        },
-        // SA4E-THINKING: reasoning deltas stream into the webview ThinkingBlock.
-        (token) => {
-          if (!live) return;
-          this.streamHandler.emitThinking('pi', token, streamId);
-        },
-        // SA4E-391 multimodal: forward this turn's attached images to the model.
-        this.pendingTurnImages && this.pendingTurnImages.length > 0
-          ? { images: this.pendingTurnImages }
-          : undefined
+      // CHAT-LOOP-CONT: bounded stream-loop auto-continuation (see
+      // ./session-turn-stream-loop.ts). Watches BOTH streamed surfaces for
+      // degeneration (the "thinking block stops halfway" bug: the model
+      // repeats a fragment until the OUTPUT token limit silently cuts the
+      // response — finish_reason "length" was never surfaced). On a trip the
+      // degenerate run is aborted and ONE fresh continuation message —
+      // anchored on the last coherent reasoning — is sent to the SAME
+      // session, so the turn CONTINUES instead of dying mid-sentence.
+      // Bounded by sdlcAgents.chat.streamLoopMaxContinues (default 1);
+      // exhausted → a visible stop notice, never a silent cut.
+      const maxContinues = normalizeStreamLoopMaxContinues(
+        getSetting<number>('chat.streamLoopMaxContinues', 'streamLoopMaxContinues', DEFAULT_STREAM_LOOP_MAX_CONTINUES)
       );
-      let res;
-      try {
-        if (timeoutMs > 0) {
-          const timeout = new Promise<never>((_, reject) => {
-            const t = setTimeout(
-              () => reject(new Error(`PI_SESSION_TIMEOUT after ${timeoutMs}ms`)),
-              timeoutMs
-            );
-            (t as unknown as { unref?: () => void }).unref?.();
-          });
-          res = await Promise.race([promptPromise, timeout]);
-        } else {
-          res = await promptPromise;
-        }
-      } catch (err) {
-        live = false;
-        if ((err as Error).message.startsWith('PI_SESSION_TIMEOUT')) {
-          // Timeout claimed the turn — ABORT the session too, otherwise the
-          // run keeps streaming in the background (zombie turn) and the
-          // single-flight chain blocks the tab's next message forever.
+      const outcome = await runStreamLoopTurn<SessionTurnResult>({
+        promptTurn: host.promptTurn as unknown as LoopPromptTurnFn,
+        streamHandler: this.streamHandler,
+        initialPrompt: chatInput,
+        firstStreamId: streamId,
+        // SA4E-391 multimodal: images ride ONLY the first (user) prompt —
+        // continuation prompts are text-only guidance.
+        firstAttemptOpts:
+          this.pendingTurnImages && this.pendingTurnImages.length > 0
+            ? { images: this.pendingTurnImages }
+            : undefined,
+        maxContinues,
+        timeoutMs,
+        onToolEvent: (e) => this.postToolLiveEvent(e as ToolLiveEvent),
+        abortActiveSession: () => {
           void import('../session-host/registry.js').then(m => m.abortSessionHost(this.workspaceRoot, tabId)).catch(() => {});
-          this.streamHandler.emitComplete('pi', Date.now() - turnStart, streamId);
-          this.onEvent({
-            type: 'chat:error',
-            code: 'PI_SESSION_TIMEOUT',
-            message: `Session turn timed out after ${Math.round(timeoutMs / 1000)}s. Narrow the scope and retry.`,
-            retryable: true,
-            originTabId: tabId,
-          } as ChatExtToWebviewMessage);
-          return true;
-        }
-        throw err;
+        },
+      });
+      if (outcome.kind === 'timeout') {
+        // Timeout claimed the turn — ABORT the session too, otherwise the
+        // run keeps streaming in the background (zombie turn) and the
+        // single-flight chain blocks the tab's next message forever.
+        void import('../session-host/registry.js').then(m => m.abortSessionHost(this.workspaceRoot, tabId)).catch(() => {});
+        this.streamHandler.emitComplete('pi', Date.now() - turnStart, outcome.interruptedStreamId);
+        this.onEvent({
+          type: 'chat:error',
+          code: 'PI_SESSION_TIMEOUT',
+          message: `Session turn timed out after ${Math.round(timeoutMs / 1000)}s. Narrow the scope and retry.`,
+          retryable: true,
+          originTabId: tabId,
+        } as ChatExtToWebviewMessage);
+        return true;
       }
+      const { res, sawToken, finalStreamId, continuationPrompts } = outcome;
+      const finalText = res && typeof res.text === 'string' ? res.text : '';
       // Non-streaming fallback: if the model returned text but NO token delta
-      // ever fired (onToken never called — common for local llama-server/qwen
-      // via the session host), emit the whole reply as ONE token now so the
-      // webview builds+fills the assistant bubble. Without this the reply is
-      // generated but invisible (only the user bubble shows).
-      if (live && !sawToken && res && typeof res.text === 'string' && res.text.length > 0) {
-        this.streamHandler.emitToken('pi', res.text, streamId);
+      // ever fired in the FINAL attempt (onToken never called — common for
+      // local llama-server/qwen via the session host), emit the whole reply as
+      // ONE token now so the webview builds+fills the assistant bubble.
+      // Without this the reply is generated but invisible (only the user
+      // bubble shows).
+      if (!sawToken && finalText.length > 0) {
+        this.streamHandler.emitToken('pi', finalText, finalStreamId);
       }
       // Always close the stream, even for textless turns (tool-only output
       // still opened a bubble that must be closed).
-      this.streamHandler.emitComplete('pi', Date.now() - turnStart, streamId);
+      // CHAT-LOOP-CONT: pass stopReason if the turn was cut by output token limit.
+      this.streamHandler.emitComplete('pi', Date.now() - turnStart, finalStreamId, res?.stopReason);
       // Mirror the turn into the lightweight store (context usage + fallback coherence).
+      // CHAT-LOOP-CONT: continuation prompts are mirrored too — they are real
+      // turns in the session transcript, so the context meter stays honest.
       const history = [...(this.store.getHistory() || state.chatHistory || [])];
       history.push({ role: 'user', content: chatInput } as never);
-      if (res.text) history.push({ role: 'assistant', content: res.text } as never);
+      for (const cp of continuationPrompts) history.push({ role: 'user', content: cp } as never);
+      if (finalText) history.push({ role: 'assistant', content: finalText } as never);
       this.store.setHistory(history as never);
       this.store.save(ticketKey, { ...state, chatHistory: history } as PipelineState);
-      if (res.sessionFile) {
-        debugLog(`[Chat] turn via=session ext=${getExtensionVersion()} workspace=${this.workspaceRoot} file=${res.sessionFile} tools=${res.toolCalls.length} text=${res.text.length}ch`);
+      if (res?.sessionFile) {
+        debugLog(`[Chat] turn via=session ext=${getExtensionVersion()} workspace=${this.workspaceRoot} file=${res.sessionFile} tools=${res.toolCalls.length} text=${finalText.length}ch loops=${outcome.loopKinds.length}`);
       }
       return true;
     } catch (err) {

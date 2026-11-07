@@ -57,3 +57,47 @@ describe('AssistantRepetitionMonitor (v1.53.7 stream breaker)', () => {
     expect(monitor.push('\nnext paragraph with real content\n')).toBe(false);
   });
 });
+
+describe('AssistantRepetitionMonitor.uniqueTail (CHAT-LOOP-CONT anchor)', () => {
+  const probe = 'peer-runtime-fragment-that-is-exactly-64-chars-long'.padEnd(64, 'x');
+
+  it('returns the coherent text before a pure repetition loop', () => {
+    const monitor = new AssistantRepetitionMonitor({ unitChars: 64, minRepeats: 8 });
+    const prefix = 'analyzing the peer runtime Map lifecycle ';
+    monitor.push(prefix);
+    let tripped = false;
+    for (let i = 0; i < 20 && !tripped; i++) tripped = monitor.push(probe);
+    expect(tripped).toBe(true);
+    expect(monitor.uniqueTail(500)).toBe(prefix);
+  });
+
+  it('keeps a benign EARLIER use of the same fragment (end-adjacency rule)', () => {
+    const monitor = new AssistantRepetitionMonitor({ unitChars: 64, minRepeats: 8 });
+    const benign = `the file ${probe} is small. `;
+    const prefix = 'then the model degenerated: ';
+    monitor.push(benign);
+    monitor.push(prefix);
+    let tripped = false;
+    for (let i = 0; i < 20 && !tripped; i++) tripped = monitor.push(probe);
+    expect(tripped).toBe(true);
+    const tail = monitor.uniqueTail(500);
+    expect(tail).toContain(benign);   // earlier benign mention survives
+    expect(tail.endsWith(prefix)).toBe(true); // loop body cut off
+  });
+
+  it('clamps to maxChars from the end of the coherent part', () => {
+    const monitor = new AssistantRepetitionMonitor({ unitChars: 16, minRepeats: 4 });
+    const prefix = 'a'.repeat(1200);
+    monitor.push(prefix);
+    let tripped = false;
+    for (let i = 0; i < 10 && !tripped; i++) tripped = monitor.push(probe.slice(0, 16));
+    expect(tripped).toBe(true);
+    expect(monitor.uniqueTail(100).length).toBe(100);
+  });
+
+  it('returns the raw buffer when no repetition happened', () => {
+    const monitor = new AssistantRepetitionMonitor({ unitChars: 16, minRepeats: 4 });
+    monitor.push('just normal text ');
+    expect(monitor.uniqueTail(500)).toBe('just normal text ');
+  });
+});

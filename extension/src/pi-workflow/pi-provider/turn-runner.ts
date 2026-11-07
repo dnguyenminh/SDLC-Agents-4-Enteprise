@@ -1,188 +1,120 @@
 /**
- * PiProvider turn runner — one guarded prompt cycle over the pi-agent-core
- * Agent: repetition guards (tool calls, failures, perseverating text),
- * wall-clock timeout, steer/abort effectors, and result collection with the
- * K2 intentional-stop suppression.
+ * PiProvider turn runner — bounded prompt loop over one-shot guarded attempts
+ * (see ./prompt-attempt.ts for the per-attempt guard + repetition monitors).
+ *
+ * CHAT-LOOP-CONT: a degenerating THINKING stream used to end the turn silently
+ * at the model's OUTPUT token limit (finish_reason "length" was never
+ * surfaced — the "thinking block stops halfway" bug). Now the degenerate
+ * attempt is aborted and ONE continuation prompt — anchored on the last
+ * coherent reasoning (monitor.uniqueTail) — re-prompts the SAME agent (same
+ * transcript), so the turn CONTINUES instead of dying mid-sentence. Bounded by
+ * `maxStreamLoopContinues` (default 1, setting
+ * sdlcAgents.chat.streamLoopMaxContinues); when exhausted the turn ends with
+ * the friendly stop note — visible, never silent.
+ *
+ * Answer-stream degeneration keeps the v1.53.7 guard stop-note behavior
+ * (visible intentional stop) — only the previously-invisible thinking-loop
+ * path gained the auto-continuation.
  */
-import { Agent } from '@earendil-works/pi-agent-core';
-import type { AgentEvent } from '@earendil-works/pi-agent-core';
-import { mapAgentEvent, extractToolResultText, ToolEventTracker, type EventCollector } from '../pi-event-mapper.js';
-import { TurnBudgetGuard, buildStopNote, buildSteerCorrection, buildFailureSteerCorrection, buildTextSteerCorrection, buildRereadSteerCorrection, splitCompletedBlocks } from '../turn-budget-guard.js';
-import { AssistantRepetitionMonitor } from '../assistant-repetition-monitor.js';
-import { debugLog, debugError } from '../../debug-logger.js';
-import type { PiRunResult } from '../pi-provider-types.js';
+import type { Agent } from '@earendil-works/pi-agent-core';
+import { buildStopNote, type TurnBudget } from '../turn-budget-guard.js';
+import {
+  buildLoopContinuationPrompt,
+  buildLoopNoticeText,
+  normalizeStreamLoopMaxContinues,
+} from '../stream-loop-continuation.js';
+import { runPromptAttempt } from './prompt-attempt.js';
+import { debugLog } from '../../debug-logger.js';
+import type { PiRunInput, PiRunResult, PiStreamChunk } from '../pi-provider-types.js';
+
+/** Options for the stream-loop auto-continuation (config read at the call site). */
+export interface PromptLoopOptions {
+  /** Max continuation attempts after a thinking-stream loop (default 1). */
+  maxStreamLoopContinues?: number;
+}
 
 /**
- * Run a single prompt on whatever model the agent is currently set to.
- * Captures both thrown errors and Agent.state.errorMessage into errorMessage so
- * the caller can decide whether to fall back.
- *
- * Loop guard: a TurnBudgetGuard counts tool calls (total + per-signature
- * repeats) and arms a wall-clock timeout. On trip it aborts the agent run;
- * partial output is kept with an explanatory note instead of an error so
- * the user sees results instead of a hang (UAT runaway-find loop).
+ * Run a prompt with bounded thinking-loop auto-continuation. Every attempt is
+ * a full guarded cycle (tool/failure/text guards + stream monitors); the
+ * guard's steer/abort semantics are UNCHANGED — only a degenerate THINKING
+ * stream escalates to abort + re-prompt instead of a silent stop.
  */
 export async function promptOnCurrentModel(
   agent: Agent,
   prompt: string,
-  budget?: import('../turn-budget-guard.js').TurnBudget,
-  onToolEvent?: import('../pi-provider-types.js').PiRunInput['onToolEvent']
+  budget?: TurnBudget,
+  onToolEvent?: PiRunInput['onToolEvent'],
+  options?: PromptLoopOptions
 ): Promise<PiRunResult> {
-  const collector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
-  // Shared steer/abort effectors (never throw — event dispatch must survive).
-  const abortRun = (): void => {
-    try {
-      agent.abort();
-    } catch {
-      // Abort must never break event dispatch.
-    }
+  const maxContinues = normalizeStreamLoopMaxContinues(options?.maxStreamLoopContinues);
+  let currentPrompt = prompt;
+  let continuesLeft = maxContinues;
+  const chunks: PiStreamChunk[] = [];
+  const toolCalls: PiRunResult['toolCalls'] = [];
+  let mergedText = '';
+
+  let last = await runPromptAttempt(agent, currentPrompt, budget, onToolEvent);
+  pushAttempt(chunks, toolCalls, (t) => { mergedText += t; }, last.result);
+
+  while (last.streamLoop && continuesLeft > 0) {
+    continuesLeft--;
+    // Surface WHAT happened between the aborted attempt and the continuation
+    // (the merged chunks are replayed by the adapter — never silent).
+    const notice = '\n\n' + buildLoopNoticeText('thinking', false) + '\n\n';
+    chunks.push({ type: 'text', content: notice });
+    mergedText += notice;
+    currentPrompt = buildLoopContinuationPrompt('thinking', last.streamLoop.anchor);
+    debugLog(`[PiProvider] thinking loop — auto-continuing (${continuesLeft} attempt(s) left)`);
+    last = await runPromptAttempt(agent, currentPrompt, budget, onToolEvent);
+    pushAttempt(chunks, toolCalls, (t) => { mergedText += t; }, last.result);
+  }
+
+  if (last.streamLoop) {
+    // Continuation budget exhausted — end with the FRIENDLY stop note (the
+    // same intentional-stop treatment the guard produces: K2-suppressed error,
+    // partial results kept), never a silent cut.
+    const note = buildStopNote('repeat', toolCalls.length);
+    mergedText += note;
+    chunks.push({ type: 'text', content: note });
+    chunks.push({ type: 'done' });
+    debugLog('[PiProvider] thinking loop — continuation limit reached, stopped with note');
+    return {
+      text: mergedText,
+      toolCalls,
+      chunks,
+      messages: last.result.messages,
+      errorMessage: undefined,
+      stopReason: last.result.stopReason,
+    };
+  }
+  ensureDone(chunks);
+  return {
+    text: mergedText,
+    toolCalls,
+    chunks,
+    messages: last.result.messages,
+    errorMessage: last.result.errorMessage,
+    stopReason: last.result.stopReason,
   };
-  const steerWith = (text: string): void => {
-    try {
-      agent.steer({
-        role: 'user',
-        content: [{ type: 'text', text }],
-        timestamp: Date.now(),
-      } as never);
-    } catch {
-      // Steering must never break event dispatch.
-    }
-  };
-  const guard = new TurnBudgetGuard(TurnBudgetGuard.resolveDefaults(budget), abortRun);
-  const tracker = new ToolEventTracker();
-  // Text perseveration watch: feed newly COMPLETED assistant blocks
-  // (paragraphs/fences) to the same repeat guard (spec: response repeats).
-  let seenBlocks = 0;
-  // v1.53.7 stream breaker: a paragraph looping the same fragment hundreds of
-  // times is ONE block (no blank line) and invisible to the block scan —
-  // feed raw deltas to a repetition monitor (UAT 17/10: 71 KB / ~11 minutes).
-  const repetitionMonitor = new AssistantRepetitionMonitor();
-  let seenTextChars = 0;
-  const repeatLimit = TurnBudgetGuard.resolveDefaults(budget).maxSameToolRepeats;
-  const watchTextRepeats = () => {
-    if (guard.stoppedReason) return;
-    if (collector.text.length > seenTextChars) {
-      const delta = collector.text.slice(seenTextChars);
-      seenTextChars = collector.text.length;
-      if (repetitionMonitor.push(delta)) {
-        guard.tripNow('repeat'); // guard aborts the run; stop note + K2 suppression apply
-        return;
-      }
-    }
-    const blocks = splitCompletedBlocks(collector.text);
-    for (let i = seenBlocks; i < blocks.length; i++) {
-      const action = guard.observeTextBlock(blocks[i]);
-      if (action === 'steer') steerWith(buildTextSteerCorrection(repeatLimit));
-      else if (action === 'abort') abortRun();
-    }
-    seenBlocks = blocks.length;
-  };
-  const unsubscribe = agent.subscribe((event: AgentEvent) => {
-    if ((event as { type?: string }).type === 'tool_execution_start') {
-      const e = event as { toolName?: string; args?: unknown };
-      let argsJson = '';
-      try {
-        argsJson = JSON.stringify(e.args ?? '');
-      } catch {
-        argsJson = String(e.args ?? '').slice(0, 300);
-      }
-      const toolName = String(e.toolName ?? '?');
-      const action = guard.observeToolCall(toolName, argsJson);
-      // First repeat: correct course mid-loop, keep the turn alive;
-      // persisted after correction: stop the turn (guard already tripped).
-      // SA4E-368: a re-read trip gets the synthesis correction; every other
-      // repeat keeps the generic get-workspace-layout advice.
-      if (action === 'steer') {
-        steerWith(
-          guard.lastTripKind === 'reread'
-            ? buildRereadSteerCorrection(toolName, guard.lastTripTarget ?? '', repeatLimit)
-            : buildSteerCorrection(toolName, repeatLimit)
-        );
-      } else if (action === 'abort') abortRun();
-    }
-    // BUG I: repeated identical FAILURES trip the guard even when the
-    // arguments vary (signature = tool + first error line), so a model
-    // retrying a malformed command steers/aborts instead of burning the
-    // full turn timeout.
-    if (event.type === 'tool_execution_end' && event.isError) {
-      const toolName = String(event.toolName ?? '?');
-      const action = guard.observeToolFailure(toolName, extractToolResultText(event.result));
-      if (action === 'steer') steerWith(buildFailureSteerCorrection(toolName, repeatLimit));
-      else if (action === 'abort') abortRun();
-    }
-    const live = tracker.observe(event);
-    if (live && onToolEvent) {
-      try {
-        onToolEvent(live);
-      } catch {
-        // Progress display must never break the turn.
-      }
-    }
-    mapAgentEvent(event, collector);
-    watchTextRepeats();
-  });
-  guard.startTimeout();
-  try {
-    // Stuck-run recovery: if the SDK somehow still has an active run (previous turn crashed
-    // mid-flight, abort raced), settle it BEFORE prompting — never prompt over activeRun.
-    if (agent.state.isStreaming) {
-      debugLog('[PiProvider] Stuck active run detected — waiting for idle before new prompt.');
-      await agent.waitForIdle();
-    }
-    await agent.prompt(prompt);
-    await agent.waitForIdle();
-    return collectResult(agent, collector, guard);
-  } catch (err: unknown) {
-    // Our own guard abort: partial results + note, NOT an error (turn completes).
-    if (guard.stoppedReason) {
-      // waitForIdle may still reject after abort — settle quietly.
-      try {
-        await agent.waitForIdle();
-      } catch {
-        // Ignore settle errors after a guarded abort.
-      }
-      return collectResult(agent, collector, guard);
-    }
-    debugError('[PiProvider] run failed', err as Error);
-    if (agent.state.isStreaming) {
-      debugLog('[PiProvider] run failed while agent still streaming — re-settling idle.');
-      try { await agent.waitForIdle(); } catch { /* ignore settle errors */ }
-    }
-    return { ...collectResult(agent, collector), errorMessage: (err as Error).message };
-  } finally {
-    guard.clear();
-    unsubscribe();
+}
+
+/** Merge one attempt into the run-level accumulation (single 'done' at the end). */
+function pushAttempt(
+  chunks: PiStreamChunk[],
+  toolCalls: PiRunResult['toolCalls'],
+  appendText: (t: string) => void,
+  result: PiRunResult
+): void {
+  appendText(result.text);
+  for (const tc of result.toolCalls) toolCalls.push(tc);
+  for (const chunk of result.chunks) {
+    if (chunk.type === 'done') continue; // exactly one 'done' at the very end
+    chunks.push(chunk);
   }
 }
 
-/** FIX E: snapshot the agent transcript + finalize chunks and error status. */
-export function collectResult(agent: Agent, collector: EventCollector, guard?: TurnBudgetGuard): PiRunResult {
-  // K2 (SA4E-368): a guard stop is INTENTIONAL — the abort error the SDK
-  // records on the agent state ("This operation was aborted") must NOT
-  // surface as a turn error: the friendly stop note appended below is the
-  // single source of truth. Otherwise the executor maps it to
-  // PI_EXECUTION_ERROR and the chat emits a SECOND red bubble on top of
-  // the stop note (UAT: "Stopped early … loop guard" + "This operation
-  // was aborted"). A genuine failure (no guard trip) still flows through.
-  const errorMessage = guard?.stoppedReason
-    ? undefined
-    : collector.errorMessage || agent.state.errorMessage;
-  let text = collector.text;
-  if (guard?.stoppedReason) {
-    const note = buildStopNote(guard.stoppedReason, guard.stats.totalCalls);
-    text += note;
-    // Stream the note too (the adapter renders chunks, not text).
-    collector.chunks.push({ type: 'text', content: note });
-    debugLog(`[PiProvider] turn stopped early (${guard.stoppedReason}, ${guard.stats.totalCalls} tool calls)`);
-  }
-  if (!collector.chunks.some(c => c.type === 'done')) {
-    collector.chunks.push({ type: 'done' });
-  }
-  return {
-    text,
-    toolCalls: collector.toolCalls,
-    chunks: collector.chunks,
-    messages: agent.state.messages.slice(),
-    errorMessage,
-  };
+function ensureDone(chunks: PiStreamChunk[]): void {
+  if (!chunks.some(c => c.type === 'done')) chunks.push({ type: 'done' });
 }
+
+export { collectResult } from './collect-result.js';

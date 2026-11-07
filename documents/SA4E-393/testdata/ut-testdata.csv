@@ -1,0 +1,13 @@
+test_case_id,detectionMode,threshold,sourcePath,localhostUrl,expected_http_code,expected_result,description
+UT-01,static,0.8,/workspace/src, , , loads SkillAPI, ImpeccableSkillLoader loads skill successfully
+UT-02,both,0.8,, , , error package not found, ImpeccableSkillLoader reports package not found
+UT-03,static,0.8,/workspace/src, , , loads Detector, WasmDetectorRuntime loads WASM binary
+UT-04,static,0.8,/workspace/src, ,200,findings with severity, Static detect returns findings array with file, severity, message
+UT-05,static,0.8,/workspace/src, , , ≤100 files, FileSystemAdapter respects maxFiles limit (100)
+UT-06,rendered,0.7,,http://localhost:5173, , , retries once then error, LocalhostFetcher retries once on failure then returns error
+UT-07,both,0.8,, , , pass=true, ReportGenerator calculates pass/fail correctly (score 0.85 ≥ threshold 0.8)
+UT-08,both,0.8,, , , inconclusive, ReportGenerator handles NaN score — fail-open if configured
+UT-09,static,0.8,/workspace/src, , , cacheHit=true, DetectionCache returns cached result within TTL (5 min)
+UT-10,static,0.8,/workspace/src, , , partial findings, Static detection timeout (30s) returns partial findings with warning
+UT-11,static,0.8,, ,400,error 400, detectionMode validation rejects invalid enum
+UT-12,both,0.8,, , , clamped to 1, threshold validation clamps 0-1 (1.5 → 1)

@@ -49,7 +49,8 @@ vi.mock('../pi-coding-tools.js', () => ({
 import { getPiExtensionAgentTools } from '../pi-extension-runtime.js';
 
 const BRIDGE_TOOL_NAMES = ['jira_get_issue', 'mem_search', 'mem_ingest', 'code_search'] as const;
-// SA4E-367: the gated discovery pair is NEVER in the default legacy pool.
+// SA4E-367: the gated discovery pair joins the legacy pool only via the
+// SA4E-408 opt-in wiring (allowDynamicChaining: true) — absent names get bridged.
 const DISCOVERY_PAIR = ['find_tools', 'execute_dynamic_tool'] as const;
 
 type ToolLike = { name?: unknown; marker?: string; label?: unknown };
@@ -135,8 +136,10 @@ describe('PiWorkflowAdapter — SA4E-367 bridge tools in the LEGACY pool', () =>
         const byName = new Map(tools.map((t) => [t.name as string, t]));
         // 1. Every pre-existing entry keeps its sentinel reference (never overwritten).
         for (const [name, sentinel] of sentinels) expect(byName.get(name)).toBe(sentinel);
-        // 2. Bridge tools only fill names NOT already in the pool.
-        const bridgeAdded = BRIDGE_TOOL_NAMES.filter((n) => !poolNames.includes(n));
+        // 2. Bridge tools only fill names NOT already in the pool (BR-06/OI-06) —
+        //    SA4E-408: the opt-in discovery pair now joins the bridge fillable set.
+        const bridgeFillable = [...BRIDGE_TOOL_NAMES, ...DISCOVERY_PAIR];
+        const bridgeAdded = bridgeFillable.filter((n) => !poolNames.includes(n));
         for (const name of bridgeAdded) {
           const entry = byName.get(name) as { marker?: string; label?: unknown } | undefined;
           expect(entry).toBeDefined();
@@ -146,16 +149,15 @@ describe('PiWorkflowAdapter — SA4E-367 bridge tools in the LEGACY pool', () =>
         // 3. No duplicates in the merged pool.
         expect(tools.length).toBe(new Set(tools.map((t) => t.name)).size);
         // 4. Every collided name produced exactly the BR-06 skip warn.
-        for (const name of poolNames.filter((n) => (BRIDGE_TOOL_NAMES as readonly string[]).includes(n))) {
+        for (const name of poolNames.filter((n) => bridgeFillable.includes(n))) {
           expect(debugLogMock).toHaveBeenCalledWith(`[PiWorkflowAdapter] bridge tool skipped (exists): ${name}`);
         }
-        // 5. SA4E-367: the pair is never added by the default merge — a
-        // pre-existing pair-named ext entry keeps its sentinel (case 1), and
-        // no bridge-built pair entry appears.
+        // 5. SA4E-367 → SA4E-408: pre-existing pair-named ext entries keep their
+        // sentinel (case 1); absent pair names are now filled by the opted-in bridge.
         for (const name of DISCOVERY_PAIR) {
           const entry = byName.get(name) as { marker?: string } | undefined;
           if (poolNames.includes(name)) expect(entry?.marker).toContain('sentinel-');
-          else expect(entry).toBeUndefined();
+          else expect(entry).toBeDefined();
         }
       }),
       { numRuns: 40 },

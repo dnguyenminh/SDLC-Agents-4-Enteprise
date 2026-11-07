@@ -15,6 +15,7 @@ import {
   formatFsError,
   type PathResolutionOk,
 } from "../services/PathResolver";
+import { extractBaseDirArg } from "../services/base-dir-resolution";
 import { STREAM_WRITE_MAX_BYTES } from "./constants";
 import { checkSymlinkGuard, ensureDir } from "./fs-guards";
 
@@ -36,7 +37,8 @@ export function handleStreamWriteFile(args: Record<string, unknown>): any {
     return payloadTooLarge(rawDisplay);
   }
   // (1) resolve FIRST — before any fs.* (I-1).
-  const resolution = resolveWorkspacePath(rawPath);
+  // SA4E-394: per-call base_dir/workspace_root becomes the effective root.
+  const resolution = resolveWorkspacePath(rawPath, { baseDir: extractBaseDirArg(args) });
   // (2) fail → forward VERBATIM, return NOW (C-5, C-6).
   if (!resolution.ok) {
     console.warn(`[backend-local-tools] stream_write_file resolve failed: ${resolution.message}`);

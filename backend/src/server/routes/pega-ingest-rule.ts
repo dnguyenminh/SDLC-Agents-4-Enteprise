@@ -103,7 +103,7 @@ async function handleIngest(
 
     const parsed = IngestRuleRequestSchema.safeParse(body);
     if (!parsed.success) {
-      const msg = parsed.error.errors[0]?.message || 'Invalid request';
+      const msg = parsed.error.issues[0]?.message || 'Invalid request';
       return c.json({
         data: null,
         error: { code: 'VALIDATION_ERROR', message: msg },

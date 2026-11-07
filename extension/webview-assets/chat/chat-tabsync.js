@@ -17,12 +17,14 @@
         // SA4E-381 Issue 2: restore unread; stale streaming:true (no live
         // stream after webview reload) always resets to false — a new
         // chat:streamChunk will set it again if the turn is still alive.
+        // SA4E-408: preserve context breakdown across tab state replacement.
         return {
           id: t.id, name: t.name, messages: t.messages || [],
           tokenCount: t.tokenCount || 0, maxTokens: t.maxTokens || 128000,
           streaming: false,
           unread: t.unread || 0,
-          peerUnread: t.peerUnread || 0
+          peerUnread: t.peerUnread || 0,
+          breakdown: t.breakdown,
         };
       });
     }
@@ -72,6 +74,7 @@
     if (tab) {
       tab.tokenCount = payload.tokenCount;
       tab.maxTokens = payload.maxTokens;
+      tab.breakdown = payload.breakdown;
     }
     // Always update icon for active tab when data arrives
     S.updateContextIcon(payload.tokenCount, payload.maxTokens, payload.breakdown);

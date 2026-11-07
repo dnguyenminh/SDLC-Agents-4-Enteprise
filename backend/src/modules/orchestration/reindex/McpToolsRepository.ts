@@ -6,6 +6,7 @@
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type { Logger } from 'pino';
 import type { PreparedTool } from './models/PreparedTool.js';
+import { deriveToolLabels } from '../tool-labels.js';
 
 const MAX_PRUNE_VARS = 900;
 
@@ -66,16 +67,22 @@ export class McpToolsRepository {
 
   private async insertRow(it: PreparedTool): Promise<void> {
     await this.adapter.runAsync(
-      'INSERT INTO mcp_tools (name, description, schema_json, category, server, vector) VALUES (?, ?, ?, ?, ?, ?)',
-      [it.name, it.description, it.schemaJson, it.category, it.server, it.vector],
+      'INSERT INTO mcp_tools (name, description, schema_json, category, server, labels, vector) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [it.name, it.description, it.schemaJson, it.category, it.server, this.labelsFor(it), it.vector],
     );
   }
 
   private async updateRow(it: PreparedTool, id: number): Promise<void> {
     await this.adapter.runAsync(
-      'UPDATE mcp_tools SET description = ?, schema_json = ?, category = ?, server = ?, vector = ? WHERE id = ?',
-      [it.description, it.schemaJson, it.category, it.server, it.vector, id],
+      'UPDATE mcp_tools SET description = ?, schema_json = ?, category = ?, server = ?, labels = ?, vector = ? WHERE id = ?',
+      [it.description, it.schemaJson, it.category, it.server, this.labelsFor(it), it.vector, id],
     );
+  }
+
+  /** SA4E-369 follow-up: deterministic keyword surface — prefer the prepared
+   *  labels, fall back to deriving so every DB writer leaves a row searchable. */
+  private labelsFor(it: PreparedTool): string {
+    return it.labels ?? deriveToolLabels({ name: it.name, category: it.category, server: it.server });
   }
 
   private async pruneInternal(server: string, currentNames: string[]): Promise<number> {

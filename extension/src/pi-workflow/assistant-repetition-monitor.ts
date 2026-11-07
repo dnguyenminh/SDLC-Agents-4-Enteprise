@@ -64,6 +64,33 @@ export class AssistantRepetitionMonitor {
     return false;
   }
 
+  /**
+   * CHAT-LOOP-CONT: the text BEFORE the degenerate tail — the "last coherent
+   * point" anchor for the auto-continuation prompt. Walks backwards over the
+   * trailing run of end-to-end (non-overlapping) probe occurrences and returns
+   * the text preceding that run, clamped to `maxChars` from its end. A benign
+   * earlier use of the same fragment survives (the walk stops at the first
+   * occurrence that is not end-adjacent to the run).
+   */
+  uniqueTail(maxChars = 500): string {
+    if (this.buffer.length < this.unitChars) return this.buffer;
+    const probe = this.buffer.slice(-this.unitChars);
+    let runStart = this.buffer.length - probe.length; // the final occurrence starts here
+    let runLength = 1;
+    let searchEnd = runStart - 1;
+    while (searchEnd >= 0) {
+      const at = this.buffer.lastIndexOf(probe, searchEnd);
+      if (at === -1 || at + probe.length !== runStart) break; // trailing run ends here
+      runStart = at;
+      runLength++;
+      searchEnd = at - 1;
+    }
+    // A lone trailing occurrence is not a loop — keep the whole buffer.
+    if (runLength < 2) return this.buffer.length > maxChars ? this.buffer.slice(-maxChars) : this.buffer;
+    const tail = this.buffer.slice(0, runStart);
+    return tail.length > maxChars ? tail.slice(-maxChars) : tail;
+  }
+
   /** Test/debug snapshot: current window length. */
   get windowLength(): number {
     return this.buffer.length;

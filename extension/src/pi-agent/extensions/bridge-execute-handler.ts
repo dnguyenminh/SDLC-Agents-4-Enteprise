@@ -34,7 +34,12 @@ function chainingDenied(toolName: string) {
 
 /** Check the inner tool target of an allowed dynamic-chaining call. */
 function validateChainedTarget(params: Record<string, unknown>) {
-  const inner = params.tool_name;
+  // Contract unification: the dynamic tool's registered schema (live MCP tools/list →
+  // server schema; static registry fallback) and the agent/harness emit the inner tool
+  // name under `toolName`, while legacy registry paths used `tool_name`. Read both so
+  // the chain validation resolves the real target (root-cause fix for
+  // "Dynamic tool chaining denied: 'undefined' is not allowlisted").
+  const inner = (params.toolName as string | undefined) || (params.tool_name as string | undefined);
   if (typeof inner !== "string" || !TOOL_ALLOWLIST.has(inner)) {
     return {
       content: [{ type: 'text' as const, text: `Dynamic tool chaining denied: '${String(inner)}' is not allowlisted` }],

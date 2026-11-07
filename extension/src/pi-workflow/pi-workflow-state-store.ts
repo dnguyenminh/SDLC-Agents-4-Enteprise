@@ -8,9 +8,28 @@ export class PiStateStore {
   private readonly states = new Map<string, PipelineState>();
   private readonly histories = new Map<string, any[]>();
   private activeTabId = '';
+  /** ticketKey of the state belonging to the currently active tab — used by cancel() to avoid cancelling other tabs. */
+  private activeTicketKey: string | undefined;
 
   get activeTab(): string {
     return this.activeTabId;
+  }
+
+  /** Remember which ticketKey belongs to the active tab, so cancel() only cancels that tab. */
+  setActiveTicketKey(key: string): void {
+    this.activeTicketKey = key;
+  }
+
+  /** Get the PipelineState of the active tab, or undefined if none is tracked. */
+  getStateForActiveTab(): PipelineState | undefined {
+    if (!this.activeTicketKey) return undefined;
+    return this.states.get(this.activeTicketKey);
+  }
+
+  /** Set pipeline status only for the active tab's state (not every tab). */
+  setActiveTabPipelineStatus(status: string): void {
+    const state = this.getStateForActiveTab();
+    if (state) state.pipelineStatus = status;
   }
 
   switchTab(tabId: string): void {

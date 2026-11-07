@@ -26,6 +26,11 @@
         break;
       case "chat:toolCall":
         if (!isActive) tab.streaming = true;
+        // SA4E-391 Bug 2: a tool call is a chronological boundary — close the
+        // live thinking/answer blocks BEFORE the tool block is appended, so the
+        // post-tool text opens a NEW block AFTER the tool instead of merging
+        // into the pre-tool answer (which pushed the tool block to the end).
+        if (S.flushLiveBlocks) S.flushLiveBlocks(targetTabId);
         // Count the tool against the live turn so turn-meta can show "N tools".
         if (tab.live) tab.live.toolCount = (tab.live.toolCount || 0) + 1;
         S.renderToolCall(msg.toolCall, false, msg.requiresApproval, targetTabId);

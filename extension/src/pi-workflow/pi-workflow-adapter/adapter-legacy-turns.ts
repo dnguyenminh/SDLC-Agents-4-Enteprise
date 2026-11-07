@@ -29,7 +29,8 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
     state: PipelineState,
     chatInput: string,
     systemPrompt: string,
-    tools: unknown[]
+    tools: unknown[],
+    originTabId: string
   ): Promise<{ history: Array<{ role: string; content: string }> } | null> {
     try {
       await this.detectContextWindowEarly();
@@ -61,15 +62,20 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
         code: 'PI_CONTEXT_BUDGET_EXCEEDED',
         message: (err as Error).message,
         retryable: false,
+        originTabId,
       } as ChatExtToWebviewMessage);
       return null;
     }
   }
 
-  protected async runTurnOnce(state: PipelineState, chatInput: string, ticketKey: string): Promise<void> {
-    // SA4E-391: pin the origin tab once so the outer catch stamps the SAME
-    // tab even if the user switches tabs while the turn is in flight.
-    const originTabId = this.store.activeTab || 'CHAT';
+  protected async runTurnOnce(
+    state: PipelineState,
+    chatInput: string,
+    ticketKey: string,
+    originTabId: string
+  ): Promise<void> {
+    // SA4E-391 Bug 1: the origin tab is PINNED by the caller at SUBMIT time —
+    // never re-read from the mutable, shared `store.activeTab` here.
     try {
       const { timeoutMs: chatTimeoutMs, maxSameToolRepeats: maxRepeatsRaw } = resolveTurnBudget();
       const turnBudget = {
@@ -84,7 +90,7 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
       const turnStreamId = crypto.randomUUID();
       // SA4E-370 S2: role from active agent for this tab, not hardcoded 'sm-agent'.
       // Falls back to 'sm-agent' when no agent is selected (backward compat).
-      const tabId = originTabId; // SA4E-391: pinned at method start (above)
+      const tabId = originTabId; // SA4E-391: pinned at SUBMIT time (caller)
       // SA4E-391 cross-tab routing: stamp THIS turn's origin tab onto every
       // stream event (and direct error) the legacy path emits. Turns are
       // single-flight so the running turn owns the StreamHandler origin for
@@ -92,7 +98,7 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
       this.streamHandler.setOriginTabId(tabId);
       const active = this.activeAgents.get(tabId);
       const sessionRole = active?.role || 'sm-agent';
-      if (await this.trySessionTurn(state, chatInput, ticketKey, sessionRole, chatTimeoutMs, turnStreamId)) return;
+      if (await this.trySessionTurn(state, chatInput, ticketKey, sessionRole, chatTimeoutMs, turnStreamId, originTabId)) return;
       // FIX A + B: initialize + seed credentials + register gateway + resolve model (correct order).
       const { modelUnresolved, credentialsPresent } = await configureEngineProvider(this.engine, this.secrets);
       // FIX C: PI_MODEL_UNRESOLVED only for the true no-model case (registry has no model).
@@ -127,7 +133,7 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
       // is measured against the resolved budget (fix #3: detected meta.n_ctx →
       // registry chain). Over-budget turns compact history; still-over turns
       // REJECT with PI_CONTEXT_BUDGET_EXCEEDED and the provider is never invoked.
-      const governed = await this.governLegacyTurnOrReject(state, chatInput, systemPrompt, tools as unknown[]);
+      const governed = await this.governLegacyTurnOrReject(state, chatInput, systemPrompt, tools as unknown[], originTabId);
       if (!governed) return;
       const { result, nextState } = await this.engine.executeTurn(
         { ...state, chatHistory: governed.history },
@@ -143,7 +149,10 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
       );
       debugLog(`[Chat] turn via=legacy ext=${getExtensionVersion()} workspace=${this.workspaceRoot} tools=${byName.size} used=${result.toolCalls.length} systemPrompt=${systemPrompt.length}ch`);
       this.store.save(ticketKey, nextState as PipelineState);
-      this.store.setHistory(nextState.chatHistory || []);
+      // SA4E-391 Bug 1: write the history back under the PINNED origin tab —
+      // `setHistory` defaults to the mutable store.activeTab, so a mid-turn tab
+      // switch would otherwise write this turn's history into the other tab.
+      this.store.setHistory(nextState.chatHistory || [], originTabId);
       const turnStart = Date.now();
       replayTurnChunks(this.streamHandler, result.streamChunks || [], turnStreamId);
       // ⛔ ROOT-CAUSE FIX (SA4E-289) + streaming-identity fix: ALWAYS close the
@@ -153,7 +162,7 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
       if (result.error) {
         // Local endpoints: enrich raw HTTP errors with the endpoint checklist
         // (UAT otherwise gets an bare "HTTP 401" with nothing actionable).
-        reportTurnError((msg) => this.onEvent(msg), result.error);
+        reportTurnError((msg) => this.onEvent(msg), result.error, originTabId);
       }
     } catch (err) {
       debugError('[PiWorkflowAdapter] turn failed', err as Error);

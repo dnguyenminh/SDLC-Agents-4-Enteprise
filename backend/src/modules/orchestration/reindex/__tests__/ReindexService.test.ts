@@ -37,6 +37,8 @@ describe('ReindexService', () => {
     expect(res.upserted).toBe(2);
     expect(await countFor(adapter, 'S')).toBe(2);
     expect(await countFor(adapter, 'T')).toBe(0);
+    const proxied = await adapter.get('SELECT labels FROM mcp_tools WHERE server = ? AND name = ?', ['S', 'a']) as any;
+    expect(proxied.labels).toContain('a');
   });
 
   it('UT-29: empty proxied set is a no-op (no delete/prune) + warns', async () => {

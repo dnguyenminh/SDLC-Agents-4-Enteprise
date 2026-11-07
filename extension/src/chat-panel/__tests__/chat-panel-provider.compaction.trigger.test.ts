@@ -100,6 +100,9 @@ describe("ChatPanelProvider Compaction (SA4E-339)", () => {
     const updateMsg = webviewMessages.find(m => m.type === "tab:contextUpdate");
     expect(updateMsg).toBeDefined();
     expect(updateMsg.payload.tokenCount).toBeDefined();
+    // SA4E-408: contextUpdate must carry the usage breakdown (context meter tooltip).
+    expect(updateMsg.payload.breakdown).toBeDefined();
+    expect(updateMsg.payload.breakdown.conversation).toBe(98);
   });
 
   it("STC-339-04: Error Resilience", () => {

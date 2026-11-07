@@ -79,4 +79,31 @@
     S.createNewTab();
     contextFullWarning.classList.remove("visible");
   });
+
+  // Click to show detailed breakdown (avoid postMessage loop)
+  var lastClickDetail = { tokenCount: -1, maxTokens: -1, breakdown: null };
+  contextUsageIcon.addEventListener("click", function(e) {
+    e.stopPropagation();
+    var tab = S.getTab ? S.getTab(S.activeTabId) : null;
+    var tokenCount = tab ? tab.tokenCount : 0;
+    var maxTokens = tab ? tab.maxTokens : 128000;
+    var breakdown = tab ? tab.breakdown : null;
+    if (tokenCount !== lastClickDetail.tokenCount || maxTokens !== lastClickDetail.maxTokens) {
+      lastClickDetail = { tokenCount, maxTokens, breakdown };
+    }
+    var pct = maxTokens > 0 ? Math.min(100, Math.round(tokenCount / maxTokens * 100)) : 0;
+    var fourPct = maxTokens > 0 ? Math.round(maxTokens * 0.04) : 0;
+    var html = '<div style="font-weight:700;margin-bottom:8px">Context Details</div>' +
+      '<div>' + tokenCount.toLocaleString() + ' / ' + maxTokens.toLocaleString() + ' tokens (' + pct + '%)</div>' +
+      '<div style="margin-top:6px;color:#888">4% of window = ' + fourPct.toLocaleString() + ' tokens</div>';
+    if (breakdown) {
+      html += '<div style="margin-top:8px">' +
+        '<div>Conversation: ' + (breakdown.conversation||0) + '%</div>' +
+        '<div>MCP tools: ' + (breakdown.mcpTools||0) + '%</div>' +
+        '<div>Steering: ' + (breakdown.steering||0) + '%</div>' +
+        '</div>';
+    }
+    // Simple alert-style detail for small-context safety (no tool calls)
+    S.showToast && S.showToast(html, 4000);
+  });
 })();

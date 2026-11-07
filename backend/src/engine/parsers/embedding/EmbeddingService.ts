@@ -64,9 +64,19 @@ export class EmbeddingService {
    * error level exactly once.
    */
   public async generateEmbedding(text: string): Promise<number[]> {
+    return (await this.generateEmbeddingDetailed(text)).vector;
+  }
+
+  /**
+   * Generate an embedding plus the model that ACTUALLY produced it
+   * (SA4E-339 provenance): vectors from different backends are NOT
+   * comparable, so persisted vectors must record their source model.
+   */
+  public async generateEmbeddingDetailed(text: string): Promise<{ vector: number[]; modelId: string }> {
     const backend = this.resolveBackend();
     try {
-      return await backend.generate(text);
+      const vector = await backend.generate(text);
+      return { vector, modelId: backend.modelId };
     } catch (err) {
       if (backend.kind === 'onnx') {
         this.onnxFailed = true;
@@ -74,7 +84,8 @@ export class EmbeddingService {
           { err, modelId: backend.modelId },
           'ONNX embedding backend failed — degrading to sin-hash pseudo-embeddings (semantic quality lost) until restart. Check TRANSFORMERS_CACHE / model availability.',
         );
-        return this.hash.generate(text);
+        const vector = await this.hash.generate(text);
+        return { vector, modelId: this.hash.modelId };
       }
       throw err;
     }

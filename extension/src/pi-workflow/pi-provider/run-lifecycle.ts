@@ -11,6 +11,8 @@ import { debugLog, debugError } from '../../debug-logger.js';
 import { applySystemPrompt, isTestMode } from './system-prompt.js';
 import { initializeSdk } from './initialize.js';
 import { promptOnCurrentModel, collectResult } from './turn-runner.js';
+import { getSetting } from '../../config/settings-migration.js';
+import { DEFAULT_STREAM_LOOP_MAX_CONTINUES } from '../stream-loop-continuation.js';
 import type { EventCollector } from '../pi-event-mapper.js';
 import type { TurnBudgetGuard } from '../turn-budget-guard.js';
 import { PiProviderBase } from './pi-provider-base.js';
@@ -114,7 +116,14 @@ export class PiProviderRunLifecycle extends PiProviderBase {
       const modelId = attempts[i];
       this.selectModelForAttempt(agent, providerId, modelId);
 
-      const result = await promptOnCurrentModel(agent, input.prompt, input.turnBudget, input.onToolEvent);
+      const result = await promptOnCurrentModel(agent, input.prompt, input.turnBudget, input.onToolEvent, {
+        // CHAT-LOOP-CONT: bounded thinking-loop auto-continuation (default 1).
+        maxStreamLoopContinues: getSetting<number>(
+          'chat.streamLoopMaxContinues',
+          'streamLoopMaxContinues',
+          DEFAULT_STREAM_LOOP_MAX_CONTINUES
+        ),
+      });
       if (!result.errorMessage) {
         if (i > 0) { debugLog(`[PiProvider] Recovered on fallback model '${modelId}' (attempt ${i + 1}/${attempts.length}).`); }
         return result;

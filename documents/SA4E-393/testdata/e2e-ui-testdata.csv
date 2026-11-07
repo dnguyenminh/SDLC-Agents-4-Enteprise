@@ -1,0 +1,5 @@
+test_case_id,featureFile,expectedResult,description
+E2E-UI-01,palette visible,Command executes, Open VS Code command palette, Run sdctl design-gate run
+E2E-UI-02,findings displayed,Output channel shows findings count and score, Execute design gate, Output channel displays findings count and score
+E2E-UI-03,file opens in editor,Click report link in output, Click report link in output channel, File opens in editor
+E2E-UI-04,error message shown,Trigger load with bad WASM, Notification shows error message for WASM failure

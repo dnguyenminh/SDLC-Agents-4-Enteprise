@@ -1,6 +1,10 @@
 /**
  * MemoryToolSearchService — implements ToolSearchService using mcp_tools table.
  * SA4E-53: converted to use DatabaseAdapter (async) for PostgreSQL compatibility.
+ * SA4E-369 follow-up: `labels` (derived keyword surface persisted by
+ * tool-ingestion) add a deterministic score boost on top of cosine similarity —
+ * exact keyword hits ("jira", "drawio") no longer drown behind vector noise,
+ * and rows without an embedding can still be recalled by keyword.
  */
 
 import type { ToolSearchService, ToolSearchResult } from './ToolSearchService.js';
@@ -13,6 +17,7 @@ interface McpToolRow {
   description: string;
   schema_json: string;
   vector: Buffer | null;
+  labels?: string | null;
 }
 
 export class MemoryToolSearchService implements ToolSearchService {
@@ -25,8 +30,12 @@ export class MemoryToolSearchService implements ToolSearchService {
   async search(query: string, topK: number): Promise<ToolSearchResult[]> {
     try {
       const queryVector = await EmbeddingService.getInstance().generateEmbedding(query);
+      // Tokenizer parity with tool-labels.tokensOf: underscores split
+      // (`mem_ingest` → mem, ingest) so an underscored query still matches the
+      // underscore-free label tokens (SA4E-369 follow-up).
+      const qTokens = new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? []);
       const rows = await this.adapter.allAsync<McpToolRow>(
-        'SELECT name, description, schema_json, vector FROM mcp_tools',
+        'SELECT name, description, schema_json, vector, labels FROM mcp_tools',
       );
 
       const scored = rows.map(r => {
@@ -35,6 +44,7 @@ export class MemoryToolSearchService implements ToolSearchService {
           const floatArray = new Float32Array(r.vector.buffer, r.vector.byteOffset, r.vector.byteLength / 4);
           score = EmbeddingService.getInstance().cosineSimilarity(queryVector, Array.from(floatArray));
         }
+        score += labelBoost(qTokens, r.labels ?? '');
         return {
           name: r.name,
           description: r.description,
@@ -50,4 +60,16 @@ export class MemoryToolSearchService implements ToolSearchService {
       return [];
     }
   }
+}
+
+/** Keyword-hit boost: each exact label token matched by a query token adds 0.15,
+ *  capped at 0.35 — enough to outrank weak cosine noise, never a hard override. */
+function labelBoost(qTokens: Set<string>, labels: string): number {
+  if (!labels) return 0;
+  let hits = 0;
+  for (const part of labels.toLowerCase().match(/[a-z0-9]+/g) ?? []) {
+    if (part && qTokens.has(part)) hits++;
+  }
+  if (hits === 0) return 0;
+  return Math.min(0.35, 0.15 * hits);
 }

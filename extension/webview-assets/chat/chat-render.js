@@ -90,13 +90,30 @@
       : S.escapeHtml(clean);
   };
 
-  /** Thinking block — "Thought: Xs" header + grey markdown body, shown in full. */
-  S.buildThinkingBlock = function (text, durationMs) {
+  /** Thinking block — "Thought: Xs" header + grey markdown body, collapsible. */
+  S.buildThinkingBlock = function (text, durationMs, stopReason) {
     var el = document.createElement("div");
     el.className = "oc-think";
     var head = document.createElement("div");
     head.className = "oc-think-head";
     head.textContent = "Thought" + (durationMs ? ": " + S.fmtDur(durationMs) : "");
+    // CHAT-LOOP-CONT: show stopReason badge (e.g., "length" = output token limit).
+    if (stopReason === "length") {
+      var badge = document.createElement("span");
+      badge.className = "oc-think-stop-badge";
+      badge.textContent = "Output limit reached";
+      badge.title = "The model hit the output token limit. Auto-continuation was attempted.";
+      head.appendChild(badge);
+    }
+    // Collapsible chevron (like tool calls)
+    var chevron = document.createElement("span");
+    chevron.className = "oc-think-chevron";
+    chevron.textContent = "▾";
+    head.appendChild(chevron);
+    head.addEventListener("click", function () {
+      var isCollapsed = el.classList.toggle("oc-think-collapsed");
+      chevron.textContent = isCollapsed ? "▸" : "▾";
+    });
     var body = document.createElement("div");
     body.className = "oc-think-body";
     S.renderThinkingBody(body, text);
@@ -147,7 +164,10 @@
         el.appendChild(S.buildTurnMeta(entry));
       }
     } else if (entry.role === "tool" && entry.toolData) {
-      el = S.buildToolBlock(entry.toolData, true);
+      // SA4E-391 Bug 2: a LIVE tool block (appended while the call runs) must
+      // keep its "running" status; only a REPLAYED block (restored transcript
+      // / tab switch) downgrades "running" to "interrupted".
+      el = S.buildToolBlock(entry.toolData, !entry.live);
     } else if (entry.role === "error") {
       el = document.createElement("div");
       el.className = "oc-error";

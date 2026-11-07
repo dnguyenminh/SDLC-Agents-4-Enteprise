@@ -6,16 +6,17 @@
 
 import { debugLog } from "../../debug-logger";
 import { PiWorkflowAdapter } from "../../pi-workflow";
-import { CompactableSession, SessionMonitor, SessionCompactor, normalizeUsageToFraction } from "../../pi-agent/session-compactor";
+import { CompactableSession, SessionMonitor, SessionCompactor, normalizeUsageToFraction, COMPACT_USAGE_THRESHOLD } from "../../pi-agent/session-compactor";
 import { ContextUsagePayload } from "../context-usage-tracker";
 import type { ContextUsageDeps } from "./context-usage";
-import { sendContextUpdateMessage } from "./context-usage";
+import { resolveMaxTokensFromEngine, sendContextUpdateMessage } from "./context-usage";
 
 /**
  * SA4E-182: Update context token usage after each LLM turn completes.
  * Counts conversation messages, estimates steering + tool tokens.
- * Syncs maxTokens from provider's detected context window (e.g., 32768 from llama-server).
- * Sends tab:contextUpdate to webview (which chat.js handleContextUpdate handles).
+ * Syncs maxTokens from the resolved model's real context window (SA4E-369:
+ * registry first, probe meta.n_ctx fallback, 128000 only as last resort).
+ * Sends tab:contextUpdate to webview (which chat-tabsync.js handleContextUpdate handles).
  */
 export function updateContextUsageAfterTurn(deps: ContextUsageDeps): void {
   try {
@@ -41,16 +42,19 @@ export function updateContextUsageAfterTurn(deps: ContextUsageDeps): void {
 }
 
 /**
- * SA4E-182: Sync maxTokens from detected context window (provider.getContextWindow()).
- * After first ensureGraph() call, detectContextWindow() has run and provider
- * reports the actual value (e.g., 32768 for llama-server -c 65536 -np 2).
+ * SA4E-369: Sync maxTokens from the resolved model's real context window.
+ * After the first turn, getModelContextWindow() reports the registry value
+ * (e.g., 32768 for llama-server -c 65536 -np 2). Falls back to the probe value
+ * only if the registry has none — never the hardcoded 128000 default.
+ * Uses the engine the caller already resolved (peekEngine) — no second
+ * getOrCreateEngine() lookup, so window + counting always come from ONE engine.
  */
 function syncTurnWindow(deps: ContextUsageDeps, engine: PiWorkflowAdapter): number | undefined {
-  const detectedWindow = engine.getDetectedContextWindow();
-  if (detectedWindow && detectedWindow > 0) {
-    deps.getTracker().setMaxTokens(detectedWindow);
+  const maxTokens = resolveMaxTokensFromEngine(engine);
+  if (maxTokens) {
+    deps.getTracker().setMaxTokens(maxTokens);
   }
-  return detectedWindow;
+  return maxTokens;
 }
 
 /** Count conversation tokens, one-shot steering estimate and tool definitions. */
@@ -98,9 +102,19 @@ function countTurnSteeringOnce(deps: ContextUsageDeps, tabId: string): void {
 function compactIfThreshold(deps: ContextUsageDeps, tabId: string, messages: any[], payload: ContextUsagePayload): ContextUsagePayload {
   const usageFraction = normalizeUsageToFraction(payload.total.percentage);
 
-  // SA4E-339: Auto-trigger compaction when context usage reaches threshold
-  if (SessionMonitor.shouldCompact(usageFraction) === 'compact' && messages.length > 2) {
-    debugLog(`[ChatPanel] Triggering auto-compaction: usageFraction=${usageFraction}, messages=${messages.length}`);
+  // Guard for small-context models: avoid aggressive compaction loops
+  // For windows < 16k, raise threshold to 0.97 and require at least 6 messages
+  const maxTokens = payload.maxTokens || 0;
+  const isSmallContext = maxTokens > 0 && maxTokens < 16384;
+  const messageThreshold = isSmallContext ? 6 : 2;
+  const compactThreshold = isSmallContext ? 0.97 : COMPACT_USAGE_THRESHOLD; // avoid thrashing
+
+  if (
+    usageFraction >= compactThreshold &&
+    SessionMonitor.shouldCompact(usageFraction) === 'compact' &&
+    messages.length > messageThreshold
+  ) {
+    debugLog(`[ChatPanel] Triggering auto-compaction: usageFraction=${usageFraction}, maxTokens=${maxTokens}, messages=${messages.length}`);
     applyCompactionAndRecount(deps, tabId, payload.maxTokens, usageFraction, messages);
     // Refetch payload after recount (TDD F-1)
     return deps.getTracker().getUsagePayload(tabId);

@@ -33,6 +33,7 @@ async function ensureMcpToolsTable(adapter: DatabaseAdapter): Promise<void> {
       schema_json TEXT NOT NULL,
       category TEXT,
       server TEXT,
+      labels TEXT,
       vector BYTEA
     )`);
     await adapter.execAsync(`CREATE INDEX IF NOT EXISTS idx_mcp_tools_server ON mcp_tools(server)`);

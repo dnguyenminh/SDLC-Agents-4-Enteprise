@@ -48,3 +48,4 @@
 | 2026-10-11 | Investigation | dev-agent | Analyzed ChatPanelProvider and webview chat.js. Identified tab.breakdown not persisted in handleContextUpdate, causing stale UI state on tab switch. | ROOT CAUSE FOUND |
 | 2026-10-11 | Fix | dev-agent | Updated extension/webview-assets/chat/chat.js and resources/webview-assets/chat/chat.js to persist tab.breakdown = payload.breakdown in handleContextUpdate. Tests compaction 11/11 PASS, chat suite 79/79 PASS. Committed to branch SA4E-339. | DONE |
 | 2026-10-11 | Status Update | SM | STATUS.json updated: currentPhase=uat, uat status=failed, deployment status=blocked. RUN-LOG updated. | DONE |
+| 2026-11-06 | Jira Ticket | SM | Created Jira bug ticket SA4E-408 (Stop button kills ALL chat tabs, not just current). Later determined UNRELATED to SA4E-339 — removed cross-ticket link. | DONE |

@@ -46,6 +46,10 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   private readonly modelManager: ChatModelManager;
   private readonly stateManager: ChatStateManager;
   private readonly engineListeners = new Set<(msg: ChatExtToWebviewMessage) => void>();
+  /** SA4E-391 Bug 1: track the producing tab per streamId / per tool-call id
+   * so a late event can never be re-stamped with another turn's tab. */
+  private readonly streamTurnTabId = new Map<string, string>();
+  private readonly toolCallTabId = new Map<string, string>();
   private turnTabId: string | undefined;
   private diffTracker: import('../chat/diff/IDiffTracker').IDiffTracker | null = null;
 
@@ -54,11 +58,13 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     private readonly mcpManager: IServerManager,
     private readonly workspaceRoot: string,
     private readonly secrets?: vscode.SecretStorage,
-    private readonly workspaceState?: vscode.Memento
+    private readonly workspaceState?: vscode.Memento,
+    private readonly extensionContext?: vscode.ExtensionContext
   ) {
+    this.extensionContext = extensionContext;
+    this.stateManager = new ChatStateManager(workspaceRoot, workspaceState, this.extensionContext, (msg) => this.sendToWebview(msg), () => this.getEngine());
     this.statusManager = new ChatStatusManager(mcpManager, secrets, (msg) => this.sendToWebview(msg));
     this.modelManager = new ChatModelManager((msg) => this.sendToWebview(msg));
-    this.stateManager = new ChatStateManager(workspaceRoot, workspaceState, (msg) => this.sendToWebview(msg), () => this.getEngine());
     this.contextUsageDeps = {
       getOrCreateEngine: () => this.getEngine(),
       peekEngine: () => this.engine,
@@ -189,22 +195,39 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       "chat:streamComplete",
       "chat:toolCall",
       "chat:toolCallUpdate",
-      "chat:toolApprovalPending"
+      "chat:toolApprovalPending",
+      "chat:error"
     ];
-    // SA4E-391 cross-tab routing root-cause fix: the ADAPTER now stamps
-    // originTabId at the source of each turn (StreamHandler for stream events,
-    // postToolLiveEvent for live tool events, chat:error emits), pinned to the
+    // SA4E-391 Bug 1 (cross-tab thinking leak): the ADAPTER stamps originTabId
+    // at the source of every turn event (StreamHandler for stream events,
+    // postToolLiveEvent for live tool events, the error emitters), pinned to the
     // tab that PRODUCED the turn. That stamp is authoritative — NEVER overwrite
-    // it. `turnTabId` remains only as a last-resort fallback for any legacy
-    // event path that reaches here without an origin; using it to overwrite was
-    // the bug (tab 2's user message set turnTabId, so tab 1's in-flight events
-    // were restamped to tab 2).
+    // it.
+    //
+    // The fallbacks below only serve LEGACY event paths that reach the host
+    // without an origin. They are keyed by the event's OWN identity (streamId
+    // for stream events, tool-call id for tool events) so a late event can
+    // never be re-stamped with a DIFFERENT turn's tab — the bug that made one
+    // tab's thinking block appear in another tab.
     if (protocolTypes.includes(msg.type)) {
-      const typedMsg = msg as unknown as { originTabId?: string };
-      if (!typedMsg.originTabId && this.turnTabId) {
-        typedMsg.originTabId = this.turnTabId;
+      const typedMsg = msg as unknown as {
+        originTabId?: string; streamId?: string; id?: string; toolCall?: { id?: string };
+      };
+      const streamId = typedMsg.streamId;
+      const toolId = typedMsg.toolCall?.id ?? (msg.type === "chat:toolCallUpdate" ? typedMsg.id : undefined);
+      if (!typedMsg.originTabId) {
+        typedMsg.originTabId = this.resolveFallbackOrigin(streamId, toolId);
         msg = typedMsg as unknown as ChatExtToWebviewMessage;
       }
+      // Remember the resolved origin under the event's own identity so the
+      // matching follow-up event (toolCallUpdate) resolves to the SAME tab.
+      if (streamId && typedMsg.originTabId) this.streamTurnTabId.set(streamId, typedMsg.originTabId);
+      if (toolId && typedMsg.originTabId && msg.type === "chat:toolCall") {
+        this.toolCallTabId.set(toolId, typedMsg.originTabId);
+      }
+      // Clean up the per-stream / per-tool maps once the event settles.
+      if (msg.type === "chat:streamComplete" && streamId) this.streamTurnTabId.delete(streamId);
+      if (msg.type === "chat:toolCallUpdate" && toolId) this.toolCallTabId.delete(toolId);
     }
     if (this.view) {
       this.view.webview.postMessage(msg);
@@ -215,6 +238,19 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       this.messageBuffer.push(msg);
       if (this.messageBuffer.length > 200) { this.messageBuffer.shift(); }
     }
+  }
+
+  /**
+   * Last-resort origin for an unstamped tab-scoped event (legacy paths only).
+   * Prefers the event's own identity mapping (stream / tool call) over the
+   * global "last submitting tab" hint, so a late event stays with its turn.
+   */
+  private resolveFallbackOrigin(streamId?: string, toolId?: string): string | undefined {
+    const streamTabId = streamId ? this.streamTurnTabId.get(streamId) : undefined;
+    if (streamTabId) return streamTabId;
+    const toolTabId = toolId ? this.toolCallTabId.get(toolId) : undefined;
+    if (toolTabId) return toolTabId;
+    return this.turnTabId;
   }
 
   private getEngine(): PiWorkflowAdapter {

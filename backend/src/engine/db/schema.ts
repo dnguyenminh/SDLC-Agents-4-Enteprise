@@ -137,6 +137,7 @@ CREATE TABLE IF NOT EXISTS mcp_tools (
   schema_json TEXT NOT NULL,
   category TEXT,
   server TEXT,
+  labels TEXT,
   vector BLOB
 );
 

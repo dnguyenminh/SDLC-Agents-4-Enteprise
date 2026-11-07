@@ -50,7 +50,10 @@ export async function routeUserMessage(
   images?: Array<{ data: string; mimeType: string }>,
   // SA4E-391: when true, images are ONLY for peer_send delegation (this tab's
   // model is non-vision) — they must NOT be fed to this model's own prompt.
-  imagesForDelegationOnly?: boolean
+  imagesForDelegationOnly?: boolean,
+  // SA4E-391 cross-tab routing: the submitting tab's id (webview UUID). Passed
+  // to the engine so the turn's origin is pinned to the tab that produced it.
+  tabId?: string
 ): Promise<void> {
   const textTrimmed = text.trim().toLowerCase();
 
@@ -69,7 +72,7 @@ export async function routeUserMessage(
     const [, , agentTask] = agentMatch;
     debugLog(` handleUserMessage: routed to AGENT (prefix retired, persona drives turn)`);
     sendToWebview({ type: "chat:workingStatus", working: true, label: "Agent turn --- working..." });
-    await getEngine().invokeChat(agentTask, images, imagesForDelegationOnly);
+    await getEngine().invokeChat(agentTask, images, imagesForDelegationOnly, tabId);
     if (onTurnComplete) { onTurnComplete(); }
     sendToWebview({ type: "chat:workingStatus", working: false });
     return;
@@ -83,7 +86,7 @@ export async function routeUserMessage(
     const phase = parsePhase(action);
     debugLog(` handleUserMessage: routed to SDLC ticket=${ticketKey} phase=${phase}`);
     sendToWebview({ type: "chat:workingStatus", working: true, label: `${ticketKey} --- ${phase}` });
-    await getEngine().invoke(ticketKey, phase, enrichedText);
+    await getEngine().invoke(ticketKey, phase, enrichedText, undefined, undefined, tabId);
     if (onTurnComplete) { onTurnComplete(); }
     sendToWebview({ type: "chat:workingStatus", working: false });
     return;
@@ -91,7 +94,7 @@ export async function routeUserMessage(
 
   // All other -> chat
   debugLog(` handleUserMessage: routed to CHAT (invokeChat)`);
-  await getEngine().invokeChat(enrichedText, images, imagesForDelegationOnly);
+  await getEngine().invokeChat(enrichedText, images, imagesForDelegationOnly, tabId);
   debugLog(` handleUserMessage: invokeChat RETURNED`);
 
   // Fire agentStop hooks

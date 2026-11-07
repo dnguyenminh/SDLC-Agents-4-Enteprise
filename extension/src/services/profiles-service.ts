@@ -141,4 +141,29 @@ export class ProfilesService {
 
   async getApiKey(profileId: string): Promise<string | undefined> { return readLlmApiKey(this.secrets, profileId, true); }
   getSecretKeyName(profileId: string): string { return profileSecretKey(profileId); }
+
+  /**
+   * Get grouped model picker data for connected profiles.
+   * Returns profiles grouped by provider for the model picker UI.
+   */
+  async getModelPickerGroups(): Promise<Record<string, { label: string; profiles: ProfileTableRow[] }>> {
+    const rows = await this.listProfileRows();
+    const groups: Record<string, { label: string; profiles: ProfileTableRow[] }> = {};
+    for (const row of rows) {
+      const provider = row.provider;
+      if (!groups[provider]) {
+        const providerLabels: Record<string, string> = {
+          anthropic: "Anthropic",
+          openai: "OpenAI",
+          lmstudio: "LM Studio",
+          openrouter: "OpenRouter",
+          ollama: "Ollama",
+          onnx: "ONNX",
+        };
+        groups[provider] = { label: providerLabels[provider] || provider, profiles: [] };
+      }
+      groups[provider].profiles.push(row);
+    }
+    return groups;
+  }
 }

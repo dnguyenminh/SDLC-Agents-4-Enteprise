@@ -8,8 +8,11 @@
   "use strict";
   var S = window.ChatState;
 
-  // Initial render
+  // Initialization
   S.renderTabBar();
+
+  // Initialize scroll-to-bottom button
+  if (S.initScrollToBottomButton) S.initScrollToBottomButton();
 
   // === Initialization ===
   S.vscode.postMessage({ type: "ready" });

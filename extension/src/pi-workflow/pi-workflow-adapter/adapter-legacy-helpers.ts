@@ -88,7 +88,10 @@ export async function assembleLegacyToolPool(
     if (typeof name === 'string' && name) byName.set(name, t); // extension wins (AFT hoist)
   }
   // SA4E-364: bridge tools join the pool AFTER builtin + ext; skip-if-exists (BR-06).
-  const bridgeTools = buildMcpBridgeAgentTools(mcpBridge);
+  // SA4E-408: dynamic-chaining opt-in ON for the SDLC chat agent — without it the
+  // discovery pair (find_tools + execute_dynamic_tool) is skipped / denied, so the
+  // chat LLM could not read Jira (or call MCP tools) after an auto-compaction turn.
+  const bridgeTools = buildMcpBridgeAgentTools(mcpBridge, { allowDynamicChaining: true });
   for (const t of bridgeTools) {
     const name = (t as { name?: unknown }).name;
     if (typeof name !== 'string' || !name) continue;
@@ -127,7 +130,8 @@ export function replayTurnChunks(
  */
 export function reportTurnError(
   onEvent: (msg: ChatExtToWebviewMessage) => void,
-  error: { code: string; message: string }
+  error: { code: string; message: string },
+  originTabId?: string
 ): void {
   try {
     // SA4E-369 UAT fix: ONE shared config read for both turn paths.
@@ -136,5 +140,7 @@ export function reportTurnError(
       error.message = hintLocalEndpointError(error.message, providerId, baseUrl, configuredModelId || undefined);
     }
   } catch { /* never break error reporting */ }
-  onEvent({ type: 'chat:error', code: error.code, message: error.message, retryable: true } as ChatExtToWebviewMessage);
+  // SA4E-391 Bug 1: stamp the producing tab so the error renders in the tab
+  // that owns the turn (an unstamped error falls back to the viewed tab).
+  onEvent({ type: 'chat:error', code: error.code, message: error.message, retryable: true, originTabId } as ChatExtToWebviewMessage);
 }

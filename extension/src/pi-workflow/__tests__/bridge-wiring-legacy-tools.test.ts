@@ -135,8 +135,8 @@ describe('PiWorkflowAdapter — SA4E-367 bridge tools in the LEGACY pool', () =>
     expect(tools.find((t) => t.name === 'mem_search')).toBe(extMemSearch);
     // AFT hoist untouched (reference preserved — BR-06).
     expect(tools.find((t) => t.name === 'aft_hoist_tool')).toBe(extAft);
-    // AC-3 on the real pool: the discovery pair is never wired by default (OI-04).
-    for (const name of DISCOVERY_PAIR) expect(names).not.toContain(name);
+    // SA4E-408 fix: wiring passes allowDynamicChaining: true — opted-in pair now in pool.
+    for (const name of DISCOVERY_PAIR) expect(names).toContain(name);
     // Skip warn logged (BR-06).
     expect(debugLogMock).toHaveBeenCalledWith('[PiWorkflowAdapter] bridge tool skipped (exists): mem_search');
   });
@@ -153,12 +153,11 @@ describe('PiWorkflowAdapter — SA4E-367 bridge tools in the LEGACY pool', () =>
     const names = lastTools(spy).map((t) => t.name as string);
     for (const name of BRIDGE_TOOL_NAMES) expect(names).toContain(name); // bridge merged independently
     expect(names).not.toContain('aft_hoist_tool'); // no ext tools survived
-    for (const name of DISCOVERY_PAIR) expect(names).not.toContain(name);
+    for (const name of DISCOVERY_PAIR) expect(names).toContain(name); // opted-in pair now merged
   });
 
-  // SA4E-367 AC-2/AC-3: default legacy pool carries exactly the 4 concrete
-  // bridge tools — the pair is absent (wiring passes no options).
-  it('AC-2/AC-3: default pool carries the 4 concrete bridge tools; pair absent', async () => {
+  // SA4E-408 fix: wiring passes allowDynamicChaining: true — the opted-in pair now joins the legacy pool.
+  it('AC-2/AC-3: pool carries the 4 concrete bridge tools + opted-in pair', async () => {
     adapter = makeAdapter();
     const spy = engineSpy(adapter);
 
@@ -167,6 +166,6 @@ describe('PiWorkflowAdapter — SA4E-367 bridge tools in the LEGACY pool', () =>
     expect(chatErrors(onEvent)).toEqual([]);
     const names = lastTools(spy).map((t) => t.name as string);
     for (const name of BRIDGE_TOOL_NAMES) expect(names).toContain(name);
-    for (const name of DISCOVERY_PAIR) expect(names).not.toContain(name);
+    for (const name of DISCOVERY_PAIR) expect(names).toContain(name);
   });
 });

@@ -44,13 +44,14 @@ export class IdeContextManager implements IContextManager {
     return { tokenCount, maxTokens: this.maxTokens, files, usagePercent, pruneSuggestions };
   }
 
-  /** Add a file to the context window */
-  pinFile(filePath: string, tokenCount: number): void {
+  /** Add a file to the context window. importanceScore defaults to a path-heuristic value. */
+  pinFile(filePath: string, tokenCount: number, importanceScore?: number): void {
     const file: ContextFile = {
       filePath,
       tokenCount,
       pinnedAt: Date.now(),
       relevanceScore: 1.0,
+      importanceScore: importanceScore ?? this.determineImportanceScore(filePath),
     };
     this.files.set(filePath, file);
     this.emitChange();
@@ -100,6 +101,17 @@ export class IdeContextManager implements IContextManager {
   shouldAutoSuggest(): boolean {
     const state = this.getState();
     return state.usagePercent > AUTO_SUGGEST_THRESHOLD;
+  }
+
+  /** Determine importance score based on file path heuristics */
+  private determineImportanceScore(filePath: string): number {
+    const lowerPath = filePath.toLowerCase();
+    if (lowerPath.includes('system') || lowerPath.includes('prompt')) return 1.0;
+    if (lowerPath.includes('current') || lowerPath.includes('request')) return 1.0;
+    if (lowerPath.includes('tool') && lowerPath.includes('result')) return 0.8;
+    if (lowerPath.includes('code') || lowerPath.includes('api')) return 0.7;
+    if (lowerPath.includes('old') || lowerPath.includes('log')) return 0.1;
+    return 0.3; // default importance
   }
 
   /** Dispose the event emitter */

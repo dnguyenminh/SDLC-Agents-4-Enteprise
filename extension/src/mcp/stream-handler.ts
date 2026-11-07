@@ -108,14 +108,14 @@ export class StreamHandler {
   }
 
   /** Immediately flush on complete events */
-  emitComplete(nodeId: string, duration: number, streamId: string): void {
+  emitComplete(nodeId: string, duration: number, streamId: string, stopReason?: string): void {
     this.flush();
     this.emit(this.withOriginTabId({
       type: "chat:streamComplete",
       streamId,
       nodeId,
       finalContent: `Node ${nodeId} completed in ${duration}ms`,
-      metadata: { duration },
+      metadata: { duration, stopReason },
     }));
   }
 
@@ -230,7 +230,14 @@ export class StreamHandler {
     this.flushTimer = setTimeout(() => this.flush(), this.DEBOUNCE_MS);
   }
 
-  private flush(): void {
+  /**
+   * Flush buffered token events NOW.
+   * SA4E-391 Bug 2: external ordering callers (adapter-session-turns
+   * postToolLiveEvent) must flush buffered tokens BEFORE emitting a tool
+   * call, so a debounced token produced before the tool starts can never be
+   * delivered after the tool block.
+   */
+  flush(): void {
     if (this.flushTimer) {
       clearTimeout(this.flushTimer);
       this.flushTimer = null;

@@ -78,6 +78,7 @@ function turnArgs() {
     'sm-agent', // role
     0, // timeoutMs (no wall-clock backstop)
     'stream-1', // turnStreamId
+    'tab-uat', // originTabId (SA4E-391 pinned)
   ] as const;
 }
 

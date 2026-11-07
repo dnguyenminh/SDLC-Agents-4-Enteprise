@@ -27,6 +27,7 @@ const up = async function(knex) {
       schema_json TEXT NOT NULL,
       category TEXT,
       server TEXT,
+      labels TEXT,
       vector BLOB
     )
   `);

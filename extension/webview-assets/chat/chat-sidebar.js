@@ -43,12 +43,23 @@
       var label = st === "connected" ? "Connected"
         : st === "disconnected" ? "Disconnected"
         : st === "failed" ? "Failed" : "Unknown";
-      return '<div class="oc-mcp-item">' +
+      return '<div class="oc-mcp-item" data-mcp-name="' + S.escapeHtml(s.name || "") + '">' +
         '<span class="oc-mcp-dot">\u2022</span>' +
         '<span class="oc-mcp-name">' + S.escapeHtml(s.name || "") + '</span>' +
         '<span class="oc-mcp-status ' + st + '">' + label + '</span>' +
         '</div>';
     }).join("");
+    var items = mcpListEl.querySelectorAll('.oc-mcp-item');
+    items.forEach(function(el) {
+      el.addEventListener('click', function() {
+        var name = el.getAttribute('data-mcp-name') || '';
+        var srv = servers.find(function(s){ return s.name===name; });
+        var detail = '<div style="font-weight:700;margin-bottom:6px">MCP Server: ' + S.escapeHtml(name) + '</div>' +
+          '<div>Status: ' + (srv ? srv.status : 'unknown') + '</div>' +
+          '<div>Details shown client-side to avoid tool-call loops.</div>';
+        S.showToast && S.showToast(detail, 4000);
+      });
+    });
   };
 
   // Keep a single known server (code-intel) in sync with the serverStatus event

@@ -1,7 +1,7 @@
 /**
  * SA4E-85 — Pruning Algorithm (Task 6.3).
  * Pure function implementing context file pruning logic.
- * Sort by: age*0.4 + size*0.3 + (1-relevance)*0.3
+ * Sort by: (age*0.4 + size*0.3 + (1-relevance)*0.3) * importance
  * Collect files until freed >= threshold (tokenCount - maxTokens*0.7).
  */
 
@@ -11,6 +11,7 @@ export interface PrunableFile {
   tokenCount: number;
   pinnedAt: number;
   relevanceScore: number;
+  importanceScore: number; // 0-1: P0=1.0 (never cut), P3=0.1 (cut first)
 }
 
 /** Result of pruning calculation for a single file */
@@ -60,10 +61,11 @@ function computeSizeScore(tokenCount: number, maxTokens: number): number {
 function computePruneScore(
   ageScore: number,
   sizeScore: number,
-  relevanceScore: number
+  relevanceScore: number,
+  importanceScore: number
 ): number {
   const invertedRelevance = 1 - Math.max(0, Math.min(1, relevanceScore));
-  return WEIGHT_AGE * ageScore + WEIGHT_SIZE * sizeScore + WEIGHT_RELEVANCE * invertedRelevance;
+  return (WEIGHT_AGE * ageScore + WEIGHT_SIZE * sizeScore + WEIGHT_RELEVANCE * invertedRelevance) * importanceScore;
 }
 
 /**
@@ -104,7 +106,8 @@ export function suggestPrune(
     score: computePruneScore(
       computeAgeScore(f.pinnedAt, now, maxAge),
       computeSizeScore(f.tokenCount, maxFileTokens),
-      f.relevanceScore
+      f.relevanceScore,
+      f.importanceScore
     ),
   }));
 

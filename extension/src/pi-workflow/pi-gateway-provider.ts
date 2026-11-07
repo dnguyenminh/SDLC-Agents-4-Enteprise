@@ -39,7 +39,7 @@ function contextWindowOf(reported?: number): number {
  * Keeps `provider: providerId` so auth lookup matches the seeded credential.
  */
 function buildGatewayModels(
-  entries: Array<{ id: string; name?: string; contextWindow?: number }>,
+  entries: Array<{ id: string; name?: string; contextWindow?: number; max_output_tokens?: number; max_completion_tokens?: number; max_tokens?: number }>,
   providerId: string,
   baseUrl: string,
   api: string
@@ -54,7 +54,7 @@ function buildGatewayModels(
     input: ['text', 'image'],
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
     contextWindow: contextWindowOf(m.contextWindow),
-    maxTokens: 16384,
+    maxTokens: m.max_output_tokens ?? m.max_completion_tokens ?? m.max_tokens ?? 16384,
   }));
 }
 

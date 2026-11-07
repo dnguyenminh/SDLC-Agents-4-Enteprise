@@ -19,7 +19,27 @@ import {
   formatFsError,
   FILE_PATH_SCHEMA_DESCRIPTION,
 } from "../../services/PathResolver";
+import { extractBaseDirArg } from "../../services/base-dir-resolution";
 import { AtlassianHttpClient, toResult, toErrorResult } from "./atlassian-http-client";
+
+/** SA4E-394 — shared base_dir/workspace_root schema (BR-08/BR-22, AC5). */
+const BASE_DIR_SCHEMA = (pathArg: string) => ({
+  base_dir: {
+    type: "string",
+    description:
+      `Optional workspace root to resolve relative ${pathArg} against. Must be ` +
+      "registered in the server allowlist (MCP_WORKSPACE_ROOTS). Relative values " +
+      "are normalized to absolute. Example: /home/user/project-worktree-B",
+  },
+  workspace_root: {
+    type: "string",
+    description:
+      `Deprecated alias of base_dir (same semantics — optional workspace root to ` +
+      `resolve relative ${pathArg} against; must be in the MCP_WORKSPACE_ROOTS ` +
+      "allowlist). Ignored when base_dir is present. " +
+      "Example: /home/user/project-worktree-B",
+  },
+});
 
 /** Register Jira attachment tools */
 export function registerJiraAttachmentTools(client: AtlassianHttpClient): void {
@@ -28,11 +48,13 @@ export function registerJiraAttachmentTools(client: AtlassianHttpClient): void {
     properties: {
       issue_key: { type: "string" },
       file_path: { type: "string", description: FILE_PATH_SCHEMA_DESCRIPTION },
+      ...BASE_DIR_SCHEMA("file_path"),
     },
     required: ["issue_key", "file_path"],
   }, async (args) => {
     // SA4E-356: resolve FIRST — before any fs.* and before any HTTP (I-1, I-3).
-    const resolution = resolveWorkspacePath(args.file_path);
+    // SA4E-394: per-call base_dir/workspace_root becomes the effective root.
+    const resolution = resolveWorkspacePath(args.file_path, { baseDir: extractBaseDirArg(args) });
     if (!resolution.ok) {
       console.warn(`[jira-attachment-tools] jira_attach_file resolve failed: ${resolution.message}`);
       return toErrorResult(new Error(resolution.message));

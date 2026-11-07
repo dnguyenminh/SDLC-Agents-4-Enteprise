@@ -1,0 +1,5 @@
+npm error Missing script: "check:ci"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: C:\Users\ASUS\scoop\persist\nodejs\cache\_logs\2026-11-02T13_04_06_344Z-debug-0.log

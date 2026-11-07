@@ -24,7 +24,9 @@ const { mockConfigValues, mocks } = vi.hoisted(() => {
     async (
       text: string,
       onToken?: (t: string) => void,
-      onToolEvent?: (e: { phase: string; id: string; name: string }) => void
+      onToolEvent?: (e: { phase: string; id: string; name: string }) => void,
+      onThinking?: (t: string) => void,
+      images?: { images: import('../session-host/types.js').TurnImage[] }
     ) => {
       onToken?.('routed via session');
       onToolEvent?.({ phase: 'start', id: 't-live', name: 'read' });
@@ -151,8 +153,7 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     expect(mocks.ensureSessionHost).toHaveBeenCalledWith(
       expect.objectContaining({ workspaceRoot: 'C:/ws/test', providerId: 'anthropic', apiKey: 'sk-x' })
     );
-    // SA4E-365: promptTurn receives the onThinking callback (F2 wiring).
-    // SA4E-391: + a 5th opts arg (image carrier) — undefined for a text turn.
+    // SA4E-365: promptTurn now also receives the onThinking callback (F2 wiring).
     expect(mocks.promptTurn).toHaveBeenCalledWith('hi', expect.any(Function), expect.any(Function), expect.any(Function), undefined);
     expect(chatErrors(onEvent)).toEqual([]);
     // Live tool progress reaches the webview as a tool block.
@@ -192,6 +193,39 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     await adapter.invokeChat('do tools');
 
     expect(completeSpy).toHaveBeenCalledTimes(1);
+    expect(chatErrors(onEvent)).toEqual([]);
+  });
+
+  // SA4E-391 cross-tab routing root-cause regression: the turn origin MUST be
+  // pinned from the submitting tab's id (passed into invokeChat), not from the
+  // host-local store.activeTab default ('CHAT'). Before the fix, tab A's output
+  // rendered in tab B after a mid-turn switch because the stamp used the wrong
+  // id space.
+  it('pins the turn origin to the submitting tabId (not the store default)', async () => {
+    mockConfigValues['llm.provider'] = 'anthropic';
+    mockConfigValues['llm.model'] = '';
+    const secrets = { get: async () => 'sk-x', store: async () => undefined, delete: async () => undefined };
+    adapter = new PiWorkflowAdapter({
+      mcpManager: { status: 'running' } as never,
+      workspaceRoot: 'C:/ws/test',
+      onEvent: onEvent as (msg: ChatExtToWebviewMessage) => void,
+      models,
+      secrets: secrets as never,
+    });
+
+    const tabUuid = 'tab-aaaa-1111';
+    // Stamp the StreamHandler origin — this is what every stream event carries
+    // and what the webview routes by (getMessageTargetTabId → originTabId).
+    const originSpy = vi.spyOn(adapter.getStreamHandler(), 'setOriginTabId');
+    await adapter.invokeChat('hi from tab A', undefined, undefined, tabUuid);
+
+    // The session host is keyed by the SUBMITTING tab, not 'CHAT'.
+    expect(mocks.ensureSessionHost).toHaveBeenCalledWith(
+      expect.objectContaining({ tabId: tabUuid }),
+    );
+    // Every stream event of this turn is stamped with the submitting tab id.
+    expect(originSpy).toHaveBeenCalledWith(tabUuid);
+    expect(originSpy).not.toHaveBeenCalledWith('CHAT');
     expect(chatErrors(onEvent)).toEqual([]);
   });
 });

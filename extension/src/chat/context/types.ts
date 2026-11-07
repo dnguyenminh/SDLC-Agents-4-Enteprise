@@ -12,6 +12,8 @@ export interface ContextFile {
   tokenCount: number;
   pinnedAt: number;
   relevanceScore: number;
+  /** 0-1: P0=1.0 (never cut) … P3=0.1 (cut first). Multiplies the prune score. */
+  importanceScore: number;
 }
 
 /** Full snapshot of context manager state */

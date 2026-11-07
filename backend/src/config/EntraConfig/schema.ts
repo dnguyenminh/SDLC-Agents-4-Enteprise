@@ -41,13 +41,12 @@ export const EntraConfigSchema = z.object({
     .refine(v => v.startsWith('https://') || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)(\/|$)/.test(v),
       { message: 'must be https:// or http://localhost with port' })
     .refine(v => !v.includes('#'), { message: 'fragment not allowed' }),
-  authority: httpsUrl.optional(),
-  issuer: httpsUrl.optional(),
-  jwksUri: httpsUrl.optional(),
-  scopes: z.string()
+  authority: z.string().url().default(''),
+  issuer: z.string().url().default(''),
+  jwksUri: z.string().url().default(''),
+  scopes: z.string().default('openid profile email offline_access')
     .transform(v => v.trim().split(/\s+/).filter(Boolean))
-    .pipe(z.array(z.string().regex(SCOPE_TOKEN_REGEX)).min(1))
-    .optional(),
+    .pipe(z.array(z.string().regex(SCOPE_TOKEN_REGEX)).min(1)),
 }).superRefine((cfg, ctx) => {
   // BR-04: explicit issuer must match the tenant-derived value — no silent overwrite.
   if (cfg.issuer && GUID_REGEX.test(cfg.tenantId)) {
@@ -67,7 +66,7 @@ export const EntraConfigSchema = z.object({
 export const EntraSurfaceSchema = z.object({
   ssoEnabled: z.boolean(),
   config: EntraConfigSchema.nullable().default(null),
-}) as unknown as z.ZodType<EntraSurface, z.ZodTypeDef, unknown>;
+});
 
 export { GUID_REGEX };
 

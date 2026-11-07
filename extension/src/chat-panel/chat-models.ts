@@ -156,6 +156,10 @@ export async function fetchGatewayModels(baseUrl: string, authHeader?: string): 
         rate_multiplier?: number;
         context_length?: number;
         meta?: { n_ctx?: number };
+        // CHAT-LOOP-CONT: gateway may report max output tokens under various field names
+        max_output_tokens?: number;
+        max_completion_tokens?: number;
+        max_tokens?: number;
       }>;
     };
     const data = Array.isArray(json?.data) ? json.data : [];
@@ -181,6 +185,19 @@ export async function fetchGatewayModels(baseUrl: string, authHeader?: string): 
               : undefined;
         if (contextWindow) {
           entry.contextWindow = contextWindow;
+        }
+        // CHAT-LOOP-CONT: read max output tokens from gateway (OpenAI-compatible /v1/models
+        // may use max_output_tokens, max_completion_tokens, or max_tokens).
+        const maxOutputTokens =
+          typeof m.max_output_tokens === "number" && m.max_output_tokens > 0
+            ? m.max_output_tokens
+            : typeof m.max_completion_tokens === "number" && m.max_completion_tokens > 0
+              ? m.max_completion_tokens
+              : typeof m.max_tokens === "number" && m.max_tokens > 0
+                ? m.max_tokens
+                : undefined;
+        if (maxOutputTokens) {
+          entry.maxOutputTokens = maxOutputTokens;
         }
         return entry;
       });

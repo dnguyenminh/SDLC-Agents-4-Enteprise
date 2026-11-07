@@ -30,6 +30,8 @@ import { CODE_SEARCH_BY_TAG_DEFINITION, handleCodeSearchByTag } from './code-sea
 import { CODE_ENRICHMENT_STATS_DEFINITION, handleCodeEnrichmentStats } from './code-enrichment-stats.js';
 import { CODE_LOCATE_TOOL_DEFINITION, handleCodeLocate } from './code-locate.js';
 import { CODE_EXTRACT_TOOL_DEFINITION, handleCodeExtract } from './code-extract.js';
+import type { MultiWorktreePathResolver } from '../../shared/multi-worktree-path-resolver.js';
+import { baseDirSchemaProperties } from '../../shared/base-dir-schema.js';
 
 // Singleton registry for artifact analysis
 const artifactAnalyzerRegistry = new ArtifactAnalyzerRegistry();
@@ -71,7 +73,7 @@ export const CODE_INTEL_TOOL_DEFINITIONS = [
   { name: 'code_context', description: 'Get source code context around a symbol or line range.', inputSchema: { type: 'object', properties: { file: { type: 'string' }, symbol: { type: 'string' }, startLine: { type: 'number' }, endLine: { type: 'number' }, contextLines: { type: 'number' } }, required: ['file'] } },
   { name: 'code_modules', description: 'List all discovered code modules with file counts and languages.', inputSchema: { type: 'object', properties: { name: { type: 'string' } } } },
   { name: 'code_index_status', description: 'Get current indexing status: file count, symbol count, languages, last indexed time.', inputSchema: { type: 'object', properties: { reindex: { type: 'boolean' } } } },
-  { name: 'stream_write_file', description: 'Write content directly to a file on disk. Modes: write (overwrite), append, create (fail if exists).', inputSchema: { type: 'object', properties: { file_path: { type: 'string' }, content: { type: 'string' }, mode: { type: 'string' }, encoding: { type: 'string' } }, required: ['file_path'] } },
+  { name: 'stream_write_file', description: 'Write content directly to a file on disk. Modes: write (overwrite), append, create (fail if exists).', inputSchema: { type: 'object', properties: { file_path: { type: 'string' }, content: { type: 'string' }, mode: { type: 'string' }, encoding: { type: 'string' }, ...baseDirSchemaProperties('file_path') }, required: ['file_path'] } },
   { name: 'code_kb_export', description: 'Export code intelligence data as Knowledge Base payloads for ingestion.', inputSchema: { type: 'object', properties: { module: { type: 'string' }, format: { type: 'string' } } } },
   DRAWIO_TOOL_DEFINITION,
   DRAWIO_EXPORT_PNG_DEFINITION,
@@ -99,6 +101,8 @@ interface CodeIntelContext {
   indexer: IndexingEngine;
   workspace: string;
   projectId?: string;
+  /** SA4E-394 — shared multi-worktree path resolver (base_dir support). */
+  resolver?: MultiWorktreePathResolver;
 }
 
 /** All handlers return Promise<string> — sync handlers are wrapped with resolve(). */
@@ -122,10 +126,10 @@ const TOOL_HANDLER_REGISTRY: Record<string, CodeIntelHandlerFn> = {
   code_context:       (a, ctx) => p(handleCodeContext(a, ctx.queryLayer, ctx.workspace, ctx.projectId)),
   code_modules:       (a, ctx) => p(handleCodeModules(a, ctx.queryLayer, ctx.projectId)),
   code_index_status:  (a, ctx) => p(handleCodeIndexStatus(a, ctx.queryLayer, ctx.indexer, ctx.workspace, ctx.projectId)),
-  stream_write_file:  (a, ctx) => p(handleStreamWriteFile(a, ctx.workspace, ctx.projectId)),
+  stream_write_file:  (a, ctx) => p(handleStreamWriteFile(a, ctx.workspace, ctx.projectId, ctx.resolver)),
   code_kb_export:     (a, ctx) => p(handleCodeKbExport(a, ctx.queryLayer, ctx.workspace)),
-  drawio_auto_layout: (a, ctx) => p(handleDrawioLayout(a, ctx.workspace)),
-  drawio_export_png:  (a, ctx) => p(handleDrawioExportPng(a, ctx.workspace, null as any)),
+  drawio_auto_layout: (a, ctx) => p(handleDrawioLayout(a, ctx.workspace, ctx.resolver)),
+  drawio_export_png:  (a, ctx) => p(handleDrawioExportPng(a, ctx.workspace, null as any, ctx.resolver)),
   code_callers:       (a, ctx) => p(handleCodeCallers(a, ctx.adapter, ctx.projectId)),
   code_callees:       (a, ctx) => p(handleCodeCallees(a, ctx.adapter, ctx.projectId)),
   code_dependencies:  (a, ctx) => p(handleCodeDependencies(a, ctx.adapter, ctx.workspace, ctx.projectId)),
@@ -156,6 +160,7 @@ const TOOL_HANDLER_REGISTRY: Record<string, CodeIntelHandlerFn> = {
  * Dispatch a code-intelligence tool call via the handler registry.
  * OCP: adding a new tool requires only adding to TOOL_HANDLER_REGISTRY above.
  * DIP: QueryLayer and DatabaseAdapter are injected (created once at module init).
+ * SA4E-394: optional pathResolver enables per-call base_dir on file_path tools.
  */
 export async function dispatchCodeIntelTool(
   name: string,
@@ -166,9 +171,10 @@ export async function dispatchCodeIntelTool(
   indexer: IndexingEngine,
   workspace: string,
   projectId?: string,
+  pathResolver?: MultiWorktreePathResolver,
 ): Promise<string> {
   const handler = TOOL_HANDLER_REGISTRY[name];
   if (!handler) return `Unknown tool: ${name}`;
-  const ctx: CodeIntelContext = { queryLayer, adapter, dbManager, indexer, workspace, projectId };
+  const ctx: CodeIntelContext = { queryLayer, adapter, dbManager, indexer, workspace, projectId, resolver: pathResolver };
   return handler(args, ctx);
 }

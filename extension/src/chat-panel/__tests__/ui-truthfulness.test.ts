@@ -6,6 +6,9 @@
  * TC-318 (AGENT_SWITCHED only after wiring), F02 (agentId authorization).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import * as os from "os";
+import * as fs from "fs";
+import * as path from "path";
 
 vi.mock("vscode", () => ({
   workspace: { onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })) },
@@ -15,6 +18,11 @@ vi.mock("vscode", () => ({
 
 import { ChatStateManager } from "../ChatStateManager";
 import type { ChatExtToWebviewMessage } from "../message-protocol";
+
+/** StateManager needs a writable globalStorageUri — unique temp dir per run. */
+const mockContext = {
+  globalStorageUri: { fsPath: fs.mkdtempSync(path.join(os.tmpdir(), "sa4e-ui-truth-")) },
+} as never;
 
 describe("ChatStateManager per-tab agent badge (S4)", () => {
   let sendToWebview: vi.Mock;
@@ -27,7 +35,7 @@ describe("ChatStateManager per-tab agent badge (S4)", () => {
 
   // TC-006 / TC-500: Badge shows correct agent per tab
   it("TC-006: tracks active agent per tab; different tabs can have different agents", () => {
-    const csm = new ChatStateManager("/ws", undefined, sendToWebview, getEngine);
+    const csm = new ChatStateManager("/ws", undefined, mockContext, sendToWebview, getEngine);
 
     csm.setActiveAgentForTab("tab-1", "qa-agent");
     csm.setActiveAgentForTab("tab-2", "dev-agent");
@@ -39,7 +47,7 @@ describe("ChatStateManager per-tab agent badge (S4)", () => {
 
   // TC-317: Badge reflects wired agent (not pending)
   it("TC-317: badge shows currently wired agent, not a pending one", () => {
-    const csm = new ChatStateManager("/ws", undefined, sendToWebview, getEngine);
+    const csm = new ChatStateManager("/ws", undefined, mockContext, sendToWebview, getEngine);
 
     csm.setActiveAgentForTab("tab-1", "qa-agent");
     expect(csm.getActiveAgentForTab("tab-1")).toBe("qa-agent");
@@ -51,7 +59,7 @@ describe("ChatStateManager per-tab agent badge (S4)", () => {
 
   // null agent clears badge
   it("clears badge when agentId is null", () => {
-    const csm = new ChatStateManager("/ws", undefined, sendToWebview, getEngine);
+    const csm = new ChatStateManager("/ws", undefined, mockContext, sendToWebview, getEngine);
 
     csm.setActiveAgentForTab("tab-1", "qa-agent");
     csm.setActiveAgentForTab("tab-1", null!);

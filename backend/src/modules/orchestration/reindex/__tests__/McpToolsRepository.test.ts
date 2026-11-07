@@ -49,6 +49,7 @@ describe('McpToolsRepository', () => {
     expect(row.server).toBe('S');
     expect(row.category).toBe('S');
     expect(row.vector).toBeInstanceOf(Uint8Array);
+    expect(row.labels).toContain('t1');
   });
 
   it('UT-12: repeated upsert updates in place (no duplicate)', async () => {

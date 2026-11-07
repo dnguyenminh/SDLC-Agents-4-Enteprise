@@ -23,11 +23,17 @@ import {
   buildInstallCommand,
   buildTestCommand,
 } from './command-builders.js';
+import {
+  hasBaseDirArg,
+  type MultiWorktreePathResolver,
+} from '../../../shared/multi-worktree-path-resolver.js';
+import { getSharedPathResolver } from '../../../shared/path-resolver-provider.js';
 
 export function createSandboxHandlers(
   manager: ExecutionManager,
   config: SandboxConfig,
   logger: Logger,
+  resolver?: MultiWorktreePathResolver,
 ): Map<string, ToolHandler> {
   const handlers = new Map<string, ToolHandler>();
 
@@ -95,7 +101,17 @@ export function createSandboxHandlers(
       const sessionId = String(args.sessionId || '');
       if (!file || !runtime) return err('INVALID_ARGUMENT', 'file and runtime are required');
       if (!sessionIdValid(sessionId)) return err('SESSION_NOT_FOUND', `Invalid or missing sessionId: ${sessionId}`);
-      const command = buildRunCommand(runtime, file, Array.isArray(args.args) ? (args.args as string[]) : []);
+      // SA4E-394 (DISC-2): the path argument is `file`. With base_dir present
+      // the HOST-side value is resolved pre-mount (TDD Open Question #3) and
+      // the sandbox receives the resolved host path; sandbox-internal path
+      // semantics are unchanged when base_dir is omitted (C-3, TC-110).
+      let fileArg = file;
+      if (hasBaseDirArg(args)) {
+        const resolved = resolveRunFile(args, file, logger, resolver);
+        if (resolved.error) return resolved.error;
+        fileArg = resolved.file;
+      }
+      const command = buildRunCommand(runtime, fileArg, Array.isArray(args.args) ? (args.args as string[]) : []);
       try {
         const result = await manager.execute(sessionId, command, {
           timeout: typeof args.timeout === 'number' ? args.timeout : config.commandTimeoutDefault,
@@ -158,4 +174,18 @@ export function createSandboxHandlers(
   );
 
   return handlers;
+}
+
+/** SA4E-394 — resolve the host-side `file` value pre-mount (base_dir branch). */
+function resolveRunFile(
+  args: Record<string, unknown>,
+  file: string,
+  logger: Logger,
+  resolver?: MultiWorktreePathResolver,
+): { file: string; error?: undefined } | { file?: undefined; error: ToolResult } {
+  const result = (resolver ?? getSharedPathResolver(logger)).resolve({
+    filePath: file, baseDir: args.base_dir, workspaceRoot: args.workspace_root,
+  });
+  if (result.ok) return { file: result.resolvedPath };
+  return { error: err(result.code, result.message.replace(`${result.code}: `, '')) };
 }

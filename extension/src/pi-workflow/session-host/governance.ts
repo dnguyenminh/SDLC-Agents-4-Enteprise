@@ -33,10 +33,13 @@ export function resolveSessionGovernance(
   agentDir: string,
   workspacePrompt: string
 ): SessionGovernance {
-  const resolvedModel = (model ?? {}) as { id?: string; contextWindow?: number };
+  const resolvedModel = (model ?? {}) as { id?: string; contextWindow?: number; maxOutputTokens?: number };
   const budget = resolveContextBudget({
     modelId: resolvedModel.id ?? (opts.configuredModelId ?? ''),
     nCtxDetected: opts.nCtxDetected ?? resolvedModel.contextWindow,
+    // CHAT-LOOP-CONT: pass gateway-reported maxOutputTokens as output reserve,
+    // replacing hardcoded 16384. Budget gate uses this for output token accounting.
+    reserveOutput: resolvedModel.maxOutputTokens,
   });
   const tier = resolveSessionTier(budget.nCtx);
   const measuredStaticTokens = measureStaticTokens(piCoding, workspaceRoot, agentDir, workspacePrompt);

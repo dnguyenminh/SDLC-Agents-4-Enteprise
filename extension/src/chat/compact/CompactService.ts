@@ -37,6 +37,20 @@ export type {
   StreamHandler,
 } from './CompactService/contracts';
 
+/** Structured summary of compacted content, used to preserve critical information. */
+export interface CompactSummary {
+  /** What this content was about */
+  topic: string;
+  /** Key constraints/rules preserved from the original content */
+  constraints: string[];
+  /** Important code/API references (kept verbatim if possible) */
+  references: Array<{type: 'code'|'api'|'rule'; content: string; language?: string}>;
+  /** Current state summary captured from the original content */
+  state: string;
+  /** Critical reminders - especially negations and must-do items */
+  criticalReminders: string[];
+}
+
 /**
  * Orchestrates compact: validate → emit → summarize → replace → persist.
  * Falls back to truncation if LLM fails.
@@ -125,6 +139,107 @@ export class CompactService {
     return buildSummarizationPromptText(serializedHistory);
   }
 
+  /** Build structured summarization prompt that enforces exact format.
+   * The LLM must output in this exact structure (no deviations):
+   * [TOPIC]
+   * [CONSTRAINTS: comma-separated list or "NONE"]
+   * [REFERENCES: code snippets kept verbatim, or "NONE"]
+   * [STATE: current state summary]
+   * [CRITICAL REMINDERS: bullet points, or "NONE"]
+   */
+  buildStructuredSummarizationPrompt(serializedHistory: string, targetTokens: number): string {
+    return [
+      'YOU ARE A CONTEXT COMPRESSOR. Your job is to summarize content while PRESERVING',
+      'ALL critical information that could cause hallucination if lost.',
+      '',
+      'INPUT: ' + targetTokens + ' tokens',
+      'TARGET: ' + targetTokens + ' tokens (preserve critical info)',
+      '',
+      'STRICT REQUIREMENTS:',
+      '1. Output MUST use this EXACT structure (no deviations):',
+      '   [TOPIC]',
+      '   [CONSTRAINTS: comma-separated list or "NONE"]',
+      '   [REFERENCES: code snippets kept verbatim, or "NONE"]',
+      '   [STATE: current state summary]',
+      '   [CRITICAL REMINDERS: bullet points, or "NONE"]',
+      '',
+      '2. NEVER remove these element types even if "unimportant":',
+      '   - System constraints (must, required, should, never)',
+      '   - Numerical thresholds (ratios, limits, percentages)',
+      '   - Unique identifiers (claim numbers, rule IDs, file paths)',
+      '   - Negation phrases (do NOT, must NOT, avoid)',
+      '',
+      '3. If content does not fit target tokens, prioritize in this order:',
+      '   a) Critical reminders (must-preserve)',
+      '   b) Constraints and rules',
+      '   c) Code references (keep snippets, summarize surrounding text)',
+      '   d) Narrative descriptions (aggressive summarization)',
+      '',
+      '4. Output ONLY the summary - no meta-commentary, no "here\'s the summary:"',
+      '',
+      'ORIGINAL CONTEXT:',
+      serializedHistory,
+      '',
+    ].join('\n');
+  }
+
+  /** Parse LLM output into CompactSummary structure.
+   * The LLM output must follow the exact structure:
+   * [TOPIC]
+   * [CONSTRAINTS: ...]
+   * [REFERENCES: ...]
+   * [STATE: ...]
+   * [CRITICAL REMINDERS: ...]
+   */
+  parseCompactSummary(output: string): CompactSummary {
+    const result: CompactSummary = {
+      topic: '',
+      constraints: [],
+      references: [],
+      state: '',
+      criticalReminders: [],
+    };
+
+    const sections = output.split(/\n\n/).map(s => s.trim()).filter(s => s.length > 0);
+
+    for (const section of sections) {
+      if (section.startsWith('[TOPIC]')) {
+        result.topic = section.replace('[TOPIC]', '').trim();
+      } else if (section.startsWith('[CONSTRAINTS]')) {
+        const constraintsText = section.replace('[CONSTRAINTS]', '').trim();
+        result.constraints = constraintsText === 'NONE'
+          ? []
+          : constraintsText.split(',').map(c => c.trim()).filter(c => c.length > 0);
+      } else if (section.startsWith('[REFERENCES]')) {
+        const refsText = section.replace('[REFERENCES]', '').trim();
+        if (refsText !== 'NONE' && refsText.startsWith('```')) {
+          // Code reference kept verbatim - extract the language and code
+          const languageMatch = refsText.match(/```(\w+)/);
+          const codeMatch = refsText.match(/```[\s\S]*?```/);
+          if (codeMatch) {
+            result.references.push({
+              type: 'code',
+              language: languageMatch ? languageMatch[1] : undefined,
+              content: codeMatch[0].replace(/```[\w]*\n/, '').replace(/```$/, '').trim(),
+            });
+          }
+        } else if (refsText !== 'NONE') {
+          // Non-code reference
+          result.references.push({ type: 'api', content: refsText });
+        }
+      } else if (section.startsWith('[STATE]')) {
+        result.state = section.replace('[STATE]', '').trim();
+      } else if (section.startsWith('[CRITICAL REMINDERS]')) {
+        const remindersText = section.replace('[CRITICAL REMINDERS]', '').trim();
+        result.criticalReminders = remindersText === 'NONE'
+          ? []
+          : remindersText.split('\n').map(r => r.trim()).filter(r => r.length > 0);
+      }
+    }
+
+    return result;
+  }
+
   /** Validate summary size is <= 15% of original token count (BR-09) */
   validateSummary(summary: string, originalTokens: number): void {
     validateSummarySize(summary, originalTokens);
@@ -189,5 +304,17 @@ export class CompactService {
     oldHistory: ChatMessage[], newHistory: ChatMessage[]
   ): CompactResult {
     return buildCompactResult(method, summary, before, after, oldHistory, newHistory);
+  }
+
+  /** Generate a structured summary from chat history using LLM.
+   * @param chatHistory - The chat messages to summarize
+   * @param targetTokens - Target token count for the summary
+   * @returns CompactSummary with topic, constraints, references, state, criticalReminders
+   */
+  async generateSummary(chatHistory: ChatMessage[], targetTokens: number): Promise<CompactSummary> {
+    const serialized = this.serializeChatHistory(chatHistory);
+    const prompt = this.buildStructuredSummarizationPrompt(serialized, targetTokens);
+    const raw = await this.llmProvider.call(prompt, { timeout: LLM_TIMEOUT_MS });
+    return this.parseCompactSummary(raw);
   }
 }

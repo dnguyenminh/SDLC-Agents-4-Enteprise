@@ -9,6 +9,8 @@ export interface EventCollector {
   /** SA4E-THINKING: accumulated reasoning text (rendered in ThinkingBlock, not part of the answer). */
   thinking?: string;
   errorMessage?: string;
+  /** CHAT-LOOP-CONT: stopReason from the terminal assistant message ("length" = output token limit cut). */
+  stopReason?: string;
 }
 
 /**
@@ -150,4 +152,15 @@ export function mapAgentEvent(event: AgentEvent, collector: EventCollector): voi
   // here became a red STREAM_ERROR bubble per failed tool, and errorMessage
   // failed the whole turn (PI_EXECUTION_ERROR + spurious model-fallback
   // check). Genuine turn-fatal errors surface via agent.state.errorMessage.
+  if (event.type === 'message_end') {
+    // CHAT-LOOP-CONT: the terminal assistant message carries stopReason —
+    // "length" = OUTPUT token limit (silent cut); "stop" = normal completion.
+    // This is the ONLY event carrying the final assistant message with stopReason.
+    // (The `done` stream event from the LLM is NOT forwarded via message_update.)
+    const msg = event.message as import('@earendil-works/pi-ai').AssistantMessage;
+    if (msg && msg.stopReason) {
+      collector.stopReason = msg.stopReason;
+    }
+    return;
+  }
 }

@@ -12,6 +12,7 @@ import type { PreparedTool } from './models/PreparedTool.js';
 import type { ReindexResult } from './models/ReindexResult.js';
 import { McpToolsRepository } from './McpToolsRepository.js';
 import { safeError } from './safeError.js';
+import { deriveToolLabels } from '../tool-labels.js';
 
 const DEFAULT_TARGET_MS = 5000;
 
@@ -80,7 +81,12 @@ export class ReindexService {
 
   private async prepareOne(t: ToolDefinition, server: string): Promise<PreparedTool | null> {
     try {
-      const text = `Tool: ${t.name}\nDescription: ${t.description}`;
+      // SA4E-369 follow-up: proxied rows must carry the same derived keyword
+      // labels and embedding text format as the startup ingestion
+      // (bootstrap/tool-ingestion) — otherwise proxy-synced rows (the only
+      // writer for tools that connect after ALL_MODULES_READY) stay NULL.
+      const labels = deriveToolLabels({ name: t.name, category: server, server });
+      const text = `Tool: ${t.name}\nDescription: ${t.description}\nLabels: ${labels}`;
       const vector = await this.embedder.generateEmbedding(text);
       return {
         name: t.name,
@@ -88,6 +94,7 @@ export class ReindexService {
         schemaJson: JSON.stringify(t.inputSchema || {}),
         category: server,
         server,
+        labels,
         vector: Buffer.from(new Float32Array(vector).buffer),
       };
     } catch (e) {

@@ -7,5 +7,7 @@ export interface PreparedTool {
   schemaJson: string;
   category: string;
   server: string;
+  /** SA4E-369 follow-up: derived keyword surface (see orchestration/tool-labels). */
+  labels?: string;
   vector: Buffer;
 }

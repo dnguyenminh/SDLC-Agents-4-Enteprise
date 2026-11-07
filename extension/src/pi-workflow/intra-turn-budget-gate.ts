@@ -34,6 +34,8 @@ export interface IntraTurnGateInput {
   modelId: string;
   /** Probe/runtime-detected window (meta.n_ctx) — WINS over the registry (BR-01). */
   nCtxDetected?: number;
+  /** CHAT-LOOP-CONT: model's max OUTPUT tokens (gateway-reported max_output_tokens / max_completion_tokens). Replaces hardcoded 16384. */
+  reserveOutput?: number;
 }
 
 /** Gate outcome handed to the provider boundary. */
@@ -92,7 +94,12 @@ export function measureIntraTurnRequest(input: IntraTurnGateInput): LegacyTurnMe
  * instead of the provider's raw 400.
  */
 export function governIntraTurnRequest(input: IntraTurnGateInput): IntraTurnGateResult {
-  const budget = resolveContextBudget({ modelId: input.modelId, nCtxDetected: input.nCtxDetected });
+  const budget = resolveContextBudget({
+    modelId: input.modelId,
+    nCtxDetected: input.nCtxDetected,
+    // CHAT-LOOP-CONT: pass gateway-reported maxOutputTokens as output reserve.
+    reserveOutput: input.reserveOutput,
+  });
   const usable = usableTokensOf(budget);
   const measured = measureIntraTurnRequest(input);
   if (measured.totalTokens <= usable) {

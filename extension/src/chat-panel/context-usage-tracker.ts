@@ -33,6 +33,12 @@ export class ContextUsageTracker {
   private tabUsage: Map<string, TabContextUsage> = new Map();
   private maxTokens: number;
 
+  /**
+   * Last-resort denominator ONLY when the engine is entirely unreachable (no
+   * resolved-model context window AND no probe value). SA4E-369: this is never
+   * the primary source — maxTokens is always synced from getModelContextWindow()
+   * (the model's real context window) on panel ready, so this value is transient.
+   */
   constructor(maxTokens = 128000) {
     this.maxTokens = maxTokens;
   }

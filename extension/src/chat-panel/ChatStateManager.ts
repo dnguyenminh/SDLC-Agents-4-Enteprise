@@ -20,6 +20,7 @@ import {
 } from "./ChatStateManager/dir-watchers";
 import { collectSteeringRules, readAgentInfos, readSkillInfos } from "./ChatStateManager/fs-helpers";
 import { syncPeerTabNames } from "../pi-workflow/peer/lifecycle";
+import { StateManager } from "./StateManager";
 
 const STATE_KEY = "chatPanel.state";
 
@@ -30,10 +31,12 @@ export class ChatStateManager implements vscode.Disposable {
   private skillsWatcher: WorkspaceDirWatcher;
   /** SA4E-370 S4: per-tab active agent for badge display (tabId -> agentId). */
   private readonly activeAgentByTab = new Map<string, string>();
+  private readonly stateManager: StateManager;
 
   constructor(
     private readonly workspaceRoot: string,
     private readonly workspaceState: vscode.Memento | undefined,
+    private readonly context: vscode.ExtensionContext | undefined,
     private readonly sendToWebview: (msg: ChatExtToWebviewMessage) => void,
     private readonly getEngine: () => PiWorkflowAdapter
   ) {
@@ -47,7 +50,12 @@ export class ChatStateManager implements vscode.Disposable {
     this.hooksWatcher.start();
     this.skillsWatcher = createSkillsWatcher(workspaceRoot, () => this.sendSkillsInfo());
     this.skillsWatcher.start();
+    this.stateManager = new StateManager(context);
     this.broadcastInitialState();
+    // One-time migration from workspaceState to file storage
+    if (workspaceState) {
+      void this.stateManager.migrateFromWorkspaceState(workspaceState);
+    }
   }
 
   /** SA4E-370 S4: set the active agent for a tab (badge + switch indicator). */
@@ -79,45 +87,46 @@ export class ChatStateManager implements vscode.Disposable {
 
   /** Save current chat state (called from webview via message) */
   saveChatState(state: { tabs: unknown[]; activeTabId: string; messageHistory?: string[] }): void {
-    if (!this.workspaceState) { return; }
     debugLog(` saveChatState: ${(state.tabs as any[])?.length || 0} tabs, activeTab=${state.activeTabId}`);
-    void this.workspaceState.update(STATE_KEY, state);
+    void this.stateManager.save({
+      tabs: state.tabs as any,
+      activeTabId: state.activeTabId,
+      messageHistory: state.messageHistory,
+    });
   }
 
   /** Restore chat state on webview ready */
   restoreChatState(): void {
-    if (!this.workspaceState) { return; }
-    const state = this.workspaceState.get<{
-      tabs: unknown[]; activeTabId: string; messageHistory?: string[];
-    }>(STATE_KEY);
-    debugLog(` restoreChatState: state=${state ? "found" : "null"}`);
+    this.stateManager.load().then(state => {
+      debugLog(` restoreChatState: state=${state ? "found" : "null"}`);
 
-    if (!state || !state.tabs || state.tabs.length === 0) { return; }
+      if (!state || !state.tabs || state.tabs.length === 0) { return; }
 
-    // SA4E-369: tabs restored on first open bypass tab:create / tab:switch, so
-    // NONE of them were registered as peers — peer_list then saw only the tab
-    // that happened to run a turn (self). Register EVERY restored tab here (the
-    // one place all tabs are known at startup) so a freshly opened panel shows
-    // all tabs to peer_list without the user having to switch into each one.
-    try {
-      syncPeerTabNames(
-        state.tabs as ReadonlyArray<{ id?: unknown; name?: unknown }>,
-        this.workspaceRoot,
-      );
-    } catch (e) {
-      debugError("[ChatPanel] restore peer registration failed (non-fatal)", e as Error);
-    }
+      // SA4E-369: tabs restored on first open bypass tab:create / tab:switch, so
+      // NONE of them were registered as peers — peer_list then saw only the tab
+      // that happened to run a turn (self). Register EVERY restored tab here (the
+      // one place all tabs are known at startup) so a freshly opened panel shows
+      // all tabs to peer_list without the user having to switch into each one.
+      try {
+        syncPeerTabNames(
+          state.tabs as ReadonlyArray<{ id?: unknown; name?: unknown }>,
+          this.workspaceRoot,
+        );
+      } catch (e) {
+        debugError("[ChatPanel] restore peer registration failed (non-fatal)", e as Error);
+      }
 
-    this.sendToWebview({
-      type: "tab:updated",
-      payload: {
-        tabs: state.tabs as any,
-        activeTabId: state.activeTabId,
-        messageHistory: state.messageHistory,
-      } as any,
+      this.sendToWebview({
+        type: "tab:updated",
+        payload: {
+          tabs: state.tabs as any,
+          activeTabId: state.activeTabId,
+          messageHistory: state.messageHistory,
+        } as any,
+      });
+
+      this.restoreEngineHistory(state);
     });
-
-    this.restoreEngineHistory(state);
   }
 
   /** Send steering files and hooks info to webview. */

@@ -47,7 +47,7 @@ describe('ChatStateManager.sendSkillsInfo (SA4E-188)', () => {
 
   function createManager(): ChatStateManager {
     const getEngine = () => ({}) as any;
-    return new ChatStateManager(tmpRoot, undefined, sendToWebview, getEngine);
+    return new ChatStateManager(tmpRoot, undefined, { globalStorageUri: { fsPath: tmpRoot } } as any, sendToWebview, getEngine);
   }
 
   it('broadcasts chat:skillsLoaded with parsed skill descriptions from .code-intel/skills', () => {
