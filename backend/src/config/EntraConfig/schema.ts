@@ -41,9 +41,9 @@ export const EntraConfigSchema = z.object({
     .refine(v => v.startsWith('https://') || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)(\/|$)/.test(v),
       { message: 'must be https:// or http://localhost with port' })
     .refine(v => !v.includes('#'), { message: 'fragment not allowed' }),
-  authority: z.string().url().default(''),
-  issuer: z.string().url().default(''),
-  jwksUri: z.string().url().default(''),
+  authority: httpsUrl.default(''),
+  issuer: httpsUrl.default(''),
+  jwksUri: httpsUrl.default(''),
   scopes: z.string().default('openid profile email offline_access')
     .transform(v => v.trim().split(/\s+/).filter(Boolean))
     .pipe(z.array(z.string().regex(SCOPE_TOKEN_REGEX)).min(1)),
@@ -72,15 +72,17 @@ export { GUID_REGEX };
 
 /** Apply tenant-derived defaults (authority/issuer/jwksUri/scopes). */
 export function applyDerivedDefaults(cfg: z.infer<typeof EntraConfigSchema>): EntraConfig {
-  const authority = cfg.authority ?? `https://login.microsoftonline.com/${cfg.tenantId}`;
+  // NOTE: `||` (not `??`) — the schema defaults these to '' when the env var is
+  // absent, and `'' ?? fallback` keeps the empty string (SA4E-411 regression).
+  const authority = cfg.authority || `https://login.microsoftonline.com/${cfg.tenantId}`;
   return {
     tenantId: cfg.tenantId,
     clientId: cfg.clientId,
     clientSecret: cfg.clientSecret,
     redirectUri: cfg.redirectUri,
     authority,
-    issuer: cfg.issuer ?? `https://login.microsoftonline.com/${cfg.tenantId}/v2.0`,
-    jwksUri: cfg.jwksUri ?? `${authority}/discovery/v2.0/keys`,
-    scopes: cfg.scopes ?? DEFAULT_SCOPES,
+    issuer: cfg.issuer || `https://login.microsoftonline.com/${cfg.tenantId}/v2.0`,
+    jwksUri: cfg.jwksUri || `${authority}/discovery/v2.0/keys`,
+    scopes: cfg.scopes || DEFAULT_SCOPES,
   };
 }
