@@ -1,0 +1,933 @@
+
+ RUN  v4.1.11 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend
+
+{"level":50,"time":1793625357424,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625357434,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625357484,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625357485,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-jqRjhK\\index.db"}
+{"level":30,"time":1793625357528,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"REQUIREMENT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625357485,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625357436,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625357437,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625357453,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625357454,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625357455,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625357456,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625357456,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625357456,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625357470,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625357570,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625357595,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625357598,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625357637,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":30,"time":1793625357651,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"REQUIREMENT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625357638,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-sw5ugV\\index.db"}
+{"level":50,"time":1793625357638,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625357600,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625357600,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625357611,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625357612,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625357613,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625357613,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625357614,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625357614,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625357630,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625357661,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625357675,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625357677,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625357705,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":30,"time":1793625357718,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"ARCHITECTURE","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625357706,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-cG5HVY\\index.db"}
+{"level":50,"time":1793625357706,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625357677,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625357677,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625357687,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625357689,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625357690,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625357690,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625357690,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625357690,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625357699,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625357724,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":2,"type":"ARCHITECTURE","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625357735,"pid":63732,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":40,"time":1793625362183,"pid":33844,"hostname":"WIN-LK2TQOOAELR","name":"app-config","msg":"Entra vars partially set but SSO_ENABLED=false — SSO stays disabled"}
+{"level":40,"time":1793625362184,"pid":33844,"hostname":"WIN-LK2TQOOAELR","name":"app-config","msg":"Entra vars partially set but SSO_ENABLED=false — SSO stays disabled"}
+{"level":40,"time":1793625362184,"pid":33844,"hostname":"WIN-LK2TQOOAELR","name":"app-config","msg":"Entra vars partially set but SSO_ENABLED=false — SSO stays disabled"}
+{"level":40,"time":1793625362184,"pid":33844,"hostname":"WIN-LK2TQOOAELR","name":"app-config","msg":"Entra vars partially set but SSO_ENABLED=false — SSO stays disabled"}
+{"level":40,"time":1793625362184,"pid":33844,"hostname":"WIN-LK2TQOOAELR","name":"app-config","msg":"Entra vars partially set but SSO_ENABLED=false — SSO stays disabled"}
+{"level":40,"time":1793625362185,"pid":33844,"hostname":"WIN-LK2TQOOAELR","name":"app-config","scopes":["openid","profile","email"],"msg":"ENTRA_SCOPES missing offline_access — refresh token flow may not work"}
+{"level":50,"time":1793625363678,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625363683,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625363710,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625363712,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-0AWFvZ\\index.db"}
+{"level":50,"time":1793625363712,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625363684,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625363684,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625363696,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625363697,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625363697,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625363697,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625363697,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625363697,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625363703,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625363743,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625363751,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625363752,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625363765,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625363766,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-yo2Hh6\\index.db"}
+{"level":50,"time":1793625363766,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625363753,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625363753,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625363756,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625363757,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625363757,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625363757,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625363757,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625363757,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625363762,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625363802,"pid":39228,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":40,"time":1793625364209,"pid":20848,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"userId":"user-abc","msg":"auditProvision failed"}
+{"level":40,"time":1793625364211,"pid":20848,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"userId":"user-goog","msg":"auditProvision failed"}
+{"level":40,"time":1793625364213,"pid":20848,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"userId":"user-gh","msg":"auditProvision failed"}
+{"level":40,"time":1793625364214,"pid":20848,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"action":"SSO_LINK_REJECTED_LOCAL_NO_AUTOLINK","msg":"auditReject failed"}
+{"level":40,"time":1793625364216,"pid":20848,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"userId":"user-1b","msg":"auditLink failed"}
+{"level":40,"time":1793625364218,"pid":20848,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"action":"SSO_JIT_REJECTED_EMAIL_NOT_VERIFIED","msg":"auditReject failed"}
+{"level":40,"time":1793625364219,"pid":20848,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"action":"SSO_JIT_REJECTED_EMAIL_NOT_VERIFIED","msg":"auditReject failed"}
+{"level":40,"time":1793625364219,"pid":20848,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"action":"SSO_LINK_REJECTED_EMAIL_NOT_VERIFIED","msg":"auditReject failed"}
+{"level":40,"time":1793625364219,"pid":20848,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"action":"SSO_LINK_REJECTED_HYBRID_ACCOUNT","msg":"auditReject failed"}
+{"level":50,"time":1793625365352,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625365392,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625365411,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=proj1)"}
+{"level":50,"time":1793625365430,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Running graph schema migrations (engine: sqlite)..."}
+{"level":50,"time":1793625365435,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Added 6 enrichment columns"}
+{"level":30,"time":1793625365436,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":50,"time":1793625365362,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings.project_id"}
+{"level":50,"time":1793625365362,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625365365,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625365382,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625365383,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema up to date"}
+{"level":50,"time":1793625365390,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625365412,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625365417,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625365429,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625365395,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625365395,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625365401,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625365401,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625365401,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625365401,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625365401,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625365402,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625365407,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625365418,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":50,"time":1793625365418,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625365418,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625365422,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625365423,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625365423,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625365423,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625365423,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625365423,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625365426,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625365429,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=proj1)"}
+{"level":50,"time":1793625365435,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Relationships table ready"}
+{"level":50,"time":1793625365436,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] File index table ready"}
+{"level":50,"time":1793625365436,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Graph metadata table ready"}
+{"level":50,"time":1793625365436,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Body embeddings table ready"}
+{"level":50,"time":1793625365436,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Schema version set to 3"}
+{"level":30,"time":1793625365436,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Work-HR:ApproveLeave:-:-","virtualPath":"pega://Work-HR/rule_obj_activity/ApproveLeave/-/-","kind":"pega_rule_obj_activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","msg":"syncRuleToSymbols built identity"}
+{"level":40,"time":1793625365441,"pid":65456,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","err":{"type":"RepositoryError","message":"SQLITE_ERROR: sqlite3 result code 1: no such table: project_registry: SQLITE_ERROR: sqlite3 result code 1: no such table: project_registry","stack":"RepositoryError: SQLITE_ERROR: sqlite3 result code 1: no such table: project_registry\n    at translateError (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/errors/RepositoryError.ts:59:12)\n    at GraphRepository.registerProject (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/repositories/GraphRepository.ts:104:13)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at registerPegaProject (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/pega/PegaSymbolSync.ts:119:5)\n    at syncRuleToSymbols (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/pega/PegaSymbolSync.ts:109:3)\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/engine/db/__tests__/migration-body-embeddings-upsert.test.ts:165:20\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20\nCaused by: SQLite3Error: SQLITE_ERROR: sqlite3 result code 1: no such table: project_registry\n    at toss3 (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9572:11)\n    at checkSqlite3Rc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9621:6)\n    at DB.checkRc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10024:37)\n    at DB.prepare (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10082:10)\n    at sqliteRun (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/adapters/sqlite-statements.ts:15:21)\n    at SqliteAdapter.run (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/adapters/SqliteAdapter.ts:83:12)\n    at SqliteAdapter.runAsync (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/adapters/SqliteAdapter.ts:107:85)\n    at GraphRepository.registerProject (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/repositories/GraphRepository.ts:89:28)\n    at registerPegaProject (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/pega/PegaSymbolSync.ts:119:40)\n    at syncRuleToSymbols (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/pega/PegaSymbolSync.ts:109:9)\ncaused by: SQLite3Error: SQLITE_ERROR: sqlite3 result code 1: no such table: project_registry\n    at toss3 (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9572:11)\n    at checkSqlite3Rc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9621:6)\n    at DB.checkRc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10024:37)\n    at DB.prepare (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10082:10)\n    at sqliteRun (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/adapters/sqlite-statements.ts:15:21)\n    at SqliteAdapter.run (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/adapters/SqliteAdapter.ts:83:12)\n    at SqliteAdapter.runAsync (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/adapters/SqliteAdapter.ts:107:85)\n    at GraphRepository.registerProject (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/repositories/GraphRepository.ts:89:28)\n    at registerPegaProject (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/pega/PegaSymbolSync.ts:119:40)\n    at syncRuleToSymbols (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/pega/PegaSymbolSync.ts:109:9)","name":"RepositoryError"},"projectId":"proj1","msg":"[pega] project_registry register skipped (non-fatal)"}
+{"level":30,"time":1793625370182,"pid":44344,"hostname":"WIN-LK2TQOOAELR","name":"graph-fallback","query":"ProcessClaim","directHits":2,"neighbors":2,"msg":"Graph fallback returned results"}
+{"level":30,"time":1793625370184,"pid":44344,"hostname":"WIN-LK2TQOOAELR","name":"graph-fallback","query":"ProcessClaim","directHits":2,"neighbors":2,"msg":"Graph fallback returned results"}
+{"level":30,"time":1793625370184,"pid":44344,"hostname":"WIN-LK2TQOOAELR","name":"graph-fallback","query":"ProcessClaim","directHits":2,"neighbors":2,"msg":"Graph fallback returned results"}
+{"level":40,"time":1793625370184,"pid":44344,"hostname":"WIN-LK2TQOOAELR","name":"graph-fallback","err":"DB connection lost","query":"ProcessClaim","msg":"Graph fallback failed (non-fatal)"}
+{"level":30,"time":1793625370184,"pid":44344,"hostname":"WIN-LK2TQOOAELR","name":"graph-fallback","query":"ProcessClaim","directHits":2,"neighbors":2,"msg":"Graph fallback returned results"}
+{"level":30,"time":1793625377325,"pid":28460,"hostname":"WIN-LK2TQOOAELR","name":"admin-db","engine":"sqlite","msg":"[admin] SQLite (wasm) adapter connected and ready"}
+{"level":30,"time":1793625377327,"pid":28460,"hostname":"WIN-LK2TQOOAELR","name":"sa4e-215-schema","table":"mcp_servers","msg":"[sa4e-215] table ensured"}
+{"level":30,"time":1793625377328,"pid":28460,"hostname":"WIN-LK2TQOOAELR","name":"sa4e-215-schema","table":"decisions","msg":"[sa4e-215] table ensured"}
+{"level":50,"time":1793625378320,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378325,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378352,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378353,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-CQEOaA\\index.db"}
+{"level":50,"time":1793625378353,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378327,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378327,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378333,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378333,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378333,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378334,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378335,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378335,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378344,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378389,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625378398,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378399,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378415,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378415,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-rRp45j\\index.db"}
+{"level":50,"time":1793625378415,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378399,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378399,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378406,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378406,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378407,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378407,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378407,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378407,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378412,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378424,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625378432,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378433,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378446,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378446,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-mniAe8\\index.db"}
+{"level":50,"time":1793625378446,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378433,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378433,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378438,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378439,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378439,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378439,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378439,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378440,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378443,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378456,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625378461,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378461,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378470,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378470,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-3xOgZ5\\index.db"}
+{"level":50,"time":1793625378470,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378461,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378461,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378465,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378465,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378465,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378465,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378465,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378465,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378468,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378479,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625378485,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378486,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378495,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378496,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-UdjqtE\\index.db"}
+{"level":50,"time":1793625378486,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378486,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378489,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378490,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378490,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378490,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378490,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378490,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378493,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378496,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378501,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625378507,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378508,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378515,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378516,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-9QtKdf\\index.db"}
+{"level":50,"time":1793625378516,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378508,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378508,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378511,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378511,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378511,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378511,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378511,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378512,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378514,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378521,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625378525,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378525,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378534,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378534,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-A38jKz\\index.db"}
+{"level":50,"time":1793625378526,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378526,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378528,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378528,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378529,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378529,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378529,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378529,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378532,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378534,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378539,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625378544,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378545,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378553,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378553,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-8G768w\\index.db"}
+{"level":50,"time":1793625378553,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378545,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378545,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378549,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378549,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378549,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378549,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378549,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378549,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378552,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378558,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625378564,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378565,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378573,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378573,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-X5GQZY\\index.db"}
+{"level":50,"time":1793625378565,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378565,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378568,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378569,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378569,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378569,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378569,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378569,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378572,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378573,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378579,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625378586,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378586,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378594,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378594,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-iOVwR8\\index.db"}
+{"level":50,"time":1793625378586,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378586,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378589,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378589,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378589,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378590,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378590,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378590,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378592,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378594,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378600,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625378605,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378605,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378613,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378613,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-UDE1zh\\index.db"}
+{"level":50,"time":1793625378613,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378605,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378605,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378608,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378608,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378608,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378608,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378609,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378609,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378611,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378617,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625378621,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625378622,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625378631,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625378631,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-uCoAj1\\index.db"}
+{"level":50,"time":1793625378631,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625378622,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625378622,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625378626,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625378627,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625378627,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625378627,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625378627,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625378627,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625378629,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625378637,"pid":13736,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":30,"time":1793625382016,"pid":59676,"hostname":"WIN-LK2TQOOAELR","name":"admin-db","engine":"sqlite","msg":"[admin] SQLite (wasm) adapter connected and ready"}
+{"level":30,"time":1793625384833,"pid":53304,"hostname":"WIN-LK2TQOOAELR","name":"index-operation-manager","count":1,"msg":"[index-op] hydrated interrupted operations from DB"}
+{"level":30,"time":1793625385199,"pid":58936,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+{"level":40,"time":1793625385205,"pid":58936,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","count":2,"msg":"[startup-interrupt] marked stale running operations as interrupted"}
+{"level":50,"time":1793625385211,"pid":58936,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","err":{"type":"RepositoryError","message":"db down: db down","stack":"RepositoryError: db down\n    at translateError (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/errors/RepositoryError.ts:59:12)\n    at IndexOperationRepository.findStaleRunning (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/repositories/IndexOperationRepository.ts:150:13)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at Module.runStartupInterruptDetection (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/engine/indexer/startup-interrupt-detector.ts:37:19)\nCaused by: Error: db down\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/engine/indexer/__tests__/startup-interrupt-detector.test.ts:99:39\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64\ncaused by: Error: db down\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/engine/indexer/__tests__/startup-interrupt-detector.test.ts:99:39\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64","name":"RepositoryError"},"msg":"[startup-interrupt] CRITICAL: detection failed, continuing startup (graceful degradation)"}
+{"level":40,"time":1793625385214,"pid":58936,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","count":1,"msg":"[startup-interrupt] marked stale running operations as interrupted"}
+{"level":40,"time":1793625385216,"pid":58936,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","count":1,"msg":"[startup-interrupt] marked stale running operations as interrupted"}
+{"level":30,"time":1793625385218,"pid":58936,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","intervalMs":60000,"staleSeconds":600,"msg":"[startup-interrupt] periodic scheduler started"}
+{"level":30,"time":1793625445218,"pid":58936,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+{"level":30,"time":1793625445218,"pid":58936,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] periodic scheduler stopped"}
+{"level":30,"time":1793625388387,"pid":24008,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=legacy12345x)"}
+{"level":30,"time":1793625388400,"pid":24008,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=legacy12345x)"}
+{"level":30,"time":1793625388411,"pid":24008,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=legacy12345x)"}
+{"level":30,"time":1793625388426,"pid":24008,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=legacy12345x)"}
+{"level":30,"time":1793625388430,"pid":24008,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=legacy12345x)"}
+{"level":30,"time":1793625388436,"pid":24008,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=legacy12345x)"}
+{"level":30,"time":1793625390888,"pid":45140,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1793625390889,"pid":45140,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Work-HR:ApproveLeave:-:-","virtualPath":"pega://Work-HR/rule_obj_activity/ApproveLeave/-/-","kind":"pega_rule_obj_activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","msg":"syncRuleToSymbols built identity"}
+{"level":30,"time":1793625390894,"pid":45140,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work","pyRuleName":"Done","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1793625390894,"pid":45140,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Work:Done:-:-","virtualPath":"pega://Work/rule_obj_activity/Done/-/-","kind":"pega_rule_obj_activity","pyClassName":"Work","pyRuleName":"Done","msg":"syncRuleToSymbols built identity"}
+{"level":30,"time":1793625390895,"pid":45140,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work","pyRuleName":"LegacyRule","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1793625390895,"pid":45140,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Work:LegacyRule:-:-","virtualPath":"pega://Work/rule_obj_activity/LegacyRule/-/-","kind":"pega_rule_obj_activity","pyClassName":"Work","pyRuleName":"LegacyRule","msg":"syncRuleToSymbols built identity"}
+{"level":30,"time":1793625390895,"pid":45140,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Flow","pyClassName":"Work","pyRuleName":"LongDoc","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1793625390895,"pid":45140,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Flow:Work:LongDoc:-:-","virtualPath":"pega://Work/rule_obj_flow/LongDoc/-/-","kind":"pega_rule_obj_flow","pyClassName":"Work","pyRuleName":"LongDoc","msg":"syncRuleToSymbols built identity"}
+{"level":30,"time":1793625390896,"pid":45140,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1793625390896,"pid":45140,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Work-HR:ApproveLeave:-:-","virtualPath":"pega://Work-HR/rule_obj_activity/ApproveLeave/-/-","kind":"pega_rule_obj_activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","msg":"syncRuleToSymbols built identity"}
+{"level":30,"time":1793625390898,"pid":45140,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work","pyRuleName":"NoChk","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":50,"time":1793625399159,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625399166,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625399191,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625399191,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-TNs0kq\\index.db"}
+{"level":50,"time":1793625399191,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625399167,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625399167,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625399177,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625399177,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625399177,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625399178,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625399178,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625399178,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625399184,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625399215,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625399239,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625399244,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625399245,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625399261,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625399261,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-D8Q0Yn\\index.db"}
+{"level":50,"time":1793625399261,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625399246,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625399246,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625399251,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625399252,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625399252,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625399252,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625399252,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625399252,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625399258,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625399266,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625399271,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625399276,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625399277,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625399287,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625399288,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-QRbmUN\\index.db"}
+{"level":50,"time":1793625399288,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625399277,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625399277,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625399280,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625399281,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625399281,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625399281,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625399281,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625399281,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625399285,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625399292,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":30,"time":1793625399308,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":2,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625399312,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625399318,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625399319,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625399332,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625399332,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-2drJPn\\index.db"}
+{"level":50,"time":1793625399332,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625399319,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625399319,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625399325,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625399325,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625399325,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625399326,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625399326,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625399326,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625399330,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625399340,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":30,"time":1793625399344,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":2,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625399347,"pid":44948,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":40,"time":1793625407637,"pid":26080,"hostname":"WIN-LK2TQOOAELR","name":"app-config","msg":"Entra vars partially set but SSO_ENABLED=false — SSO stays disabled"}
+{"level":30,"time":1793625409308,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"resolve-engine-adapter","msg":"[engine-adapter] Active engine: sqlite — using SqliteWasmAdapter"}
+{"level":50,"time":1793625409378,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625409379,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625409410,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625409411,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e-test-j2m1aT\\.code-intel\\index.db"}
+{"level":50,"time":1793625409411,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625409382,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625409382,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625409391,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625409392,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625409393,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625409394,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625409394,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625409395,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625409401,"pid":29704,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625428785,"pid":51144,"hostname":"WIN-LK2TQOOAELR","name":"admin-db","engine":"sqlite","msg":"[admin] SQLite (wasm) adapter connected and ready"}
+{"level":50,"time":1793625429479,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625429484,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625429507,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625429508,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-7qxCbV\\index.db"}
+{"level":50,"time":1793625429508,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625429484,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625429485,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625429493,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625429493,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625429493,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625429493,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625429493,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625429494,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625429500,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625429528,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625429547,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625429554,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625429555,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625429566,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625429567,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-urW9Wx\\index.db"}
+{"level":50,"time":1793625429567,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625429555,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625429555,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625429559,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625429559,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625429559,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625429559,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625429559,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625429559,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625429563,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625429574,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625429576,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625429582,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625429582,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625429591,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625429592,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-B5kMFj\\index.db"}
+{"level":50,"time":1793625429583,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625429583,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625429586,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625429586,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625429586,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625429587,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625429587,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625429587,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625429590,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625429592,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":30,"time":1793625429596,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625429599,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625429604,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625429605,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625429614,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625429614,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-uHnmyA\\index.db"}
+{"level":50,"time":1793625429605,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625429605,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625429608,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625429609,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625429609,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625429609,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625429609,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625429609,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625429612,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625429614,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":30,"time":1793625429618,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625429621,"pid":63368,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":40,"time":1793625430061,"pid":57900,"hostname":"WIN-LK2TQOOAELR","name":"app-config","msg":"Entra vars partially set but SSO_ENABLED=false — SSO stays disabled"}
+{"level":30,"time":1793625430584,"pid":28004,"hostname":"WIN-LK2TQOOAELR","name":"admin-db","engine":"sqlite","msg":"[admin] SQLite (wasm) adapter connected and ready"}
+{"level":30,"time":1793625436269,"pid":41116,"hostname":"WIN-LK2TQOOAELR","name":"admin-db","engine":"sqlite","msg":"[admin] SQLite (wasm) adapter connected and ready"}
+{"level":30,"time":1793625442605,"pid":50968,"hostname":"WIN-LK2TQOOAELR","name":"admin-db","engine":"sqlite","msg":"[admin] SQLite (wasm) adapter connected and ready"}
+{"level":50,"time":1793625445408,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625445413,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625445441,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625445442,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-NNpMvL\\index.db"}
+{"level":50,"time":1793625445442,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625445415,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625445416,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625445425,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625445426,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625445426,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625445426,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625445427,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625445427,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625445433,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625445457,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625445465,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625445466,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625445482,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625445483,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-yfhweS\\index.db"}
+{"level":50,"time":1793625445483,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625445467,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625445467,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625445471,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625445471,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625445472,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625445472,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625445472,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625445472,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625445479,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625445493,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625445500,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625445501,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625445514,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625445514,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-MttwQy\\index.db"}
+{"level":50,"time":1793625445514,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625445501,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625445501,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625445505,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625445506,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625445506,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625445506,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625445506,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625445506,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625445510,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625445519,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625445525,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625445526,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625445543,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":40,"time":1793625445557,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","err":{"type":"SQLite3Error","message":"SQLITE_ERROR: sqlite3 result code 1: no such column: enrichment_status","stack":"SQLite3Error: SQLITE_ERROR: sqlite3 result code 1: no such column: enrichment_status\n    at toss3 (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9572:11)\n    at checkSqlite3Rc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9621:6)\n    at DB.checkRc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10024:37)\n    at DB.exec (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10116:11)\n    at Object.all (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/adapters/wasm/WasmDbSyncAdapter.ts:24:24)\n    at SqliteDbAdapter.all (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/task-queue/SqliteDbAdapter.ts:40:27)\n    at SqliteDbAdapter.allAsync (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/task-queue/SqliteDbAdapter.ts:72:17)\n    at queryPendingEntries (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/dispatchers/search.ts:91:38)\n    at handleSearch (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/dispatchers/search.ts:42:29)\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/__tests__/SA4E-331-CrossProjectIsolation.test.ts:94:20","resultCode":1,"name":"SQLite3Error"},"msg":"[mem_search] Pending query failed (non-fatal)"}
+{"level":50,"time":1793625445543,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-kTFUtw\\index.db"}
+{"level":50,"time":1793625445543,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625445527,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625445527,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625445533,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625445534,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625445534,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625445534,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625445534,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625445535,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625445540,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625445566,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625445573,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625445574,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625445589,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":40,"time":1793625445593,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","err":{"type":"SQLite3Error","message":"SQLITE_ERROR: sqlite3 result code 1: no such column: enrichment_status","stack":"SQLite3Error: SQLITE_ERROR: sqlite3 result code 1: no such column: enrichment_status\n    at toss3 (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9572:11)\n    at checkSqlite3Rc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9621:6)\n    at DB.checkRc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10024:37)\n    at DB.exec (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10116:11)\n    at Object.all (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/adapters/wasm/WasmDbSyncAdapter.ts:24:24)\n    at SqliteDbAdapter.all (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/task-queue/SqliteDbAdapter.ts:40:27)\n    at SqliteDbAdapter.allAsync (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/task-queue/SqliteDbAdapter.ts:72:17)\n    at queryPendingEntries (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/dispatchers/search.ts:91:38)\n    at handleSearch (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/dispatchers/search.ts:42:29)\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/__tests__/SA4E-331-CrossProjectIsolation.test.ts:100:20","resultCode":1,"name":"SQLite3Error"},"msg":"[mem_search] Pending query failed (non-fatal)"}
+{"level":50,"time":1793625445589,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-bVPT1c\\index.db"}
+{"level":50,"time":1793625445589,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625445575,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625445575,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625445582,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625445582,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625445582,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625445583,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625445583,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625445583,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625445586,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625445599,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625445607,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625445608,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625445620,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625445620,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-FVeYCv\\index.db"}
+{"level":50,"time":1793625445620,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625445608,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625445608,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625445612,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625445612,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625445612,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625445612,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625445613,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625445613,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625445618,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625445625,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625445630,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625445631,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625445641,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":40,"time":1793625445644,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","err":{"type":"SQLite3Error","message":"SQLITE_ERROR: sqlite3 result code 1: no such column: enrichment_status","stack":"SQLite3Error: SQLITE_ERROR: sqlite3 result code 1: no such column: enrichment_status\n    at toss3 (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9572:11)\n    at checkSqlite3Rc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9621:6)\n    at DB.checkRc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10024:37)\n    at DB.exec (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10116:11)\n    at Object.all (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/adapters/wasm/WasmDbSyncAdapter.ts:24:24)\n    at SqliteDbAdapter.all (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/task-queue/SqliteDbAdapter.ts:40:27)\n    at SqliteDbAdapter.allAsync (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/task-queue/SqliteDbAdapter.ts:72:17)\n    at queryPendingEntries (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/dispatchers/search.ts:91:38)\n    at handleSearch (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/dispatchers/search.ts:42:29)\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/__tests__/SA4E-331-CrossProjectIsolation.test.ts:113:20","resultCode":1,"name":"SQLite3Error"},"msg":"[mem_search] Pending query failed (non-fatal)"}
+{"level":50,"time":1793625445641,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-s2JMv9\\index.db"}
+{"level":50,"time":1793625445641,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625445631,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625445631,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625445634,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625445635,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625445635,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625445635,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625445635,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625445635,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625445639,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625445648,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625445654,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625445655,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625445665,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":40,"time":1793625445667,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","err":{"type":"SQLite3Error","message":"SQLITE_ERROR: sqlite3 result code 1: no such column: enrichment_status","stack":"SQLite3Error: SQLITE_ERROR: sqlite3 result code 1: no such column: enrichment_status\n    at toss3 (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9572:11)\n    at checkSqlite3Rc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:9621:6)\n    at DB.checkRc (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10024:37)\n    at DB.exec (file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@sqlite.org/sqlite-wasm/dist/node.mjs:10116:11)\n    at Object.all (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/adapters/wasm/WasmDbSyncAdapter.ts:24:24)\n    at SqliteDbAdapter.all (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/task-queue/SqliteDbAdapter.ts:40:27)\n    at SqliteDbAdapter.allAsync (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/task-queue/SqliteDbAdapter.ts:72:17)\n    at queryPendingEntries (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/dispatchers/search.ts:91:38)\n    at handleSearch (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/dispatchers/search.ts:42:29)\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/modules/memory/__tests__/SA4E-331-CrossProjectIsolation.test.ts:123:20","resultCode":1,"name":"SQLite3Error"},"msg":"[mem_search] Pending query failed (non-fatal)"}
+{"level":50,"time":1793625445665,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-qI81hL\\index.db"}
+{"level":50,"time":1793625445665,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625445656,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625445656,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625445659,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625445660,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625445660,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625445660,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625445660,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625445660,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625445663,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625445672,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625445678,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625445679,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625445689,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625445689,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-WuiBeL\\index.db"}
+{"level":50,"time":1793625445689,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625445679,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625445679,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625445683,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625445683,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625445684,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625445684,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625445684,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625445684,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625445687,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625445694,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625445700,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625445701,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625445711,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625445711,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-B49RZk\\index.db"}
+{"level":50,"time":1793625445711,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625445701,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625445701,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625445704,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625445704,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625445705,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625445705,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625445705,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625445705,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625445709,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625445717,"pid":58092,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":30,"time":1793625446920,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"resolve-engine-adapter","msg":"[engine-adapter] Active engine: sqlite — using SqliteWasmAdapter"}
+{"level":50,"time":1793625447018,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625447021,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625447059,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625447060,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e-test-AwHbM5\\.code-intel\\index.db"}
+{"level":50,"time":1793625447060,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625447026,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625447027,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625447034,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625447035,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625447035,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625447036,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625447037,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625447037,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625447048,"pid":19328,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625451196,"pid":49680,"hostname":"WIN-LK2TQOOAELR","name":"admin-db","engine":"sqlite","msg":"[admin] SQLite (wasm) adapter connected and ready"}
+{"level":50,"time":1793625452115,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625452122,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625452171,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625452173,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-gHuGK2\\index.db"}
+{"level":50,"time":1793625452173,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625452124,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625452125,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625452138,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625452140,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625452141,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625452142,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625452142,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625452143,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625452160,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625452200,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625452232,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625452241,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625452243,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625452263,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625452264,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-U0JhuC\\index.db"}
+{"level":50,"time":1793625452264,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625452243,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625452243,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625452250,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625452251,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625452251,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625452251,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625452251,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625452251,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625452258,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625452272,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625452277,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625452287,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625452288,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625452303,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625452304,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-T4A2a3\\index.db"}
+{"level":50,"time":1793625452304,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625452288,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625452288,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625452294,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625452294,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625452295,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625452295,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625452295,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625452295,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625452300,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625452311,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625452322,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625452323,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625452336,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625452336,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-Nt8ADt\\index.db"}
+{"level":50,"time":1793625452336,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625452323,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625452323,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625452328,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625452329,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625452329,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625452329,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625452329,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625452329,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625452333,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625452343,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625452354,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625452355,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625452372,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":30,"time":1793625452380,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625452374,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-N0onAL\\index.db"}
+{"level":50,"time":1793625452373,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625452356,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625452356,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625452361,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625452361,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625452361,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625452361,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625452361,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625452362,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625452366,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625452385,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625452395,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625452396,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625452410,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625452410,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-BqTJoH\\index.db"}
+{"level":50,"time":1793625452410,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625452396,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625452396,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625452402,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625452402,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625452403,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625452403,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625452403,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625452403,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625452408,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625452417,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625452424,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625452425,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625452438,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":30,"time":1793625452444,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"CONTEXT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625452439,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-yrNe77\\index.db"}
+{"level":50,"time":1793625452439,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625452426,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625452426,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625452431,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625452432,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625452432,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625452432,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625452432,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625452432,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625452436,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625452449,"pid":32356,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":40,"time":1793625452848,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"","pyClassName":"Work","pyRuleName":"Test","msg":"Missing required Pega fields"}
+{"level":40,"time":1793625452848,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pyClassName":"Work","pyRuleName":"Test","msg":"extractRequiredFields returned null"}
+{"level":40,"time":1793625452852,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work","pyRuleName":"","msg":"Missing required Pega fields"}
+{"level":30,"time":1793625452849,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Rule-Obj-Activity","pyRuleName":"Test","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1793625452849,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Rule-Obj-Activity:Test:-:-","virtualPath":"pega://Rule-Obj-Activity/rule_obj_activity/Test/-/-","kind":"pega_rule_obj_activity","pyClassName":"Rule-Obj-Activity","pyRuleName":"Test","msg":"syncRuleToSymbols built identity"}
+{"level":40,"time":1793625452852,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work","msg":"extractRequiredFields returned null"}
+{"level":30,"time":1793625452853,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work","pyRuleName":"BigRule","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1793625452853,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Work:BigRule:-:-","virtualPath":"pega://Work/rule_obj_activity/BigRule/-/-","kind":"pega_rule_obj_activity","pyClassName":"Work","pyRuleName":"BigRule","msg":"syncRuleToSymbols built identity"}
+{"level":40,"time":1793625452860,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Work:BigRule:-:-","size":6291544,"msg":"Rule exceeds 5MB limit — skipped"}
+{"level":30,"time":1793625452861,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1793625452861,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Work-HR:ApproveLeave:-:-","virtualPath":"pega://Work-HR/rule_obj_activity/ApproveLeave/-/-","kind":"pega_rule_obj_activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","msg":"syncRuleToSymbols built identity"}
+{"level":30,"time":1793625452862,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1793625452862,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Work-HR:ApproveLeave:-:-","virtualPath":"pega://Work-HR/rule_obj_activity/ApproveLeave/-/-","kind":"pega_rule_obj_activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","msg":"syncRuleToSymbols built identity"}
+{"level":30,"time":1793625452863,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","projectId":"proj1","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1793625452863,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Work-HR:ApproveLeave:-:-","virtualPath":"pega://Work-HR/rule_obj_activity/ApproveLeave/-/-","kind":"pega_rule_obj_activity","pyClassName":"Work-HR","pyRuleName":"ApproveLeave","msg":"syncRuleToSymbols built identity"}
+{"level":30,"time":1793625452863,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Work","pyRuleName":"X","projectId":"proj-xyz","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1793625452863,"pid":54544,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Work:X:-:-","virtualPath":"pega://Work/rule_obj_activity/X/-/-","kind":"pega_rule_obj_activity","pyClassName":"Work","pyRuleName":"X","msg":"syncRuleToSymbols built identity"}
+{"level":50,"time":1793625454781,"pid":64296,"hostname":"WIN-LK2TQOOAELR","name":"migration-service","err":{"type":"Error","message":"Mismatch app_data: 2 vs 0","stack":"Error: Mismatch app_data: 2 vs 0\n    at MigrationService.migrate (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/migration/MigrationService.ts:106:17)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/migration/__tests__/MigrationService.test.ts:120:20\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"},"stack":"Error: Mismatch app_data: 2 vs 0\n    at MigrationService.migrate (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/migration/MigrationService.ts:106:17)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/migration/__tests__/MigrationService.test.ts:120:20\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20","msg":"[migration] Failed: Mismatch app_data: 2 vs 0"}
+{"level":50,"time":1793625454789,"pid":64296,"hostname":"WIN-LK2TQOOAELR","name":"migration-service","err":{"type":"CancelledError","message":"Cancelled","stack":"Error: Cancelled\n    at MigrationService.migrate (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/migration/MigrationService.ts:93:35)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/migration/__tests__/MigrationService.test.ts:129:20\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"},"stack":"Error: Cancelled\n    at MigrationService.migrate (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/migration/MigrationService.ts:93:35)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src/database/migration/__tests__/MigrationService.test.ts:129:20\n    at file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20","msg":"[migration] Failed: Cancelled"}
+{"level":40,"time":1793625455161,"pid":32376,"hostname":"WIN-LK2TQOOAELR","name":"engine-from-env","file":"C:\\Users\\ASUS\\AppData\\Local\\Temp\\env-db-91BX6s\\missing","reason":"ENOENT: no such file or directory, open 'C:\\Users\\ASUS\\AppData\\Local\\Temp\\env-db-91BX6s\\missing'","msg":"DATABASE_URL_FILE unreadable — falling back to DATABASE_URL"}
+{"level":40,"time":1793625455164,"pid":32376,"hostname":"WIN-LK2TQOOAELR","name":"engine-from-env","file":"C:\\Users\\ASUS\\AppData\\Local\\Temp\\env-db-91BX6s\\empty","msg":"DATABASE_URL_FILE is empty — falling back to DATABASE_URL"}
+{"level":30,"time":1793625455181,"pid":32376,"hostname":"WIN-LK2TQOOAELR","name":"engine-from-env","host":"postgres","port":5432,"database":"sa4e_db","msg":"Active DB engine seeded from environment: postgresql"}
+{"level":30,"time":1793625455196,"pid":32376,"hostname":"WIN-LK2TQOOAELR","name":"engine-from-env","host":"postgres","port":5432,"database":"sa4e_db","msg":"Active DB engine seeded from environment: postgresql"}
+{"level":40,"time":1793625455201,"pid":32376,"hostname":"WIN-LK2TQOOAELR","name":"engine-from-env","adapter":"mysql","msg":"DATABASE_ADAPTER is not a postgres variant — leaving database.json unchanged"}
+{"level":40,"time":1793625455205,"pid":32376,"hostname":"WIN-LK2TQOOAELR","name":"engine-from-env","msg":"DATABASE_URL is not a usable PostgreSQL URL — leaving database.json unchanged"}
+{"level":30,"time":1793625455208,"pid":32376,"hostname":"WIN-LK2TQOOAELR","name":"engine-from-env","host":"h","port":5432,"database":"db","msg":"Active DB engine seeded from environment: postgresql"}
+{"level":30,"time":1793625455219,"pid":32376,"hostname":"WIN-LK2TQOOAELR","name":"engine-from-env","host":"h","port":5432,"database":"db","msg":"Active DB engine seeded from environment: postgresql"}
+{"level":50,"time":1793625457727,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625457733,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625457760,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625457761,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-a2Sjnc\\index.db"}
+{"level":50,"time":1793625457761,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625457734,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625457735,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625457744,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625457745,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625457745,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625457746,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625457746,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625457746,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625457753,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625457780,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625457787,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625457788,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625457805,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625457806,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-wW24Xr\\index.db"}
+{"level":50,"time":1793625457806,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625457789,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625457789,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625457793,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625457793,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625457793,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625457793,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625457794,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625457794,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625457800,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625458118,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625458124,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625458125,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625458135,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625458136,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-TdoA8N\\index.db"}
+{"level":50,"time":1793625458126,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625458126,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625458129,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625458130,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625458130,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625458130,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625458130,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625458130,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625458133,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625458136,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625458142,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625458148,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625458148,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625458159,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625458159,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-smM9r2\\index.db"}
+{"level":50,"time":1793625458149,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625458149,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625458154,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625458154,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625458154,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625458154,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625458154,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625458154,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625458157,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625458159,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625458164,"pid":27008,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":30,"time":1793625462914,"pid":44972,"hostname":"WIN-LK2TQOOAELR","name":"admin-db","engine":"sqlite","msg":"[admin] SQLite (wasm) adapter connected and ready"}
+{"level":30,"time":1793625463958,"pid":50920,"hostname":"WIN-LK2TQOOAELR","name":"admin-db","engine":"sqlite","msg":"[admin] SQLite (wasm) adapter connected and ready"}
+{"level":50,"time":1793625467520,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625467526,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625467545,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625467546,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-UBIX3R\\index.db"}
+{"level":50,"time":1793625467546,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625467527,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625467527,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625467533,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625467533,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625467533,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625467534,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625467534,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625467534,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625467540,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625467562,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625467569,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625467569,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625467588,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625467591,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-aHlXT4\\index.db"}
+{"level":50,"time":1793625467591,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625467570,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625467570,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625467578,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625467579,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625467580,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625467580,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625467581,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625467581,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625467585,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625467603,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625467611,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625467612,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625467623,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625467623,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-gUUtUr\\index.db"}
+{"level":50,"time":1793625467623,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625467612,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625467612,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625467616,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625467616,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625467616,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625467616,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625467617,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625467617,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625467621,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625467632,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625467640,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625467641,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625467653,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625467654,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-qtowA1\\index.db"}
+{"level":50,"time":1793625467654,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625467642,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625467642,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625467646,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625467647,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625467647,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625467647,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625467647,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625467647,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625467651,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625467660,"pid":63516,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}

@@ -155,24 +155,26 @@ export class PendingTaskRepositoryWrites extends PendingTaskRepositoryBase {
   /**
    * SA4E-165: Reconcile orphan tasks whose entry_id no longer exists.
    * DELETES them entirely — they can never succeed and should not inflate failed counts.
-   * Handles both KB tasks (knowledge_entries) and CODE_ENRICHMENT tasks (symbols).
+   * Handles both KB tasks (knowledge_entries) and CODE_ENRICHMENT tasks (symbols),
+   * including COMPLETED rows for dead entries (no functional value — they made
+   * pending_tasks grow unbounded between restarts).
    */
   async reconcileOrphans(): Promise<number> {
     // KB tasks: entry_id references knowledge_entries
     const kbResult = await this.db.runAsync(
       `DELETE FROM pending_tasks
-       WHERE status IN (?, ?, ?)
+       WHERE status IN (?, ?, ?, ?)
          AND task_type NOT IN ('CODE_ENRICHMENT')
          AND entry_id NOT IN (SELECT id FROM knowledge_entries)`,
-      [TaskStatus.PENDING, TaskStatus.PROCESSING, TaskStatus.FAILED],
+      [TaskStatus.PENDING, TaskStatus.PROCESSING, TaskStatus.FAILED, TaskStatus.COMPLETED],
     );
     // CODE_ENRICHMENT tasks: entry_id references symbols table
     const codeResult = await this.db.runAsync(
       `DELETE FROM pending_tasks
-       WHERE status IN (?, ?, ?)
+       WHERE status IN (?, ?, ?, ?)
          AND task_type = 'CODE_ENRICHMENT'
          AND entry_id NOT IN (SELECT id FROM symbols)`,
-      [TaskStatus.PENDING, TaskStatus.PROCESSING, TaskStatus.FAILED],
+      [TaskStatus.PENDING, TaskStatus.PROCESSING, TaskStatus.FAILED, TaskStatus.COMPLETED],
     );
     return kbResult.changes + codeResult.changes;
   }

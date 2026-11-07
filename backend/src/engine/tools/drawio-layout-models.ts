@@ -42,4 +42,8 @@ export interface NormalizedArgs {
   algorithm: string;
   spacing: number;
   direction: string;
+  /** 'auto' chooses minimal fix; 'positions' forces full relayout; 'ports' only spreads edge ports. */
+  scope: 'auto' | 'positions' | 'ports';
+  /** Force full ELK relayout even when a minimal local repair would do. */
+  relayout: boolean;
 }

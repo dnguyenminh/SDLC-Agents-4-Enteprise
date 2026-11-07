@@ -24,8 +24,60 @@ import {
 /** Config keys isolated per workspace (SA4E-323) — never via generic updateConfig. */
 const WORKSPACE_SCOPED_KEYS = ["pega.endpoint", "pega.username", "jira.connectionType"];
 
+/** Memento key for the LLM profiles list (SA4E-390). */
+const PROFILES_STATE_KEY = "sdlcAgents.llm.profiles";
+/** Memento key for the active profile id. */
+const ACTIVE_PROFILE_STATE_KEY = "sdlcAgents.llm.activeProfileId";
+
 export class ProviderConfigService {
-  constructor(private readonly secrets: vscode.SecretStorage) {}
+  /**
+   * @param globalState SA4E-390: LLM profiles are extension STATE, not a
+   * user-editable setting. Kiro rejects config.update() for keys it has not
+   * registered as a contribution ("not a registered configuration"), so
+   * profiles are persisted in globalState (Memento) when available. Falls back
+   * to workspace configuration only when no Memento is injected (older call
+   * sites / tests).
+   */
+  constructor(
+    private readonly secrets: vscode.SecretStorage,
+    private readonly globalState?: vscode.Memento
+  ) {}
+
+  /** Read the profiles list from globalState (preferred) or config (fallback). */
+  private readProfilesStore(): LlmProfile[] {
+    if (this.globalState) {
+      return this.globalState.get<LlmProfile[]>(PROFILES_STATE_KEY, []);
+    }
+    return vscode.workspace.getConfiguration("sdlcAgents").get<LlmProfile[]>("llm.profiles", []);
+  }
+
+  /** Persist the profiles list to globalState (preferred) or config (fallback). */
+  private async writeProfilesStore(profiles: LlmProfile[]): Promise<void> {
+    if (this.globalState) {
+      await this.globalState.update(PROFILES_STATE_KEY, profiles);
+      return;
+    }
+    await vscode.workspace.getConfiguration("sdlcAgents")
+      .update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
+  }
+
+  /** Read the active profile id from globalState (preferred) or config. */
+  private readActiveProfileId(): string | undefined {
+    if (this.globalState) {
+      return this.globalState.get<string>(ACTIVE_PROFILE_STATE_KEY) || undefined;
+    }
+    return vscode.workspace.getConfiguration("sdlcAgents").get<string>("llm.activeProfileId") || undefined;
+  }
+
+  /** Persist the active profile id to globalState (preferred) or config. */
+  private async writeActiveProfileId(id: string | undefined): Promise<void> {
+    if (this.globalState) {
+      await this.globalState.update(ACTIVE_PROFILE_STATE_KEY, id);
+      return;
+    }
+    await vscode.workspace.getConfiguration("sdlcAgents")
+      .update("llm.activeProfileId", id, vscode.ConfigurationTarget.Global);
+  }
 
   /**
    * Build current settings state to send to webview.
@@ -48,8 +100,7 @@ export class ProviderConfigService {
     let baseUrl = this.getBaseUrlForProvider(provider);
     // Multi-profile mode: the active profile drives provider/model/baseUrl (SA4E-389).
     const rows = await this.readRows();
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const activeRaw = rows.find((p) => p.id === config.get<string>("llm.activeProfileId"));
+    const activeRaw = rows.find((p) => p.id === this.readActiveProfileId());
     if (activeRaw) {
       provider = activeRaw.provider;
       model = activeRaw.model;
@@ -59,6 +110,7 @@ export class ProviderConfigService {
     }
 
     const backendUrl = getBackendUrl();
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const allowInsecureRemote = config.get<boolean>("backend.allowInsecureRemote", false);
     const mcpServerPort = getSetting<number>("mcp.serverPort", "mcp.serverPort", 9181);
     const enableMcpServer = getSetting<boolean>("mcp.enabled", "mcp.enabled", true);
@@ -119,8 +171,14 @@ export class ProviderConfigService {
 
   /**
    * Build the provider-aware model list.
+   *
+   * @param baseUrlOverride SA4E-390: when the Edit Provider modal is open, the
+   * user may be pointing at a DIFFERENT server than the saved setting (e.g.
+   * typing a new Base URL, or two local servers fighting over port 1234). The
+   * model combobox must fetch /v1/models from the URL the user is CONFIGURING,
+   * not the stored setting — otherwise the list reflects the wrong server.
    */
-  async getModels(provider: string, currentModel: string): Promise<{
+  async getModels(provider: string, currentModel: string, baseUrlOverride?: string): Promise<{
     models: { id: string; name: string; isFree?: boolean }[]; selected: string; defaultModel: string;
   }> {
     let models = getStaticModels(provider);
@@ -128,9 +186,14 @@ export class ProviderConfigService {
     const lmstudioBaseUrl = getSetting<string>("llm.lmstudio.baseUrl", "llm.lmstudio.baseUrl", "")
       || "http://localhost:1234/v1";
 
-    const fetchUrl = provider === "lmstudio"
-      ? lmstudioBaseUrl
-      : gatewayBaseUrl;
+    // The modal's Base URL wins when provided — it is the server the user is
+    // actually configuring right now.
+    const override = (baseUrlOverride || "").trim();
+    const fetchUrl = override
+      ? override
+      : provider === "lmstudio"
+        ? lmstudioBaseUrl
+        : gatewayBaseUrl;
 
     if (fetchUrl) {
       // Pass the provider's API key as a Bearer token — gateways (e.g. OmniRoute)
@@ -223,10 +286,9 @@ export class ProviderConfigService {
     return `sdlcAgents.${profileId}ApiKey`;
   }
 
-  /** Raw profiles list from configuration. */
+  /** Raw profiles list (globalState preferred — see constructor note). */
   private async readRows(): Promise<LlmProfile[]> {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    return config.get<LlmProfile[]>("llm.profiles", []);
+    return this.readProfilesStore();
   }
 
   /**
@@ -238,8 +300,7 @@ export class ProviderConfigService {
 
   /** Get the active profile row, or null when none is active. */
   async getActiveProfileRow(): Promise<ProfileTableRow | null> {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const activeId = config.get<string>("llm.activeProfileId");
+    const activeId = this.readActiveProfileId();
     if (!activeId) { return null; }
     const active = (await this.readRows()).find((p) => p.id === activeId);
     return active ? this.toTableRow(active) : null;
@@ -290,13 +351,12 @@ export class ProviderConfigService {
         lastTestStatus: "untested",
       };
       const updated = [...profiles, newProfile];
-      const config = vscode.workspace.getConfiguration("sdlcAgents");
-      await config.update("llm.profiles", updated, vscode.ConfigurationTarget.Global);
+      await this.writeProfilesStore(updated);
 
       let activeProfileId: string | undefined;
       if (updated.length === 1) {
         activeProfileId = payload.id;
-        await config.update("llm.activeProfileId", payload.id, vscode.ConfigurationTarget.Global);
+        await this.writeActiveProfileId(payload.id);
       }
       return { success: true, profiles: updated.map((p) => this.toTableRow(p)), activeProfileId };
     } catch (err) {
@@ -339,8 +399,7 @@ export class ProviderConfigService {
         await this.secrets.store(this.profileApiKeySecretKey(profileId), updates.apiKey.trim());
       }
 
-      const config = vscode.workspace.getConfiguration("sdlcAgents");
-      await config.update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
+      await this.writeProfilesStore(profiles);
       return { success: true, profiles: profiles.map((p) => this.toTableRow(p)) };
     } catch (err) {
       return { success: false, error: (err as Error).message };
@@ -357,13 +416,12 @@ export class ProviderConfigService {
       }
       await this.secrets.delete(this.profileApiKeySecretKey(profileId));
 
-      const config = vscode.workspace.getConfiguration("sdlcAgents");
-      await config.update("llm.profiles", updated, vscode.ConfigurationTarget.Global);
+      await this.writeProfilesStore(updated);
 
       let activeProfileId: string | undefined;
-      if (config.get<string>("llm.activeProfileId") === profileId) {
+      if (this.readActiveProfileId() === profileId) {
         activeProfileId = updated.length > 0 ? updated[0].id : undefined;
-        await config.update("llm.activeProfileId", activeProfileId, vscode.ConfigurationTarget.Global);
+        await this.writeActiveProfileId(activeProfileId);
       }
       return { success: true, profiles: updated.map((p) => this.toTableRow(p)), activeProfileId };
     } catch (err) {
@@ -378,8 +436,7 @@ export class ProviderConfigService {
       if (!profiles.some((p) => p.id === profileId)) {
         return { success: false, error: "Profile not found" };
       }
-      const config = vscode.workspace.getConfiguration("sdlcAgents");
-      await config.update("llm.activeProfileId", profileId, vscode.ConfigurationTarget.Global);
+      await this.writeActiveProfileId(profileId);
       return { success: true, activeProfileId: profileId };
     } catch (err) {
       return { success: false, error: (err as Error).message };
@@ -404,12 +461,16 @@ export class ProviderConfigService {
         lastTestStatus: status as LlmTestStatus,
         lastTestedAt: Number.isNaN(at) ? Date.now() : at,
       };
-      const config = vscode.workspace.getConfiguration("sdlcAgents");
-      await config.update("llm.profiles", profiles, vscode.ConfigurationTarget.Global);
+      await this.writeProfilesStore(profiles);
       return { success: true, profiles: profiles.map((p) => this.toTableRow(p)) };
     } catch (err) {
       return { success: false, error: (err as Error).message };
     }
+  }
+
+  /** Full profile config by id (SA4E-390: reads the Memento-backed store). */
+  async getProfileById(profileId: string): Promise<LlmProfile | undefined> {
+    return (await this.readRows()).find((p) => p.id === profileId);
   }
 
   /** Read the API key stored for a profile. */

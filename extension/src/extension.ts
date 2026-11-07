@@ -54,7 +54,9 @@ export async function activate(context: vscode.ExtensionContext) {
   // Register Settings command early — must work even without a workspace folder.
   context.subscriptions.push(
     vscode.commands.registerCommand("sdlcAgents.openSettings", () =>
-      SettingsPanel.open(context.extensionUri, context.secrets)
+      // SA4E-390: pass globalState so LLM profiles persist in a Memento (Kiro
+      // rejects config.update for unregistered keys like sdlcAgents.llm.profiles).
+      SettingsPanel.open(context.extensionUri, context.secrets, context.globalState)
     )
   );
 

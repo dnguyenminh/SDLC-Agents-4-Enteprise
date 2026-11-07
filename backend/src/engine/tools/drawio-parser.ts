@@ -21,12 +21,26 @@ export interface DiagramEdge {
   sourceId: string;
   targetId: string;
   style: string;
+  /** Parent cell id — waypoints are stored relative to this cell's origin. */
+  parentId: string;
+  /** Stored waypoints (relative to edge parent origin), in file order. */
+  points: Array<{ x: number; y: number }>;
+  /** Fixed exit anchor as fractions of the source rect (exitX/exitY), or null. */
+  exit: { x: number; y: number } | null;
+  /** Fixed entry anchor as fractions of the target rect (entryX/entryY), or null. */
+  entry: { x: number; y: number } | null;
+  /** Stored terminal hint (as="sourcePoint"), relative to edge parent — or null. */
+  sourcePoint: { x: number; y: number } | null;
+  /** Stored terminal hint (as="targetPoint"), relative to edge parent — or null. */
+  targetPoint: { x: number; y: number } | null;
 }
 
 export interface DiagramGraph {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
   containers: DiagramNode[];
+  /** Edges without source/target cells — rendered from stored terminal points. */
+  looseEdges?: DiagramEdge[];
 }
 
 /** Parse .drawio XML file into DiagramGraph. */
@@ -40,6 +54,7 @@ function extractGraph(xml: string): DiagramGraph {
   const nodes: DiagramNode[] = [];
   const edges: DiagramEdge[] = [];
   const containers: DiagramNode[] = [];
+  const looseEdges: DiagramEdge[] = [];
 
   // Match all mxCell elements (self-closing or with children)
   const cellRegex = /<mxCell\s([^>]*?)(?:\/>|>([\s\S]*?)<\/mxCell>)/g;
@@ -58,9 +73,17 @@ function extractGraph(xml: string): DiagramGraph {
     const parent = cell.attrs['parent'] ?? '1';
 
     if (cell.attrs['edge'] === '1') {
-      const src = cell.attrs['source'];
-      const tgt = cell.attrs['target'];
-      if (src && tgt) edges.push({ id, sourceId: src, targetId: tgt, style });
+      const edge: DiagramEdge = {
+        id, sourceId: cell.attrs['source'] ?? '', targetId: cell.attrs['target'] ?? '',
+        style, parentId: parent,
+        points: parseWaypoints(cell.body),
+        exit: parseStyleAnchor(style, 'exit'),
+        entry: parseStyleAnchor(style, 'entry'),
+        sourcePoint: parseTerminalPoint(cell.body, 'sourcePoint'),
+        targetPoint: parseTerminalPoint(cell.body, 'targetPoint'),
+      };
+      if (edge.sourceId && edge.targetId) edges.push(edge);
+      else if (edge.sourcePoint && edge.targetPoint) looseEdges.push(edge);
     } else if (id !== '0' && id !== '1') {
       const geom = parseGeometry(cell.body, cell.attrs);
       if (!geom) continue;
@@ -73,7 +96,7 @@ function extractGraph(xml: string): DiagramGraph {
       if (isCont) containers.push(node); else nodes.push(node);
     }
   }
-  return { nodes, edges, containers };
+  return { nodes, edges, containers, looseEdges };
 }
 
 function parseGeometry(body: string, _cellAttrs: Record<string, string>): { x: number; y: number; w: number; h: number } | null {
@@ -99,6 +122,40 @@ function parseAttrs(attrStr: string): Record<string, string> {
     result[m[1]] = m[2];
   }
   return result;
+}
+
+/** Extract stored waypoints from an edge's <Array as="points"> section. */
+function parseWaypoints(body: string): Array<{ x: number; y: number }> {
+  const arr = /<Array\s+as="points">([\s\S]*?)<\/Array>/.exec(body);
+  if (!arr) return [];
+  const points: Array<{ x: number; y: number }> = [];
+  const pointRegex = /<mxPoint\s([^>]*?)\/?>/g;
+  let m: RegExpExecArray | null;
+  while ((m = pointRegex.exec(arr[1])) !== null) {
+    const attrs = parseAttrs(m[1]);
+    points.push({ x: parseFloat(attrs['x'] ?? '0'), y: parseFloat(attrs['y'] ?? '0') });
+  }
+  return points;
+}
+
+/** Parse exit/entry anchor fractions (exitX/exitY, entryX/entryY) from edge style. */
+function parseStyleAnchor(style: string, kind: 'exit' | 'entry'): { x: number; y: number } | null {
+  const x = new RegExp(`${kind}X=([^;]*)`).exec(style)?.[1];
+  const y = new RegExp(`${kind}Y=([^;]*)`).exec(style)?.[1];
+  if (x === undefined && y === undefined) return null;
+  return { x: parseFloat(x ?? '0.5'), y: parseFloat(y ?? '0.5') };
+}
+
+/** Extract a stored terminal hint point (as="sourcePoint"|"targetPoint"). */
+function parseTerminalPoint(body: string, kind: 'sourcePoint' | 'targetPoint'): { x: number; y: number } | null {
+  const tagRe = /<mxPoint\s([^>]*?)\/?>/g;
+  let m: RegExpExecArray | null;
+  while ((m = tagRe.exec(body)) !== null) {
+    if (!m[1].includes(`as="${kind}"`)) continue;
+    const attrs = parseAttrs(m[1]);
+    return { x: parseFloat(attrs['x'] ?? '0'), y: parseFloat(attrs['y'] ?? '0') };
+  }
+  return null;
 }
 
 function hasChildren(nodeId: string, cells: Array<{ attrs: Record<string, string>; body: string }>): boolean {

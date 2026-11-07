@@ -84,8 +84,8 @@ export class LlmSettingsHandler {
   }
 
   /** Run an end-to-end LLM test prompt. */
-  async testLlm(provider?: string, baseUrl?: string): Promise<void> {
-    const result = await this.llmTestService.testLlm(provider, baseUrl);
+  async testLlm(provider?: string, baseUrl?: string, model?: string): Promise<void> {
+    const result = await this.llmTestService.testLlm(provider, baseUrl, model);
     this.postMessage({ type: "llmTestResult", ...result });
   }
 

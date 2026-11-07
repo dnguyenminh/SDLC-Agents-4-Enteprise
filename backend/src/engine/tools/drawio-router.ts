@@ -1,5 +1,6 @@
 /**
  * Orthogonal edge routing — computes waypoints so connectors avoid shapes.
+ * Used by the local-repair path to reroute edges that cut through obstacles.
  */
 
 import { DiagramGraph, DiagramNode } from './drawio-parser.js';
@@ -23,7 +24,13 @@ export function routeEdges(graph: DiagramGraph): Map<string, Waypoint[]> {
   return routes;
 }
 
-function computeRoute(src: DiagramNode, tgt: DiagramNode, obstacles: DiagramNode[]): Waypoint[] {
+/**
+ * Compute detour waypoints for one edge around the given obstacles.
+ * Returns [] when the straight course is already clear.
+ */
+export function computeRoute(
+  src: DiagramNode, tgt: DiagramNode, obstacles: DiagramNode[],
+): Waypoint[] {
   const srcPort = exitPort(src, tgt);
   const tgtPort = entryPort(src, tgt);
   const crossed = obstacles.filter(o => lineIntersectsRect(srcPort, tgtPort, o));
@@ -38,24 +45,17 @@ function orthogonalRoute(start: Waypoint, end: Waypoint, obstacles: DiagramNode[
   // Try L-shape: vertical first
   const midL2: Waypoint = { x: start.x, y: end.y };
   if (!anyIntersection(start, midL2, obstacles) && !anyIntersection(midL2, end, obstacles)) return [midL2];
-  // Z-shape
-  const dx = end.x - start.x, dy = end.y - start.y;
-  const offset = 30;
+  // Z-shape: divert to a lane beyond the obstacle, turning at the ports
   const obs = obstacles[0];
-  if (Math.abs(dx) > Math.abs(dy)) {
-    const bypassY = start.y < obs.y ? obs.y - offset : obs.y + obs.height + offset;
-    return [
-      { x: start.x + dx * 0.3, y: start.y },
-      { x: start.x + dx * 0.3, y: bypassY },
-      { x: end.x - dx * 0.1, y: bypassY },
-    ];
+  const offset = 30;
+  if (Math.abs(end.x - start.x) >= Math.abs(end.y - start.y)) {
+    const midY = (start.y + end.y) / 2;
+    const bypassY = midY < obs.y + obs.height / 2 ? obs.y - offset : obs.y + obs.height + offset;
+    return [{ x: start.x, y: bypassY }, { x: end.x, y: bypassY }];
   }
-  const bypassX = start.x < obs.x ? obs.x - offset : obs.x + obs.width + offset;
-  return [
-    { x: start.x, y: start.y + dy * 0.3 },
-    { x: bypassX, y: start.y + dy * 0.3 },
-    { x: bypassX, y: end.y - dy * 0.1 },
-  ];
+  const midX = (start.x + end.x) / 2;
+  const bypassX = midX < obs.x + obs.width / 2 ? obs.x - offset : obs.x + obs.width + offset;
+  return [{ x: bypassX, y: start.y }, { x: bypassX, y: end.y }];
 }
 
 function anyIntersection(a: Waypoint, b: Waypoint, obstacles: DiagramNode[]): boolean {

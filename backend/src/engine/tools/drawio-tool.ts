@@ -13,7 +13,7 @@ import * as path from 'path';
 import pino from 'pino';
 import { parseDrawio } from './drawio-parser.js';
 import { handleApply } from './drawio-apply.js';
-import { detectAllIssues } from './drawio-detection.js';
+import { detectAllIssues, type LayoutIssue } from './drawio-detection.js';
 import {
   hasBaseDirArg,
   type MultiWorktreePathResolver,

@@ -119,8 +119,8 @@ export function createAdminContext(logger: Logger, registry?: any): AdminContext
           `INSERT INTO project_registry (project_id, display_name, workspace_path, created_by, last_seen)
            VALUES (?, ?, ?, ?, current_timestamp)
            ON CONFLICT(project_id) DO UPDATE SET
-             display_name = COALESCE(EXCLUDED.display_name, display_name),
-             workspace_path = COALESCE(EXCLUDED.workspace_path, workspace_path),
+             display_name = COALESCE(EXCLUDED.display_name, project_registry.display_name),
+             workspace_path = COALESCE(EXCLUDED.workspace_path, project_registry.workspace_path),
              last_seen = current_timestamp`,
           [projectId, displayName, workspaceRoot, '']
         );

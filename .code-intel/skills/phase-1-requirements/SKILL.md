@@ -1,10 +1,7 @@
 ---
 name: phase-1-requirements
-description: Phase 1: Requirements (BA → BRD)
+description: Phase 1 workflow — BA creates BRD with diagrams, glossary extraction, Jira attachment
 ---
-
-
-# Phase 1: Requirements (BA → BRD)
 
 ## Prerequisites
 
@@ -74,17 +71,17 @@ mem_ingest(
 )
 ```
 
-6. Pass REFERENCE-ANALYSIS.md to BA as contextFile when invoking BRD creation.
+6. Pass REFERENCE-ANALYSIS.md to BA when invoking BRD creation (instruct BA to read it).
 
-**Skip condition:** Ticket là CRUD đơn giản, UI tweak, hoặc bug fix nhỏ — không cần reference analysis.
+**Skip condition:** Ticket is simple CRUD, UI tweak, or small bug fix — no reference analysis needed.
 
 ### Step 3: Invoke BA Agent
 
 ```
-invokeSubAgent(
-  name: "ba-agent",
-  prompt: "Tạo BRD cho {TICKET}. Đọc REFERENCE-ANALYSIS.md nếu có. PHẢI tạo draw.io diagrams (use-case.drawio + business-flow.drawio) và export PNG. Không được bỏ qua Step 7 (Generate Diagrams).",
-  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }, { "path": "documents/{TICKET}/REFERENCE-ANALYSIS.md" }]
+task(
+  description: "Create BRD for {TICKET}",
+  prompt: "Create BRD for {TICKET}. Read REFERENCE-ANALYSIS.md if it exists (documents/{TICKET}/REFERENCE-ANALYSIS.md). MUST create draw.io diagrams (use-case.drawio + business-flow.drawio) and export PNG — load the 'drawio-diagrams' skill via the skill tool. Do not skip Step 7 (Generate Diagrams).",
+  subagent_type: "ba-agent"
 )
 ```
 
@@ -96,7 +93,11 @@ invokeSubAgent(
 
 If diagrams missing → invoke BA again:
 ```
-"Tạo draw.io diagrams cho BRD {TICKET}. Chỉ tạo diagrams, không tạo lại BRD."
+task(
+  description: "Create draw.io diagrams for BRD {TICKET}",
+  prompt: "Create draw.io diagrams for BRD {TICKET}. Only create diagrams, do not recreate BRD. Load the 'drawio-diagrams' skill via the skill tool.",
+  subagent_type: "ba-agent"
+)
 ```
 
 ### Step 5: Update Status
@@ -118,13 +119,13 @@ Also attach all `.drawio` files from `documents/{TICKET}/diagrams/`.
 ### Step 7: Report
 
 ```
-✅ Phase 1 done — BRD.md created & attached to Jira.
-Chuyển sang Phase 2 (Specification)?
+Phase 1 done — BRD.md created & attached to Jira.
+Proceed to Phase 2 (Specification)?
 ```
 
 Wait for user confirmation.
 
-## Quality Gate (from shared-quality-gates.md)
+## Quality Gate
 
 | # | Check | If Missing |
 |---|-------|------------|
@@ -142,7 +143,7 @@ Wait for user confirmation.
 
 ### Purpose
 
-Establish consistent terminology across ALL agents. Every agent will `mem_search("glossary {PROJECT}")` before writing documents or code to ensure they use correct domain terms.
+Establish consistent terminology across ALL agents. Every agent will `mem_search("glossary {PROJECT}")` before writing documents or code.
 
 ### Process
 
@@ -167,11 +168,7 @@ mem_ingest(
 ### Entry Format
 
 ```
-GLOSSARY | term=Provider | definition=An external MCP server that exposes tools to the system. Each provider has a transport type (stdio/sse/streamable-http) and configuration. | avoid=server, plugin, extension, connector
-```
-
-```
-GLOSSARY | term=Scan | definition=The automated process of discovering available tools from a connected Provider by calling tools/list. | avoid=search, query, fetch, poll
+GLOSSARY | term=Provider | definition=An external MCP server that exposes tools to the system. | avoid=server, plugin, extension, connector
 ```
 
 ### Rules
@@ -179,7 +176,7 @@ GLOSSARY | term=Scan | definition=The automated process of discovering available
 - Extract **minimum 5 terms** from each BRD
 - Each term MUST have: term name, clear definition, list of terms to AVOID
 - Terms should be specific to the project domain (not generic software terms)
-- If updating an existing glossary entry, ingest with updated content (KB handles versioning)
+- If updating an existing glossary entry, ingest with updated content
 
 ### Consumer Pattern (for ALL other agents)
 
@@ -189,7 +186,7 @@ All agents (TA, SA, QA, DEV, DevOps) MUST search glossary before producing outpu
 mem_search("glossary {PROJECT}")
 ```
 
-Then use the correct terms in all documents and code:
+Then use correct terms in all documents and code:
 - Variable/class names follow glossary terms
 - Document text uses glossary definitions
 - Avoid using "bad alternatives" listed in glossary entries
@@ -203,7 +200,7 @@ SM verifies after BA completes glossary extraction:
 
 ## Agent Data Access
 
-**BA reads:** Jira ticket description, code intelligence (Step 9.5)
+**BA reads:** Jira ticket description, code intelligence
 **BA writes:** BRD.md → ingest to KB (FULL content), Glossary entries → KB
 
 ## Template
@@ -211,11 +208,9 @@ SM verifies after BA completes glossary extraction:
 Default: `documents/templates/BRD-TEMPLATE.md`
 Override: user provides `template:path/to/custom.md`
 
-Thông báo template rồi tiếp tục (không dừng hỏi):
+Announce template then proceed (do not stop to ask):
 ```
-📄 Template: documents/templates/BRD-TEMPLATE.md (mặc định)
-💡 Muốn dùng template khác? Interrupt và gọi lại với template:path
-▶️ Tiếp tục tạo BRD...
+Template: documents/templates/BRD-TEMPLATE.md (default)
+Use a different template? Interrupt and call again with template:path
+Continuing BRD creation...
 ```
-
-

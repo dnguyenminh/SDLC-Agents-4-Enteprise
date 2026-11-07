@@ -28,6 +28,30 @@ const MODULES_COLUMN_ALTERS: readonly string[] = [
   `ALTER TABLE modules ADD COLUMN IF NOT EXISTS logging_framework TEXT`,
   `ALTER TABLE modules ADD COLUMN IF NOT EXISTS testing_framework TEXT`,
   `ALTER TABLE modules ADD COLUMN IF NOT EXISTS purpose TEXT`,
+  // Legacy data repair: index runs older than mergeModuleLanguages() (module-helper.ts)
+  // wrote one row per (module, language) — a polyglot module ended up with many rows
+  // (e.g. 11 rows for `backend`). Those duplicates made the CREATE UNIQUE INDEX below
+  // fail on EVERY boot ("Key (project_id, name) is duplicated") and would break any
+  // ON CONFLICT(project_id, name) consumer.
+  // ORDER MATTERS: the stats UPDATE must run BEFORE the DELETE so the merge can
+  // aggregate over ALL per-language rows while they still exist. Each duplicate
+  // group gets mergeModuleLanguages semantics (SUM file_count, MAX symbol_count,
+  // language of the file-richest variant) on every row, then the DELETE keeps the
+  // lowest id as the survivor. Idempotent: no-op when no duplicates exist. PG-only.
+  `UPDATE modules m
+      SET file_count = s.file_count, symbol_count = s.symbol_count, language = s.language
+     FROM (
+       SELECT project_id, name,
+              SUM(file_count) AS file_count,
+              MAX(symbol_count) AS symbol_count,
+              (ARRAY_AGG(language ORDER BY file_count DESC))[1] AS language
+         FROM modules
+        GROUP BY project_id, name
+     ) s
+    WHERE m.project_id = s.project_id AND m.name = s.name`,
+  `DELETE FROM modules a
+     USING modules b
+    WHERE a.project_id = b.project_id AND a.name = b.name AND a.id > b.id`,
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_modules_project_name ON modules(project_id, name)`,
 ];
 

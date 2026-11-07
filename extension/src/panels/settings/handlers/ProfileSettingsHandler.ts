@@ -3,7 +3,6 @@
  * SA4E-389: Profile CRUD, test connection, set active, grouped model picker data.
  */
 
-import * as vscode from "vscode";
 import { ProviderConfigService } from "../../../services/ProviderConfigService";
 import { LlmTestService } from "../../../services/LlmTestService";
 import { LlmProviderId } from "../../../shared/types/llm-profile.js";
@@ -42,12 +41,135 @@ export class ProfileSettingsHandler {
         await this.testProfile(msg.profileId);
         return true;
 
+      // SA4E-390 Edit Provider modal: single Save routes to add or edit by id.
+      case "saveProfile":
+        await this.saveProfile(msg.payload);
+        return true;
+
+      // SA4E-390 Edit Provider modal: ad-hoc connection test BEFORE a profile
+      // is saved (no profileId in config yet) — test the typed config directly.
+      case "testProfileConnection":
+        await this.testProfileConnection(msg);
+        return true;
+
+      // SA4E-390 Provider Table "Save All": persist every row at once.
+      case "saveAllProfiles":
+        await this.saveAllProfiles(msg.profiles);
+        return true;
+
       case "getModelPickerGroups":
         await this.sendModelPickerGroups();
         return true;
 
+      // SA4E-390 UX: the Edit Provider modal's Model field is a combobox that
+      // auto-fills when the provider/base URL changes. Fetch the provider's
+      // live model list (/v1/models) from the Base URL the modal is editing.
+      case "getProviderModels":
+        await this.sendProviderModels(msg.provider, msg.baseUrl);
+        return true;
+
       default:
         return false;
+    }
+  }
+
+  /**
+   * Fetch a provider's model list for the modal's Model combobox. baseUrl is
+   * the value typed in the modal — fetch /v1/models from THAT server so the
+   * list matches what the user is configuring (not the saved setting).
+   */
+  private async sendProviderModels(provider: string, baseUrl?: string): Promise<void> {
+    try {
+      if (!provider) { this.postMessage({ type: "providerModels", provider, models: [] }); return; }
+      const { models } = await this.configService.getModels(provider, "", baseUrl);
+      this.postMessage({ type: "providerModels", provider, models });
+    } catch (err) {
+      // Non-fatal: the combobox just stays free-text. Report empty list.
+      this.postMessage({ type: "providerModels", provider, models: [], error: (err as Error).message });
+    }
+  }
+
+  /**
+   * SA4E-390: the Edit Provider modal has a single Save button. Route to
+   * editProfile when the id already exists, otherwise addProfile — the
+   * webview does not track which mode it is in at the handler boundary.
+   */
+  private async saveProfile(payload: {
+    id: string;
+    label: string;
+    provider: string;
+    baseUrl?: string;
+    model: string;
+    useDefaultUrl: boolean;
+    apiKey?: string;
+  }): Promise<void> {
+    const existing = await this.configService.getProfileRows();
+    if (existing.some((p) => p.profileId === payload.id)) {
+      await this.editProfile(payload.id, payload);
+    } else {
+      await this.addProfile(payload);
+    }
+  }
+
+  /**
+   * SA4E-390: ad-hoc test for the Edit Provider modal. The profile is not yet
+   * persisted, so test the typed provider/baseUrl directly via LlmTestService
+   * (end-to-end real completion) and report back with the temp profileId.
+   */
+  private async testProfileConnection(msg: {
+    profileId: string;
+    provider: string;
+    baseUrl?: string;
+    model?: string;
+  }): Promise<void> {
+    this.postMessage({ type: "profileTestStarted", profileId: msg.profileId });
+    const result = await this.llmTestService.testProfile(msg.profileId, {
+      provider: msg.provider,
+      model: msg.model,
+      baseUrl: msg.baseUrl,
+      useDefaultUrl: !msg.baseUrl,
+    });
+    this.postMessage({ type: "profileTested", profileId: msg.profileId, ...result });
+  }
+
+  /**
+   * SA4E-390 Provider Table "Save All": upsert every provided row. API keys
+   * are left untouched here (each row carries no secret — keys are saved
+   * through the modal), so this persists label/provider/model/baseUrl only.
+   */
+  private async saveAllProfiles(rows: Array<{
+    profileId: string;
+    label: string;
+    provider: string;
+    baseUrl?: string;
+    model: string;
+    useDefaultUrl?: boolean;
+  }>): Promise<void> {
+    try {
+      const existing = await this.configService.getProfileRows();
+      let saved = 0;
+      for (const row of rows || []) {
+        const payload = {
+          id: row.profileId,
+          label: row.label,
+          provider: row.provider,
+          baseUrl: row.baseUrl,
+          model: row.model,
+          useDefaultUrl: row.useDefaultUrl ?? !row.baseUrl,
+        };
+        const result = existing.some((p) => p.profileId === row.profileId)
+          ? await this.configService.editProfile(row.profileId, payload)
+          : await this.configService.addProfile(payload);
+        if (!result.success) {
+          this.postMessage({ type: "saveAllResult", success: false, error: `${row.label}: ${result.error}` });
+          return;
+        }
+        saved++;
+      }
+      this.postMessage({ type: "saveAllResult", success: true, message: `Saved ${saved} provider configuration(s).` });
+      await this.sendProfiles();
+    } catch (err) {
+      this.postMessage({ type: "saveAllResult", success: false, error: (err as Error).message });
     }
   }
 
@@ -152,10 +274,8 @@ export class ProfileSettingsHandler {
     // Notify webview that test started
     this.postMessage({ type: "profileTestStarted", profileId });
 
-    // Get full profile data for baseUrl
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const fullProfiles = config.get<any[]>("llm.profiles", []);
-    const fullProfile = fullProfiles.find((p: any) => p.id === profileId);
+    // Get full profile data for baseUrl (SA4E-390: Memento-backed store).
+    const fullProfile = await this.configService.getProfileById(profileId);
 
     // Run test
     const result = await this.llmTestService.testProfile(profileId, {

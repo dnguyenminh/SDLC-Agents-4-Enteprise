@@ -7,6 +7,8 @@
 import pino from 'pino';
 import { IndexOperationRepository } from '../../database/repositories/IndexOperationRepository.js';
 import { ensureSa4e301GraphEdges } from '../../database/schema-registry/ensure-sa4e-301.js';
+import { PendingTaskRepository } from '../../modules/memory/task-queue/PendingTaskRepository.js';
+import { getDbAdapter } from '../../admin/db/core.js';
 
 const logger = pino({ name: 'cleanup-scheduler' });
 
@@ -52,6 +54,21 @@ export class CleanupScheduler {
       await ensureSa4e301GraphEdges();
     } catch (err) {
       logger.warn({ err }, '[cleanup-scheduler] graph edges heal failed (non-fatal)');
+    }
+    // pending_tasks housekeeping: purgeSupersededCompleted/reconcileOrphans only
+    // ran at TaskWorker startup, so terminal rows (incl. COMPLETED for dead
+    // entries) accumulated unbounded between restarts — 806 MB table, autovacuum
+    // starved ("canceling autovacuum task" in pg_log). Both methods are the
+    // existing, tested lifecycle primitives — just run them periodically.
+    try {
+      const taskRepo = new PendingTaskRepository(getDbAdapter());
+      const purged = await taskRepo.purgeSupersededCompleted();
+      const reconciled = await taskRepo.reconcileOrphans();
+      if (purged > 0 || reconciled > 0) {
+        logger.info({ purged, reconciled }, '[cleanup-scheduler] pending_tasks housekeeping');
+      }
+    } catch (err) {
+      logger.warn({ err }, '[cleanup-scheduler] pending_tasks housekeeping failed (non-fatal)');
     }
   }
 }

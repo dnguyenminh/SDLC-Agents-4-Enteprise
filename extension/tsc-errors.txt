@@ -1,0 +1,32 @@
+src/config/llm-profile-migration.ts(12,25): error TS2305: Module '"./llm-secret-keys.js"' has no exported member 'profileSecretKey'.
+src/config/llm-profile-migration.ts(77,71): error TS2554: Expected 2 arguments, but got 3.
+src/panels/settings/handlers/ProfileSettingsHandler.ts(56,47): error TS2339: Property 'getProfileRows' does not exist on type 'ProviderConfigService'.
+src/panels/settings/handlers/ProfileSettingsHandler.ts(57,52): error TS2339: Property 'getActiveProfileRow' does not exist on type 'ProviderConfigService'.
+src/panels/settings/handlers/ProfileSettingsHandler.ts(78,45): error TS2339: Property 'addProfile' does not exist on type 'ProviderConfigService'.
+src/panels/settings/handlers/ProfileSettingsHandler.ts(117,45): error TS2339: Property 'editProfile' does not exist on type 'ProviderConfigService'.
+src/panels/settings/handlers/ProfileSettingsHandler.ts(126,45): error TS2339: Property 'deleteProfile' does not exist on type 'ProviderConfigService'.
+src/panels/settings/handlers/ProfileSettingsHandler.ts(135,45): error TS2339: Property 'setActiveProfile' does not exist on type 'ProviderConfigService'.
+src/panels/settings/handlers/ProfileSettingsHandler.ts(145,47): error TS2339: Property 'getProfileRows' does not exist on type 'ProviderConfigService'.
+src/panels/settings/handlers/ProfileSettingsHandler.ts(146,36): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/panels/settings/handlers/ProfileSettingsHandler.ts(161,46): error TS2339: Property 'testProfile' does not exist on type 'LlmTestService'.
+src/panels/settings/handlers/ProfileSettingsHandler.ts(170,32): error TS2339: Property 'updateProfileTestStatus' does not exist on type 'ProviderConfigService'.
+src/panels/settings/handlers/ProfileSettingsHandler.ts(182,45): error TS2339: Property 'getModelPickerGroups' does not exist on type 'ProviderConfigService'.
+src/services/profiles-persistence.ts(8,10): error TS2724: '"../config/llm-secret-keys.js"' has no exported member named 'writeLlmApiKey'. Did you mean 'readLlmApiKey'?
+src/services/profiles-persistence.ts(8,26): error TS2305: Module '"../config/llm-secret-keys.js"' has no exported member 'deleteLlmApiKey'.
+src/services/profiles-persistence.ts(9,10): error TS2305: Module '"../pi-workflow/pi-provider-config-bridge.js"' has no exported member 'invalidateProviderTurnConfigCache'.
+src/services/profiles-service.ts(11,25): error TS2305: Module '"../config/llm-secret-keys.js"' has no exported member 'profileSecretKey'.
+src/services/profiles-service.ts(142,115): error TS2554: Expected 2 arguments, but got 3.
+src/services/ProviderConfigAddProfile.ts(7,10): error TS2724: '"../config/llm-secret-keys.js"' has no exported member named 'writeLlmApiKey'. Did you mean 'readLlmApiKey'?
+src/services/ProviderConfigAddProfile.ts(8,10): error TS2305: Module '"../pi-workflow/pi-provider-config-bridge.js"' has no exported member 'invalidateProviderTurnConfigCache'.
+src/services/ProviderConfigDeleteProfile.ts(7,10): error TS2305: Module '"../config/llm-secret-keys.js"' has no exported member 'deleteLlmApiKey'.
+src/services/ProviderConfigEditProfile.ts(7,10): error TS2724: '"../config/llm-secret-keys.js"' has no exported member named 'writeLlmApiKey'. Did you mean 'readLlmApiKey'?
+src/services/ProviderConfigEditProfile.ts(7,26): error TS2305: Module '"../config/llm-secret-keys.js"' has no exported member 'deleteLlmApiKey'.
+src/services/ProviderConfigMigration.ts(6,25): error TS2724: '"../config/llm-secret-keys.js"' has no exported member named 'writeLlmApiKey'. Did you mean 'readLlmApiKey'?
+src/services/ProviderConfigMigration.ts(6,41): error TS2305: Module '"../config/llm-secret-keys.js"' has no exported member 'profileSecretKey'.
+src/services/ProviderConfigMigration.ts(75,71): error TS2554: Expected 2 arguments, but got 3.
+src/services/ProviderConfigModels.ts(133,44): error TS2554: Expected 2 arguments, but got 3.
+src/services/ProviderConfigSecrets.ts(7,25): error TS2305: Module '"../config/llm-secret-keys.js"' has no exported member 'profileSecretKey'.
+src/services/ProviderConfigSecrets.ts(7,43): error TS2724: '"../config/llm-secret-keys.js"' has no exported member named 'writeLlmApiKey'. Did you mean 'readLlmApiKey'?
+src/services/ProviderConfigSecrets.ts(7,59): error TS2305: Module '"../config/llm-secret-keys.js"' has no exported member 'deleteLlmApiKey'.
+src/services/ProviderConfigSecrets.ts(29,49): error TS2554: Expected 2 arguments, but got 3.
+src/services/ProviderConfigState.ts(10,10): error TS2305: Module '"../pi-workflow/pi-provider-config-bridge.js"' has no exported member 'invalidateProviderTurnConfigCache'.

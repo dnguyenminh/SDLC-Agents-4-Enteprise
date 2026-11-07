@@ -1,444 +1,174 @@
-# Source Code Review — SDLC-Agents-4-Enterprise v1.53.4
+# Source Code Review — SDLC-Agents-4-Enterprise (v1.55.16)
 
-**Review Date:** 2026-10-17  
-**Scope:** Full codebase (backend + extension + e2e)  
-**Review Type:** Comprehensive (Security, Architecture, Code Quality, Performance)
-
----
-
-## Executive Summary
-
-This is a **production-grade multi-agent SDLC pipeline** with significant architectural maturity. The codebase demonstrates strong engineering practices with clear separation of concerns, comprehensive testing, and thoughtful security considerations.
-
-**Overall Assessment:** ⭐⭐⭐⭐ (4/5)  
-**Key Strengths:** Modular architecture, comprehensive test coverage, security-first design  
-**Key Concerns:** Some complexity from multi-language approach, potential for technical debt accumulation
+> **Adversarial, evidence-based review of the application code** in `backend/src/`, `extension/src/`, and `source/slash/`.
+> Findings are grounded in actual source; every issue cites a file path, function, and line.
 
 ---
 
-## 1. Architecture Review
+## 0. Correction of the previous review
 
-### 1.1 Backend Architecture ✅ STRONG
+The prior `SOURCE-CODE-REVIEW.md` (dated 2026-10-17, version 1.53.4) is **factually wrong** about this project and must not be trusted:
 
-**Module System (Factory/Registry Pattern)**
-- Clean separation of concerns with `ModuleFactory` and `ModuleRegistry`
-- Proper dependency injection via `Container` class
-- Lifecycle management with EventBus pattern
-- **Assessment:** Well-designed, follows SOLID principles
+| Claim in old review | Reality (verified) |
+|---|---|
+| "Kotlin/Ktor/SQLDelight backend" | **No.** Backend is **TypeScript + Hono** (HTTP framework), MCP SDK, SQLite/PostgreSQL, `jose`-style HS256 JWT, `zod`, `ajv`. (`backend/package.json`, `backend/src/index.ts`, `HttpServer.ts`.) |
+| "284 files / 3,079 tests / 1,349+ nodes" | **No.** `backend/src` = **1,632 TS files / ~151.8k LOC**; `extension/src` = **1,305 TS files / ~133.7k LOC**; `source/slash` = **6 files**. No Kiro/Pi "nodes" concept. |
+| "Kiro multi-agent orchestrator" | Partially true in spirit — a **module-registry DI container** + Hono HTTP server + Streamable-HTTP MCP endpoint — but implemented in TS, not Kotlin. |
 
-**Database Layer**
-- Abstracted via `DatabaseAdapter` interface
-- Supports SQLite, PostgreSQL, MySQL
-- Migration system with backward compatibility
-- **Assessment:** Robust design, good pattern for multi-tenant support
+**Correct architecture (from source):**
+- **Backend** (`backend/src/`): Hono app assembled by `createConfiguredApp()` in `HttpRouteRegistrar.ts`. A `ModuleRegistry` DI container (lazy modules: `memory`, `orchestration`, `knowledge`, `pega`, …). DB layer in `admin/db/` with a parameterized `DbAdapter`. Streamable-HTTP MCP transport mounted at `/mcp`. Binds **only to `127.0.0.1`** (`HttpServer.ts`) — no direct network exposure.
+- **Extension** (`extension/src/`): VS Code extension on Kiro/Pi agent libraries, Svelte 5 UI, `puppeteer-core`, and a corporate-proxy subsystem (`proxy/`) with curl/PowerShell subprocess transports. Auth is a `AuthManager` state machine in `extension/src/auth/`.
+- **Slash commands** (`source/slash/`): re-exports the `slashMenu` singleton and registers command handlers (`copy`, `debug`, `help`, `init`, `sessions`, `skills`, `status`, `thinking`).
 
-**Knowledge Base**
-- Hybrid vector + BM25 search
-- Graph database for relationship tracking
-- Enrichment pipeline with LLM integration
-- **Assessment:** Sophisticated, but complex — may need monitoring for performance
-
-**MCP Server Bridge**
-- JSON-RPC protocol implementation
-- Tool discovery and execution pattern
-- Nested tool handling with execute_dynamic_tool wrapper
-- **Assessment:** Well-implemented, follows MCP specification
-
-### 1.2 Extension Architecture ✅ STRONG
-
-**Svelte-based UI**
-- Component-based architecture
-- Webview integration with VS Code
-- Panel management system
-- **Assessment:** Modern approach, good maintainability
-
-**MCP Bridge**
-- Stream handler for real-time tool execution
-- IDE-specific adapters
-- Context budget management
-- **Assessment:** Innovative, well-thought-out for LLM integration
-
-**Chat System**
-- Multi-LLM provider support (135+ providers)
-- Session management with compaction
-- Thinking/reasoning display support
-- **Assessment:** Production-ready, comprehensive
-
-### 1.3 Testing Strategy ✅ EXCELLENT
-
-**Test Coverage**
-- Backend: 284 files / 3079 tests
-- Extension: 221 files / 2077+ tests
-- E2E: WebdriverIO-based integration tests
-- **Assessment:** Excellent coverage across all layers
-
-**Test Types**
-- Unit tests for business logic
-- Integration tests for API endpoints
-- E2E tests for user workflows
-- Security pentest simulations
-- **Assessment:** Comprehensive testing strategy
+The rest of this document is the **genuine review**.
 
 ---
 
-## 2. Security Review
+## 1. Security findings
 
-### 2.1 Security Strengths ✅
+### SEC-1 (Medium) — CSP deliberately downgraded to `unsafe-inline` / `unsafe-eval`
 
-**Authentication & Authorization**
-- JWT-based authentication
-- Role-based access control (RBAC)
-- Session management with auto-refresh
-- **Assessment:** Production-grade security
+`backend/src/server/middleware/security-headers.ts` sets:
 
-**Input Validation**
-- Path traversal protection
-- JSON input validation
-- Schema validation for tools
-- **Assessment:** Good defensive programming practices
+```
+script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net
+```
 
-**Security Hardening**
-- CORS origin/host gates (OriginGate with 7 phases)
-- SSRF protection
-- Secret redaction in prompts
-- **Assessment:** Security-conscious development
+Rationale (in-code comment): the admin SPA uses inline scripts + Babel `eval` + CDN libs. This is a **known CSP downgrade** — if the CSP is ever bypassed (e.g. via a reflected XSS in the SPA or a same-origin token leak into an embeddable view), injected script/eval will execute. `object-src 'none'`, `base-uri 'self'`, and locked `connect-src 'self'` are good compensating controls, but `'unsafe-eval'` defeats the main defense-in-depth purpose of CSP. **Recommendation:** move Babel to `'strict-dynamic'` + a nonce, or ship Babel as a build step so `eval` is eliminated, and tighten `script-src`.
 
-### 2.2 Security Concerns ⚠️
+### SEC-2 (Medium) — Anonymous fallback in no-auth mode lets any client self-assign identity
 
-**1. Multi-LLM Provider Integration**
-- **Risk:** 135+ LLM providers means complex authentication flows
-- **Recommendation:** Implement centralized auth token management with expiration tracking
-- **Current State:** Good provider registry, but token refresh logic could be more robust
+`CODE_INTEL_REQUIRE_AUTH` defaults to *not set*, which enables **anonymous mode** across the API. In `backend/src/server/routes/tools.ts`, `stampUserId()`:
 
-**2. MCP Tool Execution Security**
-- **Risk:** Dynamic tool execution requires careful sandboxing
-- **Recommendation:** Implement stricter tool approval gates for dangerous operations
-- **Current State:** Has approval gate (SA4E-85), but could enforce more granular permissions
+```ts
+} else if (!isApiKeyAuthEnabled()) {
+  const userId = c.req.header('X-User-Id') || c.req.header('x-user-id');
+  if (userId) { logger.warn({ userId }, 'X-User-Id header used without verified auth — identity unverified'); args.__userId = userId; }
+}
+```
 
-**3. Knowledge Base Data Isolation**
-- **Risk:** Multi-tenant data isolation needs verification
-- **Recommendation:** Implement row-level security for cross-tenant queries
-- **Current State:** Has PROJECT scope filtering, but needs testing for edge cases
+In no-auth mode an unauthenticated client can set `X-User-Id` and have it stamped as their `__userId`. `jwtAuthStrict` on `/api/v1/*` correctly fails closed, but `/api/tools`, `/api/admin/*`, and `/api/tags/*` fall back to this **unverified self-assignment**. **Recommendation:** no-auth mode should be development-only (documented in CI gating) and never enabled in production; `X-User-Id` should be rejected outright (401) rather than logged-and-used.
 
-**4. External API Dependencies**
-- **Risk:** Multiple external services (Pega, Atlassian, etc.)
-- **Recommendation:** Implement circuit breakers and fallback mechanisms
-- **Current State:** Has health monitoring, but some services may lack proper timeout handling
+### SEC-3 (Medium) — Streaming ingest endpoint has no per-request size cap (DoS vector)
 
----
+`HttpRouteRegistrar.ts` applies a 100 MB global `bodyLimit` to `*` **except** `/api/v1/pega/ingest-stream`:
 
-## 3. Code Quality Review
+```ts
+app.use('*', async (c, next) => {
+  if (c.req.path === '/api/v1/pega/ingest-stream') return next();
+  return bodyLimit({ maxSize: 100 * 1024 * 1024 })(c, next);
+});
+```
 
-### 3.1 Code Organization ✅ EXCELLENT
+The stream handler (`backend/src/server/routes/pega-stream.ts`) reads the NDJSON body line-by-line but still accumulates **every line into an in-memory `string[]`**, then buffers the raw text per line. There is **no per-request cap on the stream body**, so a client can send an unbounded NDJSON payload and exhaust host memory before processing finishes. **Recommendation:** add an explicit `bodyLimit` (or a max-line-count / max-bytes guard) on the ingest-stream route, and cap the buffered `lines[]` (e.g. drop/skip lines beyond a configured threshold with a `413`).
 
-**File Structure**
-- Clear module boundaries
-- Proper naming conventions
-- Consistent directory structure
-- **Assessment:** Easy to navigate and maintain
+### SEC-4 (Low–Medium) — Tool output can trigger an arbitrary in-workspace file write
 
-**Documentation**
-- Comprehensive AGENTS.md with role definitions
-- Inline code comments
-- API documentation via inputSchema
-- **Assessment:** Well-documented for team collaboration
+`extension/src/mcp/mcp-bridge.ts` `interceptResponse()`:
 
-### 3.2 Code Quality Metrics
+```ts
+const filename = resultObj._filename || `output_${Date.now()}.bin`;
+const outPath = path.join(tmpDir, filename);
+fs.writeFileSync(outPath, Buffer.from(resultObj._base64_file, 'base64'));
+```
 
-**TypeScript Strictness**
-- Full TypeScript implementation
-- Strict type checking enabled
-- Proper type inference
-- **Assessment:** Strong type safety
+`_base64_file` / `_filename` originate from tool/LLM output. `path.join` normalizes `..`, so writes are **confined to `<workspace>/documents/tmp/`** — no true filesystem escape. Still, this is an **arbitrary file-creation path driven by agent/tool output** with **no base64 validation** (`Buffer.from` silently produces garbage on invalid input) and no extension/size guard. **Recommendation:** validate base64 strictly, enforce a filename whitelist/regex (no dots/allowed extensions), and size-limit the write.
 
-**Error Handling**
-- Try-catch patterns with informative messages
-- Graceful degradation (non-fatal errors logged)
-- Error propagation with context
-- **Assessment:** Mature error handling
+### SEC-5 (Low–Medium) — HS256 API-key comparison in the tools route is not constant-time
 
-**Async Patterns**
-- Consistent async/await usage
-- Proper error handling in async chains
-- No unhandled promise rejections
-- **Assessment:** Following best practices
+`backend/src/server/routes/tools.ts` `resolveCallerIdentity()`:
 
-### 3.3 Code Smells & Anti-Patterns
+```ts
+if (!provided || provided !== envKey) return null;
+```
 
-**Low Priority Concerns:**
+The dedicated `apiKeyAuth` middleware (`middleware/api-key-auth.ts`) correctly uses `timingSafeEqual`, but the tools route uses a plain `===` comparison of the API key — a **timing side-channel** that leaks key length. **Recommendation:** route API-key checks through the existing `safeCompare`/`timingSafeEqual` helper.
 
-1. **Complexity in Knowledge Base Graph**
-   - Graph node management is complex (1,349+ nodes)
-   - Edge population is pending (KB-02)
-   - **Recommendation:** Consider breaking into smaller, more focused modules
+### SEC-6 (Low) — Single shared HS256 secret signs both access JWTs and opaque session tokens
 
-2. **Multi-language Architecture**
-   - Kotlin backend + TypeScript extension + Python orchestration
-   - **Recommendation:** Document inter-language communication protocols clearly
+`backend/src/admin/db/jwt.ts` uses one secret (`KB_TOKEN_SECRET` env, or a `0o600` provisioned `<dataDir>/.jwt-secret`, or an ephemeral per-process value) to HMAC-sign **both** the 15-min access JWTs and the opaque session tokens (`SessionService.validate`). If the secret file/disk is shared across environments or the secret is leaked, **all tokens can be forged**. The JWT auth middleware accepts any 3-part token and verifies it against this secret (`jwt-auth.ts` `verifyHs256`). **Recommendation:** treat `.jwt-secret` as a high-sensitivity artifact (restrict filesystem permissions to the owner user/group, rotate on deploy), and consider per-role signing keys for long-lived session tokens vs. short-lived access tokens.
 
-3. **Large Number of MCP Tools**
-   - 53+ tools in the system
-   - **Recommendation:** Consider tool grouping and permission levels
+### SEC-7 (Low) — `/api/admin/*` and `/api/tools` rely on internal per-route auth (not global middleware)
+
+Only `/api/v1/*`, `/api/v1/pega/*`, `/api/index/*`, `/api/tags/*`, `/mcp/*` are gated by the global middleware chain. `/api/admin/*` and `/api/tools` depend on each route calling `ctx.requireAuth()` (confirmed in `admin/index.ts`, `tools.ts`). This is **not a bug** — the audited routes all enforce auth — but it is a **design smell**: a missed `requireAuth` in any future admin/tool route silently exposes it. **Recommendation:** add a static/lint gate (or a route registry) that flags handler functions lacking a `requireAuth` call.
 
 ---
 
-## 4. Performance Review
+## 2. Bugs
 
-### 4.1 Performance Strengths ✅
+### BUG-1 (Low) — `McpBridge.callTool` timeout does not cancel the in-flight MCP call
 
-**Database Performance**
-- Indexed queries
-- Prepared statements
-- Connection pooling
-- **Assessment:** Optimized for performance
+`extension/src/mcp/mcp-bridge.ts` races `invokeTool()` against a `setTimeout` via `Promise.race`. On timeout the timer rejects, but `this.mcpManager.invokeTool(...)` is **not cancelled** — the underlying request keeps running in the background after the call returns `McpToolTimeoutError`. Concurrent calls can also leave multiple in-flight requests. **Recommendation:** support aborting the MCP call (e.g. an `AbortSignal` passed to the manager, if the SDK supports it), or at least log/track orphaned calls.
 
-**Memory Management**
-- Context budget enforcement (8% safety margin)
-- Session compaction at 95% usage
-- **Assessment:** Good resource management
+### BUG-2 (Low) — `listTools()` hardcodes `http://127.0.0.1:<port>/mcp` with no host validation
 
-**Lazy Loading**
-- Code skeletonization for large files
-- On-demand detail loading
-- **Assessment:** Smart optimization for LLM contexts
-
-### 4.2 Performance Concerns ⚠️
-
-**1. Knowledge Base Indexing**
-- Full-text search across 12,737+ entries
-- **Concern:** Indexing performance may degrade with larger codebases
-- **Recommendation:** Implement incremental indexing with delta updates
-
-**2. Graph Database Queries**
-- Graph traversal can be expensive
-- **Concern:** Complex graph queries may cause latency
-- **Recommendation:** Add query optimization with materialized views
-
-**3. E2E Test Performance**
-- WebdriverIO tests may be slow in CI
-- **Recommendation:** Implement parallel test execution
+`extension/src/mcp/mcp-bridge.ts` fetches `http://127.0.0.1:${port}/mcp`. The port comes from `this.mcpManager.port`. If the manager ever resolves an empty/wrong port, the fetch silently fails with `McpServerNotRunningError`. Acceptable (localhost, no SSRF), but the port should be validated to be a sane integer before use.
 
 ---
 
-## 5. Scalability Review
+## 3. Architecture & design
 
-### 5.1 Scalability Considerations
+### POSITIVE — Strong multi-tenant scope isolation
+Project identity is **derived from authenticated identity, never from the request body** (`SA4E-241 SEC-01`). `verifyProjectBinding()` in `tools.ts` rejects an `X-Project-Id` outside the caller's JWT grant (`allowedProjectsFromClaims`). WRITE paths fail closed (401 with no identity) instead of trusting `body.projectId`.
 
-**Horizontal Scaling**
-- Stateless backend design (good for scaling)
-- Database migration support (good for multi-tenant)
-- **Assessment:** Scalable architecture
+### POSITIVE — RBAC + reserved-key stripping on the tool boundary
+`tools.ts` drops client-supplied `__projectId/__userId/__workspaceRoot` keys before stamping trusted values, and filters tool visibility by the `MCP_ACCESS` permission (`roleData.toolAccess`). Clean separation of "what the caller may see" vs. "scope the server controls."
 
-**Multi-tenant Support**
-- Project-scoped data isolation
-- Cross-project memory isolation
-- **Assessment:** Designed for multi-tenant usage
+### POSITIVE — Error classification & no internal-detail leakage
+`pega-ingest-rule.ts` classifies errors into a structured envelope on the wire and keeps full stack traces **only in the server log** ("no internal detail leak"). `interceptResponse` returns user-facing messages, not stack traces.
 
-### 5.2 Scalability Recommendations
+### POSITIVE — Graceful degradation of startup
+`HttpServerDbBootstrap.ts` runs schema/migration ensures; failures are non-fatal (degrade to in-memory progress). Migrations use parameterized queries.
 
-1. **Database Sharding**
-   - Consider horizontal sharding for large deployments
-   - Currently using single DB instance
+### POSITIVE — Robust auth state machine
+`extension/src/auth/AuthManager.ts` is a cohesive FSM owning all token/session state; flows are isolated methods (`loginFlow`, `logoutFlow`, `doRefreshFlow`, `sso-loopback`, `http-flow`, etc.). The refresh credential is stored in **VS Code SecretStorage** (OS keychain), not plain storage. Token response includes both dual-token (`accessToken` + `refreshToken`) and a legacy single-token format for back-compat.
 
-2. **Caching Layer**
-   - Implement Redis/Memcached for frequently accessed data
-   - Currently relying on database queries
+### POSITIVE — CSP compensating controls
+Despite `unsafe-inline`, `object-src 'none'`, `base-uri 'self'`, and locked `connect-src` block plugin/base-tag/clickjacking vectors. Server strips `X-Powered-By`.
 
-3. **Load Balancing**
-   - Add load balancer for multiple backend instances
-   - Currently single instance design
+### POSITIVE — Proxy boundary is SSRF-safe
+`extension/src/proxy/HttpClient.ts` builds URLs as `this._baseUrl + path` (path is a fixed relative prefix, never attacker-controlled). Proxy dispatch goes through `ProxyAgentFactory` with a bypass list. curl/PowerShell subprocess transports keep the OS as a trust boundary.
 
----
+### NEGATIVE — Over-commented / "TODO landmine" style
+Many files carry extensive inline `SEC-*` / `DIP` / `SA4E-*` justification comments. This documents intent well, but the codebase contains several **`TODO(...)` blocks with unimplemented security follow-ups** (e.g. `tools.ts`: "TODO(SA4E-41 SEC-03): issue per-tenant API keys / JWT grants so a missing header can be resolved from the principal instead of relying on the caller"). These should be tracked as tickets, not left as open TODOs.
 
-## 6. Testing Review
-
-### 6.1 Test Coverage ✅ EXCELLENT
-
-**Backend Tests**
-- 284 test files
-- 3,079 test cases
-- Coverage across all modules
-- **Assessment:** Excellent coverage
-
-**Extension Tests**
-- 221 test files
-- 2,077+ test cases
-- Unit, integration, and E2E tests
-- **Assessment:** Comprehensive testing
-
-**E2E Tests**
-- WebdriverIO-based integration tests
-- Real browser automation
-- **Assessment:** Production-ready E2E testing
-
-### 6.2 Test Quality
-
-**Test Organization**
-- Clear test naming conventions
-- Organized by feature/module
-- Proper test isolation
-- **Assessment:** Well-structured tests
-
-**Test Data Management**
-- Proper setup and teardown
-- Isolated test data
-- **Assessment:** Clean test practices
-
-### 6.3 Security Testing ✅
-
-**Pentest Integration**
-- Security pentest simulations
-- Bypass attempt tracking
-- **Assessment:** Security-aware testing approach
+### NEGATIVE — Route registry drift
+`HttpRouteRegistrar.ts` mounts routes with many inline `SA4E-xxx` comments; several routes are conditionally mounted (`if (knowledgeModule && 'getService' in ...)`, `registerMcpConfigRoutes` skips when orchestration is absent). Conditional mounting without a central registry risks **orphaned/insecure routes in some deployments**. A declarative route registry would make the auth-surface auditable.
 
 ---
 
-## 7. Documentation Review
+## 4. Performance
 
-### 7.1 Documentation Quality ✅ EXCELLENT
+### PERF-1 (Low) — Ingest stream buffers entire NDJSON in memory
+`pega-stream.ts` accumulates all lines in `string[]` despite streaming. For the "39K+ rules" use case this is bounded but still not incremental. The per-tick `setImmediate` batching (50 rules/tick) does keep the event loop responsive. **Recommendation:** process lines incrementally (ingest per line as it arrives) rather than buffering the whole array.
 
-**AGENTS.md**
-- Comprehensive role definitions
-- Agent responsibility matrix
-- Cross-agent collaboration rules
-- **Assessment:** Excellent for team onboarding
+### PERF-2 (Info) — `interceptResponse` re-parses every tool result
+Every tool call path JSON-parses the full result string to check for `_base64_file`. For high-throughput tooling this is a per-call parse cost. Minor; acceptable given the base64 proxy is an opt-in feature.
 
-**CHANGELOG.md**
-- Version history with feature descriptions
-- Release notes for each version
-- **Assessment:** Professional documentation
-
-**API Documentation**
-- Tool inputSchema documentation
-- API endpoint descriptions
-- **Assessment:** Good API documentation
-
-### 7.2 Documentation Gaps
-
-1. **Deployment Guide**
-   - Need more detailed deployment instructions
-   - Current README is high-level
-
-2. **Troubleshooting Guide**
-   - Add common issues and solutions
-   - Help new users resolve problems faster
+### POSITIVE — No N+1 / blocking patterns observed
+Startup uses `Promise.all` for parallel user-permission/session lookups (`/me`). `tools/list` and tool calls are async. The DB adapter appears to wrap async calls cleanly.
 
 ---
 
-## 8. Specific Code Review Findings
+## 5. Test coverage
 
-### 8.1 Security Findings
-
-**SEVERITY: MEDIUM**
-1. **MCP Tool Path Traversal**
-   - **Location:** `backend/src/modules/orchestration/`
-   - **Issue:** Dynamic tool execution could potentially access files outside intended scope
-   - **Recommendation:** Implement stricter path containment validation
-   - **Current:** Has basic path safety checks
-
-**SEVERITY: LOW**
-2. **Debug Logging**
-   - **Location:** Multiple files
-   - **Issue:** Debug logging may expose sensitive information
-   - **Recommendation:** Review debug logging in production builds
-   - **Current:** Some debug scripts in `scripts/` directory
-
-### 8.2 Performance Findings
-
-**SEVERITY: LOW**
-1. **Knowledge Base Search Performance**
-   - **Location:** `backend/src/engine/`
-   - **Issue:** BM25 + vector search may be slow for large codebases
-   - **Recommendation:** Implement search result caching
-   - **Current:** No caching layer identified
-
-### 8.3 Architecture Findings
-
-**SEVERITY: INFO**
-1. **Module Coupling**
-   - **Location:** Multiple modules
-   - **Issue:** Some modules have implicit dependencies
-   - **Recommendation:** Review and document module dependencies
-   - **Current:** ModuleFactory creates dependencies, but coupling could be reduced
+- Backend has `__tests__/` dirs under `auth/` and `server/`; the route factories expose injectable deps (`HttpServerOptions.toolRouter` / `mcpConfigService`) for deterministic tests.
+- `security-headers.ts`, `api-key-auth.ts`, `jwt-auth.ts` all use timing-safe comparison in at least one path.
+- **Note:** I could not execute the suite here (`test:unit`/`test:contract`/`test:e2e-api` per `backend/package.json`). Coverage claims are inferred from directory structure; a real run would confirm.
 
 ---
 
-## 9. Recommendations
+## 6. Summary & prioritized recommendations
 
-### 9.1 High Priority
+| Priority | Item |
+|---|---|
+| **M** | SEC-3: add a per-request size cap on `/api/v1/pega/ingest-stream` (DoS) |
+| **M** | SEC-2: make no-auth mode dev-only; reject unverified `X-User-Id` (privilege/confusion) |
+| **M** | SEC-1: replace `unsafe-eval` in CSP with `'strict-dynamic'`+nonce / build-time Babel |
+| **L** | SEC-4: validate base64 + filename on `McpBridge` file-write path |
+| **L** | SEC-5: constant-time API-key comparison in `tools.ts` |
+| **L** | BUG-1: cancel MCP call on `McpBridge.callTool` timeout |
+| **L** | SEC-6: protect/rotate the shared HS256 secret file |
+| **L** | Track all `TODO(SA4E-*)` security follow-ups as tickets |
 
-1. **Implement Search Caching**
-   - Cache frequent knowledge base queries
-   - Reduce database load
-   - Improve response times
-
-2. **Strengthen Path Validation**
-   - Implement stricter path containment for dynamic tools
-   - Prevent directory traversal attacks
-   - Add comprehensive test coverage
-
-### 9.2 Medium Priority
-
-3. **Add Performance Monitoring**
-   - Implement application performance monitoring (APM)
-   - Track query performance
-   - Identify bottlenecks early
-
-4. **Document Module Dependencies**
-   - Create dependency graph visualization
-   - Document inter-module communication
-   - Aid in refactoring decisions
-
-### 9.3 Low Priority
-
-5. **Implement Caching Layer**
-   - Add Redis/Memcached for frequently accessed data
-   - Reduce database load
-   - Improve scalability
-
-6. **Add Troubleshooting Guide**
-   - Document common issues and solutions
-   - Help with deployment problems
-   - Support new users
-
----
-
-## 10. Conclusion
-
-### Overall Assessment: ⭐⭐⭐⭐ (4/5)
-
-**Strengths:**
-- ✅ Production-grade architecture with clear separation of concerns
-- ✅ Comprehensive test coverage (5,000+ tests)
-- ✅ Security-first design with RBAC and input validation
-- ✅ Modern technology stack (TypeScript, Svelte, MCP protocol)
-- ✅ Excellent documentation (AGENTS.md, CHANGELOG.md)
-- ✅ Multi-tenant support with project scoping
-
-**Areas for Improvement:**
-- ⚠️ Knowledge base performance optimization
-- ⚠️ Path traversal protection for dynamic tools
-- ⚠️ Performance monitoring implementation
-- ⚠️ More detailed deployment documentation
-
-**Verdict:** This is a **well-engineered, production-ready codebase** suitable for enterprise deployment. The architecture is scalable, security-conscious, and well-tested. Minor improvements in performance optimization and documentation would bring it to 5/5.
-
----
-
-## Appendix: Technology Stack Summary
-
-| Layer | Technology | Notes |
-|-------|-----------|-------|
-| Backend | Kotlin/Ktor/SQLDelight | MCP server, database, orchestration |
-| Frontend | TypeScript/Svelte | Extension with VS Code integration |
-| Database | SQLite/PostgreSQL/MySQL | Multi-database support |
-| Search | BM25 + Vector Embeddings | Hybrid search strategy |
-| Graph | Custom Graph Database | Pega rules and relationships |
-| Testing | Vitest + WebdriverIO | Unit, integration, E2E tests |
-| CI/CD | GitHub Actions | Automated testing and deployment |
-
----
-
-**Review Completed By:** AI Code Review System  
-**Next Review Recommended:** After major version release (v2.0.0)  
-**Questions?** Contact the development team via Jira project.
+**Overall assessment:** This is a **mature, well-engineered TypeScript codebase**. The security posture is genuinely strong for its class — localhost-only binding, strict JWT multi-tenancy, RBAC on the tool boundary, reserved-key stripping, fail-closed identity, classified error envelopes, and a robust auth state machine with OS-keychain-backed secrets. The findings above are mostly **medium-to-low** and largely about hardening defaults (no-auth mode), resource limits (stream DoS), and CSP hygiene rather than exploitable flaws. The main structural risk is that **auth is enforced per-route on some groups**, so the security surface depends on disciplined per-handler `requireAuth` calls.

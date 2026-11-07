@@ -1,0 +1,63 @@
+<mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0" adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Test Execution Flow — SA4E-393" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#333333;rounded=0;" vertex="1" parent="1">
+      <mxGeometry x="40" y="16" width="740" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="pbt" value="&lt;b&gt;1. PBT — Property-Based&lt;/b&gt;&lt;br&gt;fast-check · 4 cases · Automated" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="270" y="80" width="220" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut" value="&lt;b&gt;2. UT — Unit / Edge Cases&lt;/b&gt;&lt;br&gt;vitest · 12 cases · Automated" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="270" y="192" width="220" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="it" value="&lt;b&gt;3. IT — Integration&lt;/b&gt;&lt;br&gt;vitest + Hono app.request() · 8 cases · Automated" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="270" y="304" width="220" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2eapi" value="&lt;b&gt;4. E2E-API — REST End-to-End&lt;/b&gt;&lt;br&gt;vitest + fetch · 8 cases · Automated" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="120" y="440" width="220" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2eui" value="&lt;b&gt;5. E2E-UI — Browser End-to-End&lt;/b&gt;&lt;br&gt;Playwright · 4 cases · Automated" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="420" y="440" width="220" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="sit" value="&lt;b&gt;6. SIT — Manual Exploratory&lt;/b&gt;&lt;br&gt;Browser · 12 cases · Manual" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="270" y="596" width="220" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="gate" value="&lt;b&gt;Quality Gate&lt;/b&gt;&lt;br&gt;pass rate ≥95% · 0 Critical open (STP §9)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="230" y="708" width="300" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="fixloop" value="&lt;b&gt;Defect Fix Loop&lt;/b&gt;&lt;br&gt;log defect → fix → re-run level" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="590" y="248" width="180" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="exit: 100% properties pass (§2.4)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1.5;fontSize=10;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="pbt" target="ut">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="exit: coverage &gt;80% (§2.4)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1.5;fontSize=10;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ut" target="it">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1.5;fontSize=10;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="it" target="e2eapi">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1.5;fontSize=10;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="it" target="e2eui">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="E2E pass · 0 Critical (§2.4)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1.5;fontSize=10;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="e2eapi" target="sit">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="E2E pass · 0 Critical (§2.4)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1.5;fontSize=10;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="e2eui" target="sit">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="exit: 0 Critical/Major open (§2.4)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1.5;fontSize=10;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="sit" target="gate">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="efail" value="on FAIL (any level)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;strokeWidth=1.5;dashed=1;dashPattern=6 4;fontSize=10;fontColor=#b85450;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="it" target="fixloop">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ererun" value="re-run after fix" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;strokeWidth=1.5;dashed=1;dashPattern=6 4;fontSize=10;fontColor=#b85450;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="fixloop" target="ut">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="legend" value="&lt;b&gt;Legend — Test Execution Order (STP §2.1–§2.4)&lt;/b&gt;&lt;br&gt;• Sequence: 1 PBT → 2 UT → 3 IT → parallel { 4 E2E-API | 5 E2E-UI } → 6 SIT → Quality Gate&lt;br&gt;• Green plate = Automated level · Amber plate = Manual (SIT) · Blue plate = outcome gate&lt;br&gt;• Solid green arrow = sequential gate, exit criteria shown on the label (STP §2.4)&lt;br&gt;• Dashed red arrow = FAIL → log defect → fix → re-run the failed level&lt;br&gt;• Case counts (STP §2.5): PBT 4 · UT 12 · IT 8 · E2E-API 8 · E2E-UI 4 · SIT 12" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fontColor=#333333;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=10;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+      <mxGeometry x="80" y="800" width="680" height="116" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -2,7 +2,15 @@
 src/**
 !src/pi-agent/prompts/**
 !src/pi-agent/prompts/*.md
+out/**
+!out/extension.js
 scripts/**
+docs/**
+screenshots/**
+svelte/**
+rel-test-unit.txt
+test-escape.js
+tmp-*.txt
 *.ts
 *.map
 .mocharc.yml

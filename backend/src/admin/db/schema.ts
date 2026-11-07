@@ -7,13 +7,31 @@
  * group/user seeding in schema-seed.ts.
  */
 
-import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+import type { DatabaseAdapter, DatabaseEngine } from '../../database/adapters/DatabaseAdapter.js';
 import { schemaSql, nowExpr } from './schema-ddl.js';
 import {
   migrateUsersSso, seedDefaultSsoProviders,
   migrateLoginUiHtmlToUrlless, seedSsoProvidersFromEnv,
 } from './schema-sso.js';
 import { seedAccessGroups, ensureAdminPermissions, seedAdminUser } from './schema-seed.js';
+
+/**
+ * Idempotent ADD COLUMN. PostgreSQL supports `ADD COLUMN IF NOT EXISTS` natively,
+ * so re-running the migration stays silent in pg_log on every boot. SQLite has no
+ * IF NOT EXISTS for ADD COLUMN — fall back to try/catch (pre-existing behavior).
+ */
+async function ensureColumn(db: DatabaseAdapter, engine: DatabaseEngine, table: string, column: string, definition: string): Promise<void> {
+  const sql = engine === 'postgresql'
+    ? `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${column} ${definition}`
+    : `ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`;
+  if (engine === 'postgresql') {
+    await db.execAsync(sql);
+    return;
+  }
+  try {
+    await db.execAsync(sql);
+  } catch (err) { console.debug('[schema] column already exists :', (err as Error).message); }
+}
 
 export async function initSchema(db: DatabaseAdapter): Promise<void> {
   const engine = db.getEngine();
@@ -24,22 +42,16 @@ export async function initSchema(db: DatabaseAdapter): Promise<void> {
   await migrateUsersSso(db, engine);
 
   // SA4E-262 migration: add user_agent_hash to sessions for session fixation hardening
-  try {
-    await db.execAsync(`ALTER TABLE sessions ADD COLUMN user_agent_hash TEXT DEFAULT ''`);
-  } catch (err) { console.debug('[schema] sessions.user_agent_hash already exists :', (err as Error).message); }
+  await ensureColumn(db, engine, 'sessions', 'user_agent_hash', `TEXT DEFAULT ''`);
 
   // SA4E-321 migration: absolute session deadline (7d hard cap) for dual-token auth
-  try {
-    await db.execAsync(`ALTER TABLE sessions ADD COLUMN absolute_expires_at TEXT DEFAULT ''`);
-  } catch (err) { console.debug('[schema] sessions.absolute_expires_at already exists :', (err as Error).message); }
+  await ensureColumn(db, engine, 'sessions', 'absolute_expires_at', `TEXT DEFAULT ''`);
 
   await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_family ON refresh_tokens(family_id)`);
   await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_session ON refresh_tokens(session_id)`);
 
   // Idempotent migration: add project_id to graph_nodes for existing DBs
-  try {
-    await db.execAsync(`ALTER TABLE graph_nodes ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
-  } catch (err) { console.debug('[schema] column already exists :', (err as Error).message); }
+  await ensureColumn(db, engine, 'graph_nodes', 'project_id', `TEXT NOT NULL DEFAULT ''`);
   await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_graph_nodes_project ON graph_nodes(project_id)`);
 
   // SA4E-50: project_registry — workspace → projectId mapping
@@ -54,9 +66,7 @@ export async function initSchema(db: DatabaseAdapter): Promise<void> {
   await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_project_registry_seen ON project_registry(last_seen)`);
 
   // Idempotent migration: add created_by to project_registry
-  try {
-    await db.execAsync(`ALTER TABLE project_registry ADD COLUMN created_by TEXT NOT NULL DEFAULT ''`);
-  } catch (err) { console.debug('[schema] column already exists :', (err as Error).message); }
+  await ensureColumn(db, engine, 'project_registry', 'created_by', `TEXT NOT NULL DEFAULT ''`);
 
   // Ensure the arbiter unique index for group_permissions exists. Legacy tables
   // created before the inline UNIQUE(...) clause won't have it, which breaks the
@@ -69,10 +79,18 @@ export async function initSchema(db: DatabaseAdapter): Promise<void> {
     );
   } catch (err) { console.debug('[schema] group_permissions unique index :', (err as Error).message); }
 
-  // Migration: add login_ui_html column if missing
+  // SA4E-217: config_entries arbiter unique index. Legacy tables created before the
+  // inline UNIQUE(section, key) clause won't have it, which breaks the
+  // ON CONFLICT(section, key) upsert in rate-limit config + pega counter migrations.
   try {
-    await db.execAsync(`ALTER TABLE sso_providers ADD COLUMN login_ui_html TEXT NOT NULL DEFAULT ''`);
-  } catch (err) { console.debug('[schema] login_ui_html already exists:', (err as Error).message); }
+    await db.execAsync(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uq_config_entries_section_key
+       ON config_entries(section, key)`,
+    );
+  } catch (err) { console.debug('[schema] config_entries unique index :', (err as Error).message); }
+
+  // Migration: add login_ui_html column if missing
+  await ensureColumn(db, engine, 'sso_providers', 'login_ui_html', `TEXT NOT NULL DEFAULT ''`);
 
   // Migration (SA4E-310): strip absolute-path anchors from stored login_ui_html.
   // Old seeds embedded <a href="/auth/{p}/login">…</a> which breaks sub-path

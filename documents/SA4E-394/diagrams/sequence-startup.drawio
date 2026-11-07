@@ -1,0 +1,119 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="600" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="shB" value="Server Bootstrap<br>(mcpServer.ts)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="15" y="40" width="190" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="slifeB" value="" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;edgeStyle=none;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="110" y="86" as="sourcePoint"/>
+        <mxPoint x="110" y="550" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="shC" value="Config Source<br>(env var / file)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="275" y="40" width="190" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="slifeC" value="" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;edgeStyle=none;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="370" y="86" as="sourcePoint"/>
+        <mxPoint x="370" y="550" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="shA" value="Allowlist Builder<br>(NEW resolver)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="545" y="40" width="190" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="slifeA" value="" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;edgeStyle=none;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="640" y="86" as="sourcePoint"/>
+        <mxPoint x="640" y="550" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="shL" value="Logger" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="805" y="40" width="190" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="slifeL" value="" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;edgeStyle=none;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="900" y="86" as="sourcePoint"/>
+        <mxPoint x="900" y="550" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="shF" value="File System" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1045" y="40" width="190" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="slifeF" value="" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;edgeStyle=none;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1140" y="86" as="sourcePoint"/>
+        <mxPoint x="1140" y="550" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="sm1" value="1: read MCP_WORKSPACE_ROOTS (or config file)" style="html=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;edgeStyle=none;rounded=0;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="110" y="130" as="sourcePoint"/>
+        <mxPoint x="370" y="130" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="sm2" value="2: raw delimited string" style="html=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;endArrow=open;endFill=0;dashed=1;edgeStyle=none;rounded=0;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="370" y="168" as="sourcePoint"/>
+        <mxPoint x="110" y="168" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="sm3" value="3: parseAllowlist(raw)" style="html=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;edgeStyle=none;rounded=0;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="110" y="206" as="sourcePoint"/>
+        <mxPoint x="640" y="206" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="sm4" value="4: split (';' Win / ':' POSIX) -> trim -> normalize<br>-> dedupe -> resolve symlinks" style="html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;edgeStyle=none;rounded=0;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="640" y="240" as="sourcePoint"/>
+        <mxPoint x="640" y="276" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="730" y="240"/>
+          <mxPoint x="730" y="276"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="sm5" value="5: validate each entry exists & is directory" style="html=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;edgeStyle=none;rounded=0;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="640" y="304" as="sourcePoint"/>
+        <mxPoint x="1140" y="304" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="sm6" value="6: per-entry result" style="html=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;endArrow=open;endFill=0;dashed=1;edgeStyle=none;rounded=0;strokeColor=#82b366;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1140" y="340" as="sourcePoint"/>
+        <mxPoint x="640" y="340" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="sm7" value="7: build in-memory Set (O(1) lookup)" style="html=1;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;edgeStyle=none;rounded=0;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="640" y="372" as="sourcePoint"/>
+        <mxPoint x="640" y="404" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="730" y="372"/>
+          <mxPoint x="730" y="404"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="sm8" value="8: log allowlist (info) + warnings" style="html=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;edgeStyle=none;rounded=0;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="640" y="434" as="sourcePoint"/>
+        <mxPoint x="900" y="434" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="sm9" value="9: startup complete" style="html=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;endArrow=open;endFill=0;dashed=1;edgeStyle=none;rounded=0;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="900" y="470" as="sourcePoint"/>
+        <mxPoint x="110" y="470" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="sma" value="2a: empty/unset -> legacy pinned-root mode only" style="html=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;endArrow=open;endFill=0;dashed=1;edgeStyle=none;rounded=0;strokeColor=#b85450;fontColor=#b85450;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="370" y="515" as="sourcePoint"/>
+        <mxPoint x="110" y="515" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

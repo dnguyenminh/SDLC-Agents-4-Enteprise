@@ -6,7 +6,10 @@
 (function () {
   "use strict";
 
-  var vscode = acquireVsCodeApi();
+  // Reuse the single VS Code API instance (settings-core.js acquires it first).
+  // acquireVsCodeApi() throws "already acquired" on the 2nd call, which would
+  // crash this module and leave the provider table dead.
+  var vscode = window.__vscodeApi || (window.__vscodeApi = acquireVsCodeApi());
   var SS = window.SettingsShared = window.SettingsShared || {};
 
   // DOM elements

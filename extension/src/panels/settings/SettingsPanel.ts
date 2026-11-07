@@ -18,7 +18,8 @@ export class SettingsPanel {
 
   private constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly secrets: vscode.SecretStorage
+    private readonly secrets: vscode.SecretStorage,
+    private readonly globalState?: vscode.Memento
   ) {
     this.panel = vscode.window.createWebviewPanel(
       SettingsPanel.viewType,
@@ -58,12 +59,12 @@ export class SettingsPanel {
   }
 
   /** Open or reveal the settings panel (singleton). */
-  public static open(extensionUri: vscode.Uri, secrets: vscode.SecretStorage): void {
+  public static open(extensionUri: vscode.Uri, secrets: vscode.SecretStorage, globalState?: vscode.Memento): void {
     if (SettingsPanel.instance) {
       SettingsPanel.instance.panel.reveal();
       return;
     }
-    SettingsPanel.instance = new SettingsPanel(extensionUri, secrets);
+    SettingsPanel.instance = new SettingsPanel(extensionUri, secrets, globalState);
   }
 
   public dispose(): void {

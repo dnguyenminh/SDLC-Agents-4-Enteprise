@@ -1,0 +1,5 @@
+test_case_id,detectionMode,threshold,sourcePath,localhostUrl,expected_http_code,expected_result,description
+PBT-01,static,0.8,, ,200,valid enum,Property test — valid detectionMode enum values
+PBT-02,static,0.8,/workspace/projectA, ,200,fileCount monotonic,Larger source project has more files than smaller project
+PBT-03,rendered,0.7,,http://localhost:5173,200,no crash,Invalid URL format does not cause runtime crash
+PBT-04,both,0.8,, ,200,score monotonic,Random score ≥ threshold iff pass=true

@@ -1,0 +1,4 @@
+runId,detectionMode,threshold,score,pass,createdAt,userId,description
+run-001,both,0.8,0.92,true,2026-10-31T10:00:00Z,dev-001,Baseline successful run with high score
+run-002,static,0.8,0.65,false,2026-10-31T10:05:00Z,dev-001,Baseline failed run
+run-003,rendered,0.7,0.75,true,2026-10-31T10:10:00Z,qa-001,Rendered only pass

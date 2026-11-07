@@ -175,6 +175,14 @@ export async function ensurePostgresIndexSchema(adapter: DatabaseAdapter): Promi
     await safeExec(adapter, 'CREATE INDEX IF NOT EXISTS idx_rel_source_kind ON relationships(source_symbol_id, kind)');
     await safeExec(adapter, 'CREATE INDEX IF NOT EXISTS idx_file_index_hash ON file_index(content_hash)');
 
+    // 10. High-churn tables: keep autovacuum aggressive so it finishes before
+    // conflicting locks cancel it (pg_log: "canceling autovacuum task" while
+    // scanning pending_tasks / vacuuming knowledge_entries tsvector index).
+    // These are queue/knowledge tables with heavy UPDATE churn — the default
+    // scale factor (0.2) and cost delay let them bloat for hours first.
+    await safeExec(adapter, `ALTER TABLE pending_tasks SET (autovacuum_vacuum_scale_factor = 0.02, autovacuum_vacuum_cost_delay = 0)`);
+    await safeExec(adapter, `ALTER TABLE knowledge_entries SET (autovacuum_vacuum_scale_factor = 0.05, autovacuum_vacuum_cost_delay = 0)`);
+
     logger.info('[pg-schema-ensure] Index schema verified/fixed');
   } catch (err) {
     logger.error({ err }, '[pg-schema-ensure] Schema ensure failed (non-fatal)');
