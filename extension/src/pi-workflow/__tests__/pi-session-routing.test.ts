@@ -24,7 +24,9 @@ const { mockConfigValues, mocks } = vi.hoisted(() => {
     async (
       text: string,
       onToken?: (t: string) => void,
-      onToolEvent?: (e: { phase: string; id: string; name: string }) => void
+      onToolEvent?: (e: { phase: string; id: string; name: string }) => void,
+      onThinking?: (t: string) => void,
+      images?: { images: import('../session-host/types.js').TurnImage[] }
     ) => {
       onToken?.('routed via session');
       onToolEvent?.({ phase: 'start', id: 't-live', name: 'read' });
@@ -152,7 +154,7 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
       expect.objectContaining({ workspaceRoot: 'C:/ws/test', providerId: 'anthropic', apiKey: 'sk-x' })
     );
     // SA4E-365: promptTurn now also receives the onThinking callback (F2 wiring).
-    expect(mocks.promptTurn).toHaveBeenCalledWith('hi', expect.any(Function), expect.any(Function), expect.any(Function));
+    expect(mocks.promptTurn).toHaveBeenCalledWith('hi', expect.any(Function), expect.any(Function), expect.any(Function), undefined);
     expect(chatErrors(onEvent)).toEqual([]);
     // Live tool progress reaches the webview as a tool block.
     const toolMsgs = onEvent.mock.calls
