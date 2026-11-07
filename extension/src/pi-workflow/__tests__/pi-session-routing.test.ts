@@ -151,9 +151,8 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     expect(mocks.ensureSessionHost).toHaveBeenCalledWith(
       expect.objectContaining({ workspaceRoot: 'C:/ws/test', providerId: 'anthropic', apiKey: 'sk-x' })
     );
-    // SA4E-365: promptTurn receives the onThinking callback (F2 wiring).
-    // SA4E-391: + a 5th opts arg (image carrier) — undefined for a text turn.
-    expect(mocks.promptTurn).toHaveBeenCalledWith('hi', expect.any(Function), expect.any(Function), expect.any(Function), undefined);
+    // SA4E-365: promptTurn now also receives the onThinking callback (F2 wiring).
+    expect(mocks.promptTurn).toHaveBeenCalledWith('hi', expect.any(Function), expect.any(Function), expect.any(Function));
     expect(chatErrors(onEvent)).toEqual([]);
     // Live tool progress reaches the webview as a tool block.
     const toolMsgs = onEvent.mock.calls

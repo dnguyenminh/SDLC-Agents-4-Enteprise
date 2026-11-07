@@ -1,0 +1,13 @@
+test_case_id,detectionMode,threshold,sourcePath,localhostUrl,expected_http_code,expected_result,description
+SIT-01,both,0.8,/workspace/src, , ,Manual load verification, Start extension, run command, Skill loads without error in logs
+SIT-02,static,0.8,/workspace/projectWithIssues, , ,Manual static detection, Select source folder with known issues, Findings listed with file location and severity
+SIT-03,rendered,0.7, ,http://localhost:5173down, ,Manual rendered with dev server down, Disable localhost server, Run rendered mode, Warning logged, static detection continues
+SIT-04,both,0.8,, , ,Quality gate report audit, Run detection, open report JSON, Contains totalIssues, severityBreakdown, score, pass, timestamp
+SIT-05,static,0.8,/workspace/largeProject, , ,Performance check static <30s, Run static on 100 files, Duration <30s
+SIT-06,fail-open,0.8,, , ,Fail-open mode behavior, Enable fail-open, cause detection error, Pipeline continues with warning
+SIT-07,static,0.8,/workspace/projectA, /workspace/projectB, ,Multiple projects isolation, Run detection on two projects concurrently, Instances isolated, no cross-contamination
+SIT-08,static,0.8,/workspace/src, , ,Cache hit verification, Run static twice within 5 min, Second run faster, cache hit indicated
+SIT-09,static,0.8,/workspace/src, , ,Threshold boundary 0.8, Set threshold 0.8, score 0.800, pass=true
+SIT-10,error,0.8,, , ,Error message clarity, Trigger WASM incompatible error, User message clear and actionable
+SIT-11,static,0.8,, , ,Report persistence after restart, Restart VS Code, open previous report, Report file still accessible
+SIT-12,static,0.8,/workspace/src, , ,Visual output readability, View output channel, Findings formatted clearly

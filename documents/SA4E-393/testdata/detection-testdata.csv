@@ -1,0 +1,12 @@
+test_case_id,detectionMode,threshold,sourcePath,localhostUrl,expected_http_code,expected_result,description
+UT-01,static,0.8,/workspace/src,,
+UT-02,both,0.8,,,
+IT-01,both,0.8,,,
+E2E-API-01,both,0.8,/workspace/src,http://localhost:5173,200,loadStatus success,Valid load
+E2E-API-02,static,0.8,/workspace/fixtures/small, ,200,findings returned,Static detection
+E2E-API-03,rendered,0.7,,http://localhost:5173,200,fetchStatus success,Rendered detection
+E2E-API-04,both,0.5,, ,200,pass=true,Threshold pass
+E2E-API-05,both,0.9,, ,200,pass=false,Threshold fail
+PBT-01,static,0.8,, ,200,valid enum,Property test
+SIT-01,both,0.8,/workspace/src,, ,Manual load verification
+SIT-02,static,0.8,/workspace/project,, ,Manual static detection

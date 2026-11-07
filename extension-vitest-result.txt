@@ -1,0 +1,49 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.8 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/extension
+
+ ❯ src/services/__tests__/ProviderConfigService.integration.test.ts (20 tests | 20 failed) 22ms
+       × IT-01: adds a new profile 5ms (retry x2)
+       × IT-02: rejects duplicate profile ID 1ms (retry x2)
+       × IT-03: rejects invalid profile ID format 1ms (retry x2)
+       × IT-04: edits an existing profile 1ms (retry x2)
+       × IT-05: deletes a profile 1ms (retry x2)
+       × IT-06: switches active profile on delete 1ms (retry x2)
+       × IT-07: sets active profile 1ms (retry x2)
+       × IT-08: updates profile test status 1ms (retry x2)
+       × IT-09: returns current state with profiles 1ms (retry x2)
+       × IT-10: returns profile rows 1ms (retry x2)
+       × IT-11: returns active profile row 1ms (retry x2)
+       × IT-12: writes profile API key 1ms (retry x2)
+       × IT-13: deletes profile API key on profile delete 1ms (retry x2)
+       × IT-14: reads profile API key 1ms (retry x2)
+       × IT-15: gets models for active profile 1ms (retry x2)
+       × IT-16: gets model picker groups for connected profiles 1ms (retry x2)
+       × IT-17: handles SecretStorage failures gracefully 1ms (retry x2)
+       × IT-18: handles config update failures 1ms (retry x2)
+       × IT-19: validates base URL format 1ms (retry x2)
+       × IT-20: rejects unknown provider 1ms (retry x2)
+ ❯ src/webview/__tests__/ModelPickerPopup.test.ts (20 tests | 4 failed) 14ms
+     × UT-18: recent models initially empty 3ms (retry x2)
+     × UT-19: add model to recent 1ms (retry x2)
+     × UT-20: recent models limited to 5 2ms (retry x2)
+     × UT-21: duplicate model moved to front 0ms (retry x2)
+ ❯ src/webview/__tests__/EditProviderModal.test.ts (22 tests | 9 failed) 215ms
+     × UT-34: shows modal for add 203ms (retry x2)
+     × UT-35: shows modal for edit with pre-filled data 1ms (retry x2)
+     × UT-36: hides modal on cancel 1ms (retry x2)
+     × UT-37: toggles API key visibility 1ms (retry x2)
+     × UT-38: validates form on input 1ms (retry x2)
+     × UT-39: enables save button when form valid 2ms (retry x2)
+     × UT-40: calls onSave with form data 1ms (retry x2)
+     × UT-41: calls onTestConnection when test button clicked 1ms (retry x2)
+     × UT-42: destroys modal cleanly 1ms (retry x2)
+ ❯ src/webview/__tests__/ProviderTable.test.ts (16 tests | 6 failed) 10ms
+     × UT-11: binds add provider button 4ms (retry x2)
+     × UT-12: binds edit button with provider ID 1ms (retry x2)
+     × UT-13: binds test button with provider ID 1ms (retry x2)
+     × UT-14: binds delete button with provider ID 0ms (retry x2)
+     × UT-15: ignores clicks on non-action elements 0ms (retry x2)
+     × UT-16: handles missing provider ID gracefully 0ms (retry x2)

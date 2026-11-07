@@ -1,0 +1,240 @@
+
+> sdlc-agent-4-enterprise-server@1.55.11 check:ci
+> npm run lint && npm run lint:lines && npm run build && npm run test:unit && npm run test:contract
+
+
+> sdlc-agent-4-enterprise-server@1.55.11 lint
+> npx eslint src/ --ext .ts
+
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\database\adapters\wasm\SqliteWasmAdapter.ts
+  201:1  warning  File has too many lines (215). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\database\migration\MigrationService.ts
+  201:1  warning  File has too many lines (216). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\database\migration\TypeMapper.ts
+  201:1  warning  File has too many lines (216). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\analyzers\security\__tests__\CFG.test.ts
+  201:1  warning  File has too many lines (211). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\analyzers\security\cfg\CFGStatementHandlers.ts
+  201:1  warning  File has too many lines (201). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\analyzers\security\taint\TaintAnalyzer.ts
+  201:1  warning  File has too many lines (231). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\analyzers\similarity\DuplicateDetector.ts
+  201:1  warning  File has too many lines (219). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\context\context-sections.ts
+  201:1  warning  File has too many lines (202). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\graph\call-graph-service.ts
+  201:1  warning  File has too many lines (217). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\indexer\__tests__\tree-sitter-pipeline.test.ts
+  201:1  warning  File has too many lines (207). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\indexer\indexing-engine.ts
+  201:1  warning  File has too many lines (223). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\parsers\languages\__tests__\apex-parser.test.ts
+  201:1  warning  File has too many lines (210). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\parsers\languages\__tests__\go-parser.test.ts
+  201:1  warning  File has too many lines (237). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\parsers\languages\__tests__\python-parser.test.ts
+  201:1  warning  File has too many lines (216). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\tools\__tests__\artifact-analyzer.test.ts
+  201:1  warning  File has too many lines (244). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\tools\__tests__\drawio-tool.test.ts
+  201:1  warning  File has too many lines (220). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\tools\artifact-analyzer\analyzers\StructureAnalyzer.ts
+  201:1  warning  File has too many lines (212). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\engine\tools\drawio-tool.ts
+  201:1  warning  File has too many lines (213). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\knowledge\KnowledgeService.ts
+  201:1  warning  File has too many lines (205). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\kb-graph\service\index.ts
+  201:1  warning  File has too many lines (223). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\memory\__tests__\edge-on-ingest.test.ts
+  201:1  warning  File has too many lines (221). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\memory\__tests__\graph-fallback.test.ts
+  201:1  warning  File has too many lines (214). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\memory\dispatchers\analytics.ts
+  201:1  warning  File has too many lines (216). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\memory\dispatchers\smart-ingest.ts
+  201:1  warning  File has too many lines (223). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\memory\engine\edge-on-ingest.ts
+  201:1  warning  File has too many lines (214). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\memory\llm\LLMInitializer.ts
+  201:1  warning  File has too many lines (208). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\memory\task-queue\TaskWorker.ts
+  201:1  warning  File has too many lines (229). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\orchestration\content-proxy\artifact-source.ts
+  201:1  warning  File has too many lines (223). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\pega\PegaIndexerTool.ts
+  201:1  warning  File has too many lines (206). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\pega\PegaService.ts
+  201:1  warning  File has too many lines (214). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\pega\expression\pega-expr\astBuilder.ts
+  201:1  warning  File has too many lines (203). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\pega\expression\pega-expr\nodes.ts
+  201:1  warning  File has too many lines (231). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\pega\metamodel\PegaMetaModelLoader.ts
+  201:1  warning  File has too many lines (235). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\pega\references\PegaImpactAnalyzer.ts
+  201:1  warning  File has too many lines (219). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\pega\scripts\edge-extractors.ts
+  201:1  warning  File has too many lines (219). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\pega\semantic\simulator-flow.ts
+  201:1  warning  File has too many lines (201). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\modules\pega\services\RelativeExtractor.ts
+  201:1  warning  File has too many lines (208). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\server\middleware\jwt-auth.ts
+  201:1  warning  File has too many lines (206). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\server\routes\tools.ts
+  201:1  warning  File has too many lines (209). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\servers\atlassian\__tests__\e2e-api.test.ts
+  201:1  warning  File has too many lines (205). Maximum allowed is 200  max-lines
+
+C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2\backend\src\servers\atlassian\__tests__\integration.test.ts
+  201:1  warning  File has too many lines (205). Maximum allowed is 200  max-lines
+
+✖ 41 problems (0 errors, 41 warnings)
+
+
+> sdlc-agent-4-enterprise-server@1.55.11 lint:lines
+> bash ../scripts/check-line-count.sh
+
+== line-count gate (SA4E-223 / BR-18 / AC7) ==
+mode=changed  max=200  target=C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend/src
+No changed .ts files under backend/src. Gate PASSED.
+
+> sdlc-agent-4-enterprise-server@1.55.11 build
+> tsc && node -e "const fs=require('fs');const path=require('path');function cp(s,d){if(!fs.existsSync(d))fs.mkdirSync(d,{recursive:true});for(const f of fs.readdirSync(s)){const sp=path.join(s,f),dp=path.join(d,f);fs.statSync(sp).isDirectory()?cp(sp,dp):fs.copyFileSync(sp,dp);}}cp('src/viewer','dist/viewer');cp('src/engine/parsers/grammars','dist/engine/parsers/grammars');"
+
+
+> sdlc-agent-4-enterprise-server@1.55.11 test:unit
+> vitest run src/
+
+
+ RUN  v4.1.11 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-393-2/backend
+
+{"level":50,"time":1793625731713,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625731721,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625731767,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625731769,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-7tzu4k\\index.db"}
+{"level":30,"time":1793625731806,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"REQUIREMENT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625731769,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625731724,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625731725,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625731741,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625731743,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625731743,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625731744,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625731744,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625731745,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625731756,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625731844,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625731857,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625731859,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625731886,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":30,"time":1793625731902,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"REQUIREMENT","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625731887,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-AMDqOY\\index.db"}
+{"level":50,"time":1793625731887,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625731860,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625731860,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625731869,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625731870,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625731870,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625731870,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625731870,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625731871,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625731879,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625731912,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625731922,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625731924,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625731947,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":30,"time":1793625731958,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":1,"type":"ARCHITECTURE","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625731948,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-44DMnE\\index.db"}
+{"level":50,"time":1793625731948,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625731924,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625731924,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625731932,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625731933,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625731934,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625731934,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625731934,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625731934,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625731942,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1793625731967,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"memory-tool-dispatcher","entryId":2,"type":"ARCHITECTURE","msg":"[graph] Upserted graph node for KB entry"}
+{"level":50,"time":1793625731977,"pid":65128,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625738081,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625738087,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625738110,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625738111,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-6dCYHy\\index.db"}
+{"level":50,"time":1793625738111,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625738088,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625738088,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625738095,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625738096,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625738097,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625738097,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625738097,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625738097,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625738104,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625738136,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":50,"time":1793625738143,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+{"level":50,"time":1793625738144,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+{"level":30,"time":1793625738156,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migration-v5","msg":"[migrations] V5: multi-tenant project_id applied (legacy=default)"}
+{"level":50,"time":1793625738157,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e18-tTl1H1\\index.db"}
+{"level":50,"time":1793625738157,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1793625738144,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1793625738144,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1793625738148,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1793625738148,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1793625738149,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1793625738149,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1793625738149,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1793625738149,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1793625738153,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":50,"time":1793625738192,"pid":36372,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Connection closed"}
+{"level":40,"time":1793625738755,"pid":35708,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"userId":"user-abc","msg":"auditProvision failed"}
+{"level":40,"time":1793625738756,"pid":35708,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"userId":"user-goog","msg":"auditProvision failed"}
+{"level":40,"time":1793625738757,"pid":35708,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"userId":"user-gh","msg":"auditProvision failed"}
+{"level":40,"time":1793625738757,"pid":35708,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"action":"SSO_LINK_REJECTED_LOCAL_NO_AUTOLINK","msg":"auditReject failed"}
+{"level":40,"time":1793625738758,"pid":35708,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"userId":"user-1b","msg":"auditLink failed"}
+{"level":40,"time":1793625738760,"pid":35708,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"action":"SSO_JIT_REJECTED_EMAIL_NOT_VERIFIED","msg":"auditReject failed"}
+{"level":40,"time":1793625738760,"pid":35708,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"action":"SSO_JIT_REJECTED_EMAIL_NOT_VERIFIED","msg":"auditReject failed"}
+{"level":40,"time":1793625738761,"pid":35708,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"action":"SSO_LINK_REJECTED_EMAIL_NOT_VERIFIED","msg":"auditReject failed"}
+{"level":40,"time":1793625738761,"pid":35708,"hostname":"WIN-LK2TQOOAELR","name":"jit-provisioning","e":{},"action":"SSO_LINK_REJECTED_HYBRID_ACCOUNT","msg":"auditReject failed"}

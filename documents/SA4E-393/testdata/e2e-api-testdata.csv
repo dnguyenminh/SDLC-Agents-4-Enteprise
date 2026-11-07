@@ -1,0 +1,9 @@
+test_case_id,detectionMode,threshold,sourcePath,localhostUrl,expected_http_code,expected_result,description
+E2E-API-01,both,0.8,/workspace/src,http://localhost:5173,200,loadStatus success, End-to-end load detector via real server
+E2E-API-02,static,0.8,/workspace/fixtures/small, ,200,findings returned, Static detection E2E with fixture
+E2E-API-03,rendered,0.7,,http://localhost:5173,200,fetchStatus success, Rendered detection E2E with mock server
+E2E-API-04,both,0.5,, ,200,pass=true, Quality gate pass scenario (threshold 0.5)
+E2E-API-05,both,0.9,, ,200,pass=false, Quality gate fail scenario (threshold 0.9)
+E2E-API-06,both,0.8,,http://localhost:5173,200,cacheHit=true, Cache reuse within 5 min
+E2E-API-07,both,0.8,, ,200,JSON report, Report persistence — JSON file created
+E2E-API-08,both,0.8,, ,404,PACKAGE_NOT_FOUND, Error handling package not found
