@@ -1,0 +1,115 @@
+<mxfile host="65bd71144e">
+    <diagram name="State Diagram - Model Swap" id="SA4E-387-State-Model-Swap">
+        <mxGraphModel dx="1060" dy="1004" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="init" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;fontSize=1;" value="" vertex="1">
+                    <mxGeometry height="20" width="20" x="400" y="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="s-idle" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=12;fontStyle=1;strokeWidth=2;" value="Idle" vertex="1">
+                    <mxGeometry height="80" width="120" x="350" y="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="s-resolve" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=11;fontStyle=1;strokeWidth=2;" value="Resolving Model" vertex="1">
+                    <mxGeometry height="80" width="150" x="100" y="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="s-budget" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=2;" value="Calculating Budget" vertex="1">
+                    <mxGeometry height="80" width="150" x="350" y="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="s-enrich" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="Enriching" vertex="1">
+                    <mxGeometry height="80" width="150" x="600" y="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="s-complete" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=11;fontStyle=1;strokeWidth=2;" value="Complete" vertex="1">
+                    <mxGeometry height="80" width="120" x="850" y="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="s-error" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCDD2;strokeColor=#C62828;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="Error" vertex="1">
+                    <mxGeometry height="80" width="120" x="360" y="440" as="geometry"/>
+                </mxCell>
+                <mxCell id="s-swap" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#F57C00;fontColor=#E65100;fontSize=11;fontStyle=1;strokeWidth=2;" value="Model Swap&#xa;Pending" vertex="1">
+                    <mxGeometry height="80" width="150" x="600" y="440" as="geometry"/>
+                </mxCell>
+                <mxCell id="final" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;fontSize=1;strokeWidth=2;" value="" vertex="1">
+                    <mxGeometry height="20" width="20" x="900" y="510" as="geometry"/>
+                </mxCell>
+                <mxCell id="tc1" edge="1" parent="1" source="init" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#000000;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="s-idle" value="">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="tc2" edge="1" parent="1" source="s-idle" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#3F51B5;strokeWidth=2;fontSize=10;fontStyle=1;exitX=0;exitY=0.5;entryX=0.5;entryY=0;labelBackgroundColor=#ffffff;" target="s-resolve" value="enrich request">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="175" y="160"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="tc3" edge="1" parent="1" source="s-resolve" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#1976D2;strokeWidth=2;fontSize=10;fontStyle=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="s-budget" value="model resolved">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="tc4" edge="1" parent="1" source="s-budget" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#FBC02D;strokeWidth=2;fontSize=10;fontStyle=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="s-enrich" value="budget calculated">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="tc5" edge="1" parent="1" source="s-enrich" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#E53935;strokeWidth=2;fontSize=10;fontStyle=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="s-complete" value="enrichment done">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="tc6" edge="1" parent="1" source="s-complete" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#43A047;strokeWidth=2;fontSize=10;fontStyle=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=#ffffff;entryDx=0;entryDy=0;" target="final" value="result returned">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="tc7" edge="1" parent="1" source="s-resolve" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#C62828;strokeWidth=2;dashed=1;fontSize=10;fontStyle=1;exitX=0.5;exitY=1;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="s-error" value="model not found">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="210" y="360"/>
+                            <mxPoint x="210" y="480"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="tc8" edge="1" parent="1" source="s-budget" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#C62828;strokeWidth=2;dashed=1;fontSize=10;fontStyle=1;exitX=0.3;exitY=1;entryX=0.3;entryY=0;labelBackgroundColor=#ffffff;" target="s-error" value="budget error">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="tc9" edge="1" parent="1" source="s-enrich" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#C62828;strokeWidth=2;dashed=1;fontSize=10;fontStyle=1;exitX=0.2;exitY=1;entryX=1;entryY=0.5;labelBackgroundColor=#ffffff;" target="s-error" value="LLM error">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="-10" y="-30" as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="530" y="360"/>
+                            <mxPoint x="530" y="480"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="tc10" edge="1" parent="1" source="s-error" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#757575;strokeWidth=2;dashed=1;fontSize=10;fontStyle=1;exitX=0;exitY=0.5;entryX=0;entryY=0.75;labelBackgroundColor=#ffffff;entryDx=0;entryDy=0;" target="s-idle" value="error handled">
+                    <mxGeometry relative="1" x="0.0488" as="geometry">
+                        <mxPoint x="-10" y="-120" as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="350" y="480"/>
+                            <mxPoint x="350" y="460"/>
+                            <mxPoint x="300" y="460"/>
+                            <mxPoint x="300" y="180"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="tc11" edge="1" parent="1" source="s-idle" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#F57C00;strokeWidth=2;dashed=1;fontSize=10;fontStyle=1;exitX=1;exitY=0.5;entryX=0;entryY=0.25;labelBackgroundColor=#ffffff;entryDx=0;entryDy=0;" target="s-swap" value="swap requested">
+                    <mxGeometry relative="1" x="0.0465" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="560" y="160"/>
+                            <mxPoint x="560" y="460"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="tc12" edge="1" parent="1" source="s-swap" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#F57C00;strokeWidth=2;dashed=1;fontSize=10;fontStyle=1;exitX=0.5;exitY=1;entryX=0.5;entryY=1;labelBackgroundColor=#ffffff;" target="s-resolve" value="cache invalidated">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="675" y="545"/>
+                            <mxPoint x="175" y="545"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="tc13" edge="1" parent="1" source="s-swap" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#F57C00;strokeWidth=2;dashed=1;fontSize=10;fontStyle=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;labelBackgroundColor=#ffffff;" target="s-budget" value="restart enrich">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="790" y="480"/>
+                            <mxPoint x="790" y="240"/>
+                            <mxPoint x="425" y="240"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

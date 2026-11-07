@@ -65,26 +65,38 @@ jobs:
 
       - name: Commit and tag
         if: steps.bump.outputs.version != ''
+        env:
+          # Prefer PAT; fall back to the job's GITHUB_TOKEN. Pushing via an
+          # explicit tokenized remote URL is more reliable than relying on
+          # checkout's persisted credentials (which silently fall back to a
+          # read-only token and produce an opaque 403).
+          PUSH_TOKEN: ${{ secrets.PAT || github.token }}
         run: |
+          set -euo pipefail
           VERSION="${{ steps.bump.outputs.version }}"
+
+          # Fail loud if the PAT secret is empty — makes the "is the secret set?"
+          # question unambiguous instead of a downstream 403.
+          if [ -z "${{ secrets.PAT }}" ]; then
+            echo "::warning::secrets.PAT is EMPTY — falling back to GITHUB_TOKEN (push to main may 403)."
+          else
+            echo "🔑 secrets.PAT is present (length check passed)."
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add extension/package.json
-          git commit -m "chore: bump extension to v${VERSION} (new prebuilds)"
+          # Keep root/backend/extension in lockstep in the SAME commit before
+          # tagging, so the tag points at the fully version-synced tree (avoids
+          # the old amend-after-tag + force-push dance).
+          jq ".version = \"${VERSION}\"" backend/package.json > tmp.json && mv tmp.json backend/package.json
+          jq ".version = \"${VERSION}\"" package.json > tmp.json && mv tmp.json package.json
+          git add extension/package.json backend/package.json package.json
+          git commit -m "chore(release): v${VERSION} — version sync (auto-release)"
           git tag "v${VERSION}"
-          git push origin main --tags
-          echo "✅ Pushed v${VERSION}"
 
-      - name: Sync backend version
-        if: steps.bump.outputs.version != ''
-        run: |
-          VERSION="${{ steps.bump.outputs.version }}"
-          jq ".version = \"$VERSION\"" backend/package.json > tmp.json
-          mv tmp.json backend/package.json
-          git add backend/package.json
-          git commit --amend --no-edit
-          git push origin main --force-with-lease
-          echo "✅ Backend version synced to v${VERSION}"
+          # Push over HTTPS with the token embedded in the remote URL.
+          git push "https://x-access-token:${PUSH_TOKEN}@github.com/${{ github.repository }}.git" HEAD:main --tags
+          echo "✅ Pushed v${VERSION}"
 
       - name: Setup Node.js for npm publish
         if: steps.bump.outputs.version != ''

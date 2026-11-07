@@ -2,6 +2,8 @@
 name: sm-agent
 type: agent
 phase: requirements
+capabilities: [orchestration, coordination, sdlc, pipeline, jira, status]
+advertise: "Scrum Master — the pipeline coordinator and single entry point. Ask me for: running the SDLC pipeline for a Jira ticket, phase status/resume, routing work to the right agent, and Jira transitions. I coordinate, I do not write documents/code myself."
 description: >
   Scrum Master agent điều phối toàn bộ pipeline multi-agent theo SDLC.
   Entry point duy nhất — user chỉ cần cung cấp Jira ticket key.

@@ -52,8 +52,8 @@ vi.mock('vscode', () => ({
 }));
 
 vi.mock('../pi-agent-session-host.js', () => ({
-  ensureSessionHost: (...args: unknown[]) =>
-    (mocks.ensureSessionHost as (...args: unknown[]) => Promise<unknown>)(...args),
+  ensureSessionHost: (...a: unknown[]) =>
+    (mocks.ensureSessionHost as (...a: unknown[]) => Promise<unknown>)(...a),
   clearSessionHostCache: () => undefined,
 }));
 
@@ -89,10 +89,6 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
     mockConfigValues['llm.provider'] = 'lmstudio';
     mockConfigValues['llm.model'] = '';
-    mockConfigValues['llm.profiles'] = [
-      { id: 'lmstudio', provider: 'lmstudio', model: 'qwen-7b', useDefaultUrl: true },
-    ];
-    mockConfigValues['llm.activeProfileId'] = 'lmstudio';
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,
       workspaceRoot: 'C:/ws/test',
@@ -116,10 +112,6 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
     mockConfigValues['llm.provider'] = 'lmstudio';
     mockConfigValues['llm.model'] = '';
-    mockConfigValues['llm.profiles'] = [
-      { id: 'lmstudio', provider: 'lmstudio', model: 'qwen-7b', useDefaultUrl: true },
-    ];
-    mockConfigValues['llm.activeProfileId'] = 'lmstudio';
     // Simulate the session host failing to resolve a model (local server
     // unreachable / lists no models → PI_MODEL_UNRESOLVED from createModelRuntime).
     mocks.ensureSessionHost.mockRejectedValueOnce(
@@ -145,10 +137,6 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
   it('cloud provider with key routes to the session path', async () => {
     mockConfigValues['llm.provider'] = 'anthropic';
     mockConfigValues['llm.model'] = '';
-    mockConfigValues['llm.profiles'] = [
-      { id: 'anthropic-claude-3-haiku', provider: 'anthropic', model: 'claude-3-haiku', useDefaultUrl: true },
-    ];
-    mockConfigValues['llm.activeProfileId'] = 'anthropic-claude-3-haiku';
     const secrets = { get: async () => 'sk-x', store: async () => undefined, delete: async () => undefined };
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,
@@ -160,9 +148,12 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
 
     await adapter.invokeChat('hi');
 
-    expect(mocks.ensureSessionHost).toHaveBeenCalled();
-    // SA4E-365: promptTurn now also receives the onThinking callback (F2 wiring).
-    expect(mocks.promptTurn).toHaveBeenCalledWith('hi', expect.any(Function), expect.any(Function), expect.any(Function));
+    expect(mocks.ensureSessionHost).toHaveBeenCalledWith(
+      expect.objectContaining({ workspaceRoot: 'C:/ws/test', providerId: 'anthropic', apiKey: 'sk-x' })
+    );
+    // SA4E-365: promptTurn receives the onThinking callback (F2 wiring).
+    // SA4E-391: + a 5th opts arg (image carrier) — undefined for a text turn.
+    expect(mocks.promptTurn).toHaveBeenCalledWith('hi', expect.any(Function), expect.any(Function), expect.any(Function), undefined);
     expect(chatErrors(onEvent)).toEqual([]);
     // Live tool progress reaches the webview as a tool block.
     const toolMsgs = onEvent.mock.calls
@@ -184,10 +175,6 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
   it('closes the stream even for textless turns (tool-only output)', async () => {
     mockConfigValues['llm.provider'] = 'anthropic';
     mockConfigValues['llm.model'] = '';
-    mockConfigValues['llm.profiles'] = [
-      { id: 'anthropic-claude-3-haiku', provider: 'anthropic', model: 'claude-3-haiku', useDefaultUrl: true },
-    ];
-    mockConfigValues['llm.activeProfileId'] = 'anthropic-claude-3-haiku';
     const secrets = { get: async () => 'sk-x', store: async () => undefined, delete: async () => undefined };
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,
@@ -208,4 +195,3 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     expect(chatErrors(onEvent)).toEqual([]);
   });
 });
-

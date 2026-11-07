@@ -107,22 +107,25 @@
     // Backdrop click
     backdrop?.addEventListener("click", close);
 
-    // Model item clicks (delegated)
-    popupEl.addEventListener("click", function (e) {
+    // Keyboard shortcuts (scoped to popup)
+    popupEl.addEventListener("keydown", handleKeyDown);
+
+    // Model item clicks (delegated on the dialog). The dialog stops click
+    // propagation so backdrop-close ignores in-dialog clicks; model-item
+    // selection must therefore be delegated HERE (on the dialog), not on
+    // popupEl — otherwise the dialog's stopPropagation swallows the click
+    // before it reaches a popupEl-level listener and selection never fires.
+    var dialog = popupEl.querySelector(".model-picker-dialog");
+    dialog?.addEventListener("click", function (e) {
       var modelItem = e.target.closest(".model-item");
       if (modelItem) {
         var modelId = modelItem.dataset.modelId;
         var model = allModels.find(function (m) { return m.id === modelId; });
-        if (model) { selectModel(model); }
+        if (model) { selectModel(model); return; }
       }
+      // Keep in-dialog clicks from bubbling to the backdrop (which closes).
+      e.stopPropagation();
     });
-
-    // Keyboard shortcuts (scoped to popup)
-    popupEl.addEventListener("keydown", handleKeyDown);
-
-    // Prevent backdrop clicks from closing when clicking dialog
-    var dialog = popupEl.querySelector(".model-picker-dialog");
-    dialog?.addEventListener("click", function (e) { e.stopPropagation(); });
 
     // Initialize keyboard handler
     keyboardHandler = new KeyboardShortcutHandler(popupEl, {
@@ -308,7 +311,8 @@
       SS.setModel(model.id);
     }
     if (SS.vscode) {
-      SS.vscode.postMessage({ type: "chat:setModel", model: model.id });
+      // Explicit user pick → host updates this tab's peer capability.
+      SS.vscode.postMessage({ type: "chat:setModel", model: model.id, explicit: true });
     }
     close();
   }
@@ -355,13 +359,12 @@
     isOpen = true;
     popupEl.classList.remove("hidden");
 
-    // Position near anchor if provided
-    if (anchorEl) {
-      var rect = anchorEl.getBoundingClientRect();
-      var dialog = popupEl.querySelector(".model-picker-dialog");
-      dialog.style.top = (rect.bottom + 4) + "px";
-      dialog.style.left = rect.left + "px";
-    }
+    // SA4E-391: the dialog is centered via the backdrop's flexbox (see CSS);
+    // do NOT pin it to the anchor button — the model button sits at the bottom
+    // of the panel, so anchoring pushed the dialog off-screen. Clear any inline
+    // position left over from an older build.
+    var dialog = popupEl.querySelector(".model-picker-dialog");
+    if (dialog) { dialog.style.top = ""; dialog.style.left = ""; dialog.style.position = ""; }
 
     // Focus search input
     setTimeout(function () {

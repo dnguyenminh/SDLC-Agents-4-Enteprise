@@ -25,37 +25,37 @@
     graphDone = false;
 
     S.showMessages();
-    S.finalizeToolContainer(); // Seal previous turn's tools before user message
-    // SA4E-369: the persisted entry is created up-front so the rendered
-    // bubble carries it (per-message copy) AND the model stores ONE object.
-    var userEntry = text
-      ? { role: "user", content: text, timestamp: new Date().toISOString() }
-      : null;
-    if (userEntry) S.appendMessage("user", text, undefined, userEntry);
-    if (S.pastedAttachments.length > 0) {
-      for (var a = 0; a < S.pastedAttachments.length; a++) {
-        if (S.pastedAttachments[a].type === "image") {
-          S.appendMessage("user", "[Image: " + S.pastedAttachments[a].name + "]");
-        }
-      }
-    }
-    S.setWorking(true);
 
-    // KSA-240: Auto-rename tab to first message excerpt
+    // KSA-240: Auto-rename tab to first message excerpt — BEFORE appending the
+    // user block (the rename check reads messages.length === 0).
     var currentTab = S.getTab(S.activeTabId);
-    if (currentTab && text && (!currentTab.messages || currentTab.messages.length === 0)) {
+    var isFirst = currentTab && text && (!currentTab.messages || currentTab.messages.length === 0);
+    if (isFirst) {
       var excerpt = text.substring(0, 25).trim();
       if (text.length > 25) excerpt += "\u2026";
       currentTab.name = excerpt;
       S.renderTabBar();
       vscode.postMessage({ type: "tab:rename", payload: { tabId: S.activeTabId, newName: excerpt } });
     }
-    // Track message in local tab state
-    if (currentTab && userEntry) {
-      if (!currentTab.messages) currentTab.messages = [];
-      currentTab.messages.push(userEntry);
+
+    // SA4E-391: append the user block via the flat renderer (single source —
+    // appendBlock pushes to tab.messages AND renders). The images ride ON the
+    // user entry so the bubble shows thumbnails (not a "[Image: name]" string).
+    var imageAtts = [];
+    for (var a = 0; a < S.pastedAttachments.length; a++) {
+      if (S.pastedAttachments[a].type === "image" && S.pastedAttachments[a].dataUrl) {
+        imageAtts.push({ name: S.pastedAttachments[a].name, dataUrl: S.pastedAttachments[a].dataUrl });
+      }
     }
-    S.saveStateToDisk();
+    if (text || imageAtts.length > 0) {
+      S.appendBlock(S.activeTabId, {
+        role: "user",
+        content: text,
+        images: imageAtts.length > 0 ? imageAtts : undefined,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    S.setWorking(true);
 
     var attachments = S.pastedAttachments.map(function (att) {
       return { name: att.name, type: att.type === "image" ? "image/png" : "application/octet-stream", size: 0, uri: att.dataUrl || "" };
@@ -63,6 +63,11 @@
 
     vscode.postMessage({
       type: "chat:userMessage",
+      // SA4E-391 Issue 2 (stream routing): carry the REAL active tab id so the
+      // host can stamp it as originTabId on every stream/tool event of this
+      // turn. Without it the host used a placeholder ("default") that matched
+      // no tab UUID, so routeStreamEvent dropped every chunk.
+      tabId: S.activeTabId,
       text: text || "(attached files)",
       context: S.contextItems.length > 0 ? S.contextItems : undefined,
       attachments: attachments.length > 0 ? attachments : undefined
@@ -71,13 +76,16 @@
     inputEl.innerHTML = "";
     inputEl.style.height = "auto";
     S.clearContextChips();
-    S.pastedAttachments = [];
-    S.renderAttachments();
-    // Save to history for Up/Down navigation
-    if (text) {
-      S.messageHistory.push(text);
+    // Save to history for Up/Down navigation. SA4E-391: store an ENTRY that
+    // carries the attached images too (previously only text was kept, so a
+    // recalled message lost its image). Read `imageAtts` BEFORE we clear
+    // pastedAttachments below.
+    if (text || (imageAtts && imageAtts.length)) {
+      S.messageHistory.push({ text: text || "", images: (imageAtts && imageAtts.length) ? imageAtts.slice() : undefined });
       if (S.messageHistory.length > 50) S.messageHistory.shift();
     }
+    S.pastedAttachments = [];
+    S.renderAttachments();
     S.historyIndex = -1;
     S.pendingInput = "";
   };

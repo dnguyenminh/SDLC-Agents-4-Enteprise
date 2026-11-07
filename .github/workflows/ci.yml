@@ -2,9 +2,9 @@ name: CI — Build & Test
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, 'dnguyenminh/**']
   pull_request:
-    branches: [master, main]
+    branches: [master, main, 'dnguyenminh/**']
 
 jobs:
   backend:

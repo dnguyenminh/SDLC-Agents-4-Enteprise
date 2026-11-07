@@ -1,9 +1,3 @@
-/**
- * ModuleFactory — creates and registers all modules with their dependencies.
- * Factory pattern: centralizes module instantiation, eliminates wiring from index.ts.
- * Each module is created with the right deps based on its constructor signature.
- */
-
 import type { Logger } from 'pino';
 import type { ModuleRegistry } from './ModuleRegistry.js';
 import type { Container } from '../di/Container.js';
@@ -20,6 +14,7 @@ import { HttpServer } from '../server/HttpServer.js';
 import { MemoryToolSearchService } from './orchestration/MemoryToolSearchService.js';
 import { ToolRouter } from '../tool-router/ToolRouter.js';
 import { McpConfigService } from './orchestration/McpConfigService.js';
+import { EnrichmentModule } from './enrichment/EnrichmentModule.js';
 
 export interface ModuleFactoryConfig {
   port: number;
@@ -50,6 +45,40 @@ export class ModuleFactory {
     this.registry.register(new SecurityModule(this.logger, this.registry));
     // SA4E-6: Sandbox Execution (MCP Server Bridge) — isolated code execution
     this.registry.register(new SandboxModule(this.logger, this.registry));
+    // SA4E-387: Enrichment with Dynamic Context Budget & Runtime Model Swap
+    this.registry.register(new EnrichmentModule(this.logger, { enableMapReduce: true }));
+  }
+
+  /**
+   * Initialize cross-module dependencies after all modules are registered.
+   * This must be called after registry.initializeAll() completes.
+   * SA4E-387: Wires EnrichmentModule with DatabaseAdapter and LLMService from MemoryModule.
+   */
+  async initializeCrossModuleDependencies(): Promise<void> {
+    const memoryModule = this.registry.getModule('memory') as any;
+    const enrichmentModule = this.registry.getModule('enrichment') as any;
+
+    if (memoryModule && enrichmentModule && enrichmentModule.isReady && !enrichmentModule.isReady()) {
+      try {
+        // Get DatabaseAdapter from MemoryModule
+        const engine = memoryModule.getEngine?.();
+        const adapter = engine?.getAdapter?.();
+
+        // Get LLMService from TaskWorker (may be undefined — no LLM server yet;
+        // EnrichmentModule completes wiring later via LLM_SERVICE_READY — SA4E-387)
+        const taskWorker = memoryModule.taskWorker;
+        const llmService = taskWorker?.getLlmService?.();
+
+        if (adapter) {
+          await enrichmentModule.initializeWithDependencies(adapter, llmService, this.registry);
+          this.logger.info('EnrichmentModule cross-module dependencies initialized (SA4E-387)');
+        } else {
+          this.logger.warn('EnrichmentModule initialization deferred: missing adapter or LLMService');
+        }
+      } catch (err) {
+        this.logger.error({ err }, 'Failed to initialize EnrichmentModule cross-module dependencies');
+      }
+    }
   }
 
   createToolRouter(): ToolRouter {

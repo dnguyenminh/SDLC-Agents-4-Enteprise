@@ -7,6 +7,7 @@
 import { Type } from 'typebox';
 import { PEER_MESSAGE_MAX_CHARS } from './constants.js';
 import { wrapPeerReply } from './envelope.js';
+import { getCurrentTurnImages } from './runtime.js';
 import type { PeerBus } from './bus.js';
 import type { PeerError, PeerErrorEnvelope, SendResult } from './types.js';
 
@@ -41,7 +42,12 @@ export function buildPeerListTool(callerTabId: string, bus: PeerBus): PeerToolDe
     description: 'List the other chat tabs (peers) available for agent-to-agent messaging in this window.',
     parameters: Type.Object({}),
     promptSnippet: 'Peer tabs available for agent-to-agent messaging',
-    promptGuidelines: ['Call peer_list first to discover target tabIds before peer_send.'],
+    promptGuidelines: [
+      'Call peer_list first to discover peers BEFORE peer_send.',
+      'Each peer row describes who it is and what it can do: `role` (e.g. sa-agent, qa-agent), `capabilities` (tags like design, test, security, vision), `advertise` (a plain-language "ask me for …" blurb) and `model`.',
+      'To delegate a task, pick the peer whose role/capabilities/advertise best match what you need — e.g. architecture/design → a peer with "design", writing tests → "test", reading an image → "vision".',
+      'If no peer matches the capability the task needs, tell the user instead of delegating blindly.',
+    ],
     execute: async () => textResult(bus.list(callerTabId)),
   };
 }
@@ -52,7 +58,9 @@ export function buildPeerSendTool(callerTabId: string, bus: PeerBus): PeerToolDe
     label: 'Peer send',
     description:
       'Send a task message to another chat tab. Blocking mode waits for the peer reply; ' +
-      `async mode returns a taskId to poll with peer_status. Max ${PEER_MESSAGE_MAX_CHARS} chars.`,
+      `async mode returns a taskId to poll with peer_status. Max ${PEER_MESSAGE_MAX_CHARS} chars. ` +
+      'Any image(s) the user attached to THIS turn are forwarded automatically to the ' +
+      'target tab, so you can delegate "read/describe this image" to a vision-capable peer.',
     parameters: Type.Object({
       tabId: Type.String({ description: 'Target tab id from peer_list.' }),
       message: Type.String({ description: 'Task message for the peer agent.' }),
@@ -69,7 +77,11 @@ export function buildPeerSendTool(callerTabId: string, bus: PeerBus): PeerToolDe
         return textResult({ error: { code: 'PEER_010', message: 'peer_send requires a non-empty tabId and message.' } });
       }
       try {
-        const result: SendResult = await bus.send(callerTabId, p.tabId, p.message, p.async ? 'async' : 'blocking', 'agent');
+        // SA4E-391 multimodal: carry the sender's current-turn images so the
+        // peer (e.g. a vision tab) can read a delegated image. The agent does
+        // not pass pixels as a tool arg (too large) — they ride the task.
+        const images = getCurrentTurnImages(callerTabId);
+        const result: SendResult = await bus.send(callerTabId, p.tabId, p.message, p.async ? 'async' : 'blocking', 'agent', images);
         if (result.error) return textResult({ error: result.error });
         // S-05: the peer's reply is untrusted agent-to-agent content — the
         // [PEER REPLY] frame travels with it (origin = the target tab id).

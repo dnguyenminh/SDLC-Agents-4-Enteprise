@@ -43,6 +43,16 @@ export async function createHost(opts: SessionHostOptions): Promise<SessionHost>
 
   const settingsManager =
     (opts.settingsManager as never) ?? piCoding.SettingsManager.create(workspaceRoot, agentDir);
+  // SA4E-391 multimodal: the harness auto-resizes prompt images in a WASM
+  // worker thread (image-resize-worker.js). That worker cannot be resolved
+  // inside the esbuild single-file bundle (out/extension.js), so resizeImage()
+  // fails and processImage() DROPS the image with "could not be resized below
+  // the inline image size limit" — the model then only sees that note and
+  // replies "image removed due to size limit". Disable auto-resize so the
+  // harness base64-encodes the (already small) image directly, no worker.
+  try {
+    (settingsManager as { setImageAutoResize?: (v: boolean) => void })?.setImageAutoResize?.(false);
+  } catch { /* best-effort — test mocks lack this method */ }
   const sessionDir = path.join(workspaceRoot, '.pi', 'sessions');
   const sessionManager =
     (opts.sessionManager as never) ?? piCoding.SessionManager.create(workspaceRoot, sessionDir);

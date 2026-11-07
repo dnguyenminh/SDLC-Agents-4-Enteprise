@@ -1,0 +1,141 @@
+<mxfile host="65bd71144e">
+    <diagram name="Component Diagram" id="SA4E-387-Component">
+        <mxGraphModel dx="1683" dy="1594" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="layer-api" parent="1" style="swimlane;html=1;startSize=26;fillColor=#E3F2FD;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=12;fontStyle=1;strokeWidth=2;" value="API Layer (Hono)" vertex="1">
+                    <mxGeometry height="110" width="1500" x="40" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-enrich-route" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontColor=#0D47A1;fontSize=11;fontStyle=1;strokeWidth=2;" value="routes/enrichment.ts&#xa;POST /enrich · POST /model/swap" vertex="1">
+                    <mxGeometry height="50" width="260" x="55" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="layer-pipeline" parent="1" style="swimlane;html=1;startSize=26;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=12;fontStyle=1;strokeWidth=2;" value="Enrichment Pipeline (engine/enrichment/ — SA4E-107)" vertex="1">
+                    <mxGeometry height="180" width="1500" x="40" y="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-tokenbudget" parent="layer-pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#EF6C00;fontColor=#E65100;fontSize=10;fontStyle=1;strokeWidth=2;dashed=1;" value="token-budget.ts — capTotalPrompt / truncateToTokens&#xa;MAX_BODY_TOKENS=4000 / PROMPT_TOKEN_CAP=24000" vertex="1">
+                    <mxGeometry height="50" width="260" x="320" y="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-reduction" parent="layer-pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#EF6C00;fontColor=#E65100;fontSize=10;fontStyle=1;strokeWidth=2;dashed=1;" value="ReductionPipeline.reduce() — STUB (fail-fast)&#xa;MAX_REDUCE_ROUNDS=3 / MAX_CHUNKS_PER_RULE=32" vertex="1">
+                    <mxGeometry height="50" width="260" x="20" y="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-handler" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="CodeEnrichmentHandler&#xa;enrichSymbol()" vertex="1">
+                    <mxGeometry height="50" width="260" x="55" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-promptbuilder" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="CodeEnrichment&#xa;PromptBuilder.build()" vertex="1">
+                    <mxGeometry height="50" width="260" x="360" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-parser" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="enrichment-response-parser&#xa;parseEnrichmentResponse()" vertex="1">
+                    <mxGeometry height="50" width="260" x="665" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-store" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#E53935;fontColor=#B71C1C;fontSize=11;fontStyle=1;strokeWidth=2;" value="enrichment-result-store&#xa;storeEnrichmentResults()" vertex="1">
+                    <mxGeometry height="50" width="260" x="970" y="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="layer-sa4e387" parent="1" style="swimlane;html=1;startSize=26;fillColor=#FFF9C4;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=12;fontStyle=1;strokeWidth=2;" value="SA4E-387 New Modules (modules/enrichment/)" vertex="1">
+                    <mxGeometry height="120" width="1500" x="40" y="370" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-modelresolver" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=2;" value="ModelResolver&#xa;resolveModel(modelName, ticketId)" vertex="1">
+                    <mxGeometry height="50" width="260" x="55" y="405" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-budgetguard" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=2;" value="BudgetGuard&#xa;computeInputBudget / check / BudgetError" vertex="1">
+                    <mxGeometry height="50" width="260" x="360" y="405" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-ctxdiscovery" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=2;" value="ContextWindowDiscovery&#xa;getContextWindow / invalidateWindowCache" vertex="1">
+                    <mxGeometry height="50" width="260" x="665" y="405" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-enrichengine" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=2;" value="EnrichmentEngine&#xa;enrichChunk(chunk, modelConfig, budget)" vertex="1">
+                    <mxGeometry height="50" width="260" x="970" y="405" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-mapreduce" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#FBC02D;fontColor=#F57F17;fontSize=11;fontStyle=1;strokeWidth=2;" value="MapReduce&#xa;reduceResults(enrichedChunks)" vertex="1">
+                    <mxGeometry height="50" width="260" x="1275" y="405" as="geometry"/>
+                </mxCell>
+                <mxCell id="layer-llm" parent="1" style="swimlane;html=1;startSize=26;fillColor=#E0F2F1;strokeColor=#00897B;fontColor=#004D40;fontSize=12;fontStyle=1;strokeWidth=2;" value="LLM Layer (modules/memory/llm/)" vertex="1">
+                    <mxGeometry height="150" width="1500" x="40" y="510" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-llmservice" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2F1;strokeColor=#00897B;fontColor=#004D40;fontSize=11;fontStyle=1;strokeWidth=2;" value="LLMService&#xa;resolveActive / setActiveModel /&#xa;complete(override)" vertex="1">
+                    <mxGeometry height="60" width="260" x="55" y="545" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-ollama" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#43A047;fontColor=#1B5E20;fontSize=11;fontStyle=1;strokeWidth=2;" value="OllamaAdapter&#xa;/api/chat + num_ctx" vertex="1">
+                    <mxGeometry height="60" width="260" x="360" y="545" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-openai" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B2DFDB;strokeColor=#00897B;fontColor=#004D40;fontSize=11;fontStyle=1;strokeWidth=2;" value="OpenAIAdapter (compat)&#xa;Anthropic / Gemini / LM Studio&#xa;/ Copilot / OpenCode" vertex="1">
+                    <mxGeometry height="60" width="260" x="665" y="545" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-adapters" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2F1;strokeColor=#00897B;fontColor=#004D40;fontSize=10;fontStyle=1;strokeWidth=2;dashed=1;" value="ADAPTERS registry (8 providers):&#xa;ollama, openai, anthropic, gemini,&#xa;lmstudio, copilot, opencode, opencode-zen" vertex="1">
+                    <mxGeometry height="60" width="260" x="1275" y="545" as="geometry"/>
+                </mxCell>
+                <mxCell id="layer-db" parent="1" style="swimlane;html=1;startSize=26;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=12;fontStyle=1;strokeWidth=2;" value="Database (SQLite via DatabaseAdapter)" vertex="1">
+                    <mxGeometry height="140" width="1500" x="40" y="680" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-symbols" parent="layer-db" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=2;" value="symbols — (summary, pseudo_code,&#xa;llm_tags, enrichment_status, enriched_at)" vertex="1">
+                    <mxGeometry height="60" width="260" x="650" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-body" parent="layer-db" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=2;" value="body_embeddings&#xa;(chunk_index, symbol_id)" vertex="1">
+                    <mxGeometry height="60" width="235" x="1130" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="comp-files" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;fontColor=#1A237E;fontSize=11;fontStyle=1;strokeWidth=2;" value="files / modules / embeddings /&#xa;relationships / file_index" vertex="1">
+                    <mxGeometry height="60" width="260" x="55" y="715" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="comp-enrich-route" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#1976D2;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=#ffffff;" target="comp-handler">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="comp-handler" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#E53935;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="comp-promptbuilder">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="comp-handler" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#E53935;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=#ffffff;" target="comp-reduction">
+                    <mxGeometry relative="1" x="0.0021" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="comp-promptbuilder" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#3F51B5;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=#ffffff;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" target="comp-tokenbudget">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="comp-promptbuilder" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#E53935;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="comp-parser">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="comp-parser" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#E53935;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="comp-store">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="comp-modelresolver" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#FBC02D;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="comp-budgetguard">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="comp-budgetguard" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#FBC02D;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="comp-ctxdiscovery">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" edge="1" parent="1" source="comp-ctxdiscovery" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#FBC02D;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="comp-enrichengine">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="1" source="comp-enrichengine" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#FBC02D;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="comp-mapreduce">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" edge="1" parent="1" source="comp-llmservice" style="html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#00897B;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;labelBackgroundColor=#ffffff;" target="comp-ollama">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" edge="1" parent="1" source="comp-llmservice" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#00897B;strokeWidth=2;exitX=1;exitY=0.75;entryX=0.5;entryY=1;labelBackgroundColor=#ffffff;" target="comp-openai">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="337" y="633"/>
+                            <mxPoint x="795" y="633"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e13" edge="1" parent="1" source="comp-store" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#3F51B5;strokeWidth=2;dashed=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;labelBackgroundColor=#ffffff;" target="comp-symbols">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1650" y="235"/>
+                            <mxPoint x="1650" y="670"/>
+                            <mxPoint x="1100" y="670"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e14" edge="1" parent="1" source="comp-store" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;endSize=10;rounded=0;strokeColor=#3F51B5;strokeWidth=2;dashed=1;exitX=1;exitY=0.85;labelBackgroundColor=#ffffff;entryX=1;entryY=0;entryDx=0;entryDy=37.49999999999999;entryPerimeter=0;" target="comp-body">
+                    <mxGeometry relative="1" x="0.1761" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1600" y="252.5"/>
+                            <mxPoint x="1600" y="757.5"/>
+                        </Array>
+                        <mxPoint x="1440" y="750" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

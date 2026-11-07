@@ -3,7 +3,7 @@
  * Markdown + JSON rendering of the export object built by
  * conversation-exporter.ts. PURE module — no vscode imports.
  */
-import type { ConversationExport, ExportEntry } from "./conversation-exporter";
+import type { ConversationExport, ExportEntry, ExportImage } from "./conversation-exporter";
 
 /**
  * The safest fence for wrapping `text`: one backtick run LONGER than any
@@ -44,8 +44,28 @@ function formatDuration(ms: number): string {
   return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
 }
 
+/**
+ * SA4E-391: resolve a user-attached image to a Markdown image reference.
+ * The IO layer passes a resolver that has written the image to a sibling
+ * file (compact .md). Without a resolver (per-message copy), the image is
+ * embedded inline as a data-URL so the copy is still self-contained.
+ */
+export type ImageResolver = (image: ExportImage, index: number) => string;
+
+function defaultImageMarkdown(image: ExportImage, index: number): string {
+  const alt = image.name || `image-${index + 1}`;
+  return `![${alt}](${image.dataUrl})`;
+}
+
+function renderUserImages(images: ExportImage[] | undefined, resolve: ImageResolver): string {
+  if (!images || images.length === 0) return "";
+  const refs = images.map((im, i) => resolve(im, i));
+  return `\n\n**Attached images (${images.length}):**\n\n${refs.join("\n\n")}`;
+}
+
 /** Render ONE entry as Markdown (used for the full export and per-message copy). */
-export function renderEntryMarkdown(entry: ExportEntry): string {
+export function renderEntryMarkdown(entry: ExportEntry, imageResolver?: ImageResolver): string {
+  const resolveImage = imageResolver ?? defaultImageMarkdown;
   const ts = clockOf(entry.timestamp);
   const tsTag = ts ? `[${ts}] ` : "";
 
@@ -65,7 +85,7 @@ export function renderEntryMarkdown(entry: ExportEntry): string {
   }
 
   if (entry.kind === "user") {
-    return `## ${tsTag}\ud83d\udc64 User\n\n${entry.content}`;
+    return `## ${tsTag}\ud83d\udc64 User\n\n${entry.content}${renderUserImages(entry.images, resolveImage)}`;
   }
 
   if (entry.kind === "error") {
@@ -85,7 +105,7 @@ export function renderEntryMarkdown(entry: ExportEntry): string {
 }
 
 /** Render the whole conversation as a single Markdown document. */
-export function renderConversationMarkdown(cx: ConversationExport): string {
+export function renderConversationMarkdown(cx: ConversationExport, imageResolver?: ImageResolver): string {
   const header = [
     `# Chat export \u2014 ${cx.tab.name || "(unnamed tab)"}`,
     "",
@@ -99,7 +119,7 @@ export function renderConversationMarkdown(cx: ConversationExport): string {
   if (cx.entries.length === 0) {
     return header + "_(no messages)_\n";
   }
-  return header + cx.entries.map(renderEntryMarkdown).join("\n\n---\n\n") + "\n";
+  return header + cx.entries.map((e) => renderEntryMarkdown(e, imageResolver)).join("\n\n---\n\n") + "\n";
 }
 
 /** Render the whole conversation as lossless pretty-printed JSON. */

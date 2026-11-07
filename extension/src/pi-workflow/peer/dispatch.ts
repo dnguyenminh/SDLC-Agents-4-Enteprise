@@ -43,7 +43,12 @@ async function runTurn(bus: PeerBus, taskId: string, peer: PeerRegistryEntry): P
   try {
     const host = await bus.deps.gateway.ensureSessionHost(sessionRequest(bus, peer));
     const wrapped = wrapPeerPrompt(envelopeHeader(bus, task), task.message);
-    const result = await host.promptTurn(wrapped, { turnOrigin: 'peer' });
+    // SA4E-391 multimodal: forward the sender's attached images so a vision
+    // peer actually receives the pixels (text envelope alone can't carry them).
+    const result = await host.promptTurn(wrapped, {
+      turnOrigin: 'peer',
+      ...(task.images && task.images.length > 0 ? { images: task.images } : {}),
+    });
     bus.deps.tasks.setCompleted(taskId, result.text);
     recordExchange(bus, task, result.text);
     // AC4: the receiving tab's transcript shows the auto-run turn's reply.

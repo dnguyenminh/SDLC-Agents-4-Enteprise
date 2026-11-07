@@ -1,6 +1,7 @@
 /**
  * Token budgeting helpers for enrichment prompts.
  * Extracted from CodeEnrichmentPromptBuilder (BR-18) — pure functions, no behavior change.
+ * SA4E-387: capTotalPrompt accepts dynamic budget instead of hardcoded PROMPT_TOKEN_CAP.
  */
 
 import type { LLMMessage } from '../../../modules/memory/llm/types.js';
@@ -13,7 +14,7 @@ import type { LLMMessage } from '../../../modules/memory/llm/types.js';
  */
 export const CHARS_PER_TOKEN = 4;
 
-/** Maximum token estimate for body text sent to LLM. */
+/** Maximum token estimate for body text sent to LLM (fallback when no inputBudget). */
 export const MAX_BODY_TOKENS = 4000;
 
 /**
@@ -21,6 +22,7 @@ export const MAX_BODY_TOKENS = 4000;
  * against accumulation (body + existing pseudo code + schema + signature). Sized well
  * under a typical model input window (e.g. 65536), leaving headroom for the model's
  * completion (`maxTokens`). Override via LLM_ENRICH_PROMPT_TOKEN_CAP.
+ * SA4E-387: This is now a FALLBACK only. Dynamic inputBudget takes precedence.
  */
 export const PROMPT_TOKEN_CAP = (() => {
   const parsed = parseInt(process.env.LLM_ENRICH_PROMPT_TOKEN_CAP || '', 10);
@@ -47,20 +49,24 @@ export function truncateToTokens(text: string, maxTokens: number): string {
 }
 
 /**
- * Enforce PROMPT_TOKEN_CAP across system + user messages. The system prompt is
+ * Enforce prompt token budget across system + user messages. The system prompt is
  * fixed instructions and kept intact; only the user message (which carries the
  * variable, untrusted content) is truncated to fit the remaining budget. Truncation
  * is char-based so dense/space-free content is also cut.
+ * SA4E-387: Accepts optional `budget` parameter. Falls back to PROMPT_TOKEN_CAP if not provided.
+ * @param messages Array of LLM messages
+ * @param budget Optional dynamic token budget (inputBudget from BudgetGuard). If not provided, uses PROMPT_TOKEN_CAP.
  */
-export function capTotalPrompt(messages: LLMMessage[]): LLMMessage[] {
+export function capTotalPrompt(messages: LLMMessage[], budget?: number): LLMMessage[] {
+  const effectiveBudget = budget ?? PROMPT_TOKEN_CAP;
   const total = messages.reduce((sum, m) => sum + estimateTokens(m.content), 0);
-  if (total <= PROMPT_TOKEN_CAP) return messages;
+  if (total <= effectiveBudget) return messages;
 
   const systemTokens = messages
     .filter((m) => m.role === 'system')
     .reduce((sum, m) => sum + estimateTokens(m.content), 0);
   // Reserve the system budget; give the rest to the (single) user message.
-  const userBudget = Math.max(200, PROMPT_TOKEN_CAP - systemTokens);
+  const userBudget = Math.max(200, effectiveBudget - systemTokens);
   return messages.map((m) =>
     m.role === 'user'
       ? { ...m, content: truncateToTokens(m.content, userBudget) }

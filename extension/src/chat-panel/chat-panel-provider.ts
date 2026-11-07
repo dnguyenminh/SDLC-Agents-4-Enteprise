@@ -18,7 +18,6 @@ import { SessionCompactor } from "../pi-agent/session-compactor";
 import { ChatStatusManager } from "./ChatStatusManager";
 import { ChatModelManager } from "./ChatModelManager";
 import { ChatStateManager } from "./ChatStateManager";
-import { ProviderConfigService } from "../services/ProviderConfigService";
 import { syncPeerTabNames } from "../pi-workflow/peer/lifecycle";
 import { CountedFlags } from "./chat-panel-provider/counted-flags";
 import { sendInitialContextUsage as runInitialContextUsage, updateContextUsageFromSavedState as runSavedStateContextUsage } from "./chat-panel-provider/context-usage";
@@ -46,7 +45,6 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   private readonly statusManager: ChatStatusManager;
   private readonly modelManager: ChatModelManager;
   private readonly stateManager: ChatStateManager;
-  private readonly configService: ProviderConfigService;
   private readonly engineListeners = new Set<(msg: ChatExtToWebviewMessage) => void>();
   private turnTabId: string | undefined;
   private diffTracker: import('../chat/diff/IDiffTracker').IDiffTracker | null = null;
@@ -59,8 +57,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     private readonly workspaceState?: vscode.Memento
   ) {
     this.statusManager = new ChatStatusManager(mcpManager, secrets, (msg) => this.sendToWebview(msg));
-    this.configService = new ProviderConfigService(secrets!);
-    this.modelManager = new ChatModelManager((msg) => this.sendToWebview(msg), this.configService);
+    this.modelManager = new ChatModelManager((msg) => this.sendToWebview(msg));
     this.stateManager = new ChatStateManager(workspaceRoot, workspaceState, (msg) => this.sendToWebview(msg), () => this.getEngine());
     this.contextUsageDeps = {
       getOrCreateEngine: () => this.getEngine(),
@@ -134,11 +131,14 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   }
 
   private routeMessage(msg: ChatWebviewToExtMessage): void {
-    // SA4E-381 Issue 1: capture the active tab id when a user message starts a
-    // new turn — all subsequent stream/tool events in that turn will carry
-    // originTabId so the receiving tab can attribute them correctly.
+    // SA4E-381 Issue 1 / SA4E-391 Issue 2: capture the REAL active tab id when a
+    // user message starts a new turn — all subsequent stream/tool events in that
+    // turn carry originTabId so the receiving tab attributes them correctly.
+    // The webview stamps its activeTabId (a UUID) on the user message; a missing
+    // tabId means a legacy/single-tab client, so fall back to undefined (the
+    // webview then treats events as belonging to the viewed tab).
     if (msg.type === "chat:userMessage") {
-      this.turnTabId = "default";
+      this.turnTabId = msg.tabId;
     }
 
     if (handleBuiltinChatMessage(msg, {
@@ -191,12 +191,20 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       "chat:toolCallUpdate",
       "chat:toolApprovalPending"
     ];
-    if (this.turnTabId && protocolTypes.includes(msg.type)) {
-      // @ts-expectOriginTabId — the type already allows originTabId ?
-      // We'll spread it in via a cast since the type is widened at call site.
-      const typedMsg = msg as any;
-      typedMsg.originTabId = this.turnTabId;
-      msg = typedMsg as ChatExtToWebviewMessage;
+    // SA4E-391 cross-tab routing root-cause fix: the ADAPTER now stamps
+    // originTabId at the source of each turn (StreamHandler for stream events,
+    // postToolLiveEvent for live tool events, chat:error emits), pinned to the
+    // tab that PRODUCED the turn. That stamp is authoritative — NEVER overwrite
+    // it. `turnTabId` remains only as a last-resort fallback for any legacy
+    // event path that reaches here without an origin; using it to overwrite was
+    // the bug (tab 2's user message set turnTabId, so tab 1's in-flight events
+    // were restamped to tab 2).
+    if (protocolTypes.includes(msg.type)) {
+      const typedMsg = msg as unknown as { originTabId?: string };
+      if (!typedMsg.originTabId && this.turnTabId) {
+        typedMsg.originTabId = this.turnTabId;
+        msg = typedMsg as unknown as ChatExtToWebviewMessage;
+      }
     }
     if (this.view) {
       this.view.webview.postMessage(msg);
@@ -218,20 +226,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
 
   private getMessageHandler(): MessageHandler {
     if (!this.messageHandler) {
-      this.messageHandler = new MessageHandler(
-        () => this.getEngine(),
-        (msg) => this.sendToWebview(msg),
-        this.workspaceRoot,
-        (ct) => pickChatContext(this.workspaceRoot, (m) => this.sendToWebview(m), ct),
-        () => pickAttachmentFiles((m) => this.sendToWebview(m)),
-        (code, filePath) => applyCodeToEditor(code, filePath),
-        (code) => insertCodeToEditor(code),
-        (model) => setLlmModelConfig(model),
-        async (profileId, model) => { await this.modelManager.handleSetModelAndProfile(profileId, model); },
-        async () => { await this.modelManager.sendModelPickerGroups(); },
-        () => this.updateContextUsageAfterTurn(),
-        () => this.stateManager.broadcastInitialState()
-      );
+      this.messageHandler = new MessageHandler(() => this.getEngine(), (msg) => this.sendToWebview(msg), this.workspaceRoot, (ct) => pickChatContext(this.workspaceRoot, (m) => this.sendToWebview(m), ct), () => pickAttachmentFiles((m) => this.sendToWebview(m)), (code, filePath) => applyCodeToEditor(code, filePath), (code) => insertCodeToEditor(code), (model) => setLlmModelConfig(model), () => this.updateContextUsageAfterTurn(), () => this.stateManager.broadcastInitialState());
     }
     return this.messageHandler;
   }

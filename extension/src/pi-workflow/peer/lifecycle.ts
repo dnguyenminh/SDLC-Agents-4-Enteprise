@@ -9,6 +9,7 @@
  * flow (fail-safe: peer errors are swallowed here, chat keeps working).
  */
 import { ensurePeerRuntimeForTab, peekPeerRuntime } from './runtime.js';
+import { capabilitiesForModel, mergeCapabilities, VISION_CAPABILITY } from './model-capabilities.js';
 import type { PeerRegistryRegistration } from './types.js';
 
 /** Structural source — ConversationManager satisfies this via its listeners. */
@@ -128,6 +129,34 @@ export function renamePeerTabIdentity(tabId: string, name: string): void {
     if (!existing || existing.activeAgentId) return; // absent or agent-driven identity
     rt.registry.register(tabId, { ...existing, agentName: trimmed.substring(0, 30) });
   } catch { /* rename must never break the tab flow */ }
+}
+
+/**
+ * SA4E-391: update a tab's advertised MODEL + model-derived capabilities the
+ * moment the user picks a model — so a tab becomes "vision" in peer_list
+ * immediately, WITHOUT having to run a turn first. Model-derived tags
+ * (e.g. 'vision') are recomputed from the new model id and merged with the
+ * agent-declared (non-model) tags already on the entry. No-op if the tab has
+ * no registry entry yet (a brand-new tab registers on create/switch/restore).
+ */
+export function updatePeerTabModel(tabId: string, modelId: string): void {
+  if (!tabId || tabId === 'default' || !modelId) return;
+  try {
+    const rt = peekPeerRuntime();
+    if (!rt) return;
+    const existing = rt.registry.getEntry(tabId);
+    if (!existing) return;
+    const modelTags = capabilitiesForModel(modelId);
+    // Keep the agent-declared tags (those NOT produced by the model detector),
+    // then merge the freshly computed model tags for the new model.
+    const agentTags = existing.capabilities.filter((c) => !capabilitiesForModel(modelId).includes(c) && c !== VISION_CAPABILITY);
+    rt.registry.register(tabId, {
+      ...existing,
+      model: modelId,
+      configuredModelId: modelId,
+      capabilities: mergeCapabilities(agentTags, modelTags),
+    });
+  } catch { /* model update must never break the model picker */ }
 }
 
 /** (2) tab-closed → bus.handleTabClosed — the I-8 SINGLE cleanup point. */

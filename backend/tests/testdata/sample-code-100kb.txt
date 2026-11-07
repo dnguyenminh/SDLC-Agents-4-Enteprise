@@ -1,0 +1,448 @@
+// Sample large code for performance testing
+// This file is approximately 100KB to test performance and scalability.
+
+// Function 1
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+console.log(greet('World'));
+
+// Function 2
+function add(a, b) {
+  return a + b;
+}
+
+console.log(add(1, 2));
+
+// Function 3
+function multiply(a, b) {
+  return a * b;
+}
+
+console.log(multiply(3, 4));
+
+// Function 4
+function divide(a, b) {
+  if (b === 0) {
+    throw new Error('Cannot divide by zero');
+  }
+  return a / b;
+}
+
+console.log(divide(10, 2));
+
+// Function 5
+function isEven(num) {
+  return num % 2 === 0;
+}
+
+console.log(isEven(4));
+
+// Function 6
+function factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+console.log(factorial(5));
+
+// Function 7
+function sumArray(arr) {
+  return arr.reduce((acc, val) => acc + val, 0);
+}
+
+console.log(sumArray([1, 2, 3, 4, 5]));
+
+// Function 8
+function filterEven(arr) {
+  return arr.filter((num) => num % 2 === 0);
+}
+
+console.log(filterEven([1, 2, 3, 4, 5]));
+
+// Function 9
+function mapArray(arr, fn) {
+  return arr.map(fn);
+}
+
+console.log(mapArray([1, 2, 3], (x) => x * 2));
+
+// Function 10
+function reduceArray(arr, fn, initialValue) {
+  return arr.reduce(fn, initialValue);
+}
+
+console.log(reduceArray([1, 2, 3], (acc, val) => acc + val, 0));
+
+// Function 11
+function findMax(arr) {
+  return Math.max(...arr);
+}
+
+console.log(findMax([1, 2, 3, 4, 5]));
+
+// Function 12
+function findMin(arr) {
+  return Math.min(...arr);
+}
+
+console.log(findMin([1, 2, 3, 4, 5]));
+
+// Function 13
+function reverseString(str) {
+  return str.split('').reverse().join('');
+}
+
+console.log(reverseString('hello'));
+
+// Function 14
+function countChars(str) {
+  return str.length;
+}
+
+console.log(countChars('hello'));
+
+// Function 15
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+console.log(capitalize('hello'));
+
+// Function 16
+function isPalindrome(str) {
+  return str === reverseString(str);
+}
+
+console.log(isPalindrome('racecar'));
+
+// Function 17
+function flattenArray(arr) {
+  return arr.flat();
+}
+
+console.log(flattenArray([1, [2, 3], 4]));
+
+// Function 18
+function uniqueArray(arr) {
+  return [...new Set(arr)];
+}
+
+console.log(uniqueArray([1, 2, 2, 3, 4, 4]));
+
+// Function 19
+function chunkArray(arr, size) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
+console.log(chunkArray([1, 2, 3, 4, 5, 6], 2));
+
+// Function 20
+function mergeObjects(obj1, obj2) {
+  return { ...obj1, ...obj2 };
+}
+
+console.log(mergeObjects({ a: 1 }, { b: 2 }));
+
+// Repeat functions to reach ~100KB
+// Function 1
+function greet2(name) {
+  return `Hello, ${name}!`;
+}
+
+console.log(greet2('World'));
+
+// Function 2
+function add2(a, b) {
+  return a + b;
+}
+
+console.log(add2(1, 2));
+
+// Function 3
+function multiply2(a, b) {
+  return a * b;
+}
+
+console.log(multiply2(3, 4));
+
+// Function 4
+function divide2(a, b) {
+  if (b === 0) {
+    throw new Error('Cannot divide by zero');
+  }
+  return a / b;
+}
+
+console.log(divide2(10, 2));
+
+// Function 5
+function isEven2(num) {
+  return num % 2 === 0;
+}
+
+console.log(isEven2(4));
+
+// Function 6
+function factorial2(n) {
+  if (n <= 1) return 1;
+  return n * factorial2(n - 1);
+}
+
+console.log(factorial2(5));
+
+// Function 7
+function sumArray2(arr) {
+  return arr.reduce((acc, val) => acc + val, 0);
+}
+
+console.log(sumArray2([1, 2, 3, 4, 5]));
+
+// Function 8
+function filterEven2(arr) {
+  return arr.filter((num) => num % 2 === 0);
+}
+
+console.log(filterEven2([1, 2, 3, 4, 5]));
+
+// Function 9
+function mapArray2(arr, fn) {
+  return arr.map(fn);
+}
+
+console.log(mapArray2([1, 2, 3], (x) => x * 2));
+
+// Function 10
+function reduceArray2(arr, fn, initialValue) {
+  return arr.reduce(fn, initialValue);
+}
+
+console.log(reduceArray2([1, 2, 3], (acc, val) => acc + val, 0));
+
+// Function 11
+function findMax2(arr) {
+  return Math.max(...arr);
+}
+
+console.log(findMax2([1, 2, 3, 4, 5]));
+
+// Function 12
+function findMin2(arr) {
+  return Math.min(...arr);
+}
+
+console.log(findMin2([1, 2, 3, 4, 5]));
+
+// Function 13
+function reverseString2(str) {
+  return str.split('').reverse().join('');
+}
+
+console.log(reverseString2('hello'));
+
+// Function 14
+function countChars2(str) {
+  return str.length;
+}
+
+console.log(countChars2('hello'));
+
+// Function 15
+function capitalize2(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+console.log(capitalize2('hello'));
+
+// Function 16
+function isPalindrome2(str) {
+  return str === reverseString2(str);
+}
+
+console.log(isPalindrome2('racecar'));
+
+// Function 17
+function flattenArray2(arr) {
+  return arr.flat();
+}
+
+console.log(flattenArray2([1, [2, 3], 4]));
+
+// Function 18
+function uniqueArray2(arr) {
+  return [...new Set(arr)];
+}
+
+console.log(uniqueArray2([1, 2, 2, 3, 4, 4]));
+
+// Function 19
+function chunkArray2(arr, size) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
+console.log(chunkArray2([1, 2, 3, 4, 5, 6], 2));
+
+// Function 20
+function mergeObjects2(obj1, obj2) {
+  return { ...obj1, ...obj2 };
+}
+
+console.log(mergeObjects2({ a: 1 }, { b: 2 }));
+
+// Repeat functions to reach ~100KB
+// Function 1
+function greet3(name) {
+  return `Hello, ${name}!`;
+}
+
+console.log(greet3('World'));
+
+// Function 2
+function add3(a, b) {
+  return a + b;
+}
+
+console.log(add3(1, 2));
+
+// Function 3
+function multiply3(a, b) {
+  return a * b;
+}
+
+console.log(multiply3(3, 4));
+
+// Function 4
+function divide3(a, b) {
+  if (b === 0) {
+    throw new Error('Cannot divide by zero');
+  }
+  return a / b;
+}
+
+console.log(divide3(10, 2));
+
+// Function 5
+function isEven3(num) {
+  return num % 2 === 0;
+}
+
+console.log(isEven3(4));
+
+// Function 6
+function factorial3(n) {
+  if (n <= 1) return 1;
+  return n * factorial3(n - 1);
+}
+
+console.log(factorial3(5));
+
+// Function 7
+function sumArray3(arr) {
+  return arr.reduce((acc, val) => acc + val, 0);
+}
+
+console.log(sumArray3([1, 2, 3, 4, 5]));
+
+// Function 8
+function filterEven3(arr) {
+  return arr.filter((num) => num % 2 === 0);
+}
+
+console.log(filterEven3([1, 2, 3, 4, 5]));
+
+// Function 9
+function mapArray3(arr, fn) {
+  return arr.map(fn);
+}
+
+console.log(mapArray3([1, 2, 3], (x) => x * 2));
+
+// Function 10
+function reduceArray3(arr, fn, initialValue) {
+  return arr.reduce(fn, initialValue);
+}
+
+console.log(reduceArray3([1, 2, 3], (acc, val) => acc + val, 0));
+
+// Function 11
+function findMax3(arr) {
+  return Math.max(...arr);
+}
+
+console.log(findMax3([1, 2, 3, 4, 5]));
+
+// Function 12
+function findMin3(arr) {
+  return Math.min(...arr);
+}
+
+console.log(findMin3([1, 2, 3, 4, 5]));
+
+// Function 13
+function reverseString3(str) {
+  return str.split('').reverse().join('');
+}
+
+console.log(reverseString3('hello'));
+
+// Function 14
+function countChars3(str) {
+  return str.length;
+}
+
+console.log(countChars3('hello'));
+
+// Function 15
+function capitalize3(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+console.log(capitalize3('hello'));
+
+// Function 16
+function isPalindrome3(str) {
+  return str === reverseString3(str);
+}
+
+console.log(isPalindrome3('racecar'));
+
+// Function 17
+function flattenArray3(arr) {
+  return arr.flat();
+}
+
+console.log(flattenArray3([1, [2, 3], 4]));
+
+// Function 18
+function uniqueArray3(arr) {
+  return [...new Set(arr)];
+}
+
+console.log(uniqueArray3([1, 2, 2, 3, 4, 4]));
+
+// Function 19
+function chunkArray3(arr, size) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
+console.log(chunkArray3([1, 2, 3, 4, 5, 6], 2));
+
+// Function 20
+function mergeObjects3(obj1, obj2) {
+  return { ...obj1, ...obj2 };
+}
+
+console.log(mergeObjects3({ a: 1 }, { b: 2 }));

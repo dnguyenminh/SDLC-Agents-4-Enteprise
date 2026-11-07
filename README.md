@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.13.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.16.vsix
 ```
 
 ### 3. Use
@@ -66,6 +66,48 @@ MIT
 
 ## Changelog
 
+### v1.55.16 (2026-11-04)
+
+**SA4E-407 — SDLC Chat panel: OpenCode renderer, multimodal images, peer collaboration, model & export fixes**
+
+- 🎨 **OpenCode-style flat renderer** — rewrote the chat message renderer (user / thinking / tool / answer blocks); fixed stream routing (host now stamps the real active-tab id so assistant responses render), thinking whitespace/markdown/duplication, click-to-expand tool results, right sidebar (Context tokens + MCP list)
+- 🧠 **Model selection** — per-tab model memory; fixed the model-picker click; fixed the false "Finishing previous message" notice; "auto" is offered only when the LLM server advertises it (`Auto (server-routed)` label + tooltip), stale "auto" coerced to a real model; new tab inherits the current tab's model
+- 🔌 **MCP live tools** — the agent now receives the server's live `tools/list` instead of a frozen static catalog
+- 🤝 **Peer collaboration** — tabs register as peers on open/restore/create; general capability advertisement (`capabilities` tags + `advertise` blurb per agent file surfaced in `peer_list`); receiving tab shows inbound/reply blocks
+- 🖼️ **Multimodal images** — compact attachment chip + in-bubble thumbnail; images reach the model via `prompt({images})` (disabled the bundler-incompatible resize worker that dropped them); non-vision tab auto-delegates image reading to a vision peer; image recall across history & reload (persisted state sanitized)
+- 📤 **Export conversation** — fixed export (DataCloneError, then `S is not defined`); images embedded inline as base64 in Markdown/JSON
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.16`
+
+### v1.55.14 (2026-11-02)
+
+**KSA-298 — Restore markitdown + markdown-exporter MCP child servers in backend image**
+
+- 🐳 **Docker regression fix** — v1.55.13 switched the backend image to `node:22-alpine` and dropped the Python runtime + both `/opt` venvs, so the orchestration layer could no longer spawn the `markitdown-mcp` and `markdown-exporter-mcp-local` stdio child servers (ENOENT) — losing DOCX export + document conversion
+- 🔧 **Base back to `node:22-slim` (glibc)** — required because native node modules (`bcrypt`, `sqlite3`) need a matching libc across build/runtime, and `markitdown[all]` pulls `onnxruntime`/`magika` which ship manylinux wheels only (no musllinux)
+- 📦 **New `mcp-python` stage** — builds both venvs with `uv` (Python 3.12) and copies them + the uv-managed interpreter into `production`; child servers spawn via bare command name
+- 🪶 **Still lighter than v1.55.12 (5.09GB)** — drops the 1.14GB `chown -R` layer and the 135MB baked models-cache
+- 🛡️ **Trivy SEC-04 gate** — force-upgrade `pillow` 12.1.1 → 13.0.0 in the markdown-exporter venv (40 HIGH/CRITICAL CVEs); strip bundled `pip` from the uv CPython to remove vendored `msgpack` 1.1.2 (5 HIGH CVEs); result 45 → 0 CRITICAL/HIGH
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.14`
+
+### v1.55.13 (2026-11-02)
+
+**SA4E-387 — Enrichment with Dynamic Context Budget & Runtime Model Swap**
+
+- 🧠 **Runtime model swap** — `LLMService.resolveActive()` / `setActiveModel()`; per-call model override on `complete()`; `POST /api/v1/model/swap` endpoint
+- 📊 **Dynamic context budget** — `BudgetGuard` computes per-call `inputBudget` (context window − reserved output − overhead), replacing the static `PROMPT_TOKEN_CAP`; prompt builder accepts the budget at build time
+- 🔎 **Context-window discovery** — per-provider probing (Ollama `/api/show`, LM Studio `/api/v0/models`, vLLM `/v1/models`) with 5-min TTL cache + invalidation; `LLM_CONTEXT_WINDOW__<model>` env override; Ollama `num_ctx` passthrough
+- 🗺️ **Real map-reduce** — `ReductionPipeline` chunked-reduce for oversized bodies; full body text now read across all chunks (`chunk_index`)
+- 🔌 **Enrichment API** — `POST /api/v1/enrich`, `GET /api/v1/enrich/status`; module registered with lifecycle-ready boot + lazy capability wiring via the new `LLM_SERVICE_READY` event (no more `/health` 503 in headless environments)
+- 🩹 **CI green again** — extension profile API rebuilt to the STC contract (`profileId` rows, `readProfileApiKey`, `getModelsForActiveProfile`); webview tests moved to jsdom; multi-stage Dockerfile restored (build/test/production) with base-image npm/undici supply-chain patch (Trivy gate green); 4 files split under the 200-line gate (`mcp-endpoint.ts`, `window-providers.ts`, `task-worker-delegates.ts`, `llm-config.ts`)
+- 🧪 **Verified** — backend 3369 unit + 180 E2E green; extension compile + full vitest suite green; all 7 CI jobs + Docker/Trivy success
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.13`
+
+### v1.55.12 (2026-11-01)
+
+**SA4E-389/SA4E-390 close-out**
+
+- 📚 **Docs close-out** — STATUS.json CI-green evidence + lesson-learned recorded for the LLM profile management tickets (profile CRUD, test connection, grouped model picker)
+
 ### v1.55.13 (2026-11-01)
 
 **SA4E-394 — Multi-Worktree base_dir Support for All file_path Tools**
@@ -80,15 +122,45 @@ MIT
 - ✅ **QA review gate**: 8/8 checks PASS on STP/STC (AC1-AC5, BR-01..BR-23, T1-T10, per-tool args)
 - 📦 **Branch**: `dnguyenminh/SA4E-394` with all TDD implementation, unit tests, and build artifacts
 
-### v1.55.12 (2026-10-31)
+### v1.55.11 (2026-10-31)
 
-**SA4E-389 + SA4E-390 — Multi LLM Configuration Profiles + Chat model/provider switcher (L3 to UAT)**
+- 🎨 **OpenCode-style flat renderer** — rewrote the chat message renderer (user / thinking / tool / answer blocks); fixed stream routing (host now stamps the real active-tab id so assistant responses render), thinking whitespace/markdown/duplication, click-to-expand tool results, right sidebar (Context tokens + MCP list)
+- 🧠 **Model selection** — per-tab model memory; fixed the model-picker click; fixed the false "Finishing previous message" notice; "auto" is offered only when the LLM server advertises it (`Auto (server-routed)` label + tooltip), stale "auto" coerced to a real model; new tab inherits the current tab's model
+- 🔌 **MCP live tools** — the agent now receives the server's live `tools/list` instead of a frozen static catalog
+- 🤝 **Peer collaboration** — tabs register as peers on open/restore/create; general capability advertisement (`capabilities` tags + `advertise` blurb per agent file surfaced in `peer_list`); receiving tab shows inbound/reply blocks
+- 🖼️ **Multimodal images** — compact attachment chip + in-bubble thumbnail; images reach the model via `prompt({images})` (disabled the bundler-incompatible resize worker that dropped them); non-vision tab auto-delegates image reading to a vision peer; image recall across history & reload (persisted state sanitized)
+- 📤 **Export conversation** — fixed export (DataCloneError, then `S is not defined`); images embedded inline as base64 in Markdown/JSON
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.16`
 
-- 🧩 **SA4E-389 (Story)** — Multi-profile LLM config: `LlmProfile` data model, one-time migration flat→Profile #1, `llmSecretKey`/`readProviderTurnConfig` SSOT, `ProfilesService` CRUD, `SettingsMigrationRunner`, profile table + grouped chat model picker, `LlmTestService` async connection test
-- 🎨 **SA4E-390 (Task)** — UI redesign: Provider Table (6 cols), Edit Provider modal, Save All, Model Picker popup (search/Recent/Free badge), keyboard shortcuts (Esc/Ctrl+A/Ctrl+F scoped to picker)
-- 📋 **Phase 4–7** — STP/STC (35+33 TC), TEST-REPORT, DPG/RLN, deployment-flow + rollback-flow diagrams (+PNG); all docs in English
-- 🧪 **QA** — 100/100 targeted tests PASS, static gates PASS (flat-key/secret-bypass/line-count), build 0 TS errors
-- 🏷️ **Version sync** — root/`backend`/`extension` → `1.55.12`
+### v1.55.14 (2026-11-02)
+
+**KSA-298 — Restore markitdown + markdown-exporter MCP child servers in backend image**
+
+- 🐳 **Docker regression fix** — v1.55.13 switched the backend image to `node:22-alpine` and dropped the Python runtime + both `/opt` venvs, so the orchestration layer could no longer spawn the `markitdown-mcp` and `markdown-exporter-mcp-local` stdio child servers (ENOENT) — losing DOCX export + document conversion
+- 🔧 **Base back to `node:22-slim` (glibc)** — required because native node modules (`bcrypt`, `sqlite3`) need a matching libc across build/runtime, and `markitdown[all]` pulls `onnxruntime`/`magika` which ship manylinux wheels only (no musllinux)
+- 📦 **New `mcp-python` stage** — builds both venvs with `uv` (Python 3.12) and copies them + the uv-managed interpreter into `production`; child servers spawn via bare command name
+- 🪶 **Still lighter than v1.55.12 (5.09GB)** — drops the 1.14GB `chown -R` layer and the 135MB baked models-cache
+- 🛡️ **Trivy SEC-04 gate** — force-upgrade `pillow` 12.1.1 → 13.0.0 in the markdown-exporter venv (40 HIGH/CRITICAL CVEs); strip bundled `pip` from the uv CPython to remove vendored `msgpack` 1.1.2 (5 HIGH CVEs); result 45 → 0 CRITICAL/HIGH
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.14`
+
+### v1.55.13 (2026-11-02)
+
+**SA4E-387 — Enrichment with Dynamic Context Budget & Runtime Model Swap**
+
+- 🧠 **Runtime model swap** — `LLMService.resolveActive()` / `setActiveModel()`; per-call model override on `complete()`; `POST /api/v1/model/swap` endpoint
+- 📊 **Dynamic context budget** — `BudgetGuard` computes per-call `inputBudget` (context window − reserved output − overhead), replacing the static `PROMPT_TOKEN_CAP`; prompt builder accepts the budget at build time
+- 🔎 **Context-window discovery** — per-provider probing (Ollama `/api/show`, LM Studio `/api/v0/models`, vLLM `/v1/models`) with 5-min TTL cache + invalidation; `LLM_CONTEXT_WINDOW__<model>` env override; Ollama `num_ctx` passthrough
+- 🗺️ **Real map-reduce** — `ReductionPipeline` chunked-reduce for oversized bodies; full body text now read across all chunks (`chunk_index`)
+- 🔌 **Enrichment API** — `POST /api/v1/enrich`, `GET /api/v1/enrich/status`; module registered with lifecycle-ready boot + lazy capability wiring via the new `LLM_SERVICE_READY` event (no more `/health` 503 in headless environments)
+- 🩹 **CI green again** — extension profile API rebuilt to the STC contract (`profileId` rows, `readProfileApiKey`, `getModelsForActiveProfile`); webview tests moved to jsdom; multi-stage Dockerfile restored (build/test/production) with base-image npm/undici supply-chain patch (Trivy gate green); 4 files split under the 200-line gate (`mcp-endpoint.ts`, `window-providers.ts`, `task-worker-delegates.ts`, `llm-config.ts`)
+- 🧪 **Verified** — backend 3369 unit + 180 E2E green; extension compile + full vitest suite green; all 7 CI jobs + Docker/Trivy success
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.13`
+
+### v1.55.12 (2026-11-01)
+
+**SA4E-389/SA4E-390 close-out**
+
+- 📚 **Docs close-out** — STATUS.json CI-green evidence + lesson-learned recorded for the LLM profile management tickets (profile CRUD, test connection, grouped model picker)
 
 ### v1.55.11 (2026-10-29)
 

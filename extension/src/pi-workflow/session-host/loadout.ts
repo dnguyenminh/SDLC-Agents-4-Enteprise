@@ -8,7 +8,7 @@ import { buildSessionToolLoadout, nameTools, toolSchemaTokenCap } from '../../pi
 import { estimateToolSchemaTokens } from '../../pi-agent/tool-schema-tokens.js';
 import type { ContextBudget } from '../../pi-agent/models/ContextBudget';
 import { McpBridge } from '../../mcp/mcp-bridge';
-import { buildMcpBridgeAgentTools } from '../../pi-agent/extensions/mcp-bridge-extension';
+import { buildMcpBridgeAgentTools, buildMcpBridgeAgentToolsLive } from '../../pi-agent/extensions/mcp-bridge-extension';
 import { isDiscoveryTool } from '../../pi-agent/extensions/tool-definitions';
 import { getPiExtensionAgentTools } from '../pi-extension-runtime.js';
 import { WORKSPACE_INFO_TOOL_NAME } from '../workspace-info-tool.js';
@@ -66,8 +66,31 @@ export async function buildSessionLoadout(
   }
   // SA4E-364 OI-03: reuse opts.mcpBridge (typed unknown → narrow before build);
   // absent/wrong type ⇒ [] (fail-safe degraded — SA4E-360, W-1).
-  const bridgeTools: AgentTool[] =
-    opts.mcpBridge instanceof McpBridge ? buildMcpBridgeAgentTools(opts.mcpBridge) : [];
+  // SA4E-391: prefer the LIVE server catalog (tools/list) so the agent sees the
+  // real connected tools (drawio_*, get_curated_context, …), not just the frozen
+  // 6-tool static list. Fall back to the static concrete tools when the server
+  // is down or tools/list fails (degraded, never crashes).
+  let bridgeTools: AgentTool[] = [];
+  if (opts.mcpBridge instanceof McpBridge) {
+    const bridge = opts.mcpBridge;
+    bridgeTools = await buildMcpBridgeAgentToolsLive(bridge);
+    // Startup race: a tab's first turn can build the session a moment before
+    // the MCP server reports "running" / finishes loading its tool catalog, so
+    // the first tools/list returns empty. Since the cached host is reused for
+    // the whole tab, a one-shot empty result would freeze the agent on the
+    // static fallback forever. Retry briefly while the server IS available
+    // before giving up, so the live catalog is picked up on session build.
+    for (let attempt = 0; attempt < 3 && bridgeTools.length === 0 && bridge.isAvailable(); attempt++) {
+      await new Promise((r) => setTimeout(r, 400));
+      bridgeTools = await buildMcpBridgeAgentToolsLive(bridge);
+    }
+    if (bridgeTools.length > 0) {
+      debugLog(`[PiSessionHost] mcp live tools: ${bridgeTools.length} from tools/list`);
+    } else {
+      bridgeTools = buildMcpBridgeAgentTools(bridge);
+      debugLog(`[PiSessionHost] mcp live tools unavailable — static fallback: ${bridgeTools.length}`);
+    }
+  }
   if (bridgeTools.length === 0) debugLog('[PiSessionHost] mcp bridge absent — bridge tools omitted (degraded)');
   const bridgeNames = bridgeTools.map((t) => t.name);
   // SA4E-367: opted-in dynamic pair bypasses the role filter via discoveryTools

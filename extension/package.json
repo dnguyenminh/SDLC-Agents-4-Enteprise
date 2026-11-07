@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.55.13",
+"version": "1.55.16",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -322,11 +322,34 @@
           "default": ".code-intel/orchestration.json",
           "description": "Path to orchestration config file (relative to workspace root)"
         },
-        "sdlcAgents.workspace.workspaceRoots": {
+"sdlcAgents.workspace.workspaceRoots": {
           "type": "array",
           "items": { "type": "string" },
           "default": [],
           "description": "SA4E-394 allowlist mirror: workspace roots permitted as per-call base_dir for file_path tools. MUST mirror the backend MCP_WORKSPACE_ROOTS (backend remains source of truth). Falls back to the MCP_WORKSPACE_ROOTS env var when empty."
+        },
+        "sdlcAgents.llm.profiles": {
+          "type": "array",
+          "default": [],
+          "description": "SA4E-390: configured LLM provider profiles (id, label, provider, model, baseUrl, useDefaultUrl, lastTestStatus). Managed by the Settings panel's provider table — do not edit by hand.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "provider": { "type": "string" },
+              "model": { "type": "string" },
+              "baseUrl": { "type": "string" },
+              "useDefaultUrl": { "type": "boolean" },
+              "lastTestStatus": { "type": "string" },
+              "lastTestedAt": { "type": "number" }
+            }
+          }
+        },
+        "sdlcAgents.llm.activeProfileId": {
+          "type": "string",
+          "default": "",
+          "description": "SA4E-390: id of the active LLM provider profile (drives the chat model/provider). Managed by the Settings panel."
         },
         "sdlcAgents.llm.provider": {
           "type": "string",
@@ -533,7 +556,7 @@
     "@types/sinon": "^17.0.3",
     "@types/uuid": "^10.0.0",
     "@types/vscode": "^1.85.0",
-    "@vitest/coverage-v8": "4.1.8",
+    "@vitest/coverage-v8": "4.1.12",
     "@vscode/vsce": "^2.24.0",
     "esbuild": "0.28.2",
     "fast-check": "^4.9.0",
@@ -547,7 +570,7 @@
     "typescript": "^5.4.0",
     "typescript-eslint": "^8.67.0",
     "uuid": "^14.0.1",
-    "vitest": "4.1.8"
+    "vitest": "4.1.12"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
@@ -573,7 +596,7 @@
     "diff": "^5.2.2",
     "pi-subagents": "^0.76.1",
     "pi-web-access": "0.41.0",
-    "puppeteer-core": "^25.12.0",
+    "puppeteer-core": "^25.16.0",
     "semver": "^7.7.4",
     "typebox": "^1.1.38",
     "undici": "^6.29.1",

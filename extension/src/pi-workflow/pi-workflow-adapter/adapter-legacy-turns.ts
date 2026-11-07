@@ -6,13 +6,13 @@
 import * as crypto from 'node:crypto';
 import type { PipelineState } from '../types/pi-workflow-state.js';
 import type { ChatExtToWebviewMessage } from '../../chat-panel/message-protocol';
-import { readProviderTurnConfig } from '../pi-provider-config-bridge.js';
-import { getExtensionVersion } from '../pi-provider-config-bridge.js';
-import { isBudgetExceededError } from '../../pi-agent/budget-gate.js';
-import { debugLog, debugError } from '../../debug-logger';
-import { governLegacyTurn } from '../legacy-turn-governance.js';
 import { buildWorkspaceSystemPrompt } from '../pi-coding-tools.js';
 import { runContextPipeline } from '../pi-context-pipeline.js';
+import { getExtensionVersion } from '../pi-provider-config-bridge.js';
+import { isBudgetExceededError } from '../../pi-agent/budget-gate.js';
+import { governLegacyTurn } from '../legacy-turn-governance.js';
+import { debugLog, debugError } from '../../debug-logger';
+import { getSetting } from '../../config/settings-migration.js';
 import { assembleLegacyToolPool, configureEngineProvider, replayTurnChunks, reportTurnError, resolveTurnBudget } from './adapter-legacy-helpers.js';
 import { AdapterSessionTurns } from './adapter-session-turns.js';
 
@@ -33,8 +33,8 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
   ): Promise<{ history: Array<{ role: string; content: string }> } | null> {
     try {
       await this.detectContextWindowEarly();
-      // SA4E-390: Use readProviderTurnConfig() SSOT for model/provider resolution
-      const { configuredModelId: modelId } = readProviderTurnConfig();
+      // SA4E-370: renamed key with legacy-key fallback (safe in any host).
+      const modelId = getSetting<string>('llm.model', 'llm.model', '');
       // BR-01 window chain: probe meta.n_ctx → runtime (pi-ai) model registry —
       // the resolved model's real window (gateway models carry context_length /
       // meta.n_ctx parsed at registration). resolveContextBudget appends the
@@ -67,6 +67,9 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
   }
 
   protected async runTurnOnce(state: PipelineState, chatInput: string, ticketKey: string): Promise<void> {
+    // SA4E-391: pin the origin tab once so the outer catch stamps the SAME
+    // tab even if the user switches tabs while the turn is in flight.
+    const originTabId = this.store.activeTab || 'CHAT';
     try {
       const { timeoutMs: chatTimeoutMs, maxSameToolRepeats: maxRepeatsRaw } = resolveTurnBudget();
       const turnBudget = {
@@ -81,7 +84,12 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
       const turnStreamId = crypto.randomUUID();
       // SA4E-370 S2: role from active agent for this tab, not hardcoded 'sm-agent'.
       // Falls back to 'sm-agent' when no agent is selected (backward compat).
-      const tabId = this.store.activeTab || 'CHAT';
+      const tabId = originTabId; // SA4E-391: pinned at method start (above)
+      // SA4E-391 cross-tab routing: stamp THIS turn's origin tab onto every
+      // stream event (and direct error) the legacy path emits. Turns are
+      // single-flight so the running turn owns the StreamHandler origin for
+      // its whole lifetime; trySessionTurn re-stamps the same tab if it runs.
+      this.streamHandler.setOriginTabId(tabId);
       const active = this.activeAgents.get(tabId);
       const sessionRole = active?.role || 'sm-agent';
       if (await this.trySessionTurn(state, chatInput, ticketKey, sessionRole, chatTimeoutMs, turnStreamId)) return;
@@ -93,16 +101,18 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
           type: 'chat:error', code: 'PI_MODEL_UNRESOLVED',
           message: 'No usable Pi model resolved for this provider. Set sdlcAgents.llmModel to a real registry id, then retry.',
           retryable: true,
+          originTabId,
         } as ChatExtToWebviewMessage);
         return;
       }
       // FIX C: model resolved but no API key → distinct credentials error (fail-closed).
       if (!credentialsPresent) {
-        const { providerId } = readProviderTurnConfig();
+        const providerId = getSetting<string>('llm.provider', 'llm.provider', 'anthropic') || 'anthropic';
         this.onEvent({
           type: 'chat:error', code: 'PI_CREDENTIALS_MISSING',
           message: `No API key for '${providerId}'. Set sdlcAgents.${providerId}ApiKey in Settings, then retry.`,
           retryable: true,
+          originTabId,
         } as ChatExtToWebviewMessage);
         return;
       }
@@ -147,7 +157,9 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
       }
     } catch (err) {
       debugError('[PiWorkflowAdapter] turn failed', err as Error);
-      this.onEvent({ type: 'chat:error', code: 'PI_TURN_FAILED', message: (err as Error).message, retryable: true } as ChatExtToWebviewMessage);
+      // SA4E-391: stamp origin so a failure renders in the producing tab.
+      this.streamHandler.setOriginTabId(originTabId);
+      this.onEvent({ type: 'chat:error', code: 'PI_TURN_FAILED', message: (err as Error).message, retryable: true, originTabId } as ChatExtToWebviewMessage);
     }
   }
 }

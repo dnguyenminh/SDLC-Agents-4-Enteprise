@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.12-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.16-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.55.12.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.11.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.55.12.vsix
+code --install-extension sdlc-agents-4-enterprise-1.55.11.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -245,15 +245,18 @@ MIT
 
 ## Changelog
 
-### v1.55.12 (2026-10-31)
+### v1.55.16 (2026-11-04)
 
-**SA4E-389 + SA4E-390 — Multi LLM Configuration Profiles + Chat model/provider switcher (L3 to UAT)**
+**SA4E-407 — SDLC Chat panel: OpenCode renderer, multimodal images, peer collaboration, model & export fixes**
 
-- 🧩 **SA4E-389 (Story)** — Multi-profile LLM config: `LlmProfile` data model, one-time migration flat→Profile #1, `llmSecretKey`/`readProviderTurnConfig` SSOT, `ProfilesService` CRUD, `SettingsMigrationRunner`, profile table + grouped chat model picker, `LlmTestService` async connection test
-- 🎨 **SA4E-390 (Task)** — UI redesign: Provider Table (6 cols), Edit Provider modal, Save All, Model Picker popup (search/Recent/Free badge), keyboard shortcuts (Esc/Ctrl+A/Ctrl+F scoped to picker)
-- 📋 **Phase 4–7** — STP/STC (35+33 TC), TEST-REPORT, DPG/RLN, deployment-flow + rollback-flow diagrams (+PNG); all docs in English
-- 🧪 **QA** — 100/100 targeted tests PASS, static gates PASS (flat-key/secret-bypass/line-count), build 0 TS errors
-- 🏷️ **Version sync** — root/`backend`/`extension` → `1.55.12`
+- **OpenCode-style flat renderer** — rewrote the chat message renderer to flat user / thinking / tool / answer blocks (removed the cycle/trace machinery). Fixed stream routing (host now stamps the real active-tab id so assistant responses render), thinking whitespace/markdown/duplication, click-to-expand tool results, and the right sidebar (Context tokens + MCP list).
+- **Model selection** — per-tab model memory; fixed the model-picker click (dialog `stopPropagation` swallowed it); fixed the false "Finishing previous message" notice (single-flight guard never cleared `turnInFlight`); `"auto"` is offered only when the LLM server advertises it (`Auto (server-routed)` label + tooltip), stale `"auto"` is coerced to a real model; a new tab inherits the current tab's model.
+- **MCP live tools** — the agent now receives the server's live `tools/list` instead of a frozen static catalog (startup-race retry + static fallback).
+- **Peer collaboration** — tabs register as peers on open/restore/create; general capability advertisement (`capabilities` tags + an `advertise` blurb per agent file, surfaced in `peer_list`) so an agent can pick the right collaborator for ANY task; the receiving tab shows inbound/reply blocks.
+- **Multimodal images** — compact attachment chip + in-bubble thumbnail; images reach the model via `AgentSession.prompt({images})` (disabled the bundler-incompatible resize worker that silently dropped them); a non-vision tab auto-delegates image reading to a vision-capable peer via `peer_send`; image recall across Up/Down history and reload (persisted state sanitized to strip DOM refs).
+- **Export conversation** — fixed export doing nothing (`DataCloneError` on DOM nodes, then `S is not defined` in `export-ui.js`); attached images embedded inline as base64 in Markdown/JSON.
+- **Cross-tab stream routing** — fixed tab 1's in-flight output rendering in tab 2 after a mid-turn tab switch. The host now stamps `originTabId` at the SOURCE of each turn (the turn's `StreamHandler` origin, live tool events, and every `chat:error` emit), pinned to the tab that produced the turn; the provider only fills `originTabId` when absent and never overwrites that stamp (the old shared `turnTabId` overwrite was the root cause). The webview also routes `chat:error` to the origin tab and keeps the working bar on the viewed tab.
+- **Version sync** — root/`backend`/`extension` → `1.55.16`.
 
 ### v1.55.11 (2026-10-29)
 

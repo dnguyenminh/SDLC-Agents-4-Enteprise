@@ -13,6 +13,12 @@ export interface AgentInfo {
   role?: string;
   phase?: string;
   model?: string;
+  /** SA4E-391 peer collaboration: structured capability tags (frontmatter
+   *  `capabilities: [a, b]` or `capabilities: a, b`) — peers filter on these. */
+  capabilities?: string[];
+  /** SA4E-391 peer collaboration: free-form "what I do / ask me for …" blurb
+   *  (frontmatter `advertise`) peers read to choose the right collaborator. */
+  advertise?: string;
   personaBody: string;
 }
 export interface SkillInfo { id: string; label: string; description: string }
@@ -34,6 +40,25 @@ function truncate(value: string, maxLen: number): string {
   return value.length > maxLen ? value.slice(0, maxLen) : value;
 }
 
+/**
+ * SA4E-391: parse the `capabilities` frontmatter into a string tag list.
+ * Accepts both inline-array (`capabilities: [design, review]`) and
+ * comma-list (`capabilities: design, review`) forms. Tags are lowercased,
+ * trimmed, de-quoted, de-duplicated and capped (DoS-safe, no full YAML parse).
+ */
+function parseCapabilitiesField(yaml: string): string[] | undefined {
+  const raw = extractYamlField(yaml, 'capabilities');
+  if (!raw) return undefined;
+  const inner = raw.replace(/^\[|\]$/g, ''); // strip surrounding [ ] if present
+  const tags: string[] = [];
+  for (const part of inner.split(',')) {
+    const tag = stripQuotes(part.trim()).toLowerCase();
+    if (tag && !tags.includes(tag)) tags.push(tag);
+    if (tags.length >= 20) break; // cap — never let a file balloon the schema
+  }
+  return tags.length > 0 ? tags : undefined;
+}
+
 /** Extract name + description + extended fields from agent frontmatter (v2, backward compatible). */
 export function parseAgentFrontmatter(content: string, fallbackId: string): AgentInfo {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
@@ -48,8 +73,11 @@ export function parseAgentFrontmatter(content: string, fallbackId: string): Agen
   const role = extractYamlField(yaml, 'role');
   const phase = extractYamlField(yaml, 'phase');
   const model = extractYamlField(yaml, 'model');
+  // SA4E-391 peer collaboration: capability tags + a free-form advertise blurb.
+  const capabilities = parseCapabilitiesField(yaml);
+  const advertise = truncate(extractYamlField(yaml, 'advertise') ?? '', 300) || undefined;
   const personaBody = body.trimStart();
-  return { id: fallbackId, name, description, role, phase, model, personaBody };
+  return { id: fallbackId, name, description, role, phase, model, capabilities, advertise, personaBody };
 }
 
 /** Read a steering file and decide whether its frontmatter inclusion is auto-injected. */

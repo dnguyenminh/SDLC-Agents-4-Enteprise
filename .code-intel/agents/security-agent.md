@@ -2,6 +2,8 @@
 name: security-agent
 type: security
 phase: specification
+capabilities: [security, owasp, vulnerability, audit, auth, pentest, dependency-scan, security-review]
+advertise: "Security specialist — audits for vulnerabilities. Ask me for: OWASP Top 10 review, auth/authorization checks, dependency/CVE scan, security design review, penetration testing, and Security Assessment reports."
 description: >
   Chuyên gia bảo mật web application — review code, phát hiện vulnerabilities (OWASP Top 10),
   kiểm tra authentication/authorization, API security, dependency vulnerabilities, security headers,

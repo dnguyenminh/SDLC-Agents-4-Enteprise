@@ -1,0 +1,1035 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "@azure/identity": {
+      "name": "@azure/identity",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@azure/msal-node"
+      ],
+      "effects": [],
+      "range": ">=4.13.1",
+      "nodes": [
+        "node_modules/@azure/identity"
+      ],
+      "fixAvailable": true
+    },
+    "@azure/msal-node": {
+      "name": "@azure/msal-node",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1243111,
+          "name": "@azure/msal-node",
+          "dependency": "@azure/msal-node",
+          "title": "MSAL Node authorization code flow may disclose parameters to an attacker-controlled endpoint",
+          "url": "https://github.com/advisories/GHSA-xcx6-jx8p-x3h5",
+          "severity": "high",
+          "cwe": [
+            "CWE-346"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+          },
+          "range": ">=5.0.0-beta.0 <7.1.0"
+        }
+      ],
+      "effects": [
+        "@azure/identity"
+      ],
+      "range": "5.0.0-beta.0 - 7.0.2",
+      "nodes": [
+        "node_modules/@azure/msal-node"
+      ],
+      "fixAvailable": true
+    },
+    "@earendil-works/pi-coding-agent": {
+      "name": "@earendil-works/pi-coding-agent",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "undici"
+      ],
+      "effects": [],
+      "range": ">=0.75.4",
+      "nodes": [
+        "node_modules/@earendil-works/pi-coding-agent"
+      ],
+      "fixAvailable": {
+        "name": "@earendil-works/pi-coding-agent",
+        "version": "0.75.3",
+        "isSemVerMajor": true
+      }
+    },
+    "@jimp/core": {
+      "name": "@jimp/core",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/types",
+        "@jimp/utils"
+      ],
+      "effects": [
+        "@jimp/plugin-blur"
+      ],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/core"
+      ],
+      "fixAvailable": {
+        "name": "jimp",
+        "version": "0.22.12",
+        "isSemVerMajor": true
+      }
+    },
+    "@jimp/diff": {
+      "name": "@jimp/diff",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/plugin-resize",
+        "@jimp/types",
+        "@jimp/utils"
+      ],
+      "effects": [],
+      "range": "*",
+      "nodes": [
+        "node_modules/@jimp/diff"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/js-bmp": {
+      "name": "@jimp/js-bmp",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/types",
+        "@jimp/utils"
+      ],
+      "effects": [],
+      "range": "*",
+      "nodes": [
+        "node_modules/@jimp/js-bmp"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/js-gif": {
+      "name": "@jimp/js-gif",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/types"
+      ],
+      "effects": [],
+      "range": "*",
+      "nodes": [
+        "node_modules/@jimp/js-gif"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/js-jpeg": {
+      "name": "@jimp/js-jpeg",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/types"
+      ],
+      "effects": [],
+      "range": "*",
+      "nodes": [
+        "node_modules/@jimp/js-jpeg"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/js-png": {
+      "name": "@jimp/js-png",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/types"
+      ],
+      "effects": [],
+      "range": "*",
+      "nodes": [
+        "node_modules/@jimp/js-png"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/js-tiff": {
+      "name": "@jimp/js-tiff",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/types"
+      ],
+      "effects": [],
+      "range": "*",
+      "nodes": [
+        "node_modules/@jimp/js-tiff"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-blit": {
+      "name": "@jimp/plugin-blit",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/types",
+        "@jimp/utils",
+        "zod"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-blit"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-blur": {
+      "name": "@jimp/plugin-blur",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/utils"
+      ],
+      "effects": [
+        "jimp"
+      ],
+      "range": ">=1.1.2",
+      "nodes": [
+        "node_modules/@jimp/plugin-blur"
+      ],
+      "fixAvailable": {
+        "name": "jimp",
+        "version": "0.22.12",
+        "isSemVerMajor": true
+      }
+    },
+    "@jimp/plugin-circle": {
+      "name": "@jimp/plugin-circle",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/types",
+        "zod"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-circle"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-color": {
+      "name": "@jimp/plugin-color",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/types",
+        "@jimp/utils",
+        "zod"
+      ],
+      "effects": [
+        "@jimp/plugin-hash",
+        "jimp"
+      ],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-color"
+      ],
+      "fixAvailable": {
+        "name": "jimp",
+        "version": "0.22.12",
+        "isSemVerMajor": true
+      }
+    },
+    "@jimp/plugin-contain": {
+      "name": "@jimp/plugin-contain",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/plugin-blit",
+        "@jimp/plugin-resize",
+        "@jimp/types",
+        "@jimp/utils",
+        "zod"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-contain"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-cover": {
+      "name": "@jimp/plugin-cover",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/plugin-crop",
+        "@jimp/plugin-resize",
+        "@jimp/types",
+        "zod"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-cover"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-crop": {
+      "name": "@jimp/plugin-crop",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/types",
+        "@jimp/utils",
+        "zod"
+      ],
+      "effects": [
+        "@jimp/plugin-rotate"
+      ],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-crop"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-displace": {
+      "name": "@jimp/plugin-displace",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/types",
+        "@jimp/utils",
+        "zod"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-displace"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-dither": {
+      "name": "@jimp/plugin-dither",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/types"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-dither"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-fisheye": {
+      "name": "@jimp/plugin-fisheye",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/types",
+        "@jimp/utils",
+        "zod"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-fisheye"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-flip": {
+      "name": "@jimp/plugin-flip",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/types",
+        "zod"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-flip"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-hash": {
+      "name": "@jimp/plugin-hash",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/js-bmp",
+        "@jimp/js-jpeg",
+        "@jimp/js-png",
+        "@jimp/js-tiff",
+        "@jimp/plugin-color",
+        "@jimp/plugin-resize",
+        "@jimp/types",
+        "@jimp/utils"
+      ],
+      "effects": [],
+      "range": "*",
+      "nodes": [
+        "node_modules/@jimp/plugin-hash"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-mask": {
+      "name": "@jimp/plugin-mask",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/types",
+        "zod"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-mask"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-print": {
+      "name": "@jimp/plugin-print",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/js-jpeg",
+        "@jimp/js-png",
+        "@jimp/plugin-blit",
+        "@jimp/types",
+        "zod"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-print"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-quantize": {
+      "name": "@jimp/plugin-quantize",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "zod"
+      ],
+      "effects": [
+        "jimp"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@jimp/plugin-quantize"
+      ],
+      "fixAvailable": {
+        "name": "jimp",
+        "version": "0.22.12",
+        "isSemVerMajor": true
+      }
+    },
+    "@jimp/plugin-resize": {
+      "name": "@jimp/plugin-resize",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/types",
+        "zod"
+      ],
+      "effects": [
+        "@jimp/diff"
+      ],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-resize"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-rotate": {
+      "name": "@jimp/plugin-rotate",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/plugin-crop",
+        "@jimp/plugin-resize",
+        "@jimp/types",
+        "@jimp/utils",
+        "zod"
+      ],
+      "effects": [],
+      "range": "<=0.3.6-alpha.6 || >=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-rotate"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/plugin-threshold": {
+      "name": "@jimp/plugin-threshold",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/core",
+        "@jimp/plugin-color",
+        "@jimp/plugin-hash",
+        "@jimp/types",
+        "@jimp/utils",
+        "zod"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/@jimp/plugin-threshold"
+      ],
+      "fixAvailable": true
+    },
+    "@jimp/types": {
+      "name": "@jimp/types",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "zod"
+      ],
+      "effects": [
+        "@jimp/core",
+        "@jimp/js-bmp",
+        "@jimp/js-gif",
+        "@jimp/js-jpeg",
+        "@jimp/js-png",
+        "@jimp/js-tiff",
+        "@jimp/plugin-dither",
+        "@jimp/utils"
+      ],
+      "range": ">=1.0.1--canary.1285.8595111491.0",
+      "nodes": [
+        "node_modules/@jimp/types"
+      ],
+      "fixAvailable": {
+        "name": "jimp",
+        "version": "0.22.12",
+        "isSemVerMajor": true
+      }
+    },
+    "@jimp/utils": {
+      "name": "@jimp/utils",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@jimp/types"
+      ],
+      "effects": [],
+      "range": ">=1.0.1--canary.1285.8595111491.0",
+      "nodes": [
+        "node_modules/@jimp/utils"
+      ],
+      "fixAvailable": true
+    },
+    "@vscode/vsce": {
+      "name": "@vscode/vsce",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "markdown-it"
+      ],
+      "effects": [],
+      "range": "<=3.0.0",
+      "nodes": [
+        "node_modules/@vscode/vsce"
+      ],
+      "fixAvailable": {
+        "name": "@vscode/vsce",
+        "version": "4.0.0",
+        "isSemVerMajor": true
+      }
+    },
+    "brace-expansion": {
+      "name": "brace-expansion",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1240103,
+          "name": "brace-expansion",
+          "dependency": "brace-expansion",
+          "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+          "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-400",
+            "CWE-407"
+          ],
+          "cvss": {
+            "score": 5.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+          },
+          "range": ">=4.0.0 <5.0.12"
+        },
+        {
+          "source": 1240107,
+          "name": "brace-expansion",
+          "dependency": "brace-expansion",
+          "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+          "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7",
+          "severity": "high",
+          "cwe": [
+            "CWE-400",
+            "CWE-674"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": ">=4.0.0 <5.0.11"
+        },
+        {
+          "source": 1240111,
+          "name": "brace-expansion",
+          "dependency": "brace-expansion",
+          "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+          "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p",
+          "severity": "high",
+          "cwe": [
+            "CWE-400",
+            "CWE-674"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": ">=4.0.0 <5.0.10"
+        }
+      ],
+      "effects": [],
+      "range": "4.0.0 - 5.0.11",
+      "nodes": [
+        "node_modules/@earendil-works/pi-coding-agent/node_modules/brace-expansion"
+      ],
+      "fixAvailable": true
+    },
+    "jimp": {
+      "name": "jimp",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        "@jimp/core",
+        "@jimp/diff",
+        "@jimp/js-bmp",
+        "@jimp/js-gif",
+        "@jimp/js-jpeg",
+        "@jimp/js-png",
+        "@jimp/js-tiff",
+        "@jimp/plugin-blit",
+        "@jimp/plugin-blur",
+        "@jimp/plugin-circle",
+        "@jimp/plugin-color",
+        "@jimp/plugin-contain",
+        "@jimp/plugin-cover",
+        "@jimp/plugin-crop",
+        "@jimp/plugin-displace",
+        "@jimp/plugin-dither",
+        "@jimp/plugin-fisheye",
+        "@jimp/plugin-flip",
+        "@jimp/plugin-hash",
+        "@jimp/plugin-mask",
+        "@jimp/plugin-print",
+        "@jimp/plugin-quantize",
+        "@jimp/plugin-resize",
+        "@jimp/plugin-rotate",
+        "@jimp/plugin-threshold",
+        "@jimp/types",
+        "@jimp/utils"
+      ],
+      "effects": [],
+      "range": ">=1.0.2--canary.4e85de0.0",
+      "nodes": [
+        "node_modules/jimp"
+      ],
+      "fixAvailable": {
+        "name": "jimp",
+        "version": "0.22.12",
+        "isSemVerMajor": true
+      }
+    },
+    "linkify-it": {
+      "name": "linkify-it",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1121797,
+          "name": "linkify-it",
+          "dependency": "linkify-it",
+          "title": "LinkifyIt#match scan loop has quadratic algorithmic complexity",
+          "url": "https://github.com/advisories/GHSA-22p9-wv53-3rq4",
+          "severity": "high",
+          "cwe": [
+            "CWE-1333"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": "<=5.0.0"
+        },
+        {
+          "source": 1124012,
+          "name": "linkify-it",
+          "dependency": "linkify-it",
+          "title": "linkify-it: Quadratic-complexity DoS via the `mailto:` validator scan-loop on attacker text",
+          "url": "https://github.com/advisories/GHSA-v245-v573-v5vm",
+          "severity": "high",
+          "cwe": [
+            "CWE-407"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": "<=5.0.1"
+        }
+      ],
+      "effects": [
+        "markdown-it"
+      ],
+      "range": "<=5.0.1",
+      "nodes": [
+        "node_modules/linkify-it"
+      ],
+      "fixAvailable": {
+        "name": "@vscode/vsce",
+        "version": "4.0.0",
+        "isSemVerMajor": true
+      }
+    },
+    "markdown-it": {
+      "name": "markdown-it",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1120820,
+          "name": "markdown-it",
+          "dependency": "markdown-it",
+          "title": "markdown-it: Quadratic complexity DoS in smartquotes rule via replaceAt string operations",
+          "url": "https://github.com/advisories/GHSA-6v5v-wf23-fmfq",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-400",
+            "CWE-407"
+          ],
+          "cvss": {
+            "score": 5.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+          },
+          "range": "<=14.1.1"
+        },
+        {
+          "source": 1242600,
+          "name": "markdown-it",
+          "dependency": "markdown-it",
+          "title": "markdown-it: Quadratic complexity in smartquotes with unmatched closing quotes",
+          "url": "https://github.com/advisories/GHSA-r7fv-28h4-cvq7",
+          "severity": "high",
+          "cwe": [
+            "CWE-400",
+            "CWE-407"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": "<14.3.2"
+        },
+        {
+          "source": 1242646,
+          "name": "markdown-it",
+          "dependency": "markdown-it",
+          "title": "markdown-it: Quadratic-time denial of service in inline HTML parsing with html enabled",
+          "url": "https://github.com/advisories/GHSA-vfgh-jcmw-g37q",
+          "severity": "low",
+          "cwe": [
+            "CWE-400",
+            "CWE-407"
+          ],
+          "cvss": {
+            "score": 3.7,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L"
+          },
+          "range": "<14.3.3"
+        },
+        {
+          "source": 1243031,
+          "name": "markdown-it",
+          "dependency": "markdown-it",
+          "title": "markdown-it linkify: true has two quadratic paths, so a few hundred KB of markdown blocks the event loop for tens of seconds",
+          "url": "https://github.com/advisories/GHSA-253c-mchw-3w2r",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-400",
+            "CWE-407"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": "<14.3.1"
+        },
+        "linkify-it"
+      ],
+      "effects": [
+        "@vscode/vsce"
+      ],
+      "range": "<=14.3.2",
+      "nodes": [
+        "node_modules/markdown-it"
+      ],
+      "fixAvailable": {
+        "name": "@vscode/vsce",
+        "version": "4.0.0",
+        "isSemVerMajor": true
+      }
+    },
+    "mocha": {
+      "name": "mocha",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "serialize-javascript"
+      ],
+      "effects": [],
+      "range": "8.2.0 - 12.0.0-beta-2",
+      "nodes": [
+        "node_modules/mocha"
+      ],
+      "fixAvailable": {
+        "name": "mocha",
+        "version": "12.0.3",
+        "isSemVerMajor": true
+      }
+    },
+    "serialize-javascript": {
+      "name": "serialize-javascript",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1113686,
+          "name": "serialize-javascript",
+          "dependency": "serialize-javascript",
+          "title": "Serialize JavaScript is Vulnerable to RCE via RegExp.flags and Date.prototype.toISOString()",
+          "url": "https://github.com/advisories/GHSA-5c6j-r48x-rmvq",
+          "severity": "high",
+          "cwe": [
+            "CWE-96"
+          ],
+          "cvss": {
+            "score": 8.1,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+          },
+          "range": "<=7.0.2"
+        },
+        {
+          "source": 1119440,
+          "name": "serialize-javascript",
+          "dependency": "serialize-javascript",
+          "title": "Serialize JavaScript has CPU Exhaustion Denial of Service via crafted array-like objects",
+          "url": "https://github.com/advisories/GHSA-qj8w-gfj5-8c6v",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-400",
+            "CWE-834"
+          ],
+          "cvss": {
+            "score": 5.9,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": ">=5.0.0 <7.0.5"
+        },
+        {
+          "source": 1243082,
+          "name": "serialize-javascript",
+          "dependency": "serialize-javascript",
+          "title": "Serialize JavaScript: Cross-site scripting (XSS) via unescaped </script at the end of a serialized function body",
+          "url": "https://github.com/advisories/GHSA-m5mm-p8h7-m29v",
+          "severity": "low",
+          "cwe": [
+            "CWE-79"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": "<7.1.3"
+        }
+      ],
+      "effects": [
+        "mocha"
+      ],
+      "range": "<=7.1.2",
+      "nodes": [
+        "node_modules/serialize-javascript"
+      ],
+      "fixAvailable": {
+        "name": "mocha",
+        "version": "12.0.3",
+        "isSemVerMajor": true
+      }
+    },
+    "undici": {
+      "name": "undici",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1243077,
+          "name": "undici",
+          "dependency": "undici",
+          "title": "undici vulnerable to Denial of Service via unbounded memory in the EventSource parser",
+          "url": "https://github.com/advisories/GHSA-4qv8-2p9j-2685",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-770"
+          ],
+          "cvss": {
+            "score": 5.9,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": ">=8.0.0 <8.12.2"
+        },
+        {
+          "source": 1243080,
+          "name": "undici",
+          "dependency": "undici",
+          "title": "undici vulnerable to Subresource Integrity bypass via non-lowercase algorithm tokens",
+          "url": "https://github.com/advisories/GHSA-f72v-6w45-q472",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-178"
+          ],
+          "cvss": {
+            "score": 5.9,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N"
+          },
+          "range": ">=8.0.0 <8.12.2"
+        },
+        {
+          "source": 1243112,
+          "name": "undici",
+          "dependency": "undici",
+          "title": "undici vulnerable to Denial of Service via unhandled error on excessive content-encodings",
+          "url": "https://github.com/advisories/GHSA-xjj6-f33q-929c",
+          "severity": "high",
+          "cwe": [
+            "CWE-248",
+            "CWE-459"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": ">=8.0.0 <8.12.2"
+        }
+      ],
+      "effects": [
+        "@earendil-works/pi-coding-agent"
+      ],
+      "range": "8.0.0 - 8.12.1",
+      "nodes": [
+        "node_modules/@earendil-works/pi-coding-agent/node_modules/undici"
+      ],
+      "fixAvailable": {
+        "name": "@earendil-works/pi-coding-agent",
+        "version": "0.75.3",
+        "isSemVerMajor": true
+      }
+    },
+    "zod": {
+      "name": "zod",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        {
+          "source": 1243066,
+          "name": "zod",
+          "dependency": "zod",
+          "title": "Zod can exhaust memory while validating oversized constrained collections",
+          "url": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5",
+          "severity": "high",
+          "cwe": [
+            "CWE-770"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": "<4.6.6"
+        }
+      ],
+      "effects": [
+        "@jimp/plugin-blit",
+        "@jimp/plugin-circle",
+        "@jimp/plugin-color",
+        "@jimp/plugin-contain",
+        "@jimp/plugin-cover",
+        "@jimp/plugin-crop",
+        "@jimp/plugin-displace",
+        "@jimp/plugin-fisheye",
+        "@jimp/plugin-flip",
+        "@jimp/plugin-mask",
+        "@jimp/plugin-print",
+        "@jimp/plugin-quantize",
+        "@jimp/plugin-resize",
+        "@jimp/plugin-rotate",
+        "@jimp/plugin-threshold",
+        "@jimp/types"
+      ],
+      "range": "<4.6.6",
+      "nodes": [
+        "node_modules/@cortexkit/aft-pi/node_modules/zod",
+        "node_modules/zod"
+      ],
+      "fixAvailable": {
+        "name": "zod",
+        "version": "4.6.7",
+        "isSemVerMajor": true
+      }
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 3,
+      "high": 36,
+      "critical": 0,
+      "total": 39
+    },
+    "dependencies": {
+      "prod": 695,
+      "dev": 424,
+      "optional": 150,
+      "peer": 7,
+      "peerOptional": 0,
+      "total": 1237
+    }
+  }
+}

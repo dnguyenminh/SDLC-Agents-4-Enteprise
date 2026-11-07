@@ -1,6 +1,7 @@
 /**
  * LLMService — facade for multi-provider LLM access.
  * Reads config from backend config, selects appropriate adapter.
+ * SA4E-387: Supports runtime model swap and per-call override.
  */
 
 import type { LLMAdapter, LLMConfig, LLMMessage, LLMProvider, LLMResponse } from './types.js';
@@ -33,6 +34,9 @@ export class LLMService {
   private config: LLMConfig;
   private adapter: LLMAdapter;
 
+  /** Hook fired when model config changes — for window cache invalidation */
+  onModelChanged?: (config: LLMConfig) => void;
+
   constructor(config?: Partial<LLMConfig>) {
     const provider: LLMProvider = (config?.provider || process.env.LLM_PROVIDER || 'ollama') as LLMProvider;
     const defaults = DEFAULT_CONFIGS[provider] || DEFAULT_CONFIGS.ollama;
@@ -49,8 +53,31 @@ export class LLMService {
     this.adapter = ADAPTERS[provider]?.() || new OllamaAdapter();
   }
 
-  async complete(messages: LLMMessage[]): Promise<LLMResponse> {
-    return this.adapter.complete(messages, this.config);
+  /** Current active model config — reads at call time, NOT constructor snapshot */
+  resolveActive(): LLMConfig {
+    return { ...this.config };
+  }
+
+  /** Runtime model swap. If provider/model/baseUrl changes → rebuild adapter + fire hook */
+  setActiveModel(next: Partial<LLMConfig>): void {
+    const changed =
+      next.provider !== undefined && next.provider !== this.config.provider ||
+      next.model !== undefined && next.model !== this.config.model ||
+      next.baseUrl !== undefined && next.baseUrl !== this.config.baseUrl;
+    this.config = { ...this.config, ...next };
+    if (changed) {
+      this.adapter = ADAPTERS[this.config.provider]?.() || new OllamaAdapter();
+      this.onModelChanged?.(this.config); // Hook for cache invalidation
+    }
+  }
+
+  /** complete() accepts optional override for per-call model (no global state mutation) */
+  async complete(messages: LLMMessage[], override?: Partial<LLMConfig>): Promise<LLMResponse> {
+    const cfg = override ? { ...this.config, ...override } : this.config;
+    const adapter = override?.provider && override.provider !== this.config.provider
+      ? (ADAPTERS[override.provider]?.() || new OllamaAdapter())
+      : this.adapter;
+    return adapter.complete(messages, cfg);
   }
 
   async isAvailable(): Promise<boolean> {

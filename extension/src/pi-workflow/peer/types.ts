@@ -24,6 +24,9 @@ export interface PeerRegistryEntry {
   agentName: string;
   role: string;
   capabilities: string[];
+  /** SA4E-391 peer collaboration: free-form "what I do / ask me for …" blurb
+   *  from the agent file — peers read it to pick the right collaborator. */
+  advertise?: string;
   model: string;
   status: PeerStatus; // busy set BEFORE first token; idle after terminal capture
   registeredAt: string; // ISO 8601
@@ -42,6 +45,8 @@ export interface PeerInfo {
   agentName: string;
   role: string;
   capabilities: string[];
+  /** SA4E-391: free-form capability blurb for peer selection (optional). */
+  advertise?: string;
   model: string;
   status: PeerStatus;
   self: boolean;
@@ -75,6 +80,10 @@ export interface PeerTask {
   fromTabId: string;
   toTabId: string; // ≠ fromTabId; exists in registry at creation
   message: string;
+  /** SA4E-391 multimodal: images the sender attached to the turn that issued
+   *  this peer_send — forwarded to the receiving tab's model so a vision peer
+   *  can actually read them (text-only envelope could never carry pixels). */
+  images?: import('../session-host/types.js').TurnImage[];
   mode: PeerTaskMode;
   state: PeerTaskState;
   /** v1.1 SEC-01/C1 L2 — audit tag distinguishing peer-triggered turns. */
@@ -178,6 +187,7 @@ export type GuardVerdict =
  * §6.2). The gateway narrows the real SessionHost.promptTurn signature.
  */
 export interface PeerSessionTurnExecutor {
+  // SA4E-391: opts carries turnOrigin AND (now) images for multimodal peers.
   promptTurn(text: string, opts?: SessionTurnOptions): Promise<{ text: string }>;
 }
 

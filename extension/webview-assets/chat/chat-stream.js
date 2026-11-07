@@ -1,133 +1,132 @@
 /**
- * Chat Panel — Streaming (KSA-247 + SA4E-371 response cycles)
- * One cycle per model response: thinking block → answer bubble → tool
- * container (machinery + persistence live in chat-cycle.js). This file maps
- * chat:streamChunk / chat:streamComplete onto the open response cycle.
+ * Chat Panel — Streaming (SA4E-391 flat renderer)
+ * Maps chat:streamChunk / chat:streamComplete onto a per-tab "live turn".
+ * thinking deltas accumulate into one thinking block; answer tokens accumulate
+ * into one answer block. A tool call between deltas flushes the current answer
+ * so blocks stay in true chronological order. On complete, any buffered answer
+ * is finalized (and the non-streaming fallback text, if any, is shown).
+ *
+ * Per-tab live state lives on tab.live = { thinking, answer, nodeId, startedAt,
+ * toolCount }. DOM renders only while the owning tab is active; data always
+ * updates the owning tab so a background turn replays correctly on switch.
  */
 (function () {
   "use strict";
   var S = window.ChatState;
 
-  var messagesEl = S.messagesEl;
+  function live(tab) {
+    if (!tab.live) tab.live = { thinkingEntry: null, answerEntry: null, nodeId: "pi", startedAt: Date.now(), toolCount: 0 };
+    return tab.live;
+  }
 
-  // === Streaming (one group per model response within the turn) ===
-  // SA4E-381 routing: targetTabId is the TURN's tab (originTabId). Data
-  // (cycle entry, thinking/text buffers) always updates the owning tab's
-  // model — even while the user views another tab; DOM rendering only
-  // happens while that tab is active, so nothing is dropped and nothing
-  // leaks into the viewed tab's transcript.
+  /** Re-render an in-place entry (thinking/answer) when visible. */
+  function refresh(entry, tabId) {
+    if (tabId !== S.activeTabId) return;
+    if (!entry._el) return;
+    if (entry.role === "thinking") {
+      var body = entry._el.querySelector(".oc-think-body");
+      var head = entry._el.querySelector(".oc-think-head");
+      if (body) S.renderThinkingBody(body, entry.text);
+      if (head) head.textContent = "Thought" + (entry.durationMs ? ": " + S.fmtDur(entry.durationMs) : "");
+    } else if (entry.role === "assistant") {
+      entry._el.innerHTML = (window.MarkdownRenderer)
+        ? MarkdownRenderer.render(entry.content)
+        : S.escapeHtml(entry.content);
+      if (S.addCodeActions) { try { S.addCodeActions(entry._el); } catch (e) {} }
+    }
+  }
+
   S.handleStreamChunk = function (msg, targetTabId) {
     targetTabId = targetTabId || S.getMessageTargetTabId(msg);
     var tab = S.getTab(targetTabId);
-    if (!tab) return; // turn's tab was closed — nothing to render or persist
-    var render = targetTabId === S.activeTabId;
-
-    if (render) {
-      S.showMessages();
-      S.setWorking(true, "Working...");
-    }
+    if (!tab) return;
+    var L = live(tab);
+    L.nodeId = msg.nodeId || L.nodeId;
 
     if (msg.eventType === "status") {
-      // Node lifecycle signal (e.g. "active") — working bar only, never
-      // concatenated into the reply bubble (KSA-237).
-      if (render) {
-        S.setWorking(true, S.statusLabel(msg.nodeId, msg.content));
-        S.scrollToBottom();
-      }
+      if (targetTabId === S.activeTabId) S.setWorking(true, S.statusLabel(msg.nodeId, msg.content));
       return;
     }
 
     if (msg.eventType === "error") {
-      renderCycleError(msg, targetTabId);
+      // Flush any partial answer, then show the error as an answer block.
+      S.appendBlock(targetTabId, { role: "assistant", content: "**Error:** " + (msg.content || ""), nodeId: L.nodeId });
+      tab.live = null;
       return;
     }
 
-    // SA4E-371 cycle rule: a thinking/token delta after >=1 tool call (or a
-    // different node's stream) closes the current cycle and opens the next.
-    S.maybeCloseCycle(msg.nodeId, targetTabId);
-    var c = S.ensureCycle(msg.nodeId, targetTabId);
-
-    if (msg.eventType === "token") {
-      // Append verbatim — whitespace-only tokens carry markdown structure
-      // (blank lines between paragraphs, code indentation). Dropping them
-      // corrupts the final message (UAT: collapsed text, broken tables).
-      if (msg.content) {
-        c.content += msg.content;
-        if (c.entry) c.entry.content = c.content; // R2: live entry mutation
+    if (msg.eventType === "thinking") {
+      // A thinking delta after the answer started = a new response → flush answer.
+      if (L.answerEntry) { L.answerEntry = null; }
+      if (!L.thinkingEntry) {
+        L.thinkStart = Date.now();
+        L.thinkingEntry = { role: "thinking", text: "", durationMs: 0 };
+        S.appendBlock(targetTabId, L.thinkingEntry);
       }
-      if (render) {
-        S.ensureBubble(c);
-        c.contentEl.innerHTML = MarkdownRenderer.render(c.content);
-        S.addCodeActions(c.contentEl);
-      }
-    } else if (msg.eventType === "thinking") {
-      // Reasoning delta — streaming collapsible block preceding the bubble.
-      // No auto-collapse while it still streams (R2); the cycle settles it.
-      // SA4E-381 Issue 3: track thinking count per turn
-      S.turnThinkCount = (S.turnThinkCount || 0) + 1;
-      c.thinkingText += msg.content || "";
-      if (c.entry) c.entry.thinking = c.thinkingText; // R2: live entry mutation
-      if (render) {
-        S.ensureThinking(c);
-        // SA4E-381 Issue 2: follow-only-at-bottom — never yank the body
-        // scroll when the user scrolled up to read earlier reasoning.
-        var tb = c.thinkingBody;
-        var atBodyBottom = tb.scrollHeight - tb.scrollTop - tb.clientHeight < 24;
-        tb.textContent = c.thinkingText;
-        if (atBodyBottom) tb.scrollTop = tb.scrollHeight;
-      }
+      L.thinkingEntry.text += msg.content || "";
+      L.thinkingEntry.durationMs = Date.now() - (L.thinkStart || Date.now());
+      refresh(L.thinkingEntry, targetTabId);
+      if (targetTabId === S.activeTabId) { S.setWorking(true, "Thinking…"); S.scrollIfAtBottom(); }
+      return;
     }
 
-    if (render) {
-      // SA4E-381 Issue 2: follow-only-at-bottom — only auto-scroll when the
-      // user is at (or within 80px of) the bottom; otherwise show the jump
-      // pill so they can resume follow with one click.
-      var atBottom = messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 80;
-      if (atBottom) {
-        S.scrollToBottom();
-        if (S.showJumpPill) S.showJumpPill(false);
-      } else if (S.showJumpPill) {
-        S.showJumpPill(true);
+    if (msg.eventType === "token") {
+      // A new token after a thinking block settles it (keep it rendered).
+      if (L.thinkingEntry) { L.thinkingEntry = null; }
+      if (!L.answerEntry) {
+        L.answerStart = Date.now();
+        L.answerEntry = { role: "assistant", content: "", nodeId: L.nodeId };
+        S.appendBlock(targetTabId, L.answerEntry);
       }
+      if (msg.content) {
+        L.answerEntry.content += msg.content;
+        refresh(L.answerEntry, targetTabId);
+      }
+      if (targetTabId === S.activeTabId) { S.setWorking(true, "Working…"); S.scrollIfAtBottom(); }
     }
   };
 
-  /** chat:streamChunk eventType "error" — rendered inside the cycle bubble. */
-  function renderCycleError(msg, targetTabId) {
-    var render = targetTabId === S.activeTabId;
-    var c = S.ensureCycle(msg.nodeId, targetTabId);
-    if (render) {
-      S.ensureBubble(c);
-      c.bubbleEl.classList.add("error");
-      c.bubbleEl.classList.remove("streaming");
-      c.contentEl.innerHTML = MarkdownRenderer.render("**Error:** " + msg.content);
-    }
-    // Node errors are NOT persisted here (original behavior) — the separate
-    // chat:error path owns error persistence + diagnosis (SA4E-369).
-    S.closeCycle("error", targetTabId);
-    if (render) S.scrollToBottom();
-  }
-
-  // === Turn completion (chat:streamComplete arrives once per turn) ===
   S.handleStreamComplete = function (msg, targetTabId) {
     targetTabId = targetTabId || S.getMessageTargetTabId(msg);
-    // Close the open response cycle: settle thinking, finish bubble, push
-    // the per-cycle assistant entry. Tool-only trailing cycles persist
-    // nothing; their container was already sealed by maybeCloseCycle.
-    S.closeCycle("turn-end", targetTabId);
-    if (targetTabId === S.activeTabId) {
-      S.finalizeToolContainer();
-      // SA4E-381 Issue 3: close the per-turn work-trace (auto-collapse unless
-      // the user toggled it during the turn — sticky data-user-managed).
-      if (S.closeTrace) S.closeTrace("stream-complete");
-      // SA4E-372 R1: a turn with no replayed cycle (e.g. an error turn) has
-      // nothing to adopt — drop orphan tracking, containers stay at root.
-      S.preCycleContainers = [];
+    var tab = S.getTab(targetTabId);
+    if (!tab) return;
+    var L = live(tab);
+
+    // Non-streaming fallback: a reply that never streamed tokens arrives whole
+    // in finalContent — show it so the answer is never lost (SA4E-391).
+    var finalText = msg && typeof msg.finalContent === "string" ? msg.finalContent : "";
+    var isPlaceholder = /^Node .+ completed in \d+ms$/.test(finalText);
+    if (!L.answerEntry && finalText && !isPlaceholder) {
+      L.answerEntry = { role: "assistant", content: finalText, nodeId: L.nodeId };
+      S.appendBlock(targetTabId, L.answerEntry);
     }
-    // Don't touch the working bar — only chat:workingStatus controls it
-    // (prevents premature hide when verify loops back).
+
+    // SA4E-391: a turn that produced NOTHING (no thinking, no tool, no answer)
+    // must not leave the panel looking frozen — surface an explicit notice.
+    var producedNothing = !L.answerEntry && !L.thinkingEntry && !(L.toolCount > 0);
+    if (producedNothing) {
+      S.appendBlock(targetTabId, {
+        role: "assistant",
+        content: "_(The model returned no output for this turn.)_",
+        nodeId: L.nodeId,
+      });
+    }
+
+    // Attach turn metrics to the answer block (duration from metadata).
+    if (L.answerEntry) {
+      var dur = msg && msg.metadata && msg.metadata.duration;
+      if (dur) L.answerEntry.durationMs = dur;
+      if (L.toolCount) L.answerEntry.toolCount = L.toolCount;
+      if (targetTabId === S.activeTabId && L.answerEntry._el && (dur || L.toolCount)) {
+        var old = L.answerEntry._el.querySelector(".oc-turn-meta");
+        if (old) old.remove();
+        L.answerEntry._el.appendChild(S.buildTurnMeta(L.answerEntry));
+      }
+      S.saveStateToDisk();
+    }
+
+    tab.live = null;
     S.isStreaming = false;
-    // Streaming ended — hide the jump pill if it was showing.
     if (S.showJumpPill) S.showJumpPill(false);
   };
 })();

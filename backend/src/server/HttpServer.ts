@@ -12,6 +12,7 @@
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import type { Logger } from 'pino';
+import type { Server as HttpServerType } from 'http';
 import { loadPersistedRateLimitCap } from './middleware/rate-limiter.js';
 import { loadPersistedIndexLimit } from './routes/api-index.js';
 import {
@@ -42,38 +43,46 @@ export class HttpServer {
   }
 
   async start(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       this.server = serve({
         fetch: this.app.fetch,
         port: this.port,
-        hostname: this.host,
-        // Fix 5/UND_ERR_SOCKET: Node's default keepAliveTimeout (~5s) closes an idle
-        // socket mid-pipeline when an ingest request is queued behind the DB under
-        // load — the client sees "other side closed". Raise the timeouts so a slow
-        // request waiting on Postgres is never dropped without a response.
-        // serverOptions is forwarded to node:http.createServer (@hono/node-server).
-        // Invariant: headersTimeout > keepAliveTimeout, requestTimeout ≥ both.
+        hostname: '127.0.0.1',
         serverOptions: {
-          keepAliveTimeout: 60_000,  // keep idle sockets alive across batched POSTs
-          headersTimeout: 65_000,    // > keepAliveTimeout (Node requirement)
-          requestTimeout: 120_000,   // allow a slow DB-bound ingest to finish
+          keepAliveTimeout: 60_000,
+          headersTimeout: 65_000,
+          requestTimeout: 120_000,
         },
       }, async (info) => {
-        this._isRunning = true;
-        this.logger.info({ port: info.port, host: this.host }, 'Backend server started');
-        // Apply any admin-persisted rate-limit cap (non-blocking; survives restart).
-        loadPersistedRateLimitCap().catch((err) => {
-          this.logger.debug({ err }, '[RateLimit] Failed to load persisted cap — using env default');
-        });
-        // Apply any admin-persisted index concurrency cap (non-blocking; survives restart).
-        loadPersistedIndexLimit().catch((err) => {
-          this.logger.debug({ err }, '[IndexLimit] Failed to load persisted cap — using env default');
-        });
-        // SA4E-101: bootstrap persistent index-status tables, then mark stale
-        // running ops as interrupted, then start the cleanup scheduler.
-        // Ensure schema is ready before marking server as fully started to avoid E2E race.
-        this.cleanupScheduler = await runDbBootstrap(this.logger);
-        resolve();
+        try {
+          this._isRunning = true;
+          const addr = this.server?.address?.();
+          this.logger.info({ port: info.port, host: '127.0.0.1', address: addr, listening: this.server?.listening }, 'Backend server started - debug: server listening');
+          this.logger.info({ port: info.port, host: '127.0.0.1' }, 'Backend server started');
+          loadPersistedRateLimitCap().catch((err) => {
+            this.logger.debug({ err }, '[RateLimit] Failed to load persisted cap — using env default');
+          });
+          loadPersistedIndexLimit().catch((err) => {
+            this.logger.debug({ err }, '[IndexLimit] Failed to load persisted cap — using env default');
+          });
+          this.cleanupScheduler = await runDbBootstrap(this.logger);
+          resolve();
+        } catch (err) {
+          this.logger.error({ err }, 'Error in server startup callback');
+          reject(err);
+        }
+      });
+
+      this.server!.on('error', (err: Error) => {
+        this.logger.error({ err }, 'HTTP server error');
+        if (!this._isRunning) {
+          reject(err);
+        }
+      });
+
+      this.server!.on('close', () => {
+        this.logger.warn('HTTP server closed unexpectedly');
+        this._isRunning = false;
       });
     });
   }

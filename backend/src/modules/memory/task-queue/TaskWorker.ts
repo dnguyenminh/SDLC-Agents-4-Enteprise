@@ -2,7 +2,7 @@
  * TaskWorker — SA4E-44 / SA4E-47: background polling worker for pending tasks.
  * Facade owning the polling lifecycle; task handlers live in sibling modules
  * (BR-18): fallback-tags, code-summary, tag-enrichment, structured-map,
- * task-dispatch, worker-context, task-lifecycle.
+ * task-dispatch, worker-context, task-lifecycle, task-worker-delegates.
  */
 
 import type { Logger } from 'pino';
@@ -14,28 +14,18 @@ import type { PendingTask } from './models.js';
 import type { TaskWorkerConfig } from './TaskWorkerConfig.js';
 import { DEFAULT_TASK_WORKER_CONFIG } from './TaskWorkerConfig.js';
 import type { MemoryEngine } from '../engine/index.js';
+import { dispatchTask, scanForUnenrichedSymbols } from './task-dispatch.js';
+import type { LlmServiceLike, CodeEnrichmentHandlerLike } from './worker-context.js';
+import { buildDispatchDeps, buildTagDeps, buildCodeDeps, type TaskWorkerStats } from './task-worker-delegates.js';
 import { processTagEnrichmentTask, loadPreviousContext } from './tag-enrichment.js';
 import { processCodeSummaryTask, processVectorEmbeddingTask } from './code-summary.js';
-import { dispatchTask, scanForUnenrichedSymbols } from './task-dispatch.js';
 import {
   applyConfigPatch, getWorkerProgress, getWorkerStats, handleTaskError,
   purgeSupersededOnStartup, recoverStaleTasks, resetProcessingOnStartup,
 } from './task-lifecycle.js';
-import type {
-  LlmServiceLike, CodeEnrichmentHandlerLike,
-  CodeSummaryDeps, TaskDispatchDeps,
-} from './worker-context.js';
 
 export { extractFallbackTags } from './fallback-tags.js';
-
-export interface TaskWorkerStats {
-  pending: number;
-  processing: number;
-  completed: number;
-  failed: number;
-  isRunning: boolean;
-  lastPollAt: string | null;
-}
+export type { TaskWorkerStats } from './task-worker-delegates.js';
 
 export class TaskWorker {
   private readonly repo: PendingTaskRepository;
@@ -69,6 +59,7 @@ export class TaskWorker {
   setTagAnalyzer(analyzer: TagAnalyzerService): void { this.tagAnalyzer = analyzer; }
   setEmbeddingService(service: EmbeddingService): void { this.embeddingService = service; }
   setLlmService(service: LlmServiceLike): void { this.llmService = service; }
+  getLlmService(): LlmServiceLike | undefined { return this.llmService; }
 
   /** SA4E-107: Wire CodeEnrichmentHandler — delegates CODE_ENRICHMENT tasks to proper handler. */
   setCodeEnrichmentHandler(handler: CodeEnrichmentHandlerLike): void {
@@ -180,49 +171,29 @@ export class TaskWorker {
   }
 
   private async processTask(task: PendingTask): Promise<void> {
-    await dispatchTask(this.dispatchDeps(), task);
+    await dispatchTask(buildDispatchDeps(this.internals, this.codeEnrichmentHandler), task);
   }
 
-  private dispatchDeps(): TaskDispatchDeps {
+  /** Live internal surface for the delegate shapers (BR-18 split). */
+  private get internals() {
     return {
-      repo: this.repo, engine: this.engine, logger: this.logger,
-      codeEnrichmentHandler: this.codeEnrichmentHandler,
-      processTagEnrichment: (task, payload) => this.processTagEnrichment(task, payload),
-      processVectorEmbedding: (task, payload) => this.processVectorEmbedding(task, payload),
-      processCodeSummary: (task, payload) => this.processCodeSummary(task, payload),
-      handleTaskError: (task, err) => handleTaskError(this.repo, task, err),
+      repo: this.repo, engine: this.engine, config: this.config, logger: this.logger,
+      tagAnalyzer: this.tagAnalyzer, embeddingService: this.embeddingService, llmService: this.llmService,
+      loadPreviousContextHook: (entryId: number, source: string | null) => this.loadPreviousContext(entryId, source),
     };
   }
-
-  // ── Delegations to extracted handler modules (live deps per call) ──
-
-  private tagDeps() {
-    return {
-      repo: this.repo, engine: this.engine, config: this.config, logger: this.logger, tagAnalyzer: this.tagAnalyzer, llmService: this.llmService,
-      loadPreviousContext: (entryId: number, source: string | null) => this.loadPreviousContext(entryId, source),
-    };
-  }
-
-  private codeDeps(): CodeSummaryDeps {
-    return { repo: this.repo, engine: this.engine, config: this.config, logger: this.logger, llmService: this.llmService, embeddingService: this.embeddingService };
-  }
-
   private async processTagEnrichment(task: PendingTask, payload: any): Promise<void> {
-    await processTagEnrichmentTask(this.tagDeps(), task, payload);
+    await processTagEnrichmentTask(buildTagDeps(this.internals), task, payload);
   }
-
   private async processCodeSummary(task: PendingTask, payload: any): Promise<void> {
-    await processCodeSummaryTask(this.codeDeps(), task, payload);
+    await processCodeSummaryTask(buildCodeDeps(this.internals), task, payload);
   }
-
   private async processVectorEmbedding(task: PendingTask, payload: any): Promise<void> {
-    await processVectorEmbeddingTask(this.codeDeps(), task, payload);
+    await processVectorEmbeddingTask(buildCodeDeps(this.internals), task, payload);
   }
-
   private async loadPreviousContext(entryId: number, source: string | null) {
-    return loadPreviousContext(this.tagDeps(), entryId, source);
+    return loadPreviousContext(buildTagDeps(this.internals), entryId, source);
   }
-
   private async handleTaskError(task: PendingTask, err: Error): Promise<void> {
     await handleTaskError(this.repo, task, err);
   }

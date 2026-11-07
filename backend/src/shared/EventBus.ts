@@ -82,4 +82,6 @@ export const Events = {
   GROUP_MEMBERSHIP_CHANGED: 'rbac:group:membership',
   /** Emitted when a permission role definition changes — payload: { permissionId, changes } */
   PERMISSION_CHANGED: 'rbac:permission:changed',
+  /** Emitted when a TaskWorker-attached LLMService becomes available — payload: { llmService } */
+  LLM_SERVICE_READY: 'llm:service:ready',
 } as const;
