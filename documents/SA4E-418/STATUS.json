@@ -1,0 +1,35 @@
+{
+  "ticket": "SA4E-418",
+  "epic": "SA4E-411",
+  "title": "[Phase 2] Dynamic Repository Map (PageRank + AST Graph)",
+  "version": 1,
+  "updated": "2026-11-08",
+  "status": "in-review",
+  "phase": "phase-2",
+  "spec": "16K Doc 6 (Dynamic Repository Map)",
+  "implementation": {
+    "files": [
+      "backend/src/engine/map/repo-map-rank.ts",
+      "backend/src/engine/map/repo-map-service.ts",
+      "backend/src/engine/map/__tests__/repo-map-rank.test.ts",
+      "backend/src/engine/map/__tests__/repo-map-service.test.ts"
+    ],
+    "weight_formula": "W(A->B,s) = Multiplier(s) x sqrt(freq(A,s)) x ln(N/(df(s)+1)); Multiplier: x10 in query, x2 identifier len>=8, x0.2 test/",
+    "freq_semantics": "freq(A,s) = reference multiplicity (edges tu A target symbols chua term s); df = declaration count (test files excluded)",
+    "pagerank": "personalized, alpha=0.85, dangling mass theo personalization, tolerance 1e-9",
+    "personalization": "query-matched files = 100/len_matched, khac = 1/N",
+    "packing": "binary-search largest prefix <= token budget (1500 default, estimate 1 token/4 chars)",
+    "dsl": "[REPOSITORY_MAP (Ranked by PageRank relevance)] + path: + start-end: signature",
+    "perf": "10k files synthetic graph: build+pagerank+pack < 500ms (test enforced)"
+  },
+  "acceptance_criteria": {
+    "pagerank_custom_weight": "pass",
+    "query_personalization": "pass",
+    "binary_search_packing": "pass",
+    "dsl_format": "pass",
+    "performance_10k": "pass",
+    "graph_integration": "pass - doc tren V6 snapshot tables (code_symbol/symbol_relationship), snapshot-scoped qua SnapshotRetrievalService.pinOrThrow"
+  },
+  "regression": "454 files / 3606 tests pass",
+  "evidence": ["backend/src/engine/map/__tests__/"]
+}
