@@ -1,0 +1,41 @@
+{
+  "ticket": "SA4E-417",
+  "epic": "SA4E-411",
+  "title": "[Phase 1] CR-01..06: Patch Protocol & Isolation Hardening",
+  "version": 1,
+  "updated": "2026-11-08",
+  "status": "in-review",
+  "phase": "phase-1",
+  "spec": "16K Doc 12 (Patch Protocol) + 13 (Security & Sandbox)",
+  "implementation": {
+    "files": [
+      "backend/src/engine/security/patch-protocol.ts",
+      "backend/src/engine/security/sandbox.ts",
+      "backend/src/engine/security/tool-schemas.ts",
+      "backend/src/engine/security/__tests__/patch-protocol.test.ts",
+      "backend/src/engine/security/__tests__/sandbox.test.ts"
+    ],
+    "patch_protocol": {
+      "fields": "workspace_id, base_revision, file_path, original_content_hash, diff, expected_new_hash",
+      "validations": ["PATCH_TOO_LARGE 512KB", "PATH_INVALID (relative-only, no ..)", "SYMLINK_ESCAPE_FORBIDDEN (realpath containment)", "WORKSPACE_MISMATCH", "STALE_BASE (base-hash optimistic concurrency)", "EXPECTED_HASH_MISMATCH (atomic - khong ghi khi hash ket qua sai)", "CREATION patch: empty base hash + parent contained"],
+      "io": "injectable PatchIo - real runner dung tmp-write+rename"
+    },
+    "sandbox": {
+      "tool_arg_schemas": "4 core tools (search_symbols/get_file_skeleton/read_code_block/query_call_graph): type/length/semantic, SHELL_METACHARS forbidden",
+      "no_shell_concat": "buildArgVector -> (executable, argv) voi -- separator truoc path-like args",
+      "path_guard": "resolveWorkspacePath: absolute/.. /symlink-escape fail-closed",
+      "container_limits": "rootless + memory 512MB + cpu 50% + disk 256MB + pids 64 (bounds validate)",
+      "network": "deny by default, registry allowlist"
+    }
+  },
+  "acceptance_criteria": {
+    "patch_protocol_all_rules": "pass - 8 tests",
+    "sandbox_no_escape": "pass - absolute/..-traversal/symlink-junction rejected",
+    "tool_arg_schemas_4_tools": "pass",
+    "stale_base_rejection": "pass",
+    "path_traversal_rejection": "pass",
+    "container_limits": "pass - validate + bounds"
+  },
+  "regression": "452 files / 3592 tests pass",
+  "evidence": ["backend/src/engine/security/__tests__/"]
+}
