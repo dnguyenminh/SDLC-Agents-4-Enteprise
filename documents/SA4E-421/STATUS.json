@@ -1,0 +1,40 @@
+{
+  "ticket": "SA4E-421",
+  "epic": "SA4E-411",
+  "title": "[Phase 2] Scratchpad Format & Context Eviction Algorithm",
+  "version": 1,
+  "updated": "2026-11-09",
+  "status": "in-review",
+  "phase": "phase-2",
+  "spec": "16K Doc 8 (Scratchpad & Context Eviction) + 4 (~2,000 tokens history/scratchpad)",
+  "implementation": {
+    "files": [
+      "backend/src/engine/scratchpad/scratchpad.ts",
+      "backend/src/engine/scratchpad/eviction.ts",
+      "backend/src/engine/scratchpad/__tests__/scratchpad.test.ts",
+      "backend/src/engine/scratchpad/__tests__/eviction.test.ts"
+    ],
+    "scratchpad": {
+      "format": "<scratchpad> Goal/DeadEnds/Facts/Plan - dung spec 8",
+      "enforcement": "assertScratchpadBeforeToolCall - block PHAI la tail cua message truoc tool call; single-sentence goal; 4 sections bat buoc",
+      "evidence_refs": "referencedEvidenceIds() - evidence:<id>/chunk:<id> tokens"
+    },
+    "eviction": {
+      "score": "S_evict = Age_in_Turns*200 + Token_Count - Referenced_In_Last_Thought*1000 (constants exported)",
+      "batch": "trigger >75% budget, drain xuong <=70% (headroom), highest-score first",
+      "tombstone": "[evicted tool_call_id=...] - tool_call_id PRESERVED in-place",
+      "exemptions": "scratchpad evidence ids + inUse code (read_code_block active) + already-evicted",
+      "integration_422": "caller truyen tokenBudget tu runtime calculator (422); engine deterministic voi estimateTokens/4"
+    }
+  },
+  "acceptance_criteria": {
+    "scratchpad_enforced": "pass - tail-of-message enforcement + structural validation",
+    "eviction_score": "pass - exact formula test (700 = 3*200+100)",
+    "tombstone_tool_call_id": "pass",
+    "evidence_exemption": "pass",
+    "batch_75pct": "pass",
+    "token_budget_integration": "pass - seam qua tokenBudget param (422 supplies)"
+  },
+  "regression": "459 files / 3637 tests pass",
+  "evidence": ["backend/src/engine/scratchpad/__tests__/"]
+}
