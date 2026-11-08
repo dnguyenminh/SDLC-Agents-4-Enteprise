@@ -1,0 +1,37 @@
+{
+  "ticket": "SA4E-415",
+  "epic": "SA4E-411",
+  "title": "[Phase 1] CR-01..06: Snapshot-Scoped Retrieval Implementation",
+  "version": 1,
+  "updated": "2026-11-08",
+  "status": "in-review",
+  "phase": "phase-1",
+  "spec": "16K Doc 11 (Retrieval & Ranking)",
+  "implementation": {
+    "files": [
+      "backend/src/engine/retrieval/retrieval-types.ts",
+      "backend/src/engine/retrieval/graph-traversal.ts",
+      "backend/src/engine/retrieval/snapshot-retrieval.ts",
+      "backend/src/engine/retrieval/__tests__/retrieval-fixtures.ts",
+      "backend/src/engine/retrieval/__tests__/snapshot-retrieval.test.ts",
+      "backend/src/engine/retrieval/__tests__/graph-traversal.test.ts"
+    ],
+    "paths_snapshot_enforced": [
+      "pinOrThrow", "resolveActiveSnapshot", "symbolByName", "lexicalSearch",
+      "vectorSearch", "relationshipsOf", "graphFrom", "discoverCategory", "hybridSearch"
+    ],
+    "evidence_separation": "direct (PROVEN) vs inferred (HEURISTIC/none)",
+    "categories": ["build", "config", "test"],
+    "vector_benchmark": "SQLite MVP = exact cosine scan; HNSW chi ap dung pgvector upgrade path (ADR-001); khong gia dinh single HNSW + WHERE"
+  },
+  "acceptance_criteria": {
+    "snapshot_filter_per_path": "pass - 9/9 paths + unit test per path",
+    "hybrid_search": "pass - BM25 + vector + graph, RRF fusion, snapshot scope",
+    "direct_vs_inferred": "pass",
+    "build_config_test_discovery": "pass",
+    "graph_rules": "pass - cycle guard + node cap + stable ordering",
+    "vector_benchmark_documented": "pass - trong code + STATUS"
+  },
+  "regression": "446 files / 3566 tests pass",
+  "evidence": ["backend/src/engine/retrieval/__tests__/"]
+}
