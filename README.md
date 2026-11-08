@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.17.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.18.vsix
 ```
 
 ### 3. Use
@@ -66,7 +66,7 @@ MIT
 
 ## Changelog
 
-### v1.55.17 (2026-11-08)
+### v1.55.18 (2026-11-08)
 
 **SA4E-406 — drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration**
 
@@ -77,7 +77,7 @@ MIT
 - 🔐 **Multi-worktree path resolution** (SA4E-394) — `base_dir`/`workspace_root` support, path traversal prevention (CWE-22)
 - ⚙️ **Configurable limits** — `SA4E_ELK_MAX_NODES=500`, `SA4E_ELK_TIMEOUT_MS=10000`, `SA4E_ELK_SPACING_MAX=500`
 - ✅ **Tests**: 148 drawio tests PASS (80 unit + 4 golden + 3 integration + 2 E2E + 34 UAT automation), CI 7/7 jobs green
-- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.17`
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.18`
 
 ### v1.55.16 (2026-11-04)
 
