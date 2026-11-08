@@ -1,0 +1,37 @@
+{
+  "ticket": "SA4E-419",
+  "epic": "SA4E-411",
+  "title": "[Phase 2] AST Skeleton/Body Chunking & Embedding Strategy",
+  "version": 1,
+  "updated": "2026-11-08",
+  "status": "in-review",
+  "phase": "phase-2",
+  "spec": "16K Doc 5 (AST Code Indexing) + 4 (Token Budget ~8,000)",
+  "implementation": {
+    "files": [
+      "backend/src/engine/chunking/ast-chunker.ts",
+      "backend/src/engine/chunking/embedding-pipeline.ts",
+      "backend/src/engine/chunking/__tests__/ast-chunker.test.ts",
+      "backend/src/engine/chunking/__tests__/embedding-pipeline.test.ts"
+    ],
+    "chunk_schema": "Zero-Fat ASTCodeChunk: id (Parent#name), fp, type (SKELETON/BODY/EXTERNAL_SIGNATURE), rng, sig, doc, skeleton, body, deps {imports/calls/refs_types}, tokens {sig/skeleton/body}",
+    "key_rules": {
+      "skeleton": "container + children signatures, body hidden",
+      "body": "full source slice + rng + deps",
+      "external": "signature-only, sfr NULL (code_chunk.sfr_id now nullable)",
+      "embed_only": "[fp]+[sig]+[doc]+[deps.calls] - body NEVER embedded/FTS-indexed",
+      "separation": "ensureSnapshotChunks (parse, 1 lan/snapshot) TACH KHOI embedSnapshotChunks (new embedding_set over EXISTING chunks - doi model khong reparse, §10.4)"
+    },
+    "context_budget": "assembleRetrievedContext(ranked, 8000) - skeleton + bodies theo rank, truncated flag"
+  },
+  "acceptance_criteria": {
+    "skeleton_body_separation": "pass",
+    "embedding_no_body": "pass - unit + persisted FTS level (body-only terms unsearchable)",
+    "token_counts": "pass - sig/skeleton/body per chunk + token_count column",
+    "external_signatures_only": "pass - LEFT JOIN cho sfr NULL",
+    "fts5_integration": "pass - FTS content = embedding text",
+    "context_budget_8000": "pass - assembleRetrievedContext"
+  },
+  "regression": "456 files / 3617 tests pass",
+  "evidence": ["backend/src/engine/chunking/__tests__/"]
+}

@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS code_chunk (
   project_id  TEXT NOT NULL,
   snapshot_id TEXT NOT NULL REFERENCES code_index_snapshot(id),
   symbol_id   TEXT REFERENCES code_symbol(id),
-  sfr_id      TEXT NOT NULL REFERENCES source_file_revision(id),
+  sfr_id      TEXT REFERENCES source_file_revision(id),
   chunk_index INTEGER NOT NULL CHECK (chunk_index >= 0),
   start_line  INTEGER NOT NULL CHECK (start_line >= 0),
   end_line    INTEGER NOT NULL CHECK (end_line >= start_line),

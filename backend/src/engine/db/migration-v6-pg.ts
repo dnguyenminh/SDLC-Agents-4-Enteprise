@@ -194,7 +194,7 @@ export const V6_PG_DDL: string[] = [
      project_id TEXT NOT NULL,
      snapshot_id TEXT NOT NULL,
      symbol_id TEXT,
-     sfr_id TEXT NOT NULL REFERENCES source_file_revision(id),
+     sfr_id TEXT REFERENCES source_file_revision(id),
      chunk_index INTEGER NOT NULL CHECK (chunk_index >= 0),
      start_line INTEGER NOT NULL CHECK (start_line >= 0),
      end_line INTEGER NOT NULL CHECK (end_line >= start_line),
