@@ -1,0 +1,37 @@
+{
+  "ticket": "SA4E-414",
+  "epic": "SA4E-411",
+  "title": "[Phase 1] CR-01..06: Dependency-Before-Semantic Indexing Order",
+  "version": 1,
+  "updated": "2026-11-08",
+  "status": "in-review",
+  "phase": "phase-1",
+  "spec": "16K Doc 9 (Indexing Pipeline), Jira SA4E-414",
+  "implementation": {
+    "files": [
+      "backend/src/engine/pipeline/pipeline-types.ts",
+      "backend/src/engine/pipeline/index-pipeline.ts",
+      "backend/src/engine/pipeline/__tests__/pipeline-fixtures.ts",
+      "backend/src/engine/pipeline/__tests__/index-pipeline.order.test.ts",
+      "backend/src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts"
+    ],
+    "stages": ["A_REPO_DISCOVERY","B_FILE_INVENTORY","C_MODULE_CONFIG","D_SYNTAX_INDEX","E_DEPENDENCY_RESOLUTION","F_SEMANTIC_INDEX","G_GRAPH_RECONCILE","H_CHUNK_EMBED","I_VALIDATION","J_ATOMIC_PUBLISH"],
+    "semantics": {
+      "ordering": "A->J sequential, J owned by orchestrator (atomic publish)",
+      "gating": "F per-language requires E OK per-language",
+      "isolation": "per-language E/F failures soft - khong block ngon ngu khac",
+      "coverage": "supported/partial/unsupported/failed per language -> toolchain_manifest + diagnostics",
+      "atomic": "hard failure -> FAILED; else READY publish 1 lan duy nhat"
+    }
+  },
+  "acceptance_criteria": {
+    "stage_order": "pass",
+    "D_without_E": "pass - symbol persist, F gated off, READY voi coverage unsupported",
+    "F_waits_E": "pass - languageOutcomes.E OK truoc F",
+    "non_blocking": "pass - java E fail, typescript van supported",
+    "coverage_metadata": "pass - persisted vao toolchain_manifest/diagnostics",
+    "atomic_publication": "pass - I fail -> FAILED, happy -> READY"
+  },
+  "regression": "445 files / 3549 tests pass",
+  "evidence": ["backend/src/engine/pipeline/__tests__/", "documents/SA4E-411/TDD-01-data-model.md"]
+}
