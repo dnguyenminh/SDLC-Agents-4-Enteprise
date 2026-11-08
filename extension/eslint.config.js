@@ -11,7 +11,7 @@ const langgraphFreezePatterns = [
 export default tseslint.config(
   // 'src/test/' = vendored svelte compiler shim, 'src/mcp/devtools/' = vendored
   // chrome-devtools-mcp fork (incl. third_party/) — exempt from source standards.
-  { ignores: ['out/', 'node_modules/', 'resources/', 'mcp-server/', 'dist/', '*.vsix', '**/*.js', 'src/test/', 'src/mcp/devtools/'] },
+  { ignores: ['out/', 'node_modules/', 'resources/', 'mcp-server/', 'dist/', '*.vsix', '**/*.js', 'src/test/', 'src/mcp/devtools/', 'src/slash/**'] },
   {
     files: ['src/**/*.ts'],
     languageOptions: {
