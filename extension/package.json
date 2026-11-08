@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-"version": "1.55.17",
+"version": "1.55.18",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -178,6 +178,21 @@
       {
         "command": "sdlcAgents.openPegaIngester",
         "title": "SDLC Agents: Open Pega Ingester"
+      },
+      {
+        "command": "sdlcAgents.runDesignGateStatic",
+        "title": "SDLC: Run Design Quality Gate (Static)",
+        "icon": "$(check)"
+      },
+      {
+        "command": "sdlcAgents.runDesignGateRendered",
+        "title": "SDLC: Run Design Quality Gate (Rendered)",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "sdlcAgents.runDesignGateBoth",
+        "title": "SDLC: Run Design Quality Gate (Both)",
+        "icon": "$(check-all)"
       }
     ],
     "viewsContainers": {

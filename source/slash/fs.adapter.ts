@@ -13,7 +13,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { DetectionError, Finding, DetectionConfig } from "./types";
+import { DetectionError, createDetectionError, Finding, DetectionConfig, EnvConfig } from "./types";
 
 // Maximum number of files to read per detection run (from TDD/DPG)
 const MAX_FILES = 10000;
@@ -70,13 +70,13 @@ export async function listSourceFiles(
 
   // Validate sourceRoot is within workspace
   if (!validateFilePath(sourceRoot, workspaceRoot)) {
-    throw new DetectionError.INVALID_PATH(
+    throw createDetectionError(DetectionError.INVALID_PATH,
       `Source path does not exist or escapes workspace root: ${sourceRoot}`
     );
   }
 
   if (!fs.existsSync(sourceRoot)) {
-    throw new DetectionError.INVALID_PATH(
+    throw createDetectionError(DetectionError.INVALID_PATH,
       `Source path does not exist: ${sourceRoot}`
     );
   }
@@ -109,7 +109,7 @@ export async function listSourceFiles(
       }
     }
   } catch (error: any) {
-    throw new DetectionError.INVALID_PATH(
+    throw createDetectionError(DetectionError.INVALID_PATH,
       `Failed to list source files: ${error.message}`
     );
   }
@@ -175,7 +175,7 @@ export function readSourceFile(
 ): string {
   // Validate path is within workspace
   if (!validateFilePath(filePath, workspaceRoot)) {
-    throw new DetectionError.INVALID_PATH(
+    throw createDetectionError(DetectionError.INVALID_PATH,
       `File path escapes workspace root: ${filePath}`
     );
   }
@@ -183,7 +183,7 @@ export function readSourceFile(
   const resolvedPath = path.resolve(workspaceRoot, filePath);
 
   if (!fs.existsSync(resolvedPath)) {
-    throw new DetectionError.INVALID_PATH(
+    throw createDetectionError(DetectionError.INVALID_PATH,
       `File does not exist: ${filePath}`
     );
   }
@@ -193,7 +193,7 @@ export function readSourceFile(
   const resolvedNorm = path.normalize(resolvedPath);
 
   if (!resolvedNorm.startsWith(workspaceRootNorm)) {
-    throw new DetectionError.INVALID_PATH(
+    throw createDetectionError(DetectionError.INVALID_PATH,
       `File path resolution escaped workspace: ${filePath}`
     );
   }
@@ -201,7 +201,7 @@ export function readSourceFile(
   try {
     return fs.readFileSync(resolvedPath, "utf-8");
   } catch (error: any) {
-    throw new DetectionError.INVALID_PATH(
+    throw createDetectionError(DetectionError.INVALID_PATH,
       `Failed to read file ${filePath}: ${error.message}`
     );
   }

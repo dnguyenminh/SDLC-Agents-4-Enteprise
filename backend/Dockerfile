@@ -251,7 +251,7 @@ RUN groupadd -g 1001 sa4e \
  && chown -R sa4e:sa4e /app \
  && mkdir -p /home/sa4e \
  && chmod -R 777 /home/sa4e
-  
+ 
 USER sa4e
 
 ENV NODE_ENV=production

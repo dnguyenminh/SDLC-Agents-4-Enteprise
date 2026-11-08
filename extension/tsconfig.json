@@ -9,7 +9,11 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@sdlc/design-gate": ["../source/source-slash"]
+    }
   },
-  "exclude": ["node_modules", "out", "resources", "mcp-server", "src/test", "src/**/__tests__", "tests", "vitest.config.ts", "vitest.e2e.config.ts", "src/webview/**", "src/mcp/devtools/**", "svelte"]
+  "exclude": ["node_modules", "out", "resources", "mcp-server", "src/test", "src/**/__tests__", "tests", "vitest.config.ts", "vitest.e2e.config.ts", "src/webview/**", "src/mcp/devtools/**", "svelte", "src/slash"]
 }

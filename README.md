@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.17.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.18.vsix
 ```
 
 ### 3. Use
@@ -66,21 +66,18 @@ MIT
 
 ## Changelog
 
-### v1.55.17 (2026-11-08)
+### v1.55.18 (2026-11-08)
 
-**SA4E-394 — Multi-Worktree base_dir Support + Security Hardening (SDR-01/02/03 Fixed)**
+**SA4E-406 — drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration**
 
-- 🆕 **SA4E-394 (Task)** — Per-call `base_dir` (alias `workspace_root`) parameter on all 8 MCP tools that accept `file_path`: `mem_ingest_file`, `embed_image`, `drawio_export_png`, `drawio_auto_layout`, `jira_attach_file`, `confluence_add_attachment`, `sandbox_run`, `stream_write_file`
-- 📦 **New shared resolver** `backend/src/shared/multi-worktree-path-resolver.ts` + `workspace-allowlist.ts` + `path-resolution-types.ts` (single source of truth, ≤200 lines/file)
-- ⚙️ **Allowlist config**: `MCP_WORKSPACE_ROOTS` env var (semicolon-Windows/colon-POSIX) → `MCP_WORKSPACE_ROOTS_FILE` config file; precedence: env → file → legacy single-root; restart required (no hot-reload)
-- 🔒 **Containment never widened**: strict AFTER-resolution check blocks `../` traversal even inside allowlist; threat model T1–T10 covered
-- ↩️ **Backward compatible**: omitting `base_dir` → legacy pinned root behavior byte-identical; all 71 test cases (TC-1..TC-71) PASS, RTM 52/52 = 100%
-- 🛡️ **SDR-01 Fixed** — Production Docker container now runs as non-root user `sa4e` (UID 1001) instead of root
-- 🛡️ **SDR-02 Fixed** — Production container enforces read-only root filesystem (`read_only: true`) with `tmpfs` for writable directories
-- 🛡️ **SDR-03 Fixed** — Removed hardcoded PostgreSQL credentials from docker-compose.yml; all DB secrets via env vars / secrets manager
-- 📚 **Docs updated**: DPG.md v1.1 (security-hardened deployment), RLN.md v1.0 (release notes); 28 draw.io + 28 PNG diagrams
-- ✅ **Security Review** — SECURITY-DEPLOY-REVIEW GO with conditions; all 3 Medium blocking findings remediated
-- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.17`
+- 🎯 **Detector precision** — calibrated thresholds: node overlaps (OVERLAP_EPS=0.05), proximity (MIN_GAP=40px), container escape (CONTAINMENT_TOL=5px), diagonal edges (20px), edge crossings (3 types)
+- 🔄 **Verify loop** — fix → re-parse → re-detect cycle; `remaining_issues` returned in all fix responses
+- 🏗️ **ELK compound layout** — hierarchical container support; 4 algorithms: `layered`/`force`/`mrtree`/`radial`; strategy selection (ports-only → local repair → full ELK)
+- 🌉 **Extension migration** — `drawio_auto_layout` + `drawio_export_png` available via MCP bridge (`execute_dynamic_tool`)
+- 🔐 **Multi-worktree path resolution** (SA4E-394) — `base_dir`/`workspace_root` support, path traversal prevention (CWE-22)
+- ⚙️ **Configurable limits** — `SA4E_ELK_MAX_NODES=500`, `SA4E_ELK_TIMEOUT_MS=10000`, `SA4E_ELK_SPACING_MAX=500`
+- ✅ **Tests**: 148 drawio tests PASS (80 unit + 4 golden + 3 integration + 2 E2E + 34 UAT automation), CI 7/7 jobs green
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.18`
 
 ### v1.55.16 (2026-11-04)
 

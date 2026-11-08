@@ -18,7 +18,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { DetectionError, Finding, QualityReport, DetectionConfig, EnvConfig } from "./types";
+import { DetectionError, DetectionErrorException, createDetectionError, Finding, QualityReport, DetectionConfig, EnvConfig } from "./types";
 import { loadWasmDetector, readWasmBinary, validateWasmConstraints } from "./wasm.loader";
 import { listSourceFiles, readSourceFile, getWorkspaceRoot, isPathSafe } from "./fs.adapter";
 import { fetchLocalhostPage, shouldSkipRendered, resetCircuitBreaker } from "./localhost-fetcher";
@@ -101,7 +101,7 @@ export class ImpeccableIntegrationService {
       // Step 3: Validate WASM constraints (C2)
       const wasmBuffer = readWasmBinary(getWasmPath());
       if (!validateWasmConstraints(wasmBuffer)) {
-        throw new DetectionError.WASM_INCOMPATIBLE(
+        throw createDetectionError(DetectionError.WASM_INCOMPATIBLE,
           "WASM binary does not satisfy memory-only sandbox constraints"
         );
       }
@@ -170,13 +170,13 @@ export class ImpeccableIntegrationService {
 
       // Validate source path (C3: workspace-scoped)
       if (!isPathSafe(sourcePath)) {
-        throw new DetectionError.INVALID_PATH(
+        throw createDetectionError(DetectionError.INVALID_PATH,
           `Source path escapes workspace root: ${sourcePath}`
         );
       }
 
       if (!fs.existsSync(sourcePath)) {
-        throw new DetectionError.INVALID_PATH(
+        throw createDetectionError(DetectionError.INVALID_PATH,
           `Source path does not exist: ${sourcePath}`
         );
       }
@@ -303,7 +303,7 @@ export class ImpeccableIntegrationService {
 
       // Validate localhost URL (C4: whitelist 127.0.0.1 / localhost only)
       if (!isLocalhostUrl(localhostUrl)) {
-        throw new DetectionError.DEV_SERVER_UNREACHABLE(
+        throw createDetectionError(DetectionError.DEV_SERVER_UNREACHABLE,
           `SSRF protection: localhost URL must be 127.0.0.1 or localhost, got: ${localhostUrl}`
         );
       }
@@ -477,7 +477,7 @@ export class ImpeccableIntegrationService {
         }
 
         default:
-          throw new DetectionError.INVALID_PATH(
+          throw createDetectionError(DetectionError.INVALID_PATH,
             `Unknown detection mode: ${mode}`
           );
       }
@@ -610,7 +610,7 @@ export class ImpeccableIntegrationService {
 
       // Validate constraints before loading
       if (!validateWasmConstraints(wasmBuffer)) {
-        throw new DetectionError.WASM_INCOMPATIBLE(
+        throw createDetectionError(DetectionError.WASM_INCOMPATIBLE,
           "WASM binary failed constraint validation"
         );
       }
