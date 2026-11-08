@@ -354,6 +354,15 @@ CREATE TABLE IF NOT EXISTS execution_run (
   started_at    TEXT,
   finished_at   TEXT
 );
+
+CREATE TABLE IF NOT EXISTS agent_event (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,   -- monotonic = SSE Last-Event-ID
+  project_id   TEXT NOT NULL,
+  agent_run_id TEXT NOT NULL REFERENCES agent_run(id),
+  type         TEXT NOT NULL,
+  payload_json TEXT,                                -- reference-only (§15: no large payloads)
+  created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `;
 
 /** Same-snapshot ownership + session-pin invariants (TDD-01 §5). */
@@ -540,6 +549,7 @@ export const V6_TABLES = [
   'chat_session', 'agent_run', 'agent_plan', 'agent_step',
   'agent_state_transition', 'agent_tool_execution', 'retrieval_evidence',
   'agent_workspace', 'change_set', 'approval_request', 'execution_run',
+  'agent_event',
 ] as const;
 
 /**

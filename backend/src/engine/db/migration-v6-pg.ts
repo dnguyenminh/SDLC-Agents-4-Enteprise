@@ -26,6 +26,7 @@ export const V6_TABLES_PG = [
   'chat_session', 'agent_run', 'agent_plan', 'agent_step',
   'agent_state_transition', 'agent_tool_execution', 'retrieval_evidence',
   'agent_workspace', 'change_set', 'approval_request', 'execution_run',
+  'agent_event',
 ] as const;
 
 export const V6_PG_DDL: string[] = [
@@ -367,6 +368,16 @@ export const V6_PG_DDL: string[] = [
      exit_code INTEGER, log_ref TEXT,
      started_at TIMESTAMPTZ, finished_at TIMESTAMPTZ
    )`,
+
+  `CREATE TABLE IF NOT EXISTS agent_event (
+     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+     project_id TEXT NOT NULL,
+     agent_run_id TEXT NOT NULL REFERENCES agent_run(id),
+     type TEXT NOT NULL,
+     payload_json JSONB,
+     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+   )`,
+  `CREATE INDEX IF NOT EXISTS idx_16k_aevent_run ON agent_event(agent_run_id, id)`,
 ];
 
 /**

@@ -1,0 +1,34 @@
+{
+  "ticket": "SA4E-416",
+  "epic": "SA4E-411",
+  "title": "[Phase 1] CR-01..06: Agent Plan/Step/Approval Persistence",
+  "version": 1,
+  "updated": "2026-11-08",
+  "status": "in-review",
+  "phase": "phase-1",
+  "spec": "16K Doc 10.6 + 15 (Agent State Persistence)",
+  "implementation": {
+    "files": [
+      "backend/src/engine/agent/agent-persistence.ts",
+      "backend/src/engine/agent/agent-event-log.ts",
+      "backend/src/engine/agent/__tests__/agent-persistence.test.ts",
+      "backend/src/engine/db/migration-v6.ts (agent_event added)",
+      "backend/src/engine/db/migration-v6-pg.ts (agent_event added)"
+    ],
+    "durability_rules": {
+      "event_log_before_sse": "AgentEventLog.append() durable truoc publish; replay(afterEventId) cho Last-Event-ID (nen tang SA4E-425)",
+      "reference_only_payloads": "assertReferenceOnly cap 2048 chars - PAYLOAD_TOO_LARGE",
+      "resume_after_restart": "resumePoint() = lastCompletedStepIndex + nextStep (AC #12)",
+      "approval_workflow": "request PENDING -> decide -> decision_time persisted"
+    }
+  },
+  "acceptance_criteria": {
+    "entities_fk_agent_run": "pass - 10 bang 10.6 co san tu V6 + FK enforced",
+    "event_log_before_sse": "pass",
+    "step_payloads_reference_only": "pass - guard 2048 chars",
+    "restart_resume": "pass - lastCompleted=1, next=2, attempts increment",
+    "approval_workflow": "pass - decision_time persisted"
+  },
+  "regression": "full suite pass (446 files); scope db+agent+pipeline+retrieval: 57/57",
+  "evidence": ["backend/src/engine/agent/__tests__/agent-persistence.test.ts"]
+}
