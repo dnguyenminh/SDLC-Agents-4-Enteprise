@@ -2,22 +2,36 @@
   "ticket": "SA4E-413",
   "epic": "SA4E-411",
   "title": "[Phase 1] CR-01..06: Snapshot/Revision Data Model Redesign",
-  "version": 1,
+  "version": 2,
   "updated": "2026-11-08",
-  "status": "in-progress",
+  "status": "in-review",
   "phase": "phase-1",
   "design": {
     "doc": "documents/SA4E-411/TDD-01-data-model.md",
-    "spec": "16K Doc §10.1-10.7",
-    "migration": "V6 additive-only, dual-dialect (SQLite + PG via ddl-translator)",
-    "tables_new": 25,
-    "legacy_regression": "none - additive only"
+    "spec": "16K Doc 10.1-10.7"
   },
-  "open_questions": [
-    "blob storage: de-xuat re-read tu git, khong luu blob MVP",
-    "embedding packing: float32 BLOB",
-    "ID: uuid v7 cho PK TEXT"
-  ],
-  "next": "implement migration-v6.ts + unit/integration tests",
-  "evidence": ["documents/SA4E-411/TDD-01-data-model.md"]
+  "implementation": {
+    "files": [
+      "backend/src/engine/db/migration-v6.ts",
+      "backend/src/engine/db/migration-v6-pg.ts",
+      "backend/src/engine/db/migrations.ts",
+      "backend/src/engine/db/__tests__/migration-v6.test.ts"
+    ],
+    "tables_created": 28,
+    "fts5": "code_chunk_fts",
+    "ownership_triggers": 18,
+    "additive_only": true,
+    "legacy_tables_touched": 0
+  },
+  "acceptance_criteria": {
+    "entities_fk_check": "pass - 28 tables",
+    "migration_sqlite_pg": "pass - migration-v6.ts + migration-v6-pg.ts (composite FK)",
+    "unit_tests_crud_invariants": "pass - 8/8",
+    "integration_snapshot_flow": "pass",
+    "no_regression": "pass - 445 files / 3540 tests"
+  },
+  "evidence": [
+    "documents/SA4E-411/TDD-01-data-model.md",
+    "backend/src/engine/db/__tests__/migration-v6.test.ts"
+  ]
 }

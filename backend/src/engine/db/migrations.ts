@@ -10,6 +10,7 @@ import pino from 'pino';
 import type { QueryDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SCHEMA_V1 } from './schema.js';
 import { applyMigrationV5 } from './migration-v5.js';
+import { applyMigrationV6 } from './migration-v6.js';
 import {
   applyGraphMigrationsSync,
   applyMemorySchema,
@@ -58,7 +59,7 @@ export async function runMigrations(db: QueryDatabaseAdapter, legacyProjectId: s
   const current = await getCurrentVersion(db);
   const pending = MIGRATIONS.filter(m => m.version > current);
 
-  if (pending.length === 0 && current >= 5) {
+  if (pending.length === 0 && current >= 6) {
     logger.error('[migrations] Schema up to date');
     return;
   }
@@ -90,6 +91,11 @@ export async function runMigrations(db: QueryDatabaseAdapter, legacyProjectId: s
   // Run V5 multi-tenant isolation (SA4E-41)
   if (current < 5) {
     await applyMigrationV5(db, legacyProjectId);
+  }
+
+  // Run V6 16K data model (SA4E-413) — additive snapshot/revision tables
+  if (current < 6) {
+    await applyMigrationV6(db);
   }
 
   // SA4E-336: fresh DBs create body_embeddings in the V3 block above (and V5
