@@ -178,6 +178,21 @@
       {
         "command": "sdlcAgents.openPegaIngester",
         "title": "SDLC Agents: Open Pega Ingester"
+      },
+      {
+        "command": "sdlcAgents.runDesignGateStatic",
+        "title": "SDLC: Run Design Quality Gate (Static)",
+        "icon": "$(check)"
+      },
+      {
+        "command": "sdlcAgents.runDesignGateRendered",
+        "title": "SDLC: Run Design Quality Gate (Rendered)",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "sdlcAgents.runDesignGateBoth",
+        "title": "SDLC: Run Design Quality Gate (Both)",
+        "icon": "$(check-all)"
       }
     ],
     "viewsContainers": {

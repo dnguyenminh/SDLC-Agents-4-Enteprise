@@ -6,7 +6,7 @@
     "uat",
     "deployment"
   ],
-  "currentPhase": "deployment",
+  "currentPhase": "uat",
   "createdAt": "2026-10-31T00:00:00Z",
   "phases": {
     "requirements": {
@@ -74,7 +74,8 @@
       "status": "not_started"
     },
     "uat": {
-      "status": "not_started"
+      "status": "in_progress",
+      "startedAt": "2026-11-08T10:55:00Z"
     },
     "security_deploy_review": {
       "status": "not_started"
@@ -176,6 +177,6 @@
     "mcpWrapper9183": "up (stream_write_file, embed_image, jira tools via execute_dynamic_tool)",
     "jiraAccess": "OK - jira_get_issue working via execute_dynamic_tool (discovered after restart)"
   },
-  "lastUpdated": "2026-10-31T02:45:00Z",
+  "lastUpdated": "2026-11-08T11:06:01Z",
   "blocker": null
 }
