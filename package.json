@@ -1,6 +1,6 @@
 {
   "name": "sdlc-agents-4-enterprise-monorepo",
-"version": "1.55.16",
+"version": "1.55.17",
   "private": true,
   "workspaces": [
     "backend",
@@ -31,9 +31,6 @@
   "overrides": {
     "esbuild": "0.28.2",
     "body-parser": "2.4.0",
-"overrides": {
-    "esbuild": "0.28.2",
-    "body-parser": "2.4.0",
     "undici": "6.29.1",
     "zod": "4.6.6",
     "@earendil-works/pi-ai": "0.99.1",
@@ -44,6 +41,5 @@
     "pi-subagents": {
       "undici": "8.12.3"
     }
-  }
   }
 }

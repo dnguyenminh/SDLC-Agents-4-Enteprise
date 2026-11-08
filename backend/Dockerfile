@@ -160,5 +160,13 @@ COPY --from=mcp-python /opt/markdown-exporter-venv /opt/markdown-exporter-venv
 ENV PATH="/opt/markitdown-venv/bin:/opt/markdown-exporter-venv/bin:${PATH}"
 ENV PYTHONUNBUFFERED=1
 
+# SDR-01: Create non-root user (matches dev compose UID 1001)
+# SDR-02: Ensure copied files are owned by non-root user for read-only rootfs
+RUN groupadd -r sa4e --gid 1001 \
+ && useradd -r -g sa4e --uid 1001 --home-dir /usr/src/app --shell /bin/false sa4e \
+ && chown -R sa4e:sa4e /usr/src/app /opt/markitdown-venv /opt/markdown-exporter-venv /opt/uv-python
+
+USER sa4e
+
 EXPOSE 48721
 CMD ["npm", "start"]
