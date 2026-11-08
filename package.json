@@ -31,19 +31,14 @@
   "overrides": {
     "esbuild": "0.28.2",
     "body-parser": "2.4.0",
-"overrides": {
-    "esbuild": "0.28.2",
-    "body-parser": "2.4.0",
-    "undici": "6.29.1",
-    "zod": "4.6.6",
-    "@earendil-works/pi-ai": "0.99.1",
-    "brace-expansion@>=4.0.0 <5.0.12": "5.0.12",
-    "undici@>=6.0.0 <6.29.1": "6.29.1",
-    "undici@>=7.0.0 <7.30.1": "7.30.1",
-    "undici@>=8.0.0 <8.12.2": "8.12.3",
+    "minimatch@>=7.0.0 <11.0.1": "11.0.5",
+    "glob@>=9.0.0 <14.0.2": "14.0.4",
+    "diff@>=6.0.0 <8.0.3": "8.0.3",
+    "serialize-javascript@<7.1.3": "7.1.4",
+    "@hono/node-server@>=1.19.10 <2.1.3": "2.1.6",
     "pi-subagents": {
-      "undici": "8.12.3"
-    }
-  }
+      "@earendil-works/pi-ai": "0.99.1"
+    },
+    "zod": "4.6.6"
   }
 }
