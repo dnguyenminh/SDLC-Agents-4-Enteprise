@@ -30,11 +30,12 @@ export const SHELL_METACHARS = /[;&|`$<>(){}\[\]!\\\n\r]/;
 export const CORE_TOOL_SCHEMAS: Record<string, ToolSchema> = {
   search_symbols: {
     tool: 'search_symbols',
-    description: 'Lexical/semantic symbol search within the pinned snapshot.',
+    description: 'Hybrid BM25+vector symbol search in the pinned snapshot.',
     fields: [
       { name: 'query', type: 'string', required: true, maxLength: 500, semantic: 'free-text' },
       { name: 'limit', type: 'number', min: 1, max: 100 },
       { name: 'kind', type: 'string', maxLength: 32, semantic: 'identifier' },
+      { name: 'path_filter', type: 'string', maxLength: 256 },
     ],
   },
   get_file_skeleton: {

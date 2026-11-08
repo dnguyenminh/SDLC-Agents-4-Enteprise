@@ -1,0 +1,38 @@
+{
+  "ticket": "SA4E-420",
+  "epic": "SA4E-411",
+  "title": "[Phase 2] 4 Core Agent Tools",
+  "version": 1,
+  "updated": "2026-11-09",
+  "status": "in-review",
+  "phase": "phase-2",
+  "spec": "16K Doc 7 (Agent Toolset) + 4 (Tool schemas ~450 tokens)",
+  "implementation": {
+    "files": [
+      "backend/src/engine/agent-tools/tool-context.ts",
+      "backend/src/engine/agent-tools/core-tools.ts",
+      "backend/src/engine/agent-tools/__tests__/core-tools.test.ts"
+    ],
+    "tools": {
+      "search_symbols": "hybrid BM25+vector RRF-fused, kind/path_filter, DSL + offset cursor",
+      "get_file_skeleton": "signatures only, no bodies",
+      "read_code_block": "max 120 lines/turn + next-range cursor",
+      "query_call_graph": "CALLERS/CALLEES/IMPLEMENTATIONS + direct/inferred evidence"
+    },
+    "session_pinning": "moi tool nhan {repository_id, commit_id, index_snapshot_id} - pinOrThrow READY-only + PIN_COMMIT_MISMATCH guard (chong drift)",
+    "dsl": "[FOUND n X | BUDGET_USED: t tokens] + # [KIND] name | path:start-end + Sig:",
+    "schema_tokens": "4 schemas <= 450 tokens (test enforced)"
+  },
+  "acceptance_criteria": {
+    "session_pinning_params": "pass - ca 4 tool",
+    "hybrid_search": "pass",
+    "skeleton_only": "pass",
+    "line_range_120": "pass",
+    "graph_directions": "pass",
+    "dsl_output": "pass",
+    "schema_tokens_450": "pass",
+    "find_tools_integration": "deferred - MCP server wiring (registerCoreTools) o buoc tiep theo; contracts da san sang"
+  },
+  "regression": "457 files / 3624 tests pass",
+  "evidence": ["backend/src/engine/agent-tools/__tests__/core-tools.test.ts"]
+}
