@@ -1,0 +1,15 @@
+{
+  "ticket": "SA4E-412",
+  "epic": "SA4E-411",
+  "title": "[Phase 0] Scope Decision: SQLite vs PostgreSQL, Language MVP",
+  "version": 1,
+  "updated": "2026-11-08",
+  "status": "done",
+  "phase": "phase-0",
+  "decisions": [
+    "ADR-001/D1: Engine store = SQLite embedded per-workspace (hybrid; PostgreSQL giu nguyen platform DB)",
+    "ADR-001/D2: Language MVP = full grammar set hien co (17 Tier A + Tier B), khong them ngon ngu moi trong MVP"
+  ],
+  "evidence": ["documents/SA4E-411/ADR-001-engine-storage-and-language-mvp.md"],
+  "unblocks": ["SA4E-413", "SA4E-419"]
+}
