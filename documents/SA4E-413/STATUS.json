@@ -1,0 +1,23 @@
+{
+  "ticket": "SA4E-413",
+  "epic": "SA4E-411",
+  "title": "[Phase 1] CR-01..06: Snapshot/Revision Data Model Redesign",
+  "version": 1,
+  "updated": "2026-11-08",
+  "status": "in-progress",
+  "phase": "phase-1",
+  "design": {
+    "doc": "documents/SA4E-411/TDD-01-data-model.md",
+    "spec": "16K Doc §10.1-10.7",
+    "migration": "V6 additive-only, dual-dialect (SQLite + PG via ddl-translator)",
+    "tables_new": 25,
+    "legacy_regression": "none - additive only"
+  },
+  "open_questions": [
+    "blob storage: de-xuat re-read tu git, khong luu blob MVP",
+    "embedding packing: float32 BLOB",
+    "ID: uuid v7 cho PK TEXT"
+  ],
+  "next": "implement migration-v6.ts + unit/integration tests",
+  "evidence": ["documents/SA4E-411/TDD-01-data-model.md"]
+}
