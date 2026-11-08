@@ -59,7 +59,10 @@ jobs:
           node-version: "22.23.4"
           cache: "npm"
           cache-dependency-path: e2e/package-lock.json
-
+      # The e2e lockfile is generated with npm 11 (nested-form overrides);
+      # node 22 bundles npm 10 whose ci validation rejects that shape — align npm.
+      - name: Align npm with lockfile generator (npm@11.21.0)
+        run: npm install -g npm@11.21.0 --no-audit --no-fund --loglevel=error
       - name: Install dependencies (lockfile integrity — npm ci)
         run: npm ci
 
@@ -91,6 +94,10 @@ jobs:
           node-version: "22.23.4"
           cache: "npm"
           cache-dependency-path: e2e/package-lock.json
+      # The e2e lockfile is generated with npm 11 (nested-form overrides);
+      # node 22 bundles npm 10 whose ci validation rejects that shape — align npm.
+      - name: Align npm with lockfile generator (npm@11.21.0)
+        run: npm install -g npm@11.21.0 --no-audit --no-fund --loglevel=error
 
       - name: Install dependencies (lockfile integrity — npm ci)
         run: npm ci
