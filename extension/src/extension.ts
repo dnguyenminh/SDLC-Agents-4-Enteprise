@@ -80,7 +80,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   checkForUpgrade(context);
   
-  // Design quality gate commands (SA4E-393) - inline implementation
+  // Design quality gate commands (SA4E-393) - mock implementation for UAT
   context.subscriptions.push(
     vscode.commands.registerCommand("sdlcAgents.runDesignGateStatic", async () => {
       vscode.window.showInformationMessage(

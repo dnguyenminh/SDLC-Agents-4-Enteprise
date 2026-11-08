@@ -15,7 +15,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { Buffer } from "buffer";
 
-import { WasmDetectorRuntime, FindingsResult, Finding, DetectionError } from "./types";
+import { WasmDetectorRuntime, FindingsResult, Finding, DetectionError, createDetectionError } from "./types";
 
 // The WASM module path - configurable via ENV per DPG.md
 const WASM_BINARY_PATH = process.env[EnvConfig.IMPPECABLE_SKILL_PATH]
@@ -71,7 +71,7 @@ export async function loadWasmDetector(
 
     return runtime;
   } catch (error: any) {
-    throw new DetectionError.WASM_INCOMPATIBLE(
+    throw createDetectionError(DetectionError.WASM_INCOMPATIBLE,
       `Impeccable detector failed to load: ${error.message}`
     );
   }
@@ -136,16 +136,16 @@ async function simulateWasmAnalysis(
 export function readWasmBinary(wasmPath: string): Buffer {
   try {
     if (!existsSync(wasmPath)) {
-      throw new DetectionError.PACKAGE_NOT_FOUND(
+      throw createDetectionError(DetectionError.PACKAGE_NOT_FOUND,
         `Impeccable skill WASM package not found at: ${wasmPath}`
       );
     }
     return readFileSync(wasmPath);
   } catch (error: any) {
-    if (error instanceof DetectionError) {
+    if (error instanceof DetectionErrorException) {
       throw error;
     }
-    throw new DetectionError.PACKAGE_NOT_FOUND(
+    throw createDetectionError(DetectionError.PACKAGE_NOT_FOUND,
       `Failed to read WASM binary: ${error.message}`
     );
   }

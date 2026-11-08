@@ -100,6 +100,22 @@ export enum DetectionError {
   ERROR_LEAK = "ERROR_LEAK",
 }
 
+/** Custom error class for detection errors */
+export class DetectionErrorException extends Error {
+  constructor(
+    public readonly code: DetectionError,
+    message: string
+  ) {
+    super(message);
+    this.name = "DetectionError";
+  }
+}
+
+/** Helper functions to create detection errors */
+export function createDetectionError(code: DetectionError, message: string): DetectionErrorException {
+  return new DetectionErrorException(code, message);
+}
+
 /** Environment configuration keys (from DPG.md) */
 export enum EnvConfig {
   IMPPECABLE_SKILL_PATH = "IMPPECABLE_SKILL_PATH",

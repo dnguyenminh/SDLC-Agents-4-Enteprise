@@ -16,7 +16,7 @@ import * as http from "http";
 import * as https from "https";
 import * as stream from "stream";
 
-import { DetectionError, Finding } from "./types";
+import { DetectionError, DetectionErrorException, createDetectionError, Finding } from "./types";
 
 // Response size limit per Condition C4
 const MAX_RESPONSE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -44,10 +44,10 @@ let consecutiveFailures = 0;
 function isLocalhostUrl(urlString: string): boolean {
   try {
     const parsed = new URL(urlString);
-    const host = parsed.host.toLowerCase();
+    const hostname = parsed.hostname.toLowerCase();
 
-    // Accept only 127.0.0.1 or localhost
-    if (host === "127.0.0.1" || host === "localhost") {
+    // Accept only 127.0.0.1 or localhost (parsed.hostname excludes port)
+    if (hostname === "127.0.0.1" || hostname === "localhost") {
       return true;
     }
 
@@ -79,7 +79,7 @@ export async function fetchLocalhostPage(
   // Validate URL is localhost only (Condition C4)
   if (!isLocalhostUrl(urlString)) {
     consecutiveFailures++;
-    throw new DetectionError.DEV_SERVER_UNREACHABLE(
+    throw createDetectionError(DetectionError.DEV_SERVER_UNREACHABLE,
       `SSRF protection: URL host must be 127.0.0.1 or localhost, got: ${urlString}`
     );
   }
@@ -158,7 +158,7 @@ export async function fetchLocalhostPage(
         // Validate content type
         if (contentType && !/^text\/html$/i.test(contentType) && !/^application\/json/i.test(contentType)) {
           consecutiveFailures++;
-          throw new DetectionError.FETCH_FAILED(
+          throw createDetectionError(DetectionError.FETCH_FAILED,
             `CORS block prevented fetch: unexpected Content-Type: ${contentType}`
           );
         }
@@ -179,14 +179,14 @@ export async function fetchLocalhostPage(
           await new Promise((r) => setTimeout(r, delay));
           continue;
         }
-        throw new DetectionError.DEV_SERVER_UNREACHABLE(
+        throw createDetectionError(DetectionError.DEV_SERVER_UNREACHABLE,
           `Dev server not reachable, skipping rendered detection: ${lastError.message}`
         );
       }
 
       if (error.message?.includes("10MB") || error.message?.includes("size limit")) {
         consecutiveFailures++;
-        throw new DetectionError.FETCH_FAILED(
+        throw createDetectionError(DetectionError.FETCH_FAILED,
           `Fetch failed: Response exceeds 10MB size limit`
         );
       }
@@ -203,14 +203,14 @@ export async function fetchLocalhostPage(
         await new Promise((r) => setTimeout(r, delay));
         continue;
       }
-      throw new DetectionError.FETCH_FAILED(
+      throw createDetectionError(DetectionError.FETCH_FAILED,
         `Failed to fetch localhost page: ${lastError.message}`
       );
     }
   }
 
   // Should not reach here, but just in case
-  throw new DetectionError.DEV_SERVER_UNREACHABLE(
+  throw createDetectionError(DetectionError.DEV_SERVER_UNREACHABLE,
     `Dev server unreachable after ${MAX_RETRIES + 1} attempts`
   );
 }

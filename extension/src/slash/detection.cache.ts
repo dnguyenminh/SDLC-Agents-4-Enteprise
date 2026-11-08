@@ -52,7 +52,7 @@ function getCacheDir(): string {
  * @returns SHA256 hash string used as cache key
  */
 function generateCacheKey(sourcePath: string, mode: "static" | "rendered" | "both"): string {
-  const input = `${sourcePath}:${mode}`;
+  const input = sourcePath + ":" + mode;
   return crypto.createHash("sha256").update(input).digest("hex");
 }
 
@@ -95,7 +95,7 @@ export function cacheResult(
     });
 
     // Save to JSON file for persistence
-    const filePath = path.join(cacheDir, `${cacheKey}.json`);
+    const filePath = path.join(cacheDir, cacheKey + ".json");
     const cacheEntry = {
       runId: sourcePath,
       timestamp: Date.now(),
@@ -103,7 +103,7 @@ export function cacheResult(
     };
     writeFileSync(filePath, JSON.stringify(cacheEntry, null, 2));
   } catch (error: any) {
-    console.error(`Failed to cache result: ${error.message}`);
+    console.error("Failed to cache result: " + error.message);
     // Continue with memory-only cache if file save fails
     try {
       const cacheKey = generateCacheKey(sourcePath, mode);
@@ -112,7 +112,7 @@ export function cacheResult(
         result,
       });
     } catch (cacheError: any) {
-      console.error(`Memory cache also failed: ${cacheError.message}`);
+      console.error("Memory cache also failed: " + cacheError.message);
     }
   }
 }
@@ -140,7 +140,7 @@ export function getCachedResult(
     // Fall back to JSON file cache
     const workspaceRoot = getWorkspaceRoot();
     const cacheDir = getCacheDir();
-    const filePath = path.join(cacheDir, `${cacheKey}.json");
+    const filePath = path.join(cacheDir, cacheKey + ".json");
 
     if (fs.existsSync(filePath)) {
       try {
@@ -292,4 +292,3 @@ export function listCachedRuns(): Array<{ runId: string; timestamp: number }> {
 
 // Export the enum for use in tests
 export { DetectionError };
-// End of file
