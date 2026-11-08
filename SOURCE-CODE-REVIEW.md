@@ -1,4 +1,4 @@
-# Source Code Review — SDLC-Agents-4-Enterprise (v1.55.16)
+# Source Code Review — SDLC-Agents-4-Enterprise (v1.55.17)
 
 > **Adversarial, evidence-based review of the application code** in `backend/src/`, `extension/src/`, and `source/slash/`.
 > Findings are grounded in actual source; every issue cites a file path, function, and line.
