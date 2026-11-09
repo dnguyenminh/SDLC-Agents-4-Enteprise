@@ -1,0 +1,55 @@
+{
+  "ticket": "SA4E-428",
+  "epic": "SA4E-411",
+  "title": "[Phase 4] Token/Eviction Integration Tests",
+  "version": 1,
+  "updated": "2026-11-09",
+  "status": "in-review",
+  "phase": "phase-4",
+  "spec": "16K Doc 4 (Token Budget) + 8 (Eviction) + IMPLEMENTATION-GUIDE Tasks 1-7 + FAILURE-MODES FM-003",
+  "implementation": {
+    "files": [
+      "backend/src/engine/scratchpad/__tests__/token-eviction.integration.test.ts (new)",
+      "extension/src/pi-agent/__tests__/token-eviction.integration.test.ts (new)",
+      "package.json (test:token script)",
+      "backend/package.json (test:token script)",
+      "extension/package.json (test:token script)"
+    ],
+    "harness": {
+      "backend": "scratchpad -> referencedEvidenceIds -> batchEvict integration: parse canonical scratchpad, exempt evidence refs, verify score/tombstone/target/no-overflow",
+      "extension": "resolveContextBudget + tryRuntimeTokenCount + runSessionBudgetGate + scopedSteering + RoleScopeFilter + buildSessionToolLoadout composed per scenario (only logger and tokenizer HTTP transport mocked)",
+      "gate": "npm run test:token (root = backend && extension)"
+    }
+  },
+  "test_scenarios": {
+    "token_budget_real_tokenizer_tiers": "extension test: 8192/small, 32768/medium, 128000/large; exact real count 700 -> staticTokens = 700 + base + toolSchema; staticTokens <= staticBudget; usage < 100%",
+    "eviction_algorithm": "backend test: S_evict = age*200 + tokens - referenced*1000 exact; in-use/exempt = -Infinity; tombstone preserves tool_call_id and content = '[evicted tool_call_id=<id>]' with exact tombstone token cost",
+    "scratchpad_eviction_interaction": "backend test: scratchpad evidence:abc + chunk:xyz parsed -> exemption set; referenced row never evicted; un-referenced oldest evicted first; tokensAfter <= 70% target; no pressure -> no eviction",
+    "budget_gate_escalation": "extension test: real session gate fires compress -> drop-steering -> min-loadout in fixed order, flags shouldCompress/minLoadout true, steeringBudget halved, final staticTokens <= staticBudget",
+    "actionable_error": "extension test: unreachable assembly throws PiContextBudgetExceededError with 'Giam steering/tools' guidance instead of provider 400",
+    "role_scope_reduction": "extension test: BA filters 5 skills -> 1, SM -> 1, unknown -> 5 (fail open); scoped steering tokens < base tokens; out-of-phase body dropped, security line + governance file survive",
+    "tool_loadout_cap": "extension test: BA excludes deploy/git/build, DEV keeps git/build; core+discovery always present; explicit cap 1000 trims to <= 1000; cap 1 -> capExceeded true with BR-06 minimum; minimal mode = core+discovery only"
+  },
+  "acceptance_criteria": {
+    "integration_harness": "pass - backend + extension integration files + npm run test:token",
+    "model_tier_behavior": "pass - small/medium/large resolved from real nCtx, all within staticBudget",
+    "escalation_order": "pass - ['compress','drop-steering','min-loadout'] exactly",
+    "role_scope_reduction_measured": "pass - tokens(scoped) < tokens(base); skills 5 -> 1 for BA",
+    "tool_schema_cap_enforced": "pass - schemaTokens <= cap; capExceeded flagged when unreachable",
+    "no_context_overflow": "pass - every non-reject scenario staticTokens <= staticBudget and usage < 100%; reject path throws actionable error before provider"
+  },
+  "performance": {
+    "backend_suite": "~0.35-0.45s (4 tests, max 3ms each)",
+    "extension_suite": "~0.55-0.58s (9 tests, max 2ms each)"
+  },
+  "regression": "backend 467 files / 3680 passed (+2 skipped); extension 442 passed (+1 skipped file) / 3460 passed (+6 skipped); lint clean; tsc --noEmit clean",
+  "evidence": [
+    "backend/src/engine/scratchpad/__tests__/token-eviction.integration.test.ts",
+    "extension/src/pi-agent/__tests__/token-eviction.integration.test.ts"
+  ],
+  "notes": [
+    "Eviction budget is supplied by the caller (SA4E-422 runtime budget path) - the engine stays deterministic on its own estimateTokens accounting",
+    "Tokenizer transport is the only external mock (llama.cpp /tokenize contract)",
+    "Role-scope reduction measured on scoped steering + filtered skills; tool schema cap measured on the real loadout estimator"
+  ]
+}
