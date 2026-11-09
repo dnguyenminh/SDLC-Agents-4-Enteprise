@@ -1,0 +1,32 @@
+{
+  "ticket": "SA4E-424",
+  "epic": "SA4E-411",
+  "title": "[Phase 3] Security Sandbox & Patch Validation",
+  "version": 1,
+  "updated": "2026-11-09",
+  "status": "in-review",
+  "phase": "phase-3",
+  "spec": "16K Doc 13 (Security & Sandbox) + 12 (Patch Protocol), AC #14",
+  "implementation": {
+    "files": [
+      "backend/src/engine/security/staged-patch.ts (new)",
+      "backend/src/engine/security/__tests__/staged-patch.test.ts (new)"
+    ],
+    "staged_patch_workflow": {
+      "stage": "validate-only probe (discarding IO) - moi quy tac §12 chay nhung working tree KHONG bi dong; record change_set OPEN + approval PENDING + execution_run (audit)",
+      "applyAfterApproval": "chi khi decision=APPROVED; re-validate base hash luc apply (stale-base co the drift trong luc cho); ALREADY_APPLIED + DISCARDED blocks",
+      "working_tree_fingerprint": "deterministic hash cua guarded files - unchanged fingerprint = unchanged tree (AC #14 evidence)",
+      "pre_approval_integrity": "AC #14 - fingerprint giu nguyen qua stage + blocked apply"
+    }
+  },
+  "acceptance_criteria": {
+    "sandbox_blocks_escapes": "pass - verified 417 + traversal/symlink re-tested qua workflow",
+    "container_limits": "pass - verified 417 (bounds validated)",
+    "patch_protocol_5_rules_atomic": "pass - stage probe + apply re-validation",
+    "stale_base_rejection": "pass - ca luc stage va luc apply (drift sau approval)",
+    "pre_approval_tree_integrity": "pass - fingerprint unchanged qua stage + NOT_APPROVED block",
+    "security_audit_checklist": "pass - 5 checks trong test (stale-base/traversal/size/ownership/atomic)"
+  },
+  "regression": "461 files / 3648 tests pass",
+  "evidence": ["backend/src/engine/security/__tests__/staged-patch.test.ts"]
+}
