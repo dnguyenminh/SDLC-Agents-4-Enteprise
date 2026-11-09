@@ -1,0 +1,33 @@
+{
+  "ticket": "SA4E-426",
+  "epic": "SA4E-411",
+  "title": "[Phase 3] API Pinned index_snapshot_id Enforcement",
+  "version": 1,
+  "updated": "2026-11-09",
+  "status": "in-review",
+  "phase": "phase-3",
+  "spec": "16K Doc 17 (API Scope) + 11 (Retrieval), AC #3",
+  "implementation": {
+    "files": [
+      "backend/src/engine/api/pinned-snapshot-guard.ts (new)",
+      "backend/src/engine/api/__tests__/pinned-snapshot-guard.test.ts (new)"
+    ],
+    "guard": {
+      "resolvePinnedContext": "bat buoc session_id + index_snapshot_id; session phai ton tai; index_snapshot_id phai TRUNG session.pinned_code_index_snapshot_id; snapshot phai READY + dung repository; commit snapshot phai trung session.commit_id (defense-in-depth, DB trigger da bao dam)",
+      "error_mapping": "SNAPSHOT_NOT_FOUND / SNAPSHOT_NOT_READY / SNAPSHOT_REPOSITORY_MISMATCH tu pinOrThrow -> PinValidationError 400",
+      "error_codes": "SESSION_ID_REQUIRED, SNAPSHOT_ID_REQUIRED, SESSION_NOT_FOUND, SNAPSHOT_MISMATCH, SNAPSHOT_COMMIT_MISMATCH, SNAPSHOT_NOT_FOUND, SNAPSHOT_NOT_READY, SNAPSHOT_REPOSITORY_MISMATCH",
+      "middleware": "pinnedSnapshotGuard(db, retrieval) - Hono middleware, doc body 1 lan, set pinned + pinnedBody, 400 envelope { data: null, error: { code, message } }",
+      "branch": "display metadata only - echo lai, KHONG dung de resolve snapshot"
+    },
+    "api_contract": "chat/search handlers dung chung guard: api.post('/agent/search', pinnedSnapshotGuard(db, retrieval), handler); handler doc c.get('pinned')"
+  },
+  "acceptance_criteria": {
+    "all_chat_search_require_snapshot": "pass - guard bat buoc index_snapshot_id (middleware dung chung, ap dung cho moi route)",
+    "reject_missing_mismatched": "pass - missing -> 400 SNAPSHOT_ID_REQUIRED; khac pin -> 400 SNAPSHOT_MISMATCH; FAILED -> 400 SNAPSHOT_NOT_READY",
+    "branch_head_change_no_effect": "pass - branch head S4/c2 nhung session pin S1/c1 van resolve S1; branch param chi echo",
+    "integration_old_commit_after_branch_moves": "pass - AC #3: branch ref doi sang S4 nhung symbolByName('S1') van tra symAuth (khong drift sang symAuth4); request S4 -> 400",
+    "http_400_envelope": "pass - middleware test 400/200"
+  },
+  "regression": "463 files / 3660 tests pass (+2 skipped)",
+  "evidence": ["backend/src/engine/api/__tests__/pinned-snapshot-guard.test.ts"]
+}
