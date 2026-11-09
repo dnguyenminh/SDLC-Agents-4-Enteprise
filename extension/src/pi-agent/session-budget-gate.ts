@@ -34,6 +34,12 @@ export interface SessionGateInput {
   minToolSchemaTokens: number;
   /** Provisional compression flag from governance (BR-04, UC-03). */
   shouldCompress: boolean;
+  /**
+   * SA4E-422: runtime-tokenizer count of (context files + workspace prompt).
+   * Applied to the initial untransformed measurement only; escalation variants
+   * re-measure transformed content with estimates (see measureStaticAssembly).
+   */
+  runtimeStaticCount?: number;
 }
 
 /** Gate result with real-effect escalation flags (BR-08). */
@@ -90,6 +96,7 @@ function remeasure(
     compress,
     workspacePrompt: input.workspacePrompt,
     toolSchemaTokens,
+    runtimeStaticTokens: !compress && !dropHalf ? input.runtimeStaticCount : undefined,
   });
 }
 

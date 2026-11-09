@@ -159,18 +159,27 @@ export function measureStaticAssembly(input: {
   compress: boolean;
   workspacePrompt: string;
   toolSchemaTokens: number;
+  /**
+   * SA4E-422: REAL tokenizer count of (context files + workspace prompt) from
+   * the runtime endpoint. Used only for the untransformed measurement
+   * (`compress === false`) — compressed/dropped variants change the content so
+   * their counts fall back to estimates. `undefined` → estimates (fail-open).
+   */
+  runtimeStaticTokens?: number;
 }): GateAssembly {
   const fileTokens = input.contextFiles.reduce(
     (sum, f) => sum + estimateTokenCount(input.compress ? compressPrompt(f.content) : f.content),
     0
   );
-  return {
-    staticTokens:
-      fileTokens +
-      estimateTokenCount(input.workspacePrompt) +
-      BudgetCalculator.estimateTokens(DEFAULT_SYSTEM_PROMPT_CHARS) +
-      input.toolSchemaTokens,
-  };
+  const basePromptTokens = BudgetCalculator.estimateTokens(DEFAULT_SYSTEM_PROMPT_CHARS);
+  const staticTokens =
+    !input.compress && input.runtimeStaticTokens !== undefined
+      ? input.runtimeStaticTokens + basePromptTokens + input.toolSchemaTokens
+      : fileTokens +
+        estimateTokenCount(input.workspacePrompt) +
+        basePromptTokens +
+        input.toolSchemaTokens;
+  return { staticTokens };
 }
 
 /** Ladder step 2: halves the steering share so scopedSteering drops more (BR-08). */

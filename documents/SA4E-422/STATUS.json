@@ -1,0 +1,41 @@
+{
+  "ticket": "SA4E-422",
+  "epic": "SA4E-411",
+  "title": "[Phase 2] Token Budget Runtime Calculator (Real Tokenizer)",
+  "version": 1,
+  "updated": "2026-11-09",
+  "status": "in-review",
+  "phase": "phase-2",
+  "spec": "16K Doc 4 + context-budget-governance IMPLEMENTATION-GUIDE",
+  "implementation": {
+    "verified_pre_existing": {
+      "budget_calculator_threshold_gate": "wire san tu SA4E-355 (create-host -> runSessionBudgetGate -> BudgetCalculator/ThresholdGate REJECT>95%/WARN>85%)",
+      "tiering": "detectModelTier/classifyTier wired (SA4E-355 medium, SA4E-410 small-context guard)",
+      "qwen_registry": "qwen + qwen2.5-coder 32768 entries co san",
+      "policy": "KHONG viet lai - chi wire (dung tinh than guide)"
+    },
+    "gap_closed_this_ticket": {
+      "real_tokenizer": "runtime-tokenizer.ts - llama.cpp POST /tokenize (tokenizer THAT cua model dang chay); fail-open -> null -> estimates (SA4E-369 3-chars conservative + 8% margin)",
+      "seam": "measureStaticAssembly runtimeStaticTokens (untransformed measurement only; escalation variants fallback estimates) + SessionGateInput.runtimeStaticCount",
+      "wiring": "create-host: measureRuntimeStaticTokens(opts.baseUrl, gateFiles, workspacePrompt) TRUOC gate; dung ca cho 4 lan remeasure"
+    },
+    "files": [
+      "extension/src/pi-agent/runtime-tokenizer.ts (new)",
+      "extension/src/pi-agent/budget-gate.ts",
+      "extension/src/pi-agent/session-budget-gate.ts",
+      "extension/src/pi-workflow/session-host/create-host.ts",
+      "extension/src/pi-agent/__tests__/runtime-tokenizer.test.ts (new)",
+      "extension/src/pi-agent/__tests__/budget-gate-runtime-count.test.ts (new)"
+    ]
+  },
+  "acceptance_criteria": {
+    "real_tokenizer_integration": "pass - runtime endpoint (llama.cpp /tokenize); KHONG them npm dep (tiktoken pluggable qua interface sau)",
+    "budget_calculator_threshold_gate_wired": "pass - verified pre-existing SA4E-355 + runtime count chay qua cung duong",
+    "tier_based_behavior": "pass - verified pre-existing",
+    "no_hardcoded_estimates": "partial - runtime count la THAT khi endpoint co; fallback giu char-estimate conservative (SA4E-369 calibrated 3 chars/token) - known limit, interface cho tiktoken sau",
+    "qwen_32k_breakdown": "pass - integration test (runtime count just-under-budget -> initial measurement = real count, AC5)",
+    "no_regression": "pass - extension 440 files / 3450 tests + tsc exit 0"
+  },
+  "regression": "extension full suite 440 files / 3450 tests pass; tsc build exit 0",
+  "evidence": ["extension/src/pi-agent/__tests__/runtime-tokenizer.test.ts", "extension/src/pi-agent/__tests__/budget-gate-runtime-count.test.ts"]
+}

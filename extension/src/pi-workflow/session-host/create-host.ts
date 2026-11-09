@@ -15,6 +15,7 @@ import { debugLog } from '../../debug-logger';
 import { halveSteeringCap } from '../../pi-agent/budget-gate.js';
 import { DEFAULT_AUTO_CHUNK_CONFIG } from '../../pi-agent/context-budget-auto-split.js';
 import { runSessionBudgetGate } from '../../pi-agent/session-budget-gate.js';
+import { measureRuntimeStaticTokens } from '../../pi-agent/runtime-tokenizer.js';
 import { scopedSteering } from '../../pi-agent/scoped-steering.js';
 import type { AgentTool } from '@earendil-works/pi-agent-core';
 import { buildWorkspaceSystemPrompt } from '../pi-coding-tools.js';
@@ -89,15 +90,22 @@ export async function createHost(opts: SessionHostOptions): Promise<SessionHost>
   // WARN logs and proceeds (AF-1 UC-05). Escalation takes real effect below.
   // SA4E-360 (§6.4 ③): skeleton + map sections enter as ADDITIONAL measured
   // context-file entries — gate #2 remains the REJECT of record (P-5).
+  // SA4E-422: measure the static context with the REAL runtime tokenizer when
+  // the provider exposes a local tokenize endpoint (llama.cpp) — the gate then
+  // compares the exact count against n_ctx instead of the char heuristic.
+  // Fail-open: unavailable endpoint → undefined → estimates (SA4E-369 policy).
+  const gateFiles = [
+    ...loadSessionContextFiles(piCoding, workspaceRoot, agentDir),
+    ...skeletonRuntime.injector.gateEntries(sections),
+  ];
+  const runtimeStaticCount = await measureRuntimeStaticTokens(opts.baseUrl, gateFiles, workspacePrompt);
   const gate = runSessionBudgetGate(budget, {
-    loadFiles: () => [
-      ...loadSessionContextFiles(piCoding, workspaceRoot, agentDir),
-      ...skeletonRuntime.injector.gateEntries(sections),
-    ],
+    loadFiles: () => gateFiles,
     workspacePrompt,
     toolSchemaTokens: loadout.schemaTokens,
     minToolSchemaTokens: tokensOfNames(baseTools),
     shouldCompress,
+    runtimeStaticCount,
   });
   // SA4E-360 (§6.4 ⑦): OI-5 enriched PI_GATE_DECISION (shipped event untouched).
   skeletonRuntime.injector.telemetry(sections, gate);
