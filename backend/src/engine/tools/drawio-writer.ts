@@ -11,7 +11,7 @@
  */
 
 import type { ElkNode, ElkEdge, RepositionedNode } from './drawio-layout-models.js';
-import { setEdgePointsXml, upsertEdgeStyleKeys, replaceCellGeometryXy } from './drawio-xml-utils.js';
+import { setEdgePointsXml, upsertEdgeStyleKeys, replaceCellGeometryXy, replaceCellSize } from './drawio-xml-utils.js';
 
 export interface XmlWriteResult {
   xml: string;
@@ -31,6 +31,19 @@ export function applyLayoutToXml(rawXml: string, laidOut: ElkNode): XmlWriteResu
 
   let xml = rawXml;
   for (const [id, p] of positions) xml = replaceCellGeometryXy(xml, id, p.x, p.y);
+  // SA4E-406 UAT fix: ELK compound layout returns CONTAINERS with enlarged
+  // width/height that encompass their children — the writer MUST apply them,
+  // otherwise children laid out inside the container still render OUTSIDE the
+  // (too-small) band and child_outside_container issues never resolve.
+  // Size is parent-space-independent (w/h carry no coordinate offset).
+  for (const node of flattenAll(laidOut)) {
+    if (node.id === 'root') continue;
+    if (node.children && node.children.length > 0
+      && Number.isFinite(node.width) && Number.isFinite(node.height)
+      && node.width > 0 && node.height > 0) {
+      xml = replaceCellSize(xml, node.id, node.width, node.height);
+    }
+  }
   for (const route of collectEdgeRoutes(laidOut)) xml = writeEdgeRoute(xml, route, positions, dx, dy);
   return { xml, repositionedNodes: buildRepositioned(oldPos, positions) };
 }
