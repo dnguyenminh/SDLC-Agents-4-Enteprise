@@ -75,7 +75,12 @@
     },
     "uat": {
       "status": "in_progress",
-      "startedAt": "2026-11-08T10:55:00Z"
+      "startedAt": "2026-11-08T10:55:00Z",
+      "manualExecutedAt": "2026-11-09T10:49:22Z",
+      "executor": "human (user) in Kiro, installed vsix 1.55.18 @ commit f68923e7",
+      "evidence": "evidence-uat-qualitycheckresult.json",
+      "result": "PARTIAL — 4/6 PASS (TC-03 fallback, TC-04 UI, TC-05 SSRF, TC-06 relative-paths); 2/6 FAIL (TC-01/TC-02 score 0.00 < 0.8) — root cause: detector heuristic scope (Phase-5 simulated WASM flags TODO:/FIX( across whole workspace) — design-level finding flagged for SA/BA, NOT an integration bug",
+      "pendingDecision": "human gate: (a) sign-off with known-limitation + follow-up ticket, or (b) keep UAT open for SA re-scope of detector sourceRoot"
     },
     "security_deploy_review": {
       "status": "not_started"

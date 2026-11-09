@@ -1,123 +1,89 @@
 # UAT Report — SA4E-393: Integrate Impeccable Design Detection
 
-**Date:** 2026-11-08  
-**Auto UAT Version:** 1.0  
-**CI Pipeline:** PASS (run 42335924218)
+**Date:** 2026-11-09
+**Executor:** Human (user) in Kiro — installed extension `sdlc-agents-4-enterprise-1.55.18.vsix` (commit f68923e7)
+**Evidence file:** `documents/SA4E-393/evidence-uat-qualitycheckresult.json`
+**Overall verdict:** ⚠️ **PARTIAL — 4/6 PASS, 2/6 FAIL (root cause: detector heuristic scope — design-level issue, not integration bug)**
 
 ---
 
-## ✅ Automated Test Results Summary
+## 1. Executive Summary
 
-| Test Category | Status | Details |
-|---------------|--------|---------|
-| **Extension Compile** | ✅ PASS | TypeScript compilation successful |
-| **Extension Unit Tests (key)** | ✅ PASS | 4/4 tests pass (pi-session-routing) |
-| **Backend Build** | ✅ PASS | TypeScript compilation successful |
-| **Backend Unit Tests** | ✅ PASS | 440+ tests pass (drawio-golden, drawio-detect, etc.) |
-| **Static Design Gate** | ⚠️ SKIPPED | Script `check:ci` not found - manual verify needed |
-| **Empty Source Test** | ⚠️ MANUAL | Expect FAIL (score 0 < 0.8) |
-| **Security C1-C6** | ✅ PASS | All 6 conditions verified |
-| **Line Count (≤200)** | ✅ PASS | All files ≤ 200 lines |
-| **Secret Scan** | ✅ PASS | No high/critical vulnerabilities |
-| **Deliverables Exist** | ✅ PASS | All 9 docs + 11 diagrams + 7 CSV files |
-| **Diagrams (11+)** | ✅ PASS | 11 PNG diagrams |
+The design quality gate is **functionally integrated and running for real** in the Kiro
+extension: 3 commands registered (`SDLC Agents: Run Design Quality Gate (Static|Rendered|Both)`),
+real file scanning (~2 minutes across the workspace), real findings (497), report JSON rendered
+in the "Design Quality Gate" Output channel with **relative paths only (C5)**, SSRF guard active
+(C4), and graceful rendered→static fallback when no dev server (TC-03).
 
----
-
-## 🔒 Security Conditions C1-C6 Verification
-
-| Condition | Status | Evidence |
-|-----------|--------|----------|
-| **C1: Supply Chain** | ✅ PASS | `npm audit` - 0 high/critical vulnerabilities |
-| **C2: WASM Sandbox** | ✅ PASS | WASM loader at `source/slash/wasm.loader.ts` with memory-only config |
-| **C3: Path Traversal** | ✅ PASS | `fs.adapter.ts` has `validateFilePath`, `isPathSafe`, `workspaceRoot` validation |
-| **C4: SSRF Localhost** | ✅ PASS | `localhost-fetcher.ts` has `isLocalhostUrl()` - only 127.0.0.1/localhost allowed |
-| **C5: Report Sanitization** | ✅ PASS | `report.generator.ts` has `sanitizeFilePath()` - relative paths only |
-| **C6: Error Handling** | ✅ PASS | Try/catch throughout `integration.service.ts` |
-
-**Overall Security: ✅ PASS (6/6)**
+The gate verdict on this workspace is **FAIL (score 0.00 < 0.8)** because the Phase-5
+*simulated* WASM detector uses broad heuristics (`TODO:` / `FIX(` pattern matching) applied to
+**every** text file in the workspace — including docs, session logs (`.pi/sessions/*.jsonl`),
+and vendor minified JS — producing 483 medium + 14 low findings. Score = 1 − 483×0.15 − 14×0.05
+→ clamped to 0. **The gate mechanically works as implemented; the detector's scan scope and
+heuristics are a TDD-level design question** (the "Impeccable" detector per TDD targets design
+artifacts — HTML/CSS/design templates — not arbitrary source/docs). Flagged for SA/BA decision.
 
 ---
 
-## 📊 Test Coverage Summary
+## 2. Manual UAT Results (6 Test Cases)
 
-| Test Suite | Files | Tests | Status |
-|------------|-------|-------|--------|
-| Backend drawio tests | 2 | 25 | ✅ PASS |
-| Backend drawio-detect | 1 | 22 | ✅ PASS |
-| Extension session routing | 1 | 4 | ✅ PASS |
-| **Total** | **4** | **51+** | **✅ ALL PASS** |
+| TC | Test Case | Verdict | Evidence |
+|----|-----------|---------|----------|
+| TC-01 | Static mode: command runs, Score ≥ 0.8 | ❌ **FAIL** (functional) | Notification + Output: `Design Quality Gate (Static): FAIL - Score: 0.00 - Findings: 412+`. Gate executed real scan; verdict correctly computed from findings. Score below threshold because detector flags every `TODO:`/`FIX(` occurrence workspace-wide (see §4 Root Cause) |
+| TC-02 | Both mode: Score ≥ 0.8 | ❌ **FAIL** (functional) | `Design Quality Gate (Both): FAIL - Score: 0.00 - Findings: 497` (evidence JSON). Circuit-breaker path returned static-only report (`detectionMode: "static"`) because rendered was skipped — no dev server running |
+| TC-03 | Dev server DOWN → graceful fallback | ✅ **PASS** | Service-level verification (standalone Node): unreachable `127.0.0.1:59999` → `fetchStatus: "skipped"`, **no crash**, 514 ms. In-IDE "Both" run also completed without crash despite rendered unavailable |
+| TC-04 | UI/UX: commands visible, results render | ✅ **PASS** | 3 commands visible in Command Palette with `SDLC Agents:` prefix; report JSON rendered in "Design Quality Gate" Output channel; summary notification shown |
+| TC-05 | Security C4: SSRF block | ✅ **PASS** | Service-level: `http://192.168.1.1` → **blocked** (`fetchStatus: "failed"`, 0 findings, `SSRF protection: URL host must be 127.0.0.1 or localhost`); `127.0.0.1:59999` unreachable → `skipped` (allowed host, network refused) |
+| TC-06 | Report C5: relative paths only | ✅ **PASS** | Evidence JSON: **497/497 findings have relative paths** (e.g. `.github\workflows\publish.yml`, `backend\src\...`) — zero absolute paths (`C:\`, `/home`) |
 
----
-
-## ⚠️ Manual UAT Steps Required (Cannot Automate)
-
-The following **require human verification** in Kiro/VSCode:
-
-### 1. Rendered Detection Mode
-- [ ] Start dev server: `npm run dev` (port 3000)
-- [ ] Run Command: `SDLC: Run Design Quality Gate (Rendered)`
-- [ ] Verify: Fetch works, WASM analyzes rendered HTML, Score ≥ 0.8
-
-### 2. Both Mode (Static + Rendered)
-- [ ] Run: `SDLC: Run Design Quality Gate (Both)`
-- [ ] Verify: Combined static + rendered results, Score ≥ 0.8
-
-### 3. Edge Case: Dev Server DOWN
-- [ ] Stop dev server
-- [ ] Run: `SDLC: Run Design Quality Gate (Rendered)`
-- [ ] Verify: Graceful fallback to static-only, no crash, clear error message
-
-### 4. UI/UX Verification
-- [ ] Extension loads without errors in Kiro
-- [ ] Commands appear in Command Palette (`SDLC: Run Design Quality Gate...`)
-- [ ] Results display correctly in UI panel
-
-### 5. Security Manual Checks
-- [ ] C4: Test SSRF block - try fetch `http://192.168.1.1` → should be blocked
-- [ ] C4: Test localhost allowed - fetch `http://127.0.0.1:3000` → should work
-- [ ] C5: Check report JSON - file paths should be relative only
+**Score breakdown (evidence JSON):** low 14, medium 483, high 0 → score 0.00, pass false, threshold 0.8.
 
 ---
 
-## 📁 Deliverables Verified (22 files)
+## 3. Real-Pipeline Evidence (no mocks)
 
-| Type | Files | Status |
-|--------|-------|--------|
-| Documents | BRD.md, FSD.md, TDD.md, STP.md, STC.md, SECURITY-REVIEW.md, DPG.md, RLN.md, TEST-REPORT.md | ✅ 9/9 |
-| Diagrams | 11 PNG + 11 drawio | ✅ 22/22 |
-| Test Data | 7 CSV files | ✅ 7/7 |
-| Source Code | 8 TypeScript files | ✅ 8/8 |
-
----
-
-## 🎯 Overall UAT Decision
-
-| Criteria | Status |
-|----------|--------|
-| Automated Tests | ✅ PASS |
-| Security Conditions | ✅ PASS (6/6) |
-| CI Pipeline | ✅ PASS (run 42335924218) |
-| Manual Steps | ⏳ PENDING |
-
-### **RECOMMENDATION: CONDITIONAL APPROVE**
-- ✅ All automated checks pass
-- ✅ Security conditions verified
-- ⏳ Manual UAT steps 1-5 required for full approval
+| Check | Evidence |
+|-------|----------|
+| Real scan duration | Finding IDs span ≈ 118 s of wall-clock scanning (run `run_1794221362098_r63725wx`) |
+| Files scanned | Workspace minus `SKIP_DIRS` (node_modules/.git/out/dist/…) — includes `.pi/sessions`, `documents/`, `backend/`, `conversions/`, `.github/` |
+| Detector runtime | WASM loaded (`Impeccable skill package loaded` + `WASM detector runtime loaded successfully`) |
+| Report sanitization (C5) | `sanitizeFilePath()` — 497/497 relative paths |
+| Unrelated noise ruled out | `@smithy/node-http-handler` 15 s timeout error = **Kiro IDE's own AWS account-usage fetch**, not this extension (string absent from extension bundle) |
 
 ---
 
-## 📝 Next Steps for Full Approval
+## 4. Root Cause — TC-01/TC-02 FAIL (Documented Finding)
 
-1. **Complete Manual Steps 1-5** above
-2. **Fill UAT Report** with actual scores
-3. **Attach 22 deliverables** to Jira SA4E-393
-4. **Sign-off** → Transition to **Done**
-5. **Release v1.0.0** (tag + changelog)
+**Finding (for SA/BA):** the Phase-5 delivered WASM detector is a *simulated* runtime
+(`wasm.loader.ts → simulateWasmAnalysis`) with two regex heuristics applied per file:
+`TODO\s*:` (low) and `FIX\s*[:\(]` (medium). Applied to the **whole workspace** (all text
+files, including markdown docs, agent session logs, vendor JS), it produces ~500 findings →
+score clamps to 0 → any real codebase can never reach the 0.8 threshold.
+
+**This is a detector scope/design limitation, NOT an integration bug.** The integration
+(contract, wiring, caching, SSRF, path safety, report, UI) performs exactly as TDD specifies.
+
+**Recommended dispositions (SA/BA decision):**
+1. Re-scope `sourceRoot` for static detection to design artifacts (HTML/CSS/TSX templates), or
+2. Replace heuristics with the real Impeccable WASM detector when available, or
+3. Recalibrate threshold/severity weights for whole-codebase scans.
 
 ---
 
-**Auto UAT Completed:** 2026-11-08  
-**CI Run:** 42335924218 (PASS)  
-**Branch:** main (commit 3f52dac0)  
-**Auto UAT Script:** `auto-uat.ps1`
+## 5. Automated Checks (regression, unchanged)
+
+| Check | Status |
+|-------|--------|
+| Extension compile + lint | ✅ PASS (0 errors) |
+| Extension tests | ✅ 4/4 PASS |
+| Backend build + drawio tests | ✅ 25/25 PASS |
+| CI pipeline (commit f68923e7) | ✅ All critical jobs PASS |
+| Security C1–C6 | ✅ PASS (C4/C5 additionally verified at runtime — §2 TC-05/TC-06) |
+
+---
+
+## 6. Sign-off
+
+- **Integration scope (SA4E-393):** commands + pipeline wiring + security conditions — **verified working** (TC-03/04/05/06 PASS).
+- **Quality-gate verdict on this workspace:** FAIL by design of the current simulated detector (TC-01/02) — documented finding, needs SA/BA disposition before release sign-off.
+- **Honest record:** mock-era scores (0.82/0.85/0.83) were previously surfaced and have been replaced by this real evidence; violation logged in RUN-LOG entry #28.
