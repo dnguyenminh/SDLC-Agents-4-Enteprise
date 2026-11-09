@@ -1,0 +1,11 @@
+test_case_id,description,content_base64,file_path,base_dir,expected_renderer,expected_success,notes
+TC-025,"CLI renderer primary",valid_xml_base64,diagrams/test.drawio,,drawio-cli,true,"CLI available"
+TC-026,"Chrome DevTools fallback",valid_xml_base64,diagrams/test.drawio,,chrome-devtools-mcp,true,"CLI unavailable"
+TC-027,"Puppeteer fallback",valid_xml_base64,diagrams/test.drawio,,puppeteer-mcp,true,"CLI + Chrome unavailable"
+TC-028,"Base64 roundtrip",valid_xml_base64,,,drawio-cli,true,"output_base64=true"
+TC-029,"Export with base_dir",valid_xml_base64,diagrams/test.drawio,C:/worktree-B,drawio-cli,true,"Multi-worktree"
+TC-030,"No renderers available",valid_xml_base64,diagrams/test.drawio,,none,false,"Tool hidden from list"
+TC-031,"Invalid base64 input",invalid_base64,,,none,false,"BASE64_DECODE_ERROR"
+TC-032,"Large diagram export",large_xml_base64,diagrams/large.drawio,,drawio-cli,true,"50+ nodes"
+TC-033,"Empty base64","",diagrams/test.drawio,,none,false,"INVALID_XML or validation"
+TC-034,"Output path specified",valid_xml_base64,diagrams/test.drawio,,drawio-cli,true,"output_path parameter"

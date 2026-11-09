@@ -1,0 +1,113 @@
+rule_id,rule_category,test_case_id,test_description,input_values,expected_behavior,pass_criteria
+BR-01,Overlap Detection,TC-300,Node overlap at 5% threshold,overlap_ratio=0.049,Not flagged,Below threshold
+BR-01,Overlap Detection,TC-300,Node overlap at 5% threshold,overlap_ratio=0.05,Flagged node_overlap,At threshold
+BR-01,Overlap Detection,TC-300,Node overlap at 5% threshold,overlap_ratio=0.051,Flagged node_overlap,Above threshold
+BR-02,Parent-Child Exclusion,TC-301,Child in parent 100% overlap,parent_child=true,No node_overlap issue,Exclusion works
+BR-03,Sequence Constructs,TC-302,Sequence lifelines overlap,sequence_diagram=true,Low severity warn only,No auto-fix
+BR-04,Containment Hint,TC-303,Full containment no parent,nodeA in nodeB,node_containment_hint low,Fix hint suggests parenting
+BR-05,Gap Threshold,TC-304,Edge gap 39px,gap=39,Gap violation flagged,Below 40px
+BR-05,Gap Threshold,TC-304,Edge gap 40px,gap=40,No violation,At threshold
+BR-05,Gap Threshold,TC-304,Edge gap 41px,gap=41,No violation,Above threshold
+BR-06,Proximity Detection,TC-305,Siblings 39px apart,distance=39,node_proximity low,Below 40px
+BR-06,Proximity Detection,TC-305,Siblings 40px apart,distance=40,No proximity issue,At threshold
+BR-06,Proximity Detection,TC-305,Siblings 41px apart,distance=41,No proximity issue,Above threshold
+BR-07,Child Outside Container,TC-306,Child 4px outside,overflow=4,Not flagged,Within 5px tolerance
+BR-07,Child Outside Container,TC-306,Child 5px outside,overflow=5,Not flagged,At tolerance boundary
+BR-07,Child Outside Container,TC-306,Child 6px outside,overflow=6,child_outside_container high,Above tolerance
+BR-08,Diagonal Edge,TC-307,dx=20 dy=20,dx=20 dy=20,Not diagonal,Both not >20
+BR-08,Diagonal Edge,TC-307,dx=21 dy=20,dx=21 dy=20,Not diagonal,dy not >20
+BR-08,Diagonal Edge,TC-307,dx=20 dy=21,dx=20 dy=21,Not diagonal,dx not >20
+BR-08,Diagonal Edge,TC-307,dx=21 dy=21,dx=21 dy=21,diagonal_edge low,Both >20
+BR-09,Crossing Detection,TC-308,Edge-node crossing 4px,margin=4,edge_crossing high,Below 5px margin
+BR-09,Crossing Detection,TC-308,Edge-edge crossing 4px,margin=4,edge_edge_crossing medium,Below 5px margin
+BR-09,Crossing Detection,TC-308,Edge-container crossing 4px,margin=4,edge_container_crossing low,Below 5px margin
+BR-09,Crossing Detection,TC-308,All crossings 6px,margin=6,No crossing flagged,Above 5px margin
+BR-10,Performance Detection,TC-309,50 nodes <500ms,nodes=50,Time < 500ms,Performance target
+BR-11,Fix Hints Coordinates,TC-310,Overlap fix hint,overlap_issue=true,Specific coordinates in hint,Actionable
+BR-11,Fix Hints Coordinates,TC-310,Gap fix hint,gap_issue=true,Specific clearance in hint,Actionable
+BR-11,Fix Hints Coordinates,TC-310,Crossing fix hint,crossing_issue=true,Reroute suggestion in hint,Actionable
+BR-12,Max Iterations,TC-311,max_iterations=1,iterations=1,Loop runs max 1,Min value
+BR-12,Max Iterations,TC-311,max_iterations=3,iterations=3,Loop runs max 3,Default
+BR-12,Max Iterations,TC-311,max_iterations=5,iterations=5,Loop runs max 5,Max value
+BR-12,Max Iterations,TC-311,max_iterations=0,Validation error,Rejected,Below minimum
+BR-12,Max Iterations,TC-311,max_iterations=6,Validation error,Rejected,Above maximum
+BR-13,Spacing Increment,TC-312,spacing_increment=20,increment=20,Each iter +20%,Default
+BR-13,Spacing Increment,TC-312,spacing_increment=10,increment=10,Each iter +10%,Min
+BR-13,Spacing Increment,TC-312,spacing_increment=50,increment=50,Each iter +50%,Max
+BR-13,Spacing Increment,TC-312,spacing_increment=5,Validation error,Rejected,Below min
+BR-13,Spacing Increment,TC-312,spacing_increment=51,Validation error,Rejected,Above max
+BR-14,Iteration History,TC-313,Verify loop multiple iterations,issues_history=multiple,Array with iter/issues/strategy,Present in response
+BR-15,Restore If Worse,TC-314,Final issues > initial,worse_than_initial=true,Original restored, status=partial,Rollback works
+BR-16,Status Logic,TC-315,All resolved,issues_after=0,status=fixed,Success
+BR-16,Status Logic,TC-315,Issues remain max iter,issues_after>0 iter=max,status=partial,Partial
+BR-16,Status Logic,TC-315,No issues initially,issues_before=0,status=already_good,Already good
+BR-16,Status Logic,TC-315,Issues found review mode,issues>0 mode=review,status=needs_fix,Review mode
+BR-17,Fix Strategy Selection,TC-316,Edge routing only,edge_issues_only=true,strategy=ports,Ports only
+BR-17,Fix Strategy Selection,TC-316,Few node violations,few_violations=true,strategy=local,Local repair
+BR-17,Fix Strategy Selection,TC-316,>40% cells or relayout,major_issues=true relayout=true,strategy=elk,ELK relayout
+BR-18,ELK Timeout,TC-317,Default timeout,timeout=10000,10000ms,Default 10s
+BR-18,ELK Timeout,TC-317,Custom 5s,SA4E_ELK_TIMEOUT_MS=5000,5000ms,Env override
+BR-18,ELK Timeout,TC-317,Custom 60s,SA4E_ELK_TIMEOUT_MS=60000,60000ms,Max
+BR-18,ELK Timeout,TC-317,Invalid 500ms,SA4E_ELK_TIMEOUT_MS=500,Validation error,Min 1000
+BR-19,Max Nodes,TC-318,500 nodes,nodes=500,Accepted,Default max
+BR-19,Max Nodes,TC-318,501 nodes,nodes=501,DIAGRAM_TOO_LARGE,Above max
+BR-19,Max Nodes,TC-318,Custom 1000,SA4E_ELK_MAX_NODES=1000,1000 accepted,Env override
+BR-20,Max Spacing,TC-319,spacing=600,spacing=600,Capped at 500,Hardcoded cap
+BR-20,Max Spacing,TC-319,Increment causes >500,increment_large=true,Capped at 500,Cap enforced
+BR-21,Algorithm Enum,TC-320,layered,algorithm=layered,Accepted,Valid
+BR-21,Algorithm Enum,TC-320,stress,algorithm=stress,Accepted,Valid
+BR-21,Algorithm Enum,TC-320,force,algorithm=force,Accepted,Valid
+BR-21,Algorithm Enum,TC-320,radial,algorithm=radial,Accepted,Valid
+BR-21,Algorithm Enum,TC-320,invalid,algorithm=invalid,Fallback to layered warning,Invalid handled
+BR-22,Direction Enum,TC-321,DOWN,direction=DOWN,Accepted,Valid
+BR-22,Direction Enum,TC-321,RIGHT,direction=RIGHT,Accepted,Valid
+BR-22,Direction Enum,TC-321,LEFT,direction=LEFT,Accepted,Valid
+BR-22,Direction Enum,TC-321,UP,direction=UP,Accepted,Valid
+BR-22,Direction Enum,TC-321,INVALID,direction=INVALID,Validation error,Invalid rejected
+BR-23,Spacing Range,TC-322,spacing=0,spacing=0,Validation error,Min >0
+BR-23,Spacing Range,TC-322,spacing=1,spacing=1,Accepted,Min
+BR-23,Spacing Range,TC-322,spacing=500,spacing=500,Accepted,Max
+BR-23,Spacing Range,TC-322,spacing=501,spacing=501,Validation error,Above max
+BR-24,Container Margin,TC-323,margin=-1,container_margin=-1,Validation error,Min >=0
+BR-24,Container Margin,TC-323,margin=0,container_margin=0,Accepted,Min
+BR-24,Container Margin,TC-323,margin=40,container_margin=40,Accepted,Default
+BR-25,Container Bounds,TC-324,Container encompasses children,post_layout=true,Bounds contain children+margin,All algorithms
+BR-26,Nested Containers,TC-325,Inner in outer nested,post_layout=true,Inner in outer, both resize,Correct
+BR-27,Layered Topological,TC-326,DAG layered,algorithm=layered,Topological+BFS layers,Correct
+BR-28,Stress Convergence,TC-327,<=30 nodes stress,algorithm=stress nodes<=30,Stress < 0.01,Converges
+BR-29,Force Iterations,TC-328,100 iter damped,algorithm=force,100 iterations no drift,Correct
+BR-30,Radial Rings,TC-329,Max 8/ring radial,algorithm=radial,Max 8 per ring root center,Correct
+BR-31,ELK Options Passthrough,TC-330,Valid keys,elk_options=valid,Applied to ELK,Passed through
+BR-31,ELK Options Passthrough,TC-330,Invalid keys,elk_options=invalid,Invalid ignored valid applied,Ignored
+BR-32,Orthogonal Routing,TC-331,All algorithms orthogonal,post_layout=true,All edges orthogonal,Enforced
+BR-33,Cross-Container Edges,TC-332,Edges between containers,post_layout=true,Root-level routing,Correct
+BR-34,Tool Discovery,TC-333,find_tools lists drawio,MCP running,Both tools listed,Discoverable
+BR-35,Base64 Roundtrip,TC-334,content_base64 output_base64,input_base64 output_base64=true,Base64 XML returned,No file I/O
+BR-36,Renderer Detection,TC-335,Multiple renderers,renderers_available,Dynamic via orchestration,Not hardcoded
+BR-37,Backward Compatible,TC-336,No base_dir legacy,no base_dir,Primary workspace,Compatible
+BR-38,Legacy Deprecated,TC-337,Legacy tools exist,legacy_tools=true,Deprecated but functional,Not removed
+BR-39,BaseDir Absolute Allowlist,TC-338,Relative base_dir,base_dir=relative,Rejected,Must be absolute
+BR-39,BaseDir Absolute Allowlist,TC-338,Absolute not in allowlist,base_dir=unregistered,PATH_REJECTED,Allowlist check
+BR-39,BaseDir Absolute Allowlist,TC-338,Absolute in allowlist,base_dir=registered,Accepted,Valid
+BR-40,Relative Escape,TC-339,file_path=../../escape,file_path=../../escape,PATH_REJECTED,Escapes base_dir
+BR-41,Absolute FilePath Validation,TC-340,Abs path in A base_dir B,abs_path=A base_dir=B,Validated within B,Correct scope
+BR-41,Absolute FilePath Validation,TC-340,Abs path no base_dir,abs_path=A no base_dir,Validated primary,Legacy
+BR-42,No BaseDir Primary,TC-341,No base_dir provided,no base_dir,Primary workspace,Legacy behavior
+BR-43,Symlinks Resolved,TC-342,Path with symlink,symlink_in_path,Realpath before containment,Resolved first
+BR-44,Win32 Case-Fold,TC-343,C:\Project vs c:\project,case_diff=true,Match case-insensitive,Windows parity
+BR-45,Empty BaseDir Absent,TC-344,base_dir=\"\",base_dir=\"\",Treated as absent,Primary workspace
+BR-45,Empty BaseDir Absent,TC-344,base_dir=\"   \",base_dir=\"   \",Treated as absent,Whitespace
+BR-46,Non-String BaseDir,TC-345,base_dir=123,base_dir=123,Type error,Non-string rejected
+BR-46,Non-String BaseDir,TC-345,base_dir={},base_dir={},Type error,Object rejected
+BR-46,Non-String BaseDir,TC-345,base_dir=[],base_dir=[],Type error,Array rejected
+BR-47,All Tools Validated,TC-346,drawio_auto_layout + export_png,both_tools=tested,Same validation applied,Consistent
+BR-48,Path Resolve Then Validate,TC-347,file_path=dir/../secrets,file_path=diagrams/../secrets,Resolved then validated,Canonicalization
+BR-49,Reject Escape,TC-348,Any .. escaping,path_with_escape=yes,Rejected,Traversal blocked
+BR-50,Reject Absolute Outside,TC-349,C:\Windows\...,abs_path=windows,Rejected,Outside allowlist
+BR-51,Generic Errors,TC-350,All path violations,various_violations=true,"File path not allowed: path traversal detected",No leak
+BR-52,Consistent Enforcement,TC-351,Both tools same violation,both_tools_same_violation=true,Same error code/message,Consistent
+BR-53,Separator Boundary,TC-352,Path at root boundary,path_at_root=true,Allowed,Separator-boundary
+BR-53,Separator Boundary,TC-352,Path outside boundary,path_outside_root=true,Rejected,One level out
+BR-54,Audit Logging,TC-353,Traversal attempt,attempted_traversal=true,Log: timestamp,path,client,code,root,Complete
+BR-55,Symlinks Before Validation,TC-354,Symlink points outside,symlink_outside=true,Rejected realpath first,Resolved
+BR-56,No Stack Traces,TC-355,Any error response,error_triggered=true,No stack traces/filesystem,Clean

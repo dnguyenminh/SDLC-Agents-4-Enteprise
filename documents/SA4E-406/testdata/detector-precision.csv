@@ -1,0 +1,11 @@
+test_case_id,description,overlap_ratio,gap_px,expected_issues,notes
+TC-001,"6% node overlap - should detect",0.06,,node_overlap:high,"Overlap threshold 5%"
+TC-002,"30px edge-to-node gap - should detect",,30,edge_crossing:high,"Gap threshold 40px"
+TC-003,"45px edge-to-node gap - should pass",,45,none,"Above gap threshold"
+TC-004,"Parent-child 100% overlap - excluded",1.0,,none,"Parent/child containment legitimate"
+TC-005,"Sequence lifelines overlap - warn only",0.15,,node_overlap:low,"Sequence constructs designed to overlap"
+TC-006,"Full containment - hint only",1.0,,node_containment_hint:low,"Suggest parenting"
+TC-007,"Sibling nodes 30px apart - proximity",,30,node_proximity:low,"Cosmetic only"
+TC-008,"Child 10px outside container",,10,child_outside_container:high,"5px tolerance exceeded"
+TC-009,"Diagonal edge dx=30, dy=30",,,diagonal_edge:low,"Both dx>20 AND dy>20"
+TC-010,"Two edges crossing mid-air",,,edge_edge_crossing:medium,"5px margin crossing"
