@@ -93,11 +93,24 @@ async function simulateWasmAnalysis(
     // Check for common design anti-patterns in source code
     const text = typeof content === "string" ? content : "";
     const patterns = [
-      { pattern: /TODO\s*:/i, severity: "low" as const },
-      { pattern: /FIX\s*[:\(]/i, severity: "medium" as const },
+      // \b word boundaries (SA4E-393, user-approved heuristic fix): without them
+      // /FIX\s*[:\(]/i matched the "fix(" substring inside legit identifiers like
+      // topSuffix:/subtitlePrefix:/(suffix: — 6/8 UAT findings were such false
+      // positives. \bFIX\b no longer matches Suffix/Prefix/FIXED, still matches
+      // genuine "FIX:" / "FIX(" markers.
+      {
+        pattern: /\bTODO\b\s*:/i,
+        severity: "low" as const,
+        label: "Pending-work marker (TODO) in design artifact",
+      },
+      {
+        pattern: /\bFIX\b\s*[:\(]/i,
+        severity: "medium" as const,
+        label: "Pending-fix marker (FIX) in design artifact",
+      },
     ];
 
-    for (const { pattern, severity } of patterns) {
+    for (const { pattern, severity, label } of patterns) {
       const matches = text.match(pattern);
       if (matches) {
         findings.push({
@@ -106,7 +119,7 @@ async function simulateWasmAnalysis(
           mode: "static",
           file: "unknown",
           severity,
-          message: `Design pattern detected: ${pattern.source}`,
+          message: label,
         });
       }
     }

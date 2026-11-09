@@ -1,75 +1,27 @@
 {
   "runId": "C:\\Users\\ASUS\\orca\\workspaces\\SDLC-Agents-4-Enterprise\\SA4E-393-2",
-  "timestamp": 1794240635184,
+  "timestamp": 1794260583421,
   "result": {
     "findings": [
       {
-        "findingId": "find_1794240630305_rqlyt7s",
-        "runId": "inst_1794240630031_gdqbdpl",
-        "mode": "static",
-        "file": "backend\\servers\\nextjs\\app\\(presentation-generator)\\(dashboard)\\dashboard\\components\\PresentationListItem.tsx",
-        "severity": "medium",
-        "message": "Design pattern detected: FIX\\s*[:\\(]"
-      },
-      {
-        "findingId": "find_1794240630583_0qz2kil",
-        "runId": "inst_1794240630031_gdqbdpl",
+        "findingId": "find_1794260583343_lifiiwn",
+        "runId": "inst_1794260583187_ghiuxvs",
         "mode": "static",
         "file": "backend\\servers\\nextjs\\app\\(presentation-generator)\\components\\ImageEditor.tsx",
         "severity": "low",
-        "message": "Design pattern detected: TODO\\s*:"
+        "message": "Pending-work marker (TODO) in design artifact"
       },
       {
-        "findingId": "find_1794240632044_k3p6pp9",
-        "runId": "inst_1794240630031_gdqbdpl",
+        "findingId": "find_1794260583368_3g5k2kr",
+        "runId": "inst_1794260583187_ghiuxvs",
         "mode": "static",
         "file": "backend\\servers\\nextjs\\app\\presentation-templates\\index.tsx",
         "severity": "low",
-        "message": "Design pattern detected: TODO\\s*:"
-      },
-      {
-        "findingId": "find_1794240632677_gnailmd",
-        "runId": "inst_1794240630031_gdqbdpl",
-        "mode": "static",
-        "file": "backend\\servers\\nextjs\\app\\presentation-templates\\neo-modern\\TitleKpiSnapshotGrid.tsx",
-        "severity": "medium",
-        "message": "Design pattern detected: FIX\\s*[:\\(]"
-      },
-      {
-        "findingId": "find_1794240632963_mmqt05r",
-        "runId": "inst_1794240630031_gdqbdpl",
-        "mode": "static",
-        "file": "backend\\servers\\nextjs\\app\\presentation-templates\\neo-swift\\TitleDescriptionFourChartsSixBullets.tsx",
-        "severity": "medium",
-        "message": "Design pattern detected: FIX\\s*[:\\(]"
-      },
-      {
-        "findingId": "find_1794240633018_ompqmqg",
-        "runId": "inst_1794240630031_gdqbdpl",
-        "mode": "static",
-        "file": "backend\\servers\\nextjs\\app\\presentation-templates\\neo-swift\\TitleDescriptionSixChartsFourMetrics.tsx",
-        "severity": "medium",
-        "message": "Design pattern detected: FIX\\s*[:\\(]"
-      },
-      {
-        "findingId": "find_1794240633029_x5txmvr",
-        "runId": "inst_1794240630031_gdqbdpl",
-        "mode": "static",
-        "file": "backend\\servers\\nextjs\\app\\presentation-templates\\neo-swift\\TitleDescriptionSixChartsGrid.tsx",
-        "severity": "medium",
-        "message": "Design pattern detected: FIX\\s*[:\\(]"
-      },
-      {
-        "findingId": "find_1794240633989_70pdh6m",
-        "runId": "inst_1794240630031_gdqbdpl",
-        "mode": "static",
-        "file": "backend\\servers\\nextjs\\app\\presentation-templates\\swift\\IntroSlideLayout.tsx",
-        "severity": "medium",
-        "message": "Design pattern detected: FIX\\s*[:\\(]"
+        "message": "Pending-work marker (TODO) in design artifact"
       }
     ],
     "fileCount": 447,
-    "durationMs": 5000,
+    "durationMs": 87,
     "cacheHit": false,
     "partial": false
   }
