@@ -90,7 +90,7 @@ describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
   it('TC-29: Rejected path returns a TOOL error result, not JSON-RPC -32603 (SA4E-356 §5.6)', async () => {
     const res = await postMcp(port, {
       jsonrpc: '2.0', id: 7, method: 'tools/call',
-      params: { name: 'drawio_export_png', arguments: { file_path: '/does/not/exist.drawio' } },
+      params: { name: 'export_diagram_backend', arguments: { file_path: '/does/not/exist.drawio' } },
     });
 
     // PathResolverError → MCP tool error result (agent-readable), never a
@@ -112,12 +112,12 @@ describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
 
     const res = await postMcp(port, {
       jsonrpc: '2.0', id: 14, method: 'tools/call',
-      params: { name: 'drawio_export_png', arguments: { file_path: relName } },
+      params: { name: 'export_diagram_backend', arguments: { file_path: relName } },
     });
 
     expect(res.status).toBe(200);
     const call = deps.restCallToolMock.calls[0];
-    expect(call.name).toBe('drawio_export_png');
+    expect(call.name).toBe('export_diagram_backend');
     // File was read from the workspace root, not process.cwd() (Kiro install dir)
     expect(call.args.content_base64).toBe(Buffer.from(content).toString('base64'));
     // Derived output also lands inside the workspace root as an absolute path
@@ -129,7 +129,7 @@ describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
   it('TC-43: relative file_path outside the workspace root fails with resolved path in error (D2 regression, SA4E-356 §5.6)', async () => {
     const res = await postMcp(port, {
       jsonrpc: '2.0', id: 15, method: 'tools/call',
-      params: { name: 'drawio_export_png', arguments: { file_path: 'missing-under-root.drawio' } },
+      params: { name: 'export_diagram_backend', arguments: { file_path: 'missing-under-root.drawio' } },
     });
 
     // SA4E-356: pre-read failure is a TOOL error result (not -32603) carrying

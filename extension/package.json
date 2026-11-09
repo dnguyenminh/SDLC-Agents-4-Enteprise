@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-"version": "1.55.18",
+  "version": "1.55.18",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -337,9 +337,11 @@
           "default": ".code-intel/orchestration.json",
           "description": "Path to orchestration config file (relative to workspace root)"
         },
-"sdlcAgents.workspace.workspaceRoots": {
+        "sdlcAgents.workspace.workspaceRoots": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "SA4E-394 allowlist mirror: workspace roots permitted as per-call base_dir for file_path tools. MUST mirror the backend MCP_WORKSPACE_ROOTS (backend remains source of truth). Falls back to the MCP_WORKSPACE_ROOTS env var when empty."
         },
@@ -350,14 +352,30 @@
           "items": {
             "type": "object",
             "properties": {
-              "id": { "type": "string" },
-              "label": { "type": "string" },
-              "provider": { "type": "string" },
-              "model": { "type": "string" },
-              "baseUrl": { "type": "string" },
-              "useDefaultUrl": { "type": "boolean" },
-              "lastTestStatus": { "type": "string" },
-              "lastTestedAt": { "type": "number" }
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "baseUrl": {
+                "type": "string"
+              },
+              "useDefaultUrl": {
+                "type": "boolean"
+              },
+              "lastTestStatus": {
+                "type": "string"
+              },
+              "lastTestedAt": {
+                "type": "number"
+              }
             }
           }
         },
@@ -609,6 +627,7 @@
     "core-js": "^3.49.0",
     "debug": "^4.4.3",
     "diff": "^5.2.2",
+    "elkjs": "^0.9.3",
     "pi-subagents": "^0.76.1",
     "pi-web-access": "0.41.0",
     "puppeteer-core": "^25.16.0",
