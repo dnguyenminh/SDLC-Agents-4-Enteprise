@@ -18,6 +18,17 @@ import * as stream from "stream";
 
 import { DetectionError, DetectionErrorException, createDetectionError, Finding } from "./types";
 
+/** Result of a localhost page fetch (union — never both success and failure). */
+export interface FetchResult {
+  success: boolean;
+  /** HTML content when success === true. */
+  html?: string;
+  /** DetectionError code when success === false. */
+  error?: DetectionError;
+  /** Sanitized failure message. */
+  message?: string;
+}
+
 // Response size limit per Condition C4
 const MAX_RESPONSE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -37,11 +48,12 @@ let consecutiveFailures = 0;
 /**
  * Validate that a URL host is localhost only (127.0.0.1 or localhost).
  * Per SECURITY-REVIEW.md Condition C4, rejects any other host to prevent SSRF.
- * 
+ * Exported for reuse by the integration service (C4 URL whitelist check).
+ *
  * @param urlString - The URL string to validate
  * @returns True if the URL host is localhost only
  */
-function isLocalhostUrl(urlString: string): boolean {
+export function isLocalhostUrl(urlString: string): boolean {
   try {
     const parsed = new URL(urlString);
     const hostname = parsed.hostname.toLowerCase();
@@ -66,16 +78,13 @@ function isLocalhostUrl(urlString: string): boolean {
  * - Response size < 10MB
  * - Content-Type must be text/html or application/json
  * - 1 retry with exponential backoff
- * 
+ *
  * @param urlString - The localhost URL to fetch
- * @returns HTML content as string
- * @throws DetectionError.DEV_SERVER_UNREACHABLE if fetch fails after retries
- * @throws DetectionError.FETCH_FAILED if CORS or other fetch error
+ * @returns FetchResult — success with html, or failure with sanitized error
+ * @throws DetectionErrorException DEV_SERVER_UNREACHABLE if fetch fails after retries
+ * @throws DetectionErrorException FETCH_FAILED if CORS or other fetch error
  */
-export async function fetchLocalhostPage(
-  urlString: string
-): Promise<{ success: true; html: string }> &
-  Promise<{ success: false; error: DetectionError; message: string }> {
+export async function fetchLocalhostPage(urlString: string): Promise<FetchResult> {
   // Validate URL is localhost only (Condition C4)
   if (!isLocalhostUrl(urlString)) {
     consecutiveFailures++;
@@ -180,7 +189,7 @@ export async function fetchLocalhostPage(
           continue;
         }
         throw createDetectionError(DetectionError.DEV_SERVER_UNREACHABLE,
-          `Dev server not reachable, skipping rendered detection: ${lastError.message}`
+          `Dev server not reachable, skipping rendered detection: ${lastError?.message ?? "unknown error"}`
         );
       }
 
@@ -204,7 +213,7 @@ export async function fetchLocalhostPage(
         continue;
       }
       throw createDetectionError(DetectionError.FETCH_FAILED,
-        `Failed to fetch localhost page: ${lastError.message}`
+        `Failed to fetch localhost page: ${lastError?.message ?? "unknown error"}`
       );
     }
   }

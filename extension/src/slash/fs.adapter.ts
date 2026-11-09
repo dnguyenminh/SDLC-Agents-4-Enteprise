@@ -18,6 +18,23 @@ import { DetectionError, createDetectionError, Finding, DetectionConfig, EnvConf
 // Maximum number of files to read per detection run (from TDD/DPG)
 const MAX_FILES = 10000;
 
+// Directories excluded from static source scanning (dependency/build artifacts,
+// not workspace source). Keeps C3 scope honest and the run fast.
+const SKIP_DIRS = new Set([
+  "node_modules",
+  ".git",
+  "out",
+  "dist",
+  "build",
+  "coverage",
+  ".code-intel",
+  ".kiro",
+  ".opencode",
+  ".vscode",
+  "resources",
+  "webview-assets",
+]);
+
 /**
  * Validate that a file path is within the workspace root.
  * Per SECURITY-REVIEW.md Condition C3, paths must not escape the workspace.
@@ -95,6 +112,10 @@ export async function listSourceFiles(
       const fullPath = path.join(sourceRoot, entry.name);
 
       if (entry.isDirectory()) {
+        // Skip dependency/build artifact directories (C3 scope: workspace source only)
+        if (SKIP_DIRS.has(entry.name)) {
+          continue;
+        }
         // Recursively read subdirectory, but respect maxFiles
         const subFiles = await listFilesRecursive(
           fullPath,
@@ -140,6 +161,9 @@ async function listFilesRecursive(
       }
 
       if (entry.isDirectory()) {
+        if (SKIP_DIRS.has(entry.name)) {
+          continue;
+        }
         const subDir = path.join(dirPath, entry.name);
         const subFiles = await listFilesRecursive(subDir, workspaceRoot, remaining - 1);
         files.push(...subFiles);

@@ -33,10 +33,12 @@ export interface DetectionResult {
 
 /** Configuration for a detection run */
 export interface DetectionConfig {
-  detectionMode: "static" | "rendered" | "both";
-  threshold: number; // 0-1 quality score threshold
-  cacheReuse: boolean;
+  detectionMode?: "static" | "rendered" | "both";
+  threshold?: number; // 0-1 quality score threshold
+  cacheReuse?: boolean;
   sourceRoot?: string; // workspace root for path validation
+  localhostUrl?: string; // dev server URL for rendered detection
+  urls?: string[]; // additional pages for rendered detection
 }
 
 /** Aggregated quality gate report */
@@ -54,6 +56,28 @@ export interface QualityReport {
     medium: number;
     high: number;
   };
+  /** C6: sanitized error/fallback notice (never raw stack traces) */
+  message?: string;
+}
+
+/** Detection run entity per FSD §4.2 (in-memory / JSON file store) */
+export interface DetectionRun {
+  runId: string;
+  detectionMode: "static" | "rendered" | "both";
+  threshold: number;
+  score: number;
+  pass: boolean;
+  createdAt: string;
+  userId: string;
+  findings: Array<{
+    findingId: string;
+    runId: string;
+    mode: "static" | "rendered";
+    file: string;
+    severity: "low" | "medium" | "high";
+    message: string;
+    line?: number;
+  }>;
 }
 
 /** Instance identifier for a loaded detector */
@@ -124,3 +148,8 @@ export enum EnvConfig {
   LOCALHOST_DEV_SERVER_URL = "LOCALHOST_DEV_SERVER_URL",
   WORKSPACE_ROOT = "WORKSPACE_ROOT",
 }
+
+/** Default quality gate threshold — configurable via QUALITY_GATE_THRESHOLD env (DPG.md) */
+export const DEFAULT_THRESHOLD = parseFloat(
+  process.env[EnvConfig.QUALITY_GATE_THRESHOLD] || "0.8"
+);

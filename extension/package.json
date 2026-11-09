@@ -181,17 +181,17 @@
       },
       {
         "command": "sdlcAgents.runDesignGateStatic",
-        "title": "SDLC: Run Design Quality Gate (Static)",
+        "title": "SDLC Agents: Run Design Quality Gate (Static)",
         "icon": "$(check)"
       },
       {
         "command": "sdlcAgents.runDesignGateRendered",
-        "title": "SDLC: Run Design Quality Gate (Rendered)",
+        "title": "SDLC Agents: Run Design Quality Gate (Rendered)",
         "icon": "$(preview)"
       },
       {
         "command": "sdlcAgents.runDesignGateBoth",
-        "title": "SDLC: Run Design Quality Gate (Both)",
+        "title": "SDLC Agents: Run Design Quality Gate (Both)",
         "icon": "$(check-all)"
       }
     ],

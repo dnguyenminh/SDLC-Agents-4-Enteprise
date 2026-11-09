@@ -12,7 +12,7 @@
  */
 
 import * as path from "path";
-import { DetectionError, Finding, QualityReport, DetectionConfig, EnvConfig } from "./types";
+import { DetectionError, Finding, QualityReport, DetectionConfig, EnvConfig, DetectionRun } from "./types";
 import { generateId } from "./utils";
 
 // Import env config for threshold

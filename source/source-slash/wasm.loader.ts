@@ -15,7 +15,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { Buffer } from "buffer";
 
-import { WasmDetectorRuntime, FindingsResult, Finding, DetectionError, createDetectionError } from "./types";
+import { WasmDetectorRuntime, FindingsResult, Finding, DetectionError, DetectionErrorException, createDetectionError, EnvConfig } from "./types";
 
 // The WASM module path - configurable via ENV per DPG.md
 const WASM_BINARY_PATH = process.env[EnvConfig.IMPPECABLE_SKILL_PATH]

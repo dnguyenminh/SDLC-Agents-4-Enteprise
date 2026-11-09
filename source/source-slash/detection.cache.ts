@@ -15,8 +15,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
 
-import { DetectionResult, QualityReport, Finding, DetectionConfig } from "./types";
-import { EnvConfig } from "./types";
+import { DetectionResult, QualityReport, Finding, DetectionConfig, DetectionError, EnvConfig } from "./types";
 
 // Cache file path: <workspace>/.code-intel/design-gate/
 const CACHE_DIR = ".code-intel/design-gate";
@@ -101,7 +100,7 @@ export function cacheResult(
       timestamp: Date.now(),
       result,
     };
-    writeFileSync(filePath, JSON.stringify(cacheEntry, null, 2));
+    fs.writeFileSync(filePath, JSON.stringify(cacheEntry, null, 2));
   } catch (error: any) {
     console.error("Failed to cache result: " + error.message);
     // Continue with memory-only cache if file save fails
