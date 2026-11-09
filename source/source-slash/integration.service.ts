@@ -22,7 +22,7 @@ import { DetectionError, DetectionErrorException, createDetectionError, Finding,
 import { loadWasmDetector, readWasmBinary, validateWasmConstraints } from "./wasm.loader";
 import { listSourceFiles, readSourceFile, getWorkspaceRoot, isPathSafe } from "./fs.adapter";
 import { fetchLocalhostPage, shouldSkipRendered, resetCircuitBreaker, isLocalhostUrl } from "./localhost-fetcher";
-import { generateQualityReport, determinePassFail, createDetectionRun } from "./report.generator";
+import { generateQualityReport } from "./report.generator";
 import { cacheResult, getCachedResult, invalidateCache, clearAllCache, listCachedRuns } from "./detection.cache";
 
 /** Cache directory relative to workspace root (mirrors detection.cache.ts). */
@@ -164,7 +164,9 @@ export class ImpeccableIntegrationService {
           const report = generateQualityReport(
             cached.findings,
             "static",
-            threshold
+            threshold,
+            undefined,
+            cached.fileCount ?? 0
           );
           return { result, report };
         }
@@ -247,7 +249,7 @@ export class ImpeccableIntegrationService {
       }
 
       // Generate quality report
-      const report = generateQualityReport(result.findings, "static", threshold);
+      const report = generateQualityReport(result.findings, "static", threshold, undefined, result.fileCount);
 
       return { result, report };
     } catch (error: any) {
@@ -305,7 +307,7 @@ export class ImpeccableIntegrationService {
             fetchStatus: "skipped",
             pagesFetched: 0,
           },
-          report: generateQualityReport([], "rendered", threshold),
+          report: generateQualityReport([], "rendered", threshold, undefined, 0),
         };
       }
 
@@ -334,7 +336,7 @@ export class ImpeccableIntegrationService {
             fetchStatus: "failed",
             pagesFetched: 0,
           },
-          report: generateQualityReport([], "rendered", threshold),
+          report: generateQualityReport([], "rendered", threshold, undefined, 0),
         };
       }
 
@@ -369,8 +371,8 @@ export class ImpeccableIntegrationService {
       const pagesFetched = 1;
       const fetchStatus = "success";
 
-      // Generate quality report
-      const report = generateQualityReport(findings, "rendered", threshold);
+      // Generate quality report (rendered = 1 page in scope)
+      const report = generateQualityReport(findings, "rendered", threshold, undefined, 1);
 
       return {
         result: {
@@ -405,7 +407,7 @@ export class ImpeccableIntegrationService {
           fetchStatus,
           pagesFetched: 0,
         },
-        report: generateQualityReport([], "rendered", threshold),
+        report: generateQualityReport([], "rendered", threshold, undefined, 0),
       };
     }
   }
@@ -451,7 +453,9 @@ export class ImpeccableIntegrationService {
             const report = generateQualityReport(
               staticResult.result.findings,
               "static",
-              threshold
+              threshold,
+              undefined,
+              staticResult.result.fileCount
             );
             return { result: staticResult.result, report };
           }
@@ -465,14 +469,8 @@ export class ImpeccableIntegrationService {
             ...renderedResult.result.findings,
           ];
 
-          // Calculate combined score - take the worse (lower) score
-          // (static score comes from its report — DetectionResult carries no score)
-          const combinedScore = Math.min(
-            staticResult.report.score,
-            renderedResult.result.score
-          );
-
-          // Aggregate severity breakdown
+          // Aggregate severity breakdown (triage info — score is computed
+          // by the unified normalized formula in generateQualityReport)
           const severityBreakdown = {
             low: 0,
             medium: 0,
@@ -487,9 +485,6 @@ export class ImpeccableIntegrationService {
             severityBreakdown[f.severity] = (severityBreakdown[f.severity] || 0) + 1;
           });
 
-          // Determine pass/fail
-          const pass = determinePassFail(combinedScore, threshold);
-
           // Build combined result
           const combinedResult = {
             findings: allFindings,
@@ -499,10 +494,13 @@ export class ImpeccableIntegrationService {
             partial: staticResult.result.partial || renderedResult.result.partial,
           };
 
-          // Generate quality report
-          const report = generateQualityReport(allFindings, "both", threshold, undefined);
-          report.score = combinedScore;
-          report.pass = pass;
+          // Generate quality report — unified normalized formula over the full scope
+          // (static design files + rendered page when fetched). No min()/override:
+          // one cleanliness ratio across all findings keeps the score consistent.
+          const scopeFiles =
+            staticResult.result.fileCount +
+            (renderedResult.result.pagesFetched > 0 ? 1 : 0);
+          const report = generateQualityReport(allFindings, "both", threshold, undefined, scopeFiles);
 
           return { result: combinedResult, report };
         }
@@ -518,7 +516,7 @@ export class ImpeccableIntegrationService {
       console.error(`Full detection error: ${errorMessage}`);
 
       // Return fail-open inconclusive report
-      const report = generateQualityReport([], "static", threshold, undefined);
+      const report = generateQualityReport([], "static", threshold, undefined, 0);
       report.score = 0;
       report.pass = true; // fail-open
       report.message = errorMessage;
@@ -545,7 +543,7 @@ export class ImpeccableIntegrationService {
       if (fs.existsSync(filePath)) {
         const content = JSON.parse(fs.readFileSync(filePath, "utf-8"));
         if (content?.result?.findings) {
-          return generateQualityReport(content.result.findings, "static", undefined, content.runId);
+          return generateQualityReport(content.result.findings, "static", undefined, content.runId, content.result.fileCount ?? 0);
         }
       }
     } catch (error: any) {

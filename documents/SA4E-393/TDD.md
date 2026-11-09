@@ -564,3 +564,45 @@ Required diagrams created:
 - `diagrams/component.drawio` + `.png` — §2.2
 - `diagrams/class-diagram.drawio` + `.png` — §5 / §4.1
 
+---
+
+## Addendum (SA4E-393, 2026-11-09) — Scan Scope & Normalized Scoring [USER-APPROVED]
+
+> Approved by the human gate (ticket owner) during UAT disposition, after real-run
+> evidence showed the original spec produced a vacuous FAIL on any real repository.
+> Recorded in RUN-LOG #34. This addendum supersedes the conflicting formulas above.
+
+### A1. Scan scope (static mode) — supersedes "scan all workspace text files"
+
+The design quality gate scans **design artifacts only** — the web/UI surface:
+
+- Extensions: `.html`, `.htm`, `.css`, `.scss`, `.sass`, `.less`, `.vue`, `.svelte`, `.tsx`, `.jsx`
+- `SKIP_DIRS` still applies (node_modules, .git, out, dist, build, coverage, .code-intel, .kiro, .opencode, .vscode, resources, webview-assets)
+
+Rationale: the detector's heuristics are design-oriented. Scanning markdown docs,
+agent session logs, vendor bundles and patches produced hundreds of noise findings
+(497 in the UAT evidence) and a meaningless verdict.
+
+### A2. Normalized scoring — supersedes absolute per-finding deduction
+
+Old (superseded): `score = 1 − (Σ severity weights)` — any repository with more than
+6 medium findings clamped to 0 regardless of size.
+
+New formula (scale-independent):
+
+```
+score = 1 − (unique files with findings / total files in scan scope)
+```
+
+- `totalFiles` = design files scanned (static) + 1 rendered page (when fetched)
+- Clamp to [0, 1]; empty scope → score 1.0 with message
+  "No design artifacts found in scan scope (0 files)" (vacuous pass, surfaced in report)
+- `severityBreakdown` is kept in the report for triage but no longer drives the score
+- Threshold semantics unchanged (BR-11: score ≥ 0.8 → pass; configurable via
+  `QUALITY_GATE_THRESHOLD`)
+
+### A3. Deferred (follow-up ticket)
+
+Real Impeccable WASM detector binary (Option 2) — blocked on the external
+`impeccable-skill` package; heuristics in `simulateWasmAnalysis` remain until then.
+

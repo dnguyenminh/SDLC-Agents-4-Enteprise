@@ -35,6 +35,26 @@ const SKIP_DIRS = new Set([
   "webview-assets",
 ]);
 
+// SA4E-393 Addendum (user-approved 2026-11-09): the Impeccable design gate scans
+// DESIGN ARTIFACTS only — the web/UI surface — not arbitrary text files. Scanning
+// docs/session-logs/vendor-JS produced noise findings and a vacuous FAIL verdict.
+const DESIGN_FILE_EXTENSIONS = new Set([
+  ".html",
+  ".htm",
+  ".css",
+  ".scss",
+  ".sass",
+  ".less",
+  ".vue",
+  ".svelte",
+  ".tsx",
+  ".jsx",
+]);
+
+function isDesignArtifact(fileName: string): boolean {
+  return DESIGN_FILE_EXTENSIONS.has(path.extname(fileName).toLowerCase());
+}
+
 /**
  * Validate that a file path is within the workspace root.
  * Per SECURITY-REVIEW.md Condition C3, paths must not escape the workspace.
@@ -124,6 +144,10 @@ export async function listSourceFiles(
         );
         files.push(...subFiles);
       } else if (entry.isFile()) {
+        // Design-scope filter: only web/UI surface files (SA4E-393 Addendum)
+        if (!isDesignArtifact(entry.name)) {
+          continue;
+        }
         // Store relative path from workspace root
         const relativePath = path.relative(workspaceRoot, fullPath);
         files.push(relativePath);
@@ -168,6 +192,9 @@ async function listFilesRecursive(
         const subFiles = await listFilesRecursive(subDir, workspaceRoot, remaining - 1);
         files.push(...subFiles);
       } else if (entry.isFile()) {
+        if (!isDesignArtifact(entry.name)) {
+          continue;
+        }
         const fullPath = path.join(dirPath, entry.name);
         const relativePath = path.relative(workspaceRoot, fullPath);
         // Validate the relative path is within workspace
