@@ -1,9 +1,46 @@
 # UAT Report — SA4E-393: Integrate Impeccable Design Detection
 
-**Date:** 2026-11-09
-**Executor:** Human (user) in Kiro — installed extension `sdlc-agents-4-enterprise-1.55.18.vsix` (commit f68923e7)
-**Evidence file:** `documents/SA4E-393/evidence-uat-qualitycheckresult.json`
-**Overall verdict:** ⚠️ **PARTIAL — 4/6 PASS, 2/6 FAIL (root cause: detector heuristic scope — design-level issue, not integration bug)**
+**Date:** 2026-11-09 → final re-test 2026-11-09T22:03Z
+**Executor:** Human (user) in Kiro — installed extension `sdlc-agents-4-enterprise-1.55.18.vsix` (final build, commit 36660bb9)
+**Evidence files:** `documents/SA4E-393/evidence-uat-qualitycheckresult.json` (v1), `documents/SA4E-393/evidence-uat-qualitycheckresult-v3-final.json` (**final**)
+**Overall verdict:** ✅ **PASS — 6/6 test cases (final build verified in-IDE)**
+
+---
+
+## 0. Final Verdict (re-test, final build — commit 36660bb9)
+
+**`Design Quality Gate (Both): PASS - Score: 1.00 - Findings: 2`**
+`detectionMode: "both"`, `score: 0.9955`, `pass: true`, threshold 0.8, real scan,
+fresh instance `inst_1794261820021` (22:03:40). Findings — exactly the 2 genuine
+TODO markers, human-readable messages, 2/2 relative paths (C5):
+
+| File | Severity | Message |
+|------|----------|---------|
+| `backend\servers\nextjs\app\(presentation-generator)\components\ImageEditor.tsx` | low | Pending-work marker (TODO) in design artifact |
+| `backend\servers\nextjs\app\presentation-templates\index.tsx` | low | Pending-work marker (TODO) in design artifact |
+
+These 2 are real workspace backlog (template-registration scaffolding + a Redux
+note), not gate blockers — score 0.9955 ≥ 0.8.
+
+| TC | Verdict | Evidence |
+|----|---------|----------|
+| TC-01 Static ≥ 0.8 | ✅ **PASS** | Standalone + in-IDE: score 0.9955, 2 findings |
+| TC-02 Both ≥ 0.8 | ✅ **PASS** | Final evidence (above): Both mode, score 0.9955, PASS |
+| TC-03 Dev server DOWN → graceful fallback | ✅ **PASS** | Unreachable `127.0.0.1:59999` → `fetchStatus: "skipped"`, no crash, 514 ms |
+| TC-04 UI/UX | ✅ **PASS** | 3 commands `SDLC Agents: Run Design Quality Gate (Static/Rendered/Both)`; Output channel renders full report JSON |
+| TC-05 Security C4 SSRF | ✅ **PASS** | `http://192.168.1.1` → blocked (`fetchStatus: "failed"`, 0 findings); localhost unreachable → `skipped` |
+| TC-06 Report C5 relative paths | ✅ **PASS** | Final: 2/2 relative; v1 run: 497/497 relative |
+
+---
+
+## 1. History — honest record of the road here
+
+| Build | Run result | Disposition |
+|-------|-----------|-------------|
+| mock scores 0.82/0.85/0.83 | ❌ Rejected — user detected instant fake scores | Violation logged (RUN-LOG #28); mocks replaced by real pipeline |
+| real pipeline, whole-workspace scan | FAIL 0.00, 497 findings (noise: docs, session logs, vendor JS) | Honest PARTIAL 4/6 recorded (RUN-LOG #33); root cause = detector scope → user-approved spec change (TDD Addendum A1/A2) |
+| v2 (design scope + normalized scoring) | PASS 0.98, 8 findings — 6 were regex false positives (`fix(` inside `Suffix(`/`Prefix(`) | User-approved heuristic fix: `\b` word boundaries (RUN-LOG #36) |
+| **v3 (final)** | **PASS 1.00, 2 findings — exactly the real TODOs** | **6/6 PASS — this report** |
 
 ---
 
