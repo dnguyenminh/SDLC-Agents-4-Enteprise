@@ -104,13 +104,20 @@ export async function activate(context: vscode.ExtensionContext) {
   };
 
   const resolveWasmPath = (): string => {
-    // Packaged detector binary ships under out/wasm/detector.wasm
-    const candidate = path.join(context.extensionPath, "out", "wasm", "detector.wasm");
-    if (fs.existsSync(candidate)) {
-      process.env[EnvConfig.IMPPECABLE_SKILL_PATH] = candidate;
-      return candidate;
+    // 1) Packaged VSIX: copy-resources ships detector binary at resources/wasm/
+    //    (esbuild bundles out/ to a single file — out/wasm does not survive packaging)
+    const packaged = path.join(context.extensionPath, "resources", "wasm", "detector.wasm");
+    if (fs.existsSync(packaged)) {
+      process.env[EnvConfig.IMPPECABLE_SKILL_PATH] = packaged;
+      return packaged;
     }
-    // Fallback: workspace checkout layout (dev / F5 mode)
+    // 2) Dev tsc build: out/wasm/detector.wasm
+    const built = path.join(context.extensionPath, "out", "wasm", "detector.wasm");
+    if (fs.existsSync(built)) {
+      process.env[EnvConfig.IMPPECABLE_SKILL_PATH] = built;
+      return built;
+    }
+    // 3) F5 / repo checkout: workspace source layout
     const devCandidate = path.join(context.extensionPath, "..", "source", "source-slash", "wasm", "detector.wasm");
     process.env[EnvConfig.IMPPECABLE_SKILL_PATH] = devCandidate;
     return devCandidate;
