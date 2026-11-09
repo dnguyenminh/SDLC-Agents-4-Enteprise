@@ -1,0 +1,84 @@
+{
+  "ticket": "SA4E-427",
+  "epic": "SA4E-411",
+  "title": "[Phase 4] 17 Acceptance Criteria Test Suite",
+  "version": 1,
+  "updated": "2026-11-09",
+  "status": "in-review",
+  "phase": "phase-4",
+  "spec": "16K Doc 19 (Acceptance Criteria) - 17 AC + SA4E integration checks",
+  "implementation": {
+    "files": [
+      "backend/src/engine/acceptance/__tests__/ac-fixtures.ts (new)",
+      "backend/src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts (new)",
+      "backend/src/engine/acceptance/__tests__/acceptance-ac09-12.test.ts (new)",
+      "backend/src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts (new)",
+      "extension/src/pi-agent/__tests__/acceptance-ac17.test.ts (new)",
+      "package.json (test:ac script)",
+      "backend/package.json (test:ac script)",
+      "extension/package.json (test:ac script)",
+      "documents/SA4E-427/ACCEPTANCE-MATRIX.md (new)",
+      "documents/SA4E-427/PERF-BASELINES.md (new)"
+    ],
+    "fixture": {
+      "repositories": 2,
+      "commits": "5 (c1, c2 rename, c3 merge 2 parents, cdel delete, rc1 repo-2)",
+      "snapshots": "8: S1..S5 READY (multi-commit + cross-repo), S6 adapter re-index, S7 dependency re-run, S8 dependency-failure PENDING",
+      "embedding_models": "2 on S1 (local-minilm es1 + other-model es1b) - no vector mixing",
+      "data": "symbols, chunks + FTS5, embeddings, repository_ref_index_state"
+    },
+    "test_split": {
+      "AC-01..08": "acceptance-ac01-08.test.ts - re-index, models, pin, rename, delete, merge, ownership triggers, isolation",
+      "AC-09..12": "acceptance-ac09-12.test.ts - filtered recall/count, semantic re-run, failure cascade, restart resume",
+      "AC-13..16": "acceptance-ac13-16.test.ts - stale base/traversal, tree integrity before approval, sandbox, SSE reconnect",
+      "AC-17": "extension/src/pi-agent/__tests__/acceptance-ac17.test.ts - real tokenizer -> runtime budget gate"
+    },
+    "gates": {
+      "root": "npm run test:ac = backend && extension",
+      "backend": "vitest run src/engine/acceptance/ (16 tests / 3 files)",
+      "extension": "vitest run src/pi-agent/__tests__/acceptance-ac17.test.ts (1 test)"
+    }
+  },
+  "acceptance_criteria": {
+    "AC-01_reindex_adapter": "pass - S6 READY, S1 counts unchanged",
+    "AC-02_two_embedding_models": "pass - es1 vs es1b chunks never mixed",
+    "AC-03_pinned_old_commit": "pass - branch head S2, session pin S1/c1 returns s-auth1",
+    "AC-04_rename": "pass - src/old/auth.ts @S1 vs src/new/auth.ts @S2/S3",
+    "AC-05_delete": "pass - queryable @S1, absent @S4",
+    "AC-06_merge_commit": "pass - parents [c1,c2] ordered, S3 READY, symbols resolve",
+    "AC-07_artifact_ownership": "pass - DB triggers reject cross-snapshot parent + cross-repo chat pin",
+    "AC-08_no_vector_leak": "pass - S1 vs S5 (repo-2) fully isolated, lexical scoped",
+    "AC-09_filtered_recall_count": "pass - recall@2 = 1.0 (exact scan), counts {S1:2,S2:1,S3:1,S5:1}",
+    "AC-10_semantic_rerun": "pass - E->F re-ran on new config_fingerprint, source hashes unchanged, S1 intact",
+    "AC-11_no_fake_coverage": "pass - java coverage 'failed' (never supported), F skipped for java, snapshot READY",
+    "AC-12_restart_resume": "pass - summarizeForResume + fresh service resumePoint (nextStepIndex 1, pending approval)",
+    "AC-13_patch_reject": "pass - STALE_BASE + PATH_INVALID, file bytes untouched",
+    "AC-14_tree_unchanged_pre_approval": "pass - fingerprint identical after stage + NOT_APPROVED apply; changes only after APPROVED",
+    "AC-15_sandbox": "pass - absolute/../NUL rejected, shell metachars rejected, '--' separator, network denied by default, exact-host allowlist, limits validated",
+    "AC-16_sse_reconnect": "pass - ids [1..7], reconnect via Last-Event-ID -> 0 duplicates / 0 missing",
+    "AC-17_runtime_tokenizer": "pass - real 4200-token count drives budget decision (staticTokens = real + base + tool schema)"
+  },
+  "integration_checks": {
+    "no_sm_pipeline_regression": "pass - backend 466 files / 3676 tests, extension 441 files / 3451 tests",
+    "tsc_vitest_green": "pass - extension tsc --noEmit exit 0; backend tests excluded from build tsc (tests run via vitest)",
+    "no_unauthorized_config_change": "pass - only test:ac scripts + test files + docs"
+  },
+  "performance": {
+    "backend_ac_suite": "1.6-1.7s (target <10s)",
+    "slowest_test": "AC-01 71ms / AC-09 47ms / AC-13 49ms (target <2s each)",
+    "extension_ac_suite": "~0.4-0.5s (test 5-6ms)",
+    "baseline_doc": "documents/SA4E-427/PERF-BASELINES.md"
+  },
+  "regression": "backend 466 files / 3676 passed (+2 skipped); extension 441 passed (+1 skipped file) / 3451 passed (+6 skipped); lint clean; tsc clean",
+  "evidence": [
+    "documents/SA4E-427/ACCEPTANCE-MATRIX.md",
+    "documents/SA4E-427/PERF-BASELINES.md",
+    "backend/src/engine/acceptance/__tests__/",
+    "extension/src/pi-agent/__tests__/acceptance-ac17.test.ts"
+  ],
+  "deviations": [
+    "AC-09 uses exact SQLite cosine scan (ADR-001) - recall 100% on pinned set; ANN upgrade keeps filter-first contract",
+    "AC-15 validates policy layer; container-runtime enforcement is deployment config",
+    "AC-17 lives in extension workspace (budget gate concern)"
+  ]
+}
