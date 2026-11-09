@@ -1,0 +1,58 @@
+{
+  "ticket": "SA4E-429",
+  "epic": "SA4E-411",
+  "title": "[Phase 4] SA4E Regression Test Suite",
+  "version": 1,
+  "updated": "2026-11-09",
+  "status": "in-review",
+  "phase": "phase-4",
+  "spec": "Jira SA4E-429 AC (8 items) + AGENTS.md role boundaries + 16K Doc §19 regression scope",
+  "implementation": {
+    "files": [
+      "backend/src/engine/regression/__tests__/sa4e-regression.test.ts (new, 3 tests)",
+      "extension/src/__tests__/sa4e-regression.test.ts (new, 9 tests)",
+      "package.json (root test:regression gate)",
+      "backend/package.json (test:regression gate)",
+      "extension/package.json (test:regression gate)"
+    ],
+    "gate": "npm run test:regression — backend 11 files / 63 tests (2 skipped) + extension 20 files / 155 tests; composes the targeted SA4E suites below",
+    "targeted_suites": {
+      "sm_pipeline": "extension/src/pi-workflow/__tests__/pi-workflow-e2e.integration.test.ts + phase-router.test.ts",
+      "f12_connection": "extension/src/connection/__tests__ (connection-manager, health-checker) + src/__tests__/remote-backend-health.test.ts + src/__tests__/mcp-handshake.regression.test.ts",
+      "sa4e_155_enrichment": "backend/src/engine/enrichment/__tests__/enrichment-e2e.flow.test.ts (+ enrichment-strategy / prompt / routing)",
+      "context_budget": "extension budget-gate-decisions/enforce/escalation, context-budget-resolver, session-budget-gate, session-tier-wiring, context-governance-matrix.integration",
+      "f2_indexer": "backend/src/engine/indexer/__tests__ (file-scanner, checksum-service, path-safety, index-operation-manager) + engine/regression additive-schema proof",
+      "f4_context": "backend/src/engine/context/__tests__/ai-context-service.test.ts + engine/regression F4 assembly proof",
+      "role_boundaries": "extension/src/__tests__/sa4e-regression.test.ts + role-scope, scoped-steering, tool-loadout-invariants/roles/cap"
+    }
+  },
+  "acceptance_criteria": {
+    "sm_full_pipeline_e2e": "pass — pi-workflow-e2e.integration.test.ts covers the 7-phase lifecycle, tool approval/audit, and abort/HALTED; sa4e-regression extension test asserts the canonical phase order and PhaseRouter transitions",
+    "f12_connection_lifecycle": "pass — connection-manager + health-checker + remote-backend-health + MCP handshake regression all green in the gate",
+    "sa4e_155_enrichment_flow": "pass — enrichment-e2e.flow.test.ts green in the gate (priority queue, timeout, LLM fallback path)",
+    "context_budget_wiring": "pass — budget-gate decision/enforce/escalation + context-budget-resolver + session-budget-gate + governance matrix green in the gate",
+    "f2_indexer_unaffected": "pass — regression test proves migration V6 is additive (files/symbols/symbols_fts triggers/relationships intact, foreign_keys pragma on, host-file export on disconnect); indexer suites green",
+    "f4_context_with_new_retrieval": "pass — regression test assembles legacy symbol context (source + doc_comment) through AIContextService on a V6 DB, and proves legacy symbol vs snapshot retrieval isolation; ai-context-service suite green",
+    "role_boundaries": "pass — regression test parses the 9-agent responsibility matrix, verifies every agent prompt exists, SM coordinator-only guard, no create/forbid overlap, critical cross-agent guards, and role-scope coverage for 8 operating roles + fail-open",
+    "build_and_test_green": "pass — root `npm run build` exit 0; root `npm test` exit 0: backend 500 files / 3825 passed / 19 skipped; extension 443 files / 3469 passed / 6 skipped"
+  },
+  "verification": {
+    "new_backend_test": "backend/src/engine/regression/__tests__/sa4e-regression.test.ts — 3/3 pass",
+    "new_extension_test": "extension/src/__tests__/sa4e-regression.test.ts — 9/9 pass",
+    "entra_related_suites": "src/config + tests/unit/EntraConfig.test.ts + auth strategies + verifiers + entra-oauth integration — 16 files / 89 tests pass",
+    "regression_gate": "npm run test:regression exit 0 (backend 63 tests, extension 155 tests)",
+    "build": "npm run build exit 0 (backend tsc + extension bundle)",
+    "full_test": "npm test exit 0"
+  },
+  "cross_cutting_fixes": [
+    "core-tools.ts — TS build: local type imports (SearchSymbolsArgs, SymbolEntry), HybridHit map typing, fusedScore sort, spread args into validateToolArgs",
+    "index-pipeline.ts — import StageHandler type used by runPerLanguage",
+    "staged-patch.ts — import QueryDatabaseAdapter used by the staged-patch DB dependency",
+    "EntraConfig root cause — optional authority/issuer/jwksUri used `.default('')`, so Zod returned an unvalidated empty string and applyDerivedDefaults' `??` never derived; schema now uses the https-only `httpsUrl.optional()` and env parsing normalizes blank optional vars to undefined (ENTRA_SCOPES stays strict). Tests 11/11, incl. T-02 defaults, T-05 http:// rejection, T-09 multi-tenant derivation"
+  ],
+  "notes": [
+    "The gate is deliberately composed of pre-existing area suites plus the two new cross-cutting regression files; no production behavior changed except the Entra config root-cause fix required to make `npm test` green",
+    "Known deferred gaps from earlier stories are unchanged: CoreAgentTools registration into MCP tools/list (SA4E-420, deferred to e2e), tiktoken plug-in for non-llama.cpp providers, AC-09 exact SQLite cosine scan per ADR-001",
+    "documents/SA4E-190/* is another session's work and was not touched"
+  ]
+}

@@ -560,6 +560,7 @@
     "test:unit": "vitest run",
     "test:ac": "vitest run src/pi-agent/__tests__/acceptance-ac17.test.ts",
     "test:token": "vitest run src/pi-agent/__tests__/token-eviction.integration.test.ts",
+    "test:regression": "vitest run src/connection/__tests__ src/__tests__/remote-backend-health.test.ts src/__tests__/mcp-handshake.regression.test.ts src/__tests__/sa4e-regression.test.ts src/pi-workflow/__tests__/pi-workflow-e2e.integration.test.ts src/pi-workflow/__tests__/phase-router.test.ts src/pi-agent/__tests__/budget-gate-decisions.test.ts src/pi-agent/__tests__/budget-gate-enforce.test.ts src/pi-agent/__tests__/budget-gate-escalation.test.ts src/pi-agent/__tests__/context-governance-matrix.integration.test.ts src/pi-agent/__tests__/context-budget-resolver.test.ts src/pi-agent/__tests__/session-budget-gate.test.ts src/pi-agent/__tests__/session-tier-wiring.test.ts src/pi-agent/__tests__/role-scope.test.ts src/pi-agent/__tests__/scoped-steering.test.ts src/pi-agent/__tests__/tool-loadout-invariants.test.ts src/pi-agent/__tests__/tool-loadout-roles.test.ts src/pi-agent/__tests__/tool-loadout-cap.test.ts src/pi-agent/__tests__/token-eviction.integration.test.ts",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:watch": "vitest watch",

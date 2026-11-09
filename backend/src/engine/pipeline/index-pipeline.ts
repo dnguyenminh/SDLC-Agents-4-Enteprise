@@ -25,6 +25,7 @@ import {
   type PipelineRunResult,
   type PipelineStage,
   type PipelineStageContext,
+  type StageHandler,
   type StageOutcome,
 } from './pipeline-types.js';
 

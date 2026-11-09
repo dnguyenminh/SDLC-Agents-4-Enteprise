@@ -24,15 +24,22 @@ export function envBool(env: NodeJS.ProcessEnv, key: string, fallback: boolean):
   return val === '1' || val.toLowerCase() === 'true';
 }
 
+/** Optional var: blank/whitespace-only is treated as absent (derived default). */
+function optionalEnv(env: NodeJS.ProcessEnv, key: string): string | undefined {
+  const val = env[key]?.trim();
+  return val ? val : undefined;
+}
+
 function buildRawFrom(env: NodeJS.ProcessEnv) {
   return {
     tenantId: env.ENTRA_TENANT_ID,
     clientId: env.ENTRA_CLIENT_ID,
     clientSecret: env.ENTRA_CLIENT_SECRET,
     redirectUri: env.ENTRA_REDIRECT_URI,
-    authority: env.ENTRA_AUTHORITY,
-    issuer: env.ENTRA_ISSUER,
-    jwksUri: env.ENTRA_JWKS_URI,
+    authority: optionalEnv(env, 'ENTRA_AUTHORITY'),
+    issuer: optionalEnv(env, 'ENTRA_ISSUER'),
+    jwksUri: optionalEnv(env, 'ENTRA_JWKS_URI'),
+    // scopes: blank is NOT absent — an explicitly blank scope list must fail.
     scopes: env.ENTRA_SCOPES,
   };
 }

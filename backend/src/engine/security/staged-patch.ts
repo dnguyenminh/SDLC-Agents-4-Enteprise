@@ -16,6 +16,7 @@
 
 import { randomUUID } from 'node:crypto';
 import pino from 'pino';
+import type { QueryDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { PatchProtocol, sha256Hex, type PatchIo, type StructuredPatch } from './patch-protocol.js';
 
 const logger = pino({ name: 'staged-patch' });

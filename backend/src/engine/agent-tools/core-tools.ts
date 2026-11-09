@@ -6,13 +6,15 @@
 import type { QueryDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { validateToolArgs } from '../security/tool-schemas.js';
 import { SnapshotRetrievalService } from '../retrieval/snapshot-retrieval.js';
-import { fuseRankedList, type EvidenceKind } from '../retrieval/retrieval-types.js';
+import { fuseRankedList, type EvidenceKind, type HybridHit } from '../retrieval/retrieval-types.js';
 import {
   assertSessionPin,
   dslHeader,
   estimateTokens,
   newResultId,
+  type SearchSymbolsArgs,
   type SessionPin,
+  type SymbolEntry,
   type ToolResult,
 } from './tool-context.js';
 
@@ -59,20 +61,20 @@ export class CoreAgentTools {
 
   /** Hybrid BM25 + vector search, RRF-fused, snapshot-pinned, DSL output. */
   async searchSymbols(pin: SessionPin, args: SearchSymbolsArgs, offset = 0): Promise<ToolResult<SymbolEntry[]>> {
-    const v = validateToolArgs('search_symbols', args as Record<string, unknown>);
+    const v = validateToolArgs('search_symbols', { ...args });
     if (!v.valid) throw new Error(`INVALID_ARGS: ${v.errors.join('; ')}`);
     await assertSessionPin(this.retrieval, pin);
     const limit = (args.limit ?? 10) + offset;
 
     const lexical = await this.retrieval.lexicalSearch(pin.index_snapshot_id, args.query, limit);
-    const fused = new Map<string, number>();
+    const fused = new Map<string, HybridHit>();
     fuseRankedList(fused, 'lexical', lexical.map((h) => h.chunkId));
     try {
       const vector = await this.retrieval.vectorSearch(pin.index_snapshot_id, 'local-minilm', '1.0', this.embedFn(args.query), limit);
       fuseRankedList(fused, 'vector', vector.map((h) => h.chunkId));
     } catch { /* vector path optional — lexical results still returned (graceful) */ }
 
-    const rankedIds = [...fused.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
+    const rankedIds = [...fused.entries()].sort((a, b) => b[1].fusedScore - a[1].fusedScore).map(([id]) => id);
     const all = await this.resolveChunkSymbols(pin.index_snapshot_id, rankedIds, args);
     const page = all.slice(offset, offset + (args.limit ?? 10));
     const truncated = offset + page.length < all.length;

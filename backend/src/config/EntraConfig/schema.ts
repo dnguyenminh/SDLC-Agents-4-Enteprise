@@ -41,9 +41,11 @@ export const EntraConfigSchema = z.object({
     .refine(v => v.startsWith('https://') || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)(\/|$)/.test(v),
       { message: 'must be https:// or http://localhost with port' })
     .refine(v => !v.includes('#'), { message: 'fragment not allowed' }),
-  authority: z.string().url().default(''),
-  issuer: z.string().url().default(''),
-  jwksUri: z.string().url().default(''),
+  // Optional: absent values are tenant-derived by applyDerivedDefaults().
+  // Blank env vars are normalized to undefined by the env parser.
+  authority: httpsUrl.optional(),
+  issuer: httpsUrl.optional(),
+  jwksUri: httpsUrl.optional(),
   scopes: z.string().default('openid profile email offline_access')
     .transform(v => v.trim().split(/\s+/).filter(Boolean))
     .pipe(z.array(z.string().regex(SCOPE_TOKEN_REGEX)).min(1)),

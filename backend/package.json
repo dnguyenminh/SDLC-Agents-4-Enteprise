@@ -17,6 +17,7 @@
     "test:unit": "vitest run src/",
     "test:ac": "vitest run src/engine/acceptance/",
     "test:token": "vitest run src/engine/scratchpad/__tests__/token-eviction.integration.test.ts",
+    "test:regression": "vitest run src/engine/regression/__tests__ src/engine/indexer/__tests__/file-scanner.test.ts src/engine/indexer/__tests__/checksum-service.test.ts src/engine/indexer/__tests__/index-operation-manager.test.ts src/engine/indexer/__tests__/path-safety.test.ts src/engine/context/__tests__/ai-context-service.test.ts src/engine/enrichment/__tests__/enrichment-e2e.flow.test.ts src/engine/pipeline/__tests__ src/sa4e-190/__tests__",
     "test:integration": "vitest run tests/integration/",
     "test:contract": "vitest run tests/contract/",
     "test:e2e-api": "vitest run --config vitest.e2e.config.ts",
