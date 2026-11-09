@@ -25,7 +25,7 @@ export function createMockOutputChannel() {
 /** Standard tool schemas for tests */
 export const TOOL_SCHEMAS = [
   {
-    name: 'drawio_export_png',
+    name: 'export_diagram_backend',
     description: 'Export drawio to PNG. Returns output_base64 field.',
     inputSchema: {
       type: 'object',

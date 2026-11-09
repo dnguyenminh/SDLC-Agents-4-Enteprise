@@ -6,6 +6,9 @@
 import { handleStreamWriteFile } from "./stream-write";
 import { handleEmbedImage } from "./embed-image";
 import { streamWriteFileDefinition, embedImageDefinition } from "./definitions";
+// SA4E-406 Extension Migration: drawio tools execute LOCALLY in the extension.
+import { handleDrawioAutoLayout, DRAWIO_AUTO_LAYOUT_DEFINITION } from "../tools/drawio/drawio-tool";
+import { handleDrawioExportPng, DRAWIO_EXPORT_PNG_DEFINITION } from "../tools/drawio/drawio-export-png";
 
 /** Type for a local tool handler function. */
 export type LocalToolHandler = (args: Record<string, unknown>) => unknown;
@@ -32,6 +35,9 @@ interface LocalToolEntry {
 const LOCAL_TOOL_REGISTRY: Map<string, LocalToolEntry> = new Map([
   ["stream_write_file", { handler: handleStreamWriteFile, definition: streamWriteFileDefinition() }],
   ["embed_image", { handler: handleEmbedImage, definition: embedImageDefinition() }],
+  // SA4E-406 Extension Migration — local execution, no backend round-trip:
+  ["drawio_auto_layout", { handler: handleDrawioAutoLayout, definition: DRAWIO_AUTO_LAYOUT_DEFINITION }],
+  ["drawio_export_png", { handler: handleDrawioExportPng, definition: DRAWIO_EXPORT_PNG_DEFINITION }],
 ]);
 
 /**
