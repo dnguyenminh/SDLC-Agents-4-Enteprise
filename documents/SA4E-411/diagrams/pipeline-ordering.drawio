@@ -1,0 +1,84 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="boundary-syntax" value="Syntax Indexing (Can Run in Parallel)" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="20" width="560" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary-semantic" value="Semantic Indexing (Must Wait for Dependencies)" style="swimlane;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="260" width="560" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary-publish" value="Validation & Publication" style="swimlane;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="500" width="560" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="stage-a" value="A. Repo & Revision Discovery&#xa;• Clone/fetch repo&#xa;• Enumerate commits&#xa;• Detect refs (branches/tags)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="boundary-syntax">
+      <mxGeometry x="10" y="50" width="160" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="stage-b" value="B. File Inventory & Immutable Revisions&#xa;• Walk working tree&#xa;• Create source_file_revision rows&#xa;• content_hash + language detection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="boundary-syntax">
+      <mxGeometry x="190" y="50" width="180" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="stage-c" value="C. Build/Module Config Discovery&#xa;• Find build files (pom.xml, package.json, etc.)&#xa;• Extract module declarations&#xa;• Create code_module rows" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="boundary-syntax">
+      <mxGeometry x="390" y="50" width="160" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="stage-d" value="D. Syntax Indexing (Tree-sitter)&#xa;• Parse files with Tree-sitter&#xa;• Extract symbols (classes, methods, functions)&#xa;• Create code_symbol rows&#xa;• Populate symbols_fts (FTS5)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="boundary-syntax">
+      <mxGeometry x="10" y="120" width="540" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="arrow-a-b" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stage-a" target="stage-b">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="arrow-b-c" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stage-b" target="stage-c">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="arrow-c-d" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stage-c" target="stage-d">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="stage-e" value="E. Dependency & Toolchain Resolution&#xa;• Resolve imports/dependencies&#xa;• Find compiler/LSP toolchains&#xa;• Populate dependency_resolution_snapshot&#xa;• Detect classpath, module paths" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-semantic">
+      <mxGeometry x="10" y="50" width="540" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="stage-f" value="F. Semantic Indexing (Compiler/LSP)&#xa;• Bind symbols to types&#xa;• Cross-file resolution (imports, calls)&#xa;• Populate symbol_occurrence + resolution&#xa;• Build symbol_relationship (CALLS, IMPORTS, INHERITS)&#xa;• Language isolation: one lang failure ≠ abort all" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-semantic">
+      <mxGeometry x="10" y="160" width="540" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="arrow-d-e" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stage-d" target="stage-e">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="arrow-e-f" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stage-e" target="stage-f">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="stage-g" value="G. Graph Reconciliation&#xa;• Merge syntax + semantic edges&#xa;• Validate composite FK ownership&#xa;• Compute PageRank for repo map&#xa;• Build relationship_evidence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="boundary-publish">
+      <mxGeometry x="10" y="50" width="260" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="stage-h" value="H. Chunk & Embedding&#xa;• Split code_symbol into code_chunk (skeleton/body)&#xa;• Create embedding_set per model&#xa;• Generate code_embedding (float32[])&#xa;• Populate code_chunk_fts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="boundary-publish">
+      <mxGeometry x="290" y="50" width="260" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="stage-i" value="I. Validation&#xa;• All artifacts have snapshot_id&#xa;• Composite FK ownership checks (18 triggers)&#xa;• CHECK constraints: line ranges, confidence [0,1]&#xa;• Coverage metrics per language" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="boundary-publish">
+      <mxGeometry x="10" y="150" width="260" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="stage-j" value="J. Atomic Publication&#xa;• status → READY&#xa;• Update repository_ref_index_state for refs&#xa;• WAL checkpoint for durability&#xa;• Legacy tables (files/symbols) untouched" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="boundary-publish">
+      <mxGeometry x="290" y="150" width="260" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="arrow-f-g" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stage-f" target="stage-g">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="arrow-g-h" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stage-g" target="stage-h">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="arrow-h-i" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stage-h" target="stage-i">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="arrow-i-j" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stage-i" target="stage-j">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="note-isolation" value="⚡ Per-Language Isolation:&#xa;Stage D (Syntax) runs independently per language&#xa;Stage F (Semantic) runs after E completes for each language&#xa;Failure in one language → that language marked FAILED&#xa;Other languages continue → snapshot still READY (soft failure)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="600" y="20" width="560" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="note-dependencies" value="🔗 Dependency Ordering Rules:&#xa;1. A → B → C → D (sequential per commit)&#xa;2. D (Syntax) can start before E completes&#xa;3. F (Semantic) MUST wait for E (dependencies resolved)&#xa;4. G → H → I → J (sequential, all languages merged)&#xa;5. Snapshot is immutable once READY" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="600" y="180" width="560" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="note-invariants" value="🛡️ Invariants Enforced:&#xa;• Every artifact has snapshot_id (CR-03)&#xa;• Composite FK ownership (CR-03): parent_id, module_id, symbol_id, evidence&#xa;• Same-snapshot ownership validated by 18 triggers&#xa;• CHECK: start_line ≤ end_line, offsets ≥ 0, confidence ∈ [0,1]&#xa;• chat_session.pinned_snapshot must match (repo_id, commit_id)&#xa;• project_id on all tables (V5 multi-tenant)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="600" y="360" width="560" height="180" as="geometry"/>
+    </mxCell>
+    <mxCell id="note-ac" value="✅ Acceptance Criteria Covered:&#xa;AC-01: Re-index same commit with new adapter → old snapshot intact&#xa;AC-02: 2 embedding models on same snapshot → no vector mixing&#xa;AC-04: Rename file → old & new paths correct at respective commits&#xa;AC-05: Delete file → queryable at old commit, not at new&#xa;AC-06: Merge commit with multiple parents indexed correctly&#xa;AC-07: Every artifact belongs to required snapshot (DB-enforced)&#xa;AC-08: Vector query never leaks across repo/snapshot&#xa;AC-09: Filtered ANN recall + result-count on multi-snapshot data&#xa;AC-10: Semantic re-run after dependency/classpath change (source unchanged)&#xa;AC-11: Dependency failure → no fake semantic coverage cascade" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="600" y="560" width="560" height="220" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

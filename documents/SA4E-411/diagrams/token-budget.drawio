@@ -1,0 +1,139 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="boundary-budget" value="Runtime Token Budget Calculation (16K Doc §4)" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="20" width="560" height="380" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary-components" value="Budget Components (Reference: 16,384 total for 16K model)" style="swimlane;startSize=30;fillColor=none;strokeColor=#d6b656;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="600" y="20" width="560" height="380" as="geometry"/>
+    </mxCell>
+    <mxCell id="model-nctx" value="model_n_ctx = 16,384&#xa;(from real model config)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="boundary-budget">
+      <mxGeometry x="10" y="50" width="260" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="max-output" value="max_output_tokens = 4,096&#xa;(configurable per model)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="boundary-budget">
+      <mxGeometry x="290" y="50" width="260" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="safety" value="safety_margin = 500&#xa;(reserved for special tokens)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="boundary-budget">
+      <mxGeometry x="10" y="130" width="260" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="system-prompt" value="system_prompt + tool_schemas&#xa;≈ 1,500 tokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="boundary-budget">
+      <mxGeometry x="290" y="130" width="260" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="history" value="summary/history&#xa;≈ 2,000 tokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="boundary-budget">
+      <mxGeometry x="10" y="210" width="260" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="user-msg" value="current_user_message&#xa;≈ 500 tokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="boundary-budget">
+      <mxGeometry x="290" y="210" width="260" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="framing" value="framing/special_tokens&#xa;≈ 300 tokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="boundary-budget">
+      <mxGeometry x="10" y="290" width="260" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="tool-results" value="tool_results_must_remain&#xa;≈ 1,000 tokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="boundary-budget">
+      <mxGeometry x="290" y="290" width="260" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="available-input" value="available_input_tokens&#xa;= model_n_ctx - max_output - safety&#xa;- system_prompt - history - user_msg&#xa;- framing - tool_results_must_remain&#xa;≈ 6,488 tokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="boundary-budget">
+      <mxGeometry x="10" y="370" width="540" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="evidence-budget" value="evidence_budget = available_input_tokens - repo_map - scratchpad&#xa;≈ 6,488 - 1,500 - 2,000 = 2,988 tokens&#xa;(for retrieved code context)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="boundary-components">
+      <mxGeometry x="10" y="50" width="540" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="tier-small" value="Tier Small (8,192 n_ctx)&#xa;staticBudget ≈ 3,000&#xa;staticTokens ≤ staticBudget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="boundary-components">
+      <mxGeometry x="10" y="150" width="260" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="tier-medium" value="Tier Medium (32,768 n_ctx)&#xa;staticBudget ≈ 12,000&#xa;staticTokens ≤ staticBudget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="boundary-components">
+      <mxGeometry x="290" y="150" width="260" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="tier-large" value="Tier Large (128,000 n_ctx)&#xa;staticBudget ≈ 48,000&#xa;staticTokens ≤ staticBudget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="boundary-components">
+      <mxGeometry x="10" y="250" width="260" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="real-tokenizer" value="Real Tokenizer (llama.cpp /tokenize)&#xa;• fetchFn injected → llama.cpp endpoint&#xa;• Returns exact token count (e.g., 4,200)&#xa;• Replaces static estimate in budget-gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="boundary-components">
+      <mxGeometry x="290" y="250" width="260" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="arrow1" value="−" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="model-nctx" target="available-input">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="140" y="110"/>
+          <mxPoint x="140" y="370"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="arrow2" value="−" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="max-output" target="available-input">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="420" y="110"/>
+          <mxPoint x="420" y="370"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="arrow3" value="−" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="safety" target="available-input">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="140" y="190"/>
+          <mxPoint x="140" y="370"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="arrow4" value="−" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="system-prompt" target="available-input">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="420" y="190"/>
+          <mxPoint x="420" y="370"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="arrow5" value="−" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="history" target="available-input">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="140" y="270"/>
+          <mxPoint x="140" y="370"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="arrow6" value="−" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="user-msg" target="available-input">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="420" y="270"/>
+          <mxPoint x="420" y="370"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="arrow7" value="−" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="framing" target="available-input">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="140" y="350"/>
+          <mxPoint x="140" y="370"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="arrow8" value="−" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="tool-results" target="available-input">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="420" y="350"/>
+          <mxPoint x="420" y="370"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="boundary-escalation" value="Escalation Order (Budget Gate)" style="swimlane;startSize=30;fillColor=none;strokeColor=#b85450;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="420" width="1140" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="esc-1" value="1. COMPRESS&#xa;• Summarize history/scratchpad&#xa;• steeringBudget halved&#xa;• shouldCompress = true" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="boundary-escalation">
+      <mxGeometry x="10" y="50" width="360" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="esc-2" value="2. DROP-STEERING&#xa;• Remove steering documents from context&#xa;• minLoadout = true&#xa;• Only core tools remain" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="boundary-escalation">
+      <mxGeometry x="390" y="50" width="360" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="esc-3" value="3. MIN-LOADOUT&#xa;• Core + Discovery tools only (cap = 1000 tokens)&#xa;• capExceeded = true if unreachable&#xa;• If still over budget → PiContextBudgetExceededError" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="boundary-escalation">
+      <mxGeometry x="770" y="50" width="360" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="esc-formula" value="S_evict = Age×200 + Tokens − Referenced×1000&#xa;In-use/exempt = -Infinity&#xa;Tombstone: [evicted tool_call_id=<id>]&#xa;Batch evict at ~75% budget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="boundary-escalation">
+      <mxGeometry x="10" y="170" width="1120" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary-gate" value="Budget Gate Wiring (extension/src/pi-agent/)" style="swimlane;startSize=30;fillColor=none;strokeColor=#9673a6;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="660" width="1140" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="gate-components" value="• resolveContextBudget() — computes staticBudget from n_ctx&#xa;• tryRuntimeTokenCount(fetchFn) — llama.cpp /tokenize call&#xa;• runSessionBudgetGate() — orchestrates escalation chain&#xa;• scopedSteering() — role-scope reduction (BA 5→1 skills)&#xa;• RoleScopeFilter — 8 operating roles + fail-open (unknown=5)&#xa;• buildSessionToolLoadout() — BA excludes deploy/git/build, DEV keeps git/build&#xa;• DefaultResourceLoader wired for steering (no new code)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="boundary-gate">
+      <mxGeometry x="10" y="50" width="1120" height="80" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
