@@ -1,0 +1,39 @@
+{
+  "ticket": "SA4E-425",
+  "epic": "SA4E-411",
+  "title": "[Phase 3] SSE Durable Event Log & Replay",
+  "version": 1,
+  "updated": "2026-11-09",
+  "status": "in-review",
+  "phase": "phase-3",
+  "spec": "16K Doc 15 (Agent State Persistence) + 17 (API Scope), AC #16",
+  "implementation": {
+    "files": [
+      "backend/src/engine/agent/sse-stream.ts (new)",
+      "backend/src/engine/agent/__tests__/sse-stream.test.ts (new)"
+    ],
+    "sse_transport": {
+      "durable_before_emit": "publish() = AgentEventLog.append() (commit) -> doc lai row theo id -> moi tra frame; append fail (payload > 2048 chars) thi khong co frame, khong co row",
+      "wire_format": "id: <event_id>\\nevent: <type>\\ndata: <reference-only JSON>\\n\\n",
+      "last_event_id": "parseLastEventId(header) -> cursor; replay(runId, cursor) tra moi event id > cursor, dung thu tu",
+      "gap_refusal": "SseGapError khi contiguity fail (fail loud, khong bao gio im lang mat event)",
+      "reconnect": "0 duplicate / 0 missing qua disconnect + Last-Event-ID (test mo phong)"
+    },
+    "retention": {
+      "policy": "RetentionPolicy { enabled, keepDays, maxEventsPerRun }",
+      "config": "resolveRetentionPolicy(env) - SSE_EVENT_RETENTION_DAYS / SSE_EVENT_RETENTION_MAX_PER_RUN / SSE_EVENT_RETENTION_DISABLED",
+      "prune": "pruneEventLog() xoa PREFIX cu (age + per-run cap) -> ids con lai lien tuc, replay khong gap"
+    },
+    "transition_integration": "AgentPersistenceService.transition() da ghi agent_state_transition + STATE_TRANSITION event; test xac nhan thu tu payload khop bang transitions"
+  },
+  "acceptance_criteria": {
+    "persistence_before_sse": "pass - publish() append truoc, frame sau; failure path khong emit",
+    "last_event_id_replay": "pass - replay tu cursor tra dung sequence [cursor+1..last]",
+    "reconnect_zero_dup_zero_missing": "pass - combined ids unique + day du + giu thu tu",
+    "retention_configurable": "pass - policy object + env override + prune prefix giu contiguity",
+    "agent_state_transition_integration": "pass - transitions table <-> STATE_TRANSITION events cung thu tu",
+    "event_categories": "pass - STATE_TRANSITION / TOOL_EXECUTED / RETRIEVAL_EVIDENCE / APPROVAL_REQUESTED / APPROVAL_DECIDED"
+  },
+  "regression": "462 files / 3655 tests pass (+2 skipped)",
+  "evidence": ["backend/src/engine/agent/__tests__/sse-stream.test.ts"]
+}
