@@ -1,0 +1,16 @@
+test_case_id,description,trigger_condition,expected_result,notes
+TC-101,"No nodes in diagram",Diagram with zero vertex cells,"Error: No nodes found in diagram",UC-01 AF-2
+TC-102,"File not found",Non-existent file_path,"Error: File not found or not accessible",UC-01 AF-3
+TC-103,"base_dir not in allowlist",Unregistered base_dir,"Error: PATH_REJECTED_OUTSIDE_ALLOWLIST",UC-01 AF-4
+TC-104,"Local repair no changes",Local repair makes no progress,"Escalates to ELK relayout",UC-02 AF-1
+TC-105,"ELK layout fails",ELK.js throws exception,"Returns best result, logs error",UC-02 AF-2, UC-03 AF-2
+TC-106,"Canvas overflow",Spacing increment would exceed 500px,"Spacing capped at 500px",UC-02 AF-3
+TC-107,"Final worse than initial",Each iteration increases issues,"Original restored, status=partial",UC-02 AF-4
+TC-108,"Invalid algorithm name",algorithm=invalid_name,"Fallback to layered, warning",UC-03 AF-1
+TC-109,"ELK.js load failure",Dynamic import fails,"Fallback to legacy layered",UC-03 AF-2
+TC-110,"Compound layout failure",ELK compound throws,"Children without container constraints",UC-03 AF-3
+TC-111,"No base_dir provided",Tool call without base_dir,"Uses primary workspace (legacy)",UC-05 AF-1
+TC-112,"Absolute file_path with base_dir",Absolute path in registered worktree,"Validated within base_dir",UC-05 AF-2
+TC-113,"workspace_root alias",workspace_root provided,"Treated as base_dir",UC-05 AF-3
+TC-114,"CLI renderer unavailable",CLI not installed,"Fallback to Chrome DevTools MCP",UC-04 AF-3
+TC-115,"Chrome DevTools unavailable",CLI + Chrome unavailable,"Fallback to Puppeteer MCP",UC-04 AF-4

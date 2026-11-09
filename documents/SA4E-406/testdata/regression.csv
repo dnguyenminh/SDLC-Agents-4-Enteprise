@@ -1,0 +1,12 @@
+test_case_id,description,setup,expected_result,notes
+TC-800,"Legacy auto_layout no base_dir",Existing diagram,Works identically to before,"Backward compatible"
+TC-801,"Legacy export_png no base_dir",Existing diagram,Works identically to before,"Backward compatible"
+TC-802,"Existing detection types",Pre-existing test diagrams,Same issues detected (+new precision),"No regression"
+TC-803,"ELK layered behavior",SA4E-84 diagrams,Same or better layout,"Previous ELK integration"
+TC-804,"Fix strategies ports/local",Suitable diagrams,Strategies work as before,"Existing F6 engine"
+TC-805,"PNG export existing",Previously working diagrams,PNG generated,"Existing export"
+TC-806,"Legacy file resolution",Single-root workspace,Resolves pinned root,"SA4E-356/357 legacy"
+TC-807,"workspace_root alias",Old calls with workspace_root,Treated as base_dir,"Deprecated but works"
+TC-808,"auto_fix boolean alias",auto_fix=true,Treated as mode=apply,"Legacy alias"
+TC-809,"Detection flags default",No detect_* flags,All three enabled,"Defaults true"
+TC-810,"Error codes stable",Known error scenarios,Same error codes,"PATH_REJECTED, FILE_NOT_FOUND, etc."

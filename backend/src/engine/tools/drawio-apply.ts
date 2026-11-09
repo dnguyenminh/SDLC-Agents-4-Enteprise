@@ -30,7 +30,10 @@ function parseEnvInt(envVar: string, defaultVal: number, min: number, max: numbe
 
 // BR-7: configurable limits via env (NFR-P5) — with bounds validation (SEC-02)
 const MAX_NODES = parseEnvInt('SA4E_ELK_MAX_NODES', 500, 1, 5000);
-const TIMEOUT_MS = parseEnvInt('SA4E_ELK_TIMEOUT_MS', 10_000, 1000, 60_000);
+// SA4E-406 UAT feedback: 10s default was too short for compound diagrams
+// (architecture.drawio: 26 nodes/4 containers → ELK layered > 10s under load).
+// 30s default, hard cap 120s via env (SEC-02 bounds updated accordingly).
+const TIMEOUT_MS = parseEnvInt('SA4E_ELK_TIMEOUT_MS', 30_000, 1000, 120_000);
 /** Full relayout kicks in when more than this fraction of cells are involved. */
 const RELAYOUT_RATIO = 0.4;
 /** Maximum spacing in pixels to prevent resource exhaustion (SEC-03). */
@@ -63,7 +66,17 @@ async function elkRelayout(
     const elkGraph = buildElkGraph(graph, normalized);
     const laidOut = await runElkLayout(elkGraph, TIMEOUT_MS);
     const { xml, repositionedNodes } = applyLayoutToXml(rawXml, laidOut);
-    if (repositionedNodes.length === 0) return error('ELK layout produced no position changes');
+    // SA4E-406 UAT: deterministic algorithms (layered) can legitimately produce
+    // identical positions on a re-run — that is "already optimal", NOT an error.
+    // The old code returned error() here, which surfaced as a spurious failure
+    // whenever a second relayout ran on a fixed file.
+    if (repositionedNodes.length === 0 && xml === rawXml) {
+      return JSON.stringify({
+        status: 'already_good',
+        message: `ELK ${normalized.algorithm} layout produced identical positions — diagram already at layout optimum.`,
+        remaining_issues: issues.filter(i => i.severity !== 'low').length,
+      });
+    }
     validateReparse(xml);
     fs.writeFileSync(filePath, xml, 'utf-8');
     // Re-detect remaining issues after fix
