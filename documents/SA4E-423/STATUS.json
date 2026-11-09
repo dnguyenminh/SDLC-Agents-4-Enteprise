@@ -1,0 +1,31 @@
+{
+  "ticket": "SA4E-423",
+  "epic": "SA4E-411",
+  "title": "[Phase 3] Agent State Persistence Hardening",
+  "version": 1,
+  "updated": "2026-11-09",
+  "status": "in-review",
+  "phase": "phase-3",
+  "spec": "16K Doc 15 (Agent State Persistence) + 10.6 + ARCH.md 6.3 (state channels)",
+  "implementation": {
+    "files": [
+      "backend/src/engine/agent/agent-state-recovery.ts (new)",
+      "backend/src/engine/agent/__tests__/agent-state-recovery.test.ts (new)"
+    ],
+    "hardening_delta_tren_nen_416": {
+      "loadRunState": "FULL reconstruction: session/run/plans/steps/transitions/approvals/changeSets/toolExecutions/evidence/events - restart = instance moi tren cung DB, zero in-memory state",
+      "verifyEventContiguity": "SSE reconnect guarantee (AC #16): ids consecutive - no gaps (khong missing), no duplicates",
+      "summarizeForResume": "run/plan status, objective, steps done/total, next step, pending approvals, event count",
+      "state_channels": "plan/steps/transitions/approvals = persisted channels (ARCH 6.3); loadRunState = channel snapshot"
+    }
+  },
+  "acceptance_criteria": {
+    "event_log_write_before_sse": "pass - verified tu 416 + notify-before-decide ordering test",
+    "step_payloads_reference_only": "pass - verified tu 416",
+    "restart_full_resume": "pass - restart simulation: 2 service instances, plan/steps/approval/decision_time tat ca persisted",
+    "approval_lifecycle": "pass - create -> notify (APPROVAL_REQUESTED event truoc decide) -> decide -> decision_time",
+    "sse_reconnect_no_dup_missing": "pass - contiguity + replay deterministic (2 lan giong het nhau)"
+  },
+  "regression": "460 files / 3641 tests pass",
+  "evidence": ["backend/src/engine/agent/__tests__/agent-state-recovery.test.ts"]
+}
