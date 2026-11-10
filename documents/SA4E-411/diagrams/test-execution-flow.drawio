@@ -89,13 +89,13 @@
     <mxCell id="e2eapi-run" value="Run vitest + fetch\nlocalhost:dynamic-port\nValidate all 17 ACs via API" style="html=1;shape=rectangle;fillColor=#E1BEE7;fontColor=#7B1FA2;fontSize=10;align=center;strokeColor=#7B1FA2;" vertex="1" parent="lane-e2eapi">
       <mxGeometry x="10" y="340" width="160" height="70" as="geometry"/>
     </mxCell>
-    <mxCell id="e2eapi-pass" value="38 tests pass?\nAC suite < 10s?" style="html=1;shape=rhombus;fillColor=#FFF9C4;fontColor=#F57F17;fontStyle=1;fontSize=10;align=center;strokeColor=#F57F17;" vertex="1" parent="lane-e2eapi">
+    <mxCell id="e2eapi-pass" value="38 tests pass?\nAC suite &#60; 10s?" style="html=1;shape=rhombus;fillColor=#FFF9C4;fontColor=#F57F17;fontStyle=1;fontSize=10;align=center;strokeColor=#F57F17;" vertex="1" parent="lane-e2eapi">
       <mxGeometry x="10" y="430" width="160" height="50" as="geometry"/>
     </mxCell>
     <mxCell id="e2eapi-fail" value="Fix E2E API\nor implementation" style="html=1;shape=rectangle;fillColor=#FFCCBC;fontColor=#BF360C;fontSize=10;align=center;strokeColor=#BF360C;" vertex="1" parent="lane-e2eapi">
       <mxGeometry x="10" y="500" width="160" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="e2eapi-done" value="E2E-API EXIT:\n38 tests ✅\nAC suite < 10s\n→ E2E-UI Entry" style="html=1;shape=ellipse;fillColor=#4CAF50;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;strokeColor=#2E7D32;" vertex="1" parent="lane-e2eapi">
+    <mxCell id="e2eapi-done" value="E2E-API EXIT:\n38 tests ✅\nAC suite &#60; 10s\n→ E2E-UI Entry" style="html=1;shape=ellipse;fillColor=#4CAF50;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;strokeColor=#2E7D32;" vertex="1" parent="lane-e2eapi">
       <mxGeometry x="10" y="570" width="160" height="60" as="geometry"/>
     </mxCell>
     <mxCell id="e2eui-start" value="ENTRY:\nExtension builds\nPlaywright configured\nTest auth available" style="html=1;shape=ellipse;fillColor=#90A4AE;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;strokeColor=#37474F;" vertex="1" parent="lane-e2eui">
@@ -128,7 +128,7 @@
     <mxCell id="sit-pass" value="0 Critical/Major\nvisual defects?\nUX accepted by BA?" style="html=1;shape=rhombus;fillColor=#FFF9C4;fontColor=#F57F17;fontStyle=1;fontSize=10;align=center;strokeColor=#F57F17;" vertex="1" parent="lane-sit">
       <mxGeometry x="10" y="380" width="160" height="60" as="geometry"/>
     </mxCell>
-    <mxCell id="sit-fail" value="Log defect\nFix & retest" style="html=1;shape=rectangle;fillColor=#FFCCBC;fontColor=#BF360C;fontSize=10;align=center;strokeColor=#BF360C;" vertex="1" parent="lane-sit">
+    <mxCell id="sit-fail" value="Log defect\nFix &#38; retest" style="html=1;shape=rectangle;fillColor=#FFCCBC;fontColor=#BF360C;fontSize=10;align=center;strokeColor=#BF360C;" vertex="1" parent="lane-sit">
       <mxGeometry x="10" y="460" width="160" height="50" as="geometry"/>
     </mxCell>
     <mxCell id="sit-done" value="SIT EXIT:\n0 Critical/Major ✅\nBA sign-off ✅\n→ RELEASE" style="html=1;shape=ellipse;fillColor=#4CAF50;fontColor=#FFFFFF;fontStyle=1;fontSize=11;align=center;strokeColor=#2E7D32;" vertex="1" parent="lane-sit">

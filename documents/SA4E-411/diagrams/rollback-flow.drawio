@@ -25,12 +25,12 @@
 </mxCell>
 
 <!-- Severity Assessment -->
-<mxCell id="assess" value="Assess Severity\n& Impact" style="rounded=1;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontColor=#e65100;fontSize=11;" vertex="1" parent="1">
+<mxCell id="assess" value="Assess Severity\n&#38; Impact" style="rounded=1;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontColor=#e65100;fontSize=11;" vertex="1" parent="1">
 <mxGeometry x="480" y="120" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <!-- Decision: Critical? -->
-<mxCell id="critical" value="Critical Defect?\n(Data loss, security,\nperf >50%, data integrity)" style="rhombus;html=1;fillColor=#ffeb3b;strokeColor=#f57f17;fontColor=#f57f17;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+<mxCell id="critical" value="Critical Defect?\n(Data loss, security,\nperf &#62;50%, data integrity)" style="rhombus;html=1;fillColor=#ffeb3b;strokeColor=#f57f17;fontColor=#f57f17;fontSize=11;fontStyle=1;" vertex="1" parent="1">
 <mxGeometry x="480" y="200" width="140" height="70" as="geometry"/>
 </mxCell>
 
@@ -110,12 +110,12 @@
 </mxCell>
 
 <!-- Decision Criteria Box -->
-<mxCell id="criteriabox" value="📋 Rollback Decision Criteria (§8.2):\n✅ IMMEDIATE: Critical defect, perf >50%,\ndata integrity, MCP spawn failure\n✅ HOTFIX: Minor UI, workaround exists\n✅ WAIT: Unclear impact, need PM decision\n❌ NO ROLLBACK: Cosmetic only" style="rounded=1;html=1;fillColor=#fff9c4;strokeColor=#f57f17;fontColor=#424242;fontSize=10;" vertex="1" parent="1">
+<mxCell id="criteriabox" value="📋 Rollback Decision Criteria (§8.2):\n✅ IMMEDIATE: Critical defect, perf &#62;50%,\ndata integrity, MCP spawn failure\n✅ HOTFIX: Minor UI, workaround exists\n✅ WAIT: Unclear impact, need PM decision\n❌ NO ROLLBACK: Cosmetic only" style="rounded=1;html=1;fillColor=#fff9c4;strokeColor=#f57f17;fontColor=#424242;fontSize=10;" vertex="1" parent="1">clear impact, need PM decision\n❌ NO ROLLBACK: Cosmetic only"nclear impact, need PM decision\n❌ NO ROLLBACK: Cosmetic only" style="rounded=1;html=1;fillColor=#fff9c4;strokeColor=#f57f17;fontColor=#424242;fontSize=10;" vertex="1" parent="1">"
 <mxGeometry x="340" y="690" width="300" height="150" as="geometry"/>
 </mxCell>
 
 <!-- SA4E-335 Warning -->
-<mxCell id="warning" value="⚠️ SA4E-335 DOCKER VOLUME PROTECTION:\nNEVER run 'docker compose down -v' on prod stack!\n• Use 'docker compose down' (no -v) to keep volumes\n• Test stack separate: docker-compose.test.yml (project sa4e-test)\n• Backup: npm run db:backup (pg_dump daily 02:00)\n• SQLite: copy .code-intel/index.db + WAL files" style="rounded=1;html=1;fillColor=#ffcdd2;strokeColor=#c62828;fontColor=#c62828;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+<mxCell id="warning" value="⚠️ SA4E-335 DOCKER VOLUME PROTECTION:\nNEVER run 'docker compose down -v on prod stack!\n• Use 'docker compose down (no -v) to keep volumes\n• Test stack separate: docker-compose.test.yml (project sa4e-test)\n• Backup: npm run db:backup (pg_dump daily 02:00)\n• SQLite: copy .code-intel/index.db + WAL files" style="rounded=1;html=1;fillColor=#ffcdd2;strokeColor=#c62828;fontColor=#c62828;fontSize=10;fontStyle=1;" vertex="1" parent="1">
 <mxGeometry x="660" y="690" width="440" height="120" as="geometry"/>
 </mxCell>
 
