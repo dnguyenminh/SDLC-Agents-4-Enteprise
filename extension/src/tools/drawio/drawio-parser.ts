@@ -75,6 +75,7 @@ function extractGraph(xml: string): DiagramGraph {
   }
 
   const tableParts = tableInternals(cells);
+  const edgeIds = new Set(cells.filter(c => c.attrs['edge'] === '1').map(c => c.attrs['id'] ?? ''));
   for (const cell of cells) {
     const id = cell.attrs['id'] ?? '';
     const style = cell.attrs['style'] ?? '';
@@ -94,6 +95,10 @@ function extractGraph(xml: string): DiagramGraph {
       else if (edge.sourcePoint && edge.targetPoint) looseEdges.push(edge);
     } else if (id !== '0' && id !== '1') {
       if (tableParts.has(id)) continue; // positioned by its table, not by us
+      // An edge label is a child of its edge with RELATIVE geometry (x = position along the edge, y = offset):
+      // it follows the edge, so it is neither a node to place nor a container child. Writing absolute
+      // coordinates into it throws the label far off the page and blanks the whole export.
+      if (edgeIds.has(parent) || /(?:^|;)edgeLabel(?:;|$)/.test(style)) continue;
       const geom = parseGeometry(cell.body, cell.attrs);
       if (!geom) continue;
       const isCont = !TABLE_ROOT.test(style) && (hasChildren(id, cells) || isContainerStyle(style, geom.w, geom.h));

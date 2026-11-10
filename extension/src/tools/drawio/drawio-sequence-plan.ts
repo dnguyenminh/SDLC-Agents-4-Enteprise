@@ -14,7 +14,7 @@
 import { parseDrawioXml } from './drawio-parser';
 import { analyzeFragments } from './drawio-sequence-fragments';
 import { collectShapes, dividerFromEdge, originalMessageY } from './drawio-sequence-sources';
-import { frameRects, furnitureRects, placeRows } from './drawio-sequence-rows';
+import { frameRects, furnitureRects, mapY, placeRows } from './drawio-sequence-rows';
 import { MARGIN, SELF_LOOP_W, labelWidth, type ParticipantPlan, type SequencePlan } from './drawio-sequence-types';
 import { readCells, type TCell } from './drawio-table-cells';
 
@@ -110,7 +110,8 @@ export function planSequence(xml: string): SequencePlan | null {
   const fragments = frameRects(an, rows, messages, participants);
   const furniture = furnitureRects(an, rows, fragments, msgY);
   const right = Math.max(...participants.map(p => p.x + p.width), ...fragments.map(f => f.x + f.w));
-  const notes = placeNotes(shapes.filter(c => !an.consumed.has(c.id) && !loose.has(c.id)), right, top);
+  const rowAnchors = msgY.flatMap((y, i): Array<[number, number]> => (y === null ? [] : [[y, rows.plans[i].y]])).sort((a, b) => a[0] - b[0]);
+  const notes = placeNotes(shapes.filter(c => !an.consumed.has(c.id) && !loose.has(c.id)), right, top, rowAnchors);
   return { participants, messages: rows.plans, redundant, notes, fragments, furniture, unmatchedFrames: an.unmatched, guessedDividers: an.guessed, top, bottom };
 }
 
@@ -123,11 +124,18 @@ function placeParticipants(parts: TCell[], gaps: number[], top: number): Partici
   });
 }
 
-function placeNotes(notes: TCell[], right: number, top: number): Array<{ id: string; x: number; y: number }> {
-  let y = top;
-  return notes.map(n => {
-    const at = { id: n.id, x: right + MARGIN, y };
-    y += (n.geo.height ?? 40) + NOTE_GAP;
-    return at;
+/**
+ * Notes in a column on the right. A note keeps its place against the message rows: its original
+ * height is carried through the same original→new mapping as the messages (so `3: extract…` stays
+ * beside message 3); overlapping notes are pushed down. Without message positions they stack from the top.
+ */
+function placeNotes(notes: TCell[], right: number, top: number, anchors: Array<[number, number]>): Array<{ id: string; x: number; y: number }> {
+  const aligned = anchors.length >= 2;
+  const want = (n: TCell): number => (aligned && n.geo.y !== undefined ? mapY(n.geo.y + (n.geo.height ?? 40) / 2, anchors) - (n.geo.height ?? 40) / 2 : top);
+  let floor = top;
+  return [...notes].sort((a, b) => want(a) - want(b)).map(n => {
+    const y = Math.max(aligned ? want(n) : floor, floor);
+    floor = y + (n.geo.height ?? 40) + NOTE_GAP;
+    return { id: n.id, x: right + MARGIN, y };
   });
 }

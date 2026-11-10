@@ -106,7 +106,7 @@ function anchors(f: FragmentSpec, an: FragmentAnalysis, rows: RowsResult, msgY: 
 }
 
 /** Piecewise-linear map of an original y through the anchors (slope 1 outside them). */
-function mapY(y: number, pts: Array<[number, number]>): number {
+export function mapY(y: number, pts: Array<[number, number]>): number {
   if (pts.length === 0) return y;
   if (y <= pts[0][0]) return pts[0][1] + (y - pts[0][0]);
   const last = pts[pts.length - 1];

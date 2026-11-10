@@ -35,6 +35,7 @@ export interface UseCasePlan {
   relations: RelationPlan[];
 }
 const MARGIN = 40;
+const PLAIN_TITLE_ROOM = 44; // a plain rectangle carries its title as a label at the top: keep the first use case below it
 const PAD = 30; // boundary padding around the column (beyond the title strip)
 const ACTOR_GAP = 160; // room for the association fan between actor and boundary
 const DETOUR_GAP = 24; // first detour lane from the widest use case
@@ -92,7 +93,7 @@ export function planUseCase(model: UseCaseModel, edges: DiagramEdge[]): UseCaseP
   const detours = detourCount(ctx);
   const detourRoom = detours ? DETOUR_GAP + detours * DETOUR_STEP : 0;
   const colLeft = leftPad + (side === 'left' ? detourRoom : 0);
-  const { ys, spans, bottom } = caseRows(ctx, g => Math.max(PAD, containerInsets(styleOf(g)).top), PAD);
+  const { ys, spans, bottom } = caseRows(ctx, g => Math.max(PAD, containerInsets(styleOf(g)).top, g.nested ? 0 : PLAIN_TITLE_ROOM), PAD);
   // primary actor = most associations (first in side order); the column bends around it
   const primary = model.actors.find(a => a.id === [...sides.keys()][0]);
   const actorCy = primary ? primaryCentre(ctx, primary.id, ys, spans) : null;
@@ -130,7 +131,8 @@ function planBoundaries(
 function parentSpace(model: UseCaseModel, local: Map<string, Point>, boundaries: BoundaryPlan[], origin: Point): Map<string, Point> {
   const out = new Map<string, Point>();
   model.groups.forEach(g => {
-    const b = g.boundary ? boundaries.find(x => x.id === g.boundary!.id)!.rect : { x: 0, y: 0 };
+    // children of the boundary cell use ITS space; use cases merely drawn inside a rectangle sit on the page
+    const b = g.boundary && g.nested ? boundaries.find(x => x.id === g.boundary!.id)!.rect : { x: 0, y: 0 };
     for (const c of g.cases) out.set(c.id, { x: origin.x + local.get(c.id)!.x - b.x, y: origin.y + local.get(c.id)!.y - b.y });
   });
   return out;

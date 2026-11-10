@@ -24,6 +24,7 @@ import {
 } from '../../services/PathResolver';
 import { extractBaseDirArg } from '../../services/base-dir-resolution';
 import { findMalformedTags, sanitizeDrawioXml } from './drawio-xml-sanitize';
+import { adoptVisualChildren } from './drawio-adopt-children';
 
 export const DRAWIO_AUTO_LAYOUT_DEFINITION = {
   name: 'drawio_auto_layout',
@@ -95,6 +96,12 @@ async function layoutOn(filePath: string, args: Record<string, unknown>, display
       );
     }
 
+    // Boxes drawn OVER an empty band belong to it: make that structural before analysing
+    const adoption = adoptVisualChildren(fs.readFileSync(filePath, 'utf-8'));
+    if (adoption.adopted.size > 0) {
+      fs.writeFileSync(filePath, adoption.xml, 'utf-8');
+      console.warn(`[drawio-auto-layout] '${displayPath}': ${[...adoption.adopted.values()].flat().length} box(es) moved into the band that visually holds them`);
+    }
     const { raw, graph } = parseDrawio(filePath);
     const nodeCount = graph.nodes.length + graph.containers.length;
     if (nodeCount === 0) return toolError('No nodes found in diagram');

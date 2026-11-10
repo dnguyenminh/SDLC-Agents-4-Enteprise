@@ -18,6 +18,7 @@ import { sanitizeDrawioXml } from './drawio-xml-sanitize';
 import { applyEdgePlans, planEdges } from './drawio-edge-plan';
 import { detectSequenceDiagram } from './drawio-detect-sequence';
 import { sequenceRelayout } from './drawio-sequence-apply';
+import { normalizePointSequence } from './drawio-sequence-points';
 import { detectUseCaseDiagram } from './drawio-detect-usecase';
 import { useCaseRelayout } from './drawio-usecase-apply';
 import { MAX_NODES, RELAYOUT_RATIO, normalizeLayoutArgs, violationRatio } from './drawio-apply-args';
@@ -37,6 +38,9 @@ export async function handleApply(
   args: Record<string, unknown>, filePath: string,
 ): Promise<string> {
   if (nodeCount > MAX_NODES) return error(`Diagram too large (${nodeCount} nodes, max ${MAX_NODES})`);
+  // Free-floating sequence diagram (lifelines and messages are edges without terminals): connect it first
+  const drawn = normalizePointSequence(sanitizeDrawioXml(rawXml).xml);
+  if (drawn) return sequenceRelayout(drawn.xml, issues, filePath, validateReparse);
   const sequence = detectSequenceDiagram(graph);
   if (sequence.isSequence) return sequenceRelayout(sanitizeDrawioXml(rawXml).xml, issues, filePath, validateReparse);
   const useCase = detectUseCaseDiagram(graph);

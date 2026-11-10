@@ -15,6 +15,7 @@ import type { DiagramEdge, DiagramGraph } from './drawio-parser';
 import { absoluteRects, ancestorsOf, cellIndex } from './drawio-geometry';
 import type { Point, Rect } from './drawio-geometry';
 import { GridRouter, type Dir, type RouteJob } from './drawio-grid-router';
+import { stubLength, stubOf } from './drawio-edge-stub';
 import { assignPorts, type EdgePorts, type PortAssignment } from './drawio-edge-ports';
 import { countCrossings, lateralHints } from './drawio-edge-quality';
 import { planSelfLoops } from './drawio-edge-loops';
@@ -75,8 +76,8 @@ export function planEdges(graph: DiagramGraph): EdgePlan[] {
 function planPass(ctx: PlanContext, hints?: Map<string, number>): EdgePlan[] {
   const { graph, rects, byId, edges } = ctx;
   const ports = assignPorts(edges, byId, rects, hints);
-  const targets = edges.map(e => endpoints(e, rects, ports.get(e.id)!, relatedContainers(e, byId)));
   const obstacles = graph.nodes.map(n => rects.get(n.id)!);
+  const targets = edges.map(e => endpoints(e, rects, ports.get(e.id)!, relatedContainers(e, byId), obstacles));
   const zones = graph.containers.map(c => ({ id: c.id, rect: rects.get(c.id)! }));
   const router = new GridRouter(obstacles, targets.flatMap(t => [t.job.start, t.job.end]), zones);
   const byLength = [...targets].sort((a, b) => span(a.job) - span(b.job));
@@ -126,11 +127,12 @@ function relatedContainers(e: DiagramEdge, byId: ReturnType<typeof cellIndex>): 
 }
 
 /** Port points (absolute) and the stub jobs for the router. */
-function endpoints(edge: DiagramEdge, rects: Map<string, Rect>, ports: EdgePorts, related: Set<string>): Endpoints {
+function endpoints(edge: DiagramEdge, rects: Map<string, Rect>, ports: EdgePorts, related: Set<string>, obstacles: Rect[]): Endpoints {
   const portS = portPoint(rects.get(edge.sourceId)!, ports.exit);
   const portT = portPoint(rects.get(edge.targetId)!, ports.entry);
   const job: RouteJob = {
-    start: stubOf(portS, ports.exit.side), end: stubOf(portT, ports.entry.side),
+    start: stubOf(portS, ports.exit.side, stubLength(portS, ports.exit.side, rects.get(edge.sourceId)!, obstacles)),
+    end: stubOf(portT, ports.entry.side, stubLength(portT, ports.entry.side, rects.get(edge.targetId)!, obstacles)),
     startDir: ports.exit.side, endDir: ports.entry.side, related,
   };
   return { job, portS, portT, edge, ports };
@@ -144,10 +146,6 @@ function portPoint(r: Rect, a: PortAssignment): Point {
     case 1: return { x: round2(r.x + a.frac * r.w), y: r.y + r.h };
     default: return { x: round2(r.x + a.frac * r.w), y: r.y };
   }
-}
-
-function stubOf(p: Point, side: Dir): Point {
-  return { x: round2(p.x + DX[side] * STUB), y: round2(p.y + DY[side] * STUB) };
 }
 
 function span(j: RouteJob): number {

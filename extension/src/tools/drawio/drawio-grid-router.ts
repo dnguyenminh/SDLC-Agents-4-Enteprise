@@ -26,7 +26,7 @@ const CROSS_COST = 80; // passing straight through another edge's pass-through
 // Visiting another edge's corner: the two routes touch and read as one line
 // (a T or a "kink" continuing the other edge). Worse than a clean crossing.
 const TOUCH_COST = 200;
-const OBSTACLE_MARGIN = 10;
+export const OBSTACLE_MARGIN = 10;
 const MAX_AXIS_LINES = 700;
 const MAX_EXPANSIONS = 400_000;
 

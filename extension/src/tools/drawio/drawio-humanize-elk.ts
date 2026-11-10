@@ -70,6 +70,8 @@ export async function flatPositions(
       'elk.algorithm': mapAlgorithm(o.algorithm),
       'elk.direction': o.dir,
       'elk.spacing.nodeNode': o.nodeSpacing,
+      // Nodes with no edge between them are separate components, spaced by this option (default 20 px, too tight for routing)
+      'elk.spacing.componentComponent': o.nodeSpacing,
       'elk.layered.spacing.nodeNodeBetweenLayers': o.layerSpacing,
       'elk.edgeRouting': 'ORTHOGONAL',
       // Keep the author's declaration order when the graph leaves a choice
