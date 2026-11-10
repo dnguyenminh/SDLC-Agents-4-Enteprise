@@ -6,9 +6,11 @@
 
 import type { DiagramGraph, DiagramNode } from './drawio-parser';
 import { absoluteRects, ancestorsOf, cellIndex, fullyContains, overlapRatio, rectGap } from './drawio-geometry';
-import { isFragmentFrame, isSequenceLifeline } from './drawio-style';
-import type { Rect } from './drawio-geometry';
+import { isFragmentFrame, isSequenceLifeline, isTextRow } from './drawio-style';
+import type { Point, Rect } from './drawio-geometry';
+import { edgePolyline } from './drawio-polyline';
 import { edgeNodeCrossings, edgeEdgeCrossings, edgeContainerCrossings } from './drawio-detect-edges';
+import { detectExtremeAspect } from './drawio-detect-aspect';
 
 export type Severity = 'high' | 'medium' | 'low';
 
@@ -38,7 +40,8 @@ export function detectAllIssues(graph: DiagramGraph): LayoutIssue[] {
     ...edgeNodeCrossings(graph, abs),
     ...edgeEdgeCrossings(graph, abs),
     ...edgeContainerCrossings(graph, abs),
-    ...detectDiagonalEdges(graph),
+    ...detectDiagonalEdges(graph, abs),
+    ...detectExtremeAspect(graph, abs),
   ];
 }
 
@@ -103,6 +106,8 @@ export function detectNodeProximity(graph: DiagramGraph, abs?: Map<string, Rect>
       const sameScope = a.parentId === b.parentId;
       const topLevel = a.parentId === '1' && b.parentId === '1';
       if (!sameScope && !topLevel) continue;
+      // Table/class rows are stacked flush by design
+      if (isTextRow(a.style) && isTextRow(b.style)) continue;
       const ra = rects.get(a.id)!, rb = rects.get(b.id)!;
       if (overlapRatio(ra, rb) > 0) continue;
       const gap = rectGap(ra, rb);
@@ -141,18 +146,20 @@ export function detectChildOutsideContainer(graph: DiagramGraph, abs?: Map<strin
 }
 
 /** Near-45° connector courses — cosmetic only (severity: low). */
-export function detectDiagonalEdges(graph: DiagramGraph): LayoutIssue[] {
+export function detectDiagonalEdges(graph: DiagramGraph, abs?: Map<string, Rect>): LayoutIssue[] {
+  const rects = abs ?? absoluteRects(graph);
   const byId = cellIndex(graph);
-  const abs = absoluteRects(graph);
-  const tolerance = 20; // px threshold for "diagonal"
+  const originOf = (id: string): Point => {
+    const r = rects.get(id);
+    return r ? { x: r.x, y: r.y } : { x: 0, y: 0 };
+  };
   const issues: LayoutIssue[] = [];
   for (const edge of graph.edges) {
-    const src = abs.get(edge.sourceId), tgt = abs.get(edge.targetId);
-    if (!src || !tgt) continue;
     if (!byId.has(edge.sourceId) || !byId.has(edge.targetId)) continue;
-    const dx = Math.abs((src.x + src.w / 2) - (tgt.x + tgt.w / 2));
-    const dy = Math.abs((src.y + src.h / 2) - (tgt.y + tgt.h / 2));
-    if (dx > tolerance && dy > tolerance) {
+    // An edgeStyle (orthogonal/elbow/…) makes draw.io re-route the edge at
+    // render time, so the straight anchor-to-anchor line is not what is drawn.
+    if (/(^|;)edgeStyle=(?!none)/.test(edge.style)) continue;
+    if (hasDiagonalSegment(edgePolyline(edge, rects, originOf))) {
       issues.push({
         type: 'diagonal_edge', severity: 'low',
         edge_id: edge.id, edge_source: edge.sourceId, edge_target: edge.targetId,
@@ -161,4 +168,10 @@ export function detectDiagonalEdges(graph: DiagramGraph): LayoutIssue[] {
     }
   }
   return issues;
+}
+
+/** Any segment that moves noticeably on both axes (tolerance in px). */
+function hasDiagonalSegment(line: Point[], tolerance = 5): boolean {
+  return line.some((p, i) => i > 0
+    && Math.abs(p.x - line[i - 1].x) > tolerance && Math.abs(p.y - line[i - 1].y) > tolerance);
 }

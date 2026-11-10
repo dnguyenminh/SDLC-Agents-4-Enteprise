@@ -106,9 +106,12 @@ export async function connectMcp(
   };
 }
 
-/** The canonical 10 CORE tool names (5 memory + 3 meta + 2 drawio). */
-export const CORE_10 = [
+/**
+ * The canonical backend CORE tool names (5 memory + 3 meta + drawio_export_png).
+ * drawio_auto_layout is NOT here: it executes locally in the extension.
+ */
+export const CORE_TOOL_NAMES = [
   'mem_search', 'mem_ingest', 'mem_ingest_file', 'code_search',
   'get_curated_context', 'find_tools', 'execute_dynamic_tool', 'orchestration_status',
-  'drawio_export_png', 'drawio_auto_layout',
+  'drawio_export_png',
 ];

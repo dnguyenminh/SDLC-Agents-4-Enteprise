@@ -5,119 +5,119 @@
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         <!-- AI Agent Process -->
-        <mxCell id="agent-process" value="" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f3e5f5;strokeColor=#6a1b9a;" vertex="1" parent="1">
-          <mxGeometry x="1087.3" y="12" width="250" height="200" as="geometry"/>
+        <mxCell id="agent-process" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#f3e5f5;strokeColor=#6a1b9a;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="2208" height="230" as="geometry"/>
         </mxCell>
         <mxCell id="agent" value="BA/SA/QA/DevOps Agent&#xa;- Calls MCP tools&#xa;- Generates/modifies .drawio XML" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a;fontSize=11;" vertex="1" parent="agent-process">
-          <mxGeometry x="20" y="40" width="210" height="150" as="geometry"/>
+          <mxGeometry x="1098" y="40" width="210" height="150" as="geometry"/>
         </mxCell>
 
         <!-- Extension Host -->
-        <mxCell id="ext-host" value="" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e3f2fd;strokeColor=#1565c0;" vertex="1" parent="1">
-          <mxGeometry x="1062.3" y="424" width="300" height="250" as="geometry"/>
+        <mxCell id="ext-host" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#e3f2fd;strokeColor=#1565c0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="270" width="2208" height="180" as="geometry"/>
         </mxCell>
         <mxCell id="bridge" value="Extension MCP Bridge&#xa;- Intercepts tool calls&#xa;- Extracts base_dir/workspace_root&#xa;- Validates against allowlist&#xa;- Resolves absolute path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontSize=11;" vertex="1" parent="ext-host">
-          <mxGeometry x="20" y="40" width="260" height="100" as="geometry"/>
+          <mxGeometry x="1358" y="40" width="260" height="100" as="geometry"/>
         </mxCell>
         <mxCell id="findtools" value="MCP Client&#xa;- find_tools()&#xa;- execute_dynamic_tool()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#90caf9;strokeColor=#1565c0;fontSize=11;" vertex="1" parent="ext-host">
-          <mxGeometry x="337.6" y="60" width="260" height="80" as="geometry"/>
+          <mxGeometry x="68" y="50" width="260" height="80" as="geometry"/>
         </mxCell>
-        <mxCell id="edge1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="agent" target="bridge">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="edge1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="agent" target="bridge">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1243" y="250"/><mxPoint x="1528" y="250"/></Array></mxGeometry>
         </mxCell>
 
         <!-- MCP Orchestration Engine -->
-        <mxCell id="orch" value="" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff3e0;strokeColor=#e65100;" vertex="1" parent="1">
-          <mxGeometry x="1354.9" y="786" width="350" height="300" as="geometry"/>
+        <mxCell id="orch" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fff3e0;strokeColor=#e65100;" vertex="1" parent="1">
+          <mxGeometry x="40" y="450" width="2208" height="180" as="geometry"/>
         </mxCell>
         <mxCell id="orch-server" value="Orchestration Server&#xa;- Tool Registry&#xa;- Request routing&#xa;- Upstream server management" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=11;fontStyle=1;" vertex="1" parent="orch">
-          <mxGeometry x="20" y="50" width="310" height="80" as="geometry"/>
+          <mxGeometry x="378" y="50" width="310" height="80" as="geometry"/>
         </mxCell>
         <mxCell id="upstream" value="Upstream Servers&#xa;- chrome-devtools-mcp&#xa;- puppeteer-mcp&#xa;- State: ACTIVE/INACTIVE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffcc80;strokeColor=#e65100;fontSize=11;" vertex="1" parent="orch">
-          <mxGeometry x="387.6" y="40" width="310" height="100" as="geometry"/>
+          <mxGeometry x="948" y="40" width="310" height="100" as="geometry"/>
         </mxCell>
-        <mxCell id="edge2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565c0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="findtools" target="orch-server">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="edge2" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565c0;strokeWidth=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="findtools" target="orch-server">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="238" y="480"/><mxPoint x="573" y="480"/></Array></mxGeometry>
         </mxCell>
 
         <!-- Backend Process -->
-        <mxCell id="backend" value="" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fce4ec;strokeColor=#c2185b;" vertex="1" parent="1">
-          <mxGeometry x="316.3" y="1148" width="300" height="400" as="geometry"/>
+        <mxCell id="backend" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fce4ec;strokeColor=#c2185b;" vertex="1" parent="1">
+          <mxGeometry x="40" y="630" width="2208" height="180" as="geometry"/>
         </mxCell>
         <mxCell id="http" value="Backend HTTP Server&#xa;- Port 3000 (configurable)&#xa;- /health endpoint&#xa;- /api/health endpoint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#c2185b;fontSize=11;" vertex="1" parent="backend">
-          <mxGeometry x="85" y="40" width="260" height="80" as="geometry"/>
+          <mxGeometry x="738" y="50" width="260" height="80" as="geometry"/>
         </mxCell>
         <mxCell id="codeintel" value="Code Intel Module&#xa;- Tool Dispatcher&#xa;- CodeIntelContext injection&#xa;- QueryLayer, DatabaseAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f48fb1;strokeColor=#c2185b;fontSize=11;" vertex="1" parent="backend">
-          <mxGeometry x="85" y="312" width="260" height="100" as="geometry"/>
+          <mxGeometry x="1048" y="40" width="260" height="100" as="geometry"/>
         </mxCell>
         <mxCell id="drawio-tools" value="Draw.io Tools&#xa;- drawio_auto_layout&#xa;- drawio_export_png" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ec407a;strokeColor=#c2185b;fontSize=11;fontStyle=1;" vertex="1" parent="backend">
-          <mxGeometry x="85" y="604" width="260" height="70" as="geometry"/>
+          <mxGeometry x="1358" y="55" width="260" height="70" as="geometry"/>
         </mxCell>
         <mxCell id="elk-engine" value="ELK.js Layout Engine&#xa;- elkjs (npm package)&#xa;- 4 algorithms: layered, stress, force, radial&#xa;- Compound node support (INCLUDE_CHILDREN)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ce93d8;strokeColor=#6a1b9a;fontSize=11;" vertex="1" parent="backend">
-          <mxGeometry x="20" y="866" width="260" height="80" as="geometry"/>
+          <mxGeometry x="1668" y="50" width="260" height="80" as="geometry"/>
         </mxCell>
-        <mxCell id="edge3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e65100;strokeWidth=2;endArrow=block;exitX=1;exitY=1;entryX=1;entryY=1;" edge="1" parent="1" source="orch-server" target="http">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1529.9" y="971"/><mxPoint x="531.3" y="971"/></Array></mxGeometry>
+        <mxCell id="edge3" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e65100;strokeWidth=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="orch-server" target="http">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="573" y="660"/><mxPoint x="908" y="660"/></Array></mxGeometry>
         </mxCell>
-        <mxCell id="edge4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c2185b;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="http" target="codeintel">
+        <mxCell id="edge4" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c2185b;strokeWidth=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="backend" source="http" target="codeintel">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="edge5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c2185b;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="codeintel" target="drawio-tools">
+        <mxCell id="edge5" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c2185b;strokeWidth=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="backend" source="codeintel" target="drawio-tools">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="edge6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="drawio-tools" target="elk-engine">
+        <mxCell id="edge6" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="backend" source="drawio-tools" target="elk-engine">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
 
         <!-- Renderers -->
-        <mxCell id="renderers" value="" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1">
-          <mxGeometry x="825.6" y="2316" width="550" height="180" as="geometry"/>
+        <mxCell id="renderers" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1">
+          <mxGeometry x="40" y="810" width="2208" height="336" as="geometry"/>
         </mxCell>
         <mxCell id="renderer-detect" value="Renderer Detection (drawio-renderers.ts)&#xa;Priority: 1) draw.io CLI → 2) Chrome DevTools MCP → 3) Puppeteer MCP&#xa;Cached after first detection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;fontStyle=1;" vertex="1" parent="renderers">
-          <mxGeometry x="20" y="40" width="510" height="70" as="geometry"/>
+          <mxGeometry x="1668" y="55" width="510" height="70" as="geometry"/>
         </mxCell>
-        <mxCell id="cli-renderer" value="draw.io Desktop CLI&#xa;Path detection: Windows/Linux/macOS standard locations + PATH&#xa;Command: \"draw.io.exe\" --export --format png --border 10 --output \"out.png\" \"in.drawio\"&#xa;Timeout: 30s, stdio: pipe" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d6a7;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="renderers">
-          <mxGeometry x="587.6" y="40" width="250" height="100" as="geometry"/>
+        <mxCell id="cli-renderer" value="draw.io Desktop CLI&#xa;Path detection: Windows/Linux/macOS standard locations + PATH&#xa;Command: &quot;draw.io.exe&quot; --export --format png --border 10 --output &quot;out.png&quot; &quot;in.drawio&quot;&#xa;Timeout: 30s, stdio: pipe" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d6a7;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="renderers">
+          <mxGeometry x="68" y="40" width="250" height="100" as="geometry"/>
         </mxCell>
-        <mxCell id="chrome-renderer" value="Chrome DevTools MCP&#xa;Viewer URL: https://viewer.diagrams.net/?lightbox=1&nav=0#R{base64}&#xa;Wait 3s → take_screenshot (fullPage, png)&#xa;Via orchestrationEngine.executeUpstreamTool()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#81c784;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="renderers">
-          <mxGeometry x="895.2" y="40" width="250" height="100" as="geometry"/>
+        <mxCell id="chrome-renderer" value="Chrome DevTools MCP&#xa;Viewer URL: https://viewer.diagrams.net/?lightbox=1&amp;nav=0#R{base64}&#xa;Wait 3s → take_screenshot (fullPage, png)&#xa;Via orchestrationEngine.executeUpstreamTool()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#81c784;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="renderers">
+          <mxGeometry x="1308" y="40" width="250" height="100" as="geometry"/>
         </mxCell>
         <mxCell id="puppeteer-renderer" value="Puppeteer MCP&#xa;Viewer URL: same as Chrome&#xa;navigate → screenshot (fullPage)&#xa;Via orchestrationEngine.executeUpstreamTool()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#66bb6a;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="renderers">
-          <mxGeometry x="1202.8" y="40" width="250" height="100" as="geometry"/>
+          <mxGeometry x="1308" y="196" width="250" height="100" as="geometry"/>
         </mxCell>
-        <mxCell id="edge7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;dashed=1;exitX=1;exitY=1;entryX=1;entryY=1;" edge="1" parent="1" source="drawio-tools" target="renderer-detect">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="596.3" y="1842"/><mxPoint x="617.3" y="1842"/><mxPoint x="617.3" y="2139"/><mxPoint x="1100.6" y="2139"/></Array></mxGeometry>
+        <mxCell id="edge7" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;dashed=1;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.67;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="drawio-tools" target="renderer-detect">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1572.2" y="840"/><mxPoint x="1963" y="840"/></Array></mxGeometry>
         </mxCell>
-        <mxCell id="edge8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="upstream" target="chrome-renderer">
-          <mxGeometry relative="1" as="geometry"/>
+        <mxCell id="edge8" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;dashed=1;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.67;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="upstream" target="chrome-renderer">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1195.7" y="610"/><mxPoint x="1388" y="610"/><mxPoint x="1388" y="830"/><mxPoint x="1473" y="830"/></Array></mxGeometry>
         </mxCell>
-        <mxCell id="edge9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;dashed=1;exitX=1;exitY=1;entryX=1;entryY=1;" edge="1" parent="1" source="upstream" target="puppeteer-renderer">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1949.1" y="2139"/><mxPoint x="2153.4" y="2139"/></Array></mxGeometry>
+        <mxCell id="edge9" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;dashed=1;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.33;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="upstream" target="puppeteer-renderer">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1090.3" y="610"/><mxPoint x="1078" y="610"/><mxPoint x="1078" y="986"/><mxPoint x="1473" y="986"/></Array></mxGeometry>
         </mxCell>
 
         <!-- File System / Workspaces -->
-        <mxCell id="fs" value="" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f5f5f5;strokeColor=#616161;" vertex="1" parent="1">
-          <mxGeometry x="12" y="2316" width="350" height="300" as="geometry"/>
+        <mxCell id="fs" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#f5f5f5;strokeColor=#616161;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1146" width="2208" height="210" as="geometry"/>
         </mxCell>
         <mxCell id="allowlist" value="Workspace Allowlist (MCP_WORKSPACE_ROOTS)&#xa;- Configured at startup (env var or config file)&#xa;- Immutable in-memory Set&#xa;- Win32 case-fold membership&#xa;- Legacy mode: empty = single-root" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0e0e0;strokeColor=#616161;fontSize=11;" vertex="1" parent="fs">
-          <mxGeometry x="387.6" y="40" width="310" height="100" as="geometry"/>
+          <mxGeometry x="1668" y="55" width="310" height="100" as="geometry"/>
         </mxCell>
         <mxCell id="worktrees" value="Registered Worktrees&#xa;Worktree A: /home/user/project&#xa;Worktree B: /home/user/project-worktree-B&#xa;Worktree C: /home/user/project-worktree-C&#xa;Cross-worktree access via base_dir parameter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bdbdbd;strokeColor=#616161;fontSize=11;" vertex="1" parent="fs">
-          <mxGeometry x="20" y="40" width="310" height="130" as="geometry"/>
+          <mxGeometry x="618" y="40" width="310" height="130" as="geometry"/>
         </mxCell>
-        <mxCell id="edge10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c2185b;strokeWidth=2;endArrow=block;dashed=1;exitX=1;exitY=1;entryX=0.71;entryY=1;" edge="1" parent="1" source="drawio-tools" target="allowlist">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="531.3" y="1862"/><mxPoint x="606.3" y="1862"/></Array></mxGeometry>
+        <mxCell id="edge10" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c2185b;strokeWidth=2;endArrow=block;dashed=1;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.33;exitY=1;entryX=0.33;entryY=0;" edge="1" parent="1" source="drawio-tools" target="allowlist">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1483.8" y="775"/><mxPoint x="1698" y="775"/><mxPoint x="1698" y="1181"/><mxPoint x="1810.3" y="1181"/></Array></mxGeometry>
         </mxCell>
-        <mxCell id="edge11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#616161;strokeWidth=2;endArrow=block;dashed=1;exitX=1;exitY=1;entryX=0.37;entryY=1;" edge="1" parent="1" source="bridge" target="allowlist">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1212.3" y="609"/><mxPoint x="305.3" y="609"/><mxPoint x="305.3" y="2139"/><mxPoint x="502.9" y="2139"/></Array></mxGeometry>
+        <mxCell id="edge11" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#616161;strokeWidth=2;endArrow=block;dashed=1;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.67;entryY=0;" edge="1" parent="1" source="bridge" target="allowlist">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1528" y="430"/><mxPoint x="1688" y="430"/><mxPoint x="1688" y="1176"/><mxPoint x="1915.7" y="1176"/></Array></mxGeometry>
         </mxCell>
 
         <!-- Configuration -->
-        <mxCell id="config" value="" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=0;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff8e1;strokeColor=#f57f17;" vertex="1" parent="1">
-          <mxGeometry x="691.3" y="14.5" width="300" height="200" as="geometry"/>
+        <mxCell id="config" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fff8e1;strokeColor=#f57f17;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1356" width="2208" height="230" as="geometry"/>
         </mxCell>
         <mxCell id="env" value="Environment Variables&#xa;MCP_WORKSPACE_ROOTS=path1:path2:path3&#xa;MCP_WORKSPACE_ROOTS_FILE=/etc/mcp/roots.txt&#xa;SA4E_ELK_MAX_NODES=500&#xa;SA4E_ELK_TIMEOUT_MS=10000&#xa;LOG_LEVEL=info&#xa;PORT=3000" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#f57f17;fontSize=11;" vertex="1" parent="config">
-          <mxGeometry x="20" y="40" width="260" height="150" as="geometry"/>
+          <mxGeometry x="338" y="40" width="260" height="150" as="geometry"/>
         </mxCell>
       </root>
     </mxGraphModel>

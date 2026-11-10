@@ -1,5 +1,5 @@
 /**
- * SA4E-394 — BR-20 per-tool matrix (STC TC-307 / TC-310 / TC-311, AC1–AC5).
+ * SA4E-394 — BR-20 per-tool matrix (STC TC-307 / TC-310, AC1–AC5; TC-311 drawio_auto_layout moved to the extension).
  * Real handlers + real fixture filesystem; the Atlassian/DB/executor tools
  * (mem_ingest_file, jira/confluence attachments, sandbox_run) are covered in
  * per-tool-base-dir.service-tools.test.ts, the extension surface in the
@@ -13,7 +13,6 @@ import { MultiWorktreePathResolver } from '../multi-worktree-path-resolver.js';
 import { setSharedPathResolver, resetSharedPathResolver } from '../path-resolver-provider.js';
 import { createWorktreeFixture, type MultiWorktreeFixture } from './multi-worktree-fixture.js';
 import { WorkspaceAllowlist } from '../workspace-allowlist.js';
-import { handleDrawioLayout, DRAWIO_TOOL_DEFINITION } from '../../engine/tools/drawio-tool.js';
 import {
   handleDrawioExportPng, resetRendererCache, DRAWIO_EXPORT_PNG_DEFINITION,
 } from '../../engine/tools/drawio-export-png.js';
@@ -110,36 +109,6 @@ describe('TC-307 — stream_write_file (module variant, arguments `path`/`file_p
   });
 });
 
-describe('TC-311 — drawio_auto_layout', () => {
-  it('S1 (AC1): relative file_path + base_dir lays out diagram in worktree B', async () => {
-    const out = JSON.parse(await handleDrawioLayout({ file_path: 'diag/flow.drawio', base_dir: fx.wtB }, fx.main, resolver));
-    expect(out.error).toBeUndefined();
-    expect(fs.readFileSync(path.join(fx.wtB, 'diag', 'flow.drawio'), 'utf-8')).not.toBe(BAD_LAYOUT);
-  });
-
-  it('S2 (AC2): unregistered root rejected; diagram untouched', async () => {
-    const before = fs.readFileSync(path.join(fx.wtB, 'diag', 'flow.drawio'), 'utf-8');
-    const out = JSON.parse(await handleDrawioLayout({ file_path: 'x.drawio', base_dir: fx.wtUnreg }, fx.main, resolver));
-    expect(String(out.error).indexOf('PATH_REJECTED_OUTSIDE_ALLOWLIST')).toBe(0);
-    expect(String(out.error)).toContain(ALLOWLIST_MSG);
-    expect(fs.readFileSync(path.join(fx.wtB, 'diag', 'flow.drawio'), 'utf-8')).toBe(before);
-  });
-
-  it('S3 (AC3): base_dir omitted → legacy pinned-root path unchanged', async () => {
-    const out = JSON.parse(await handleDrawioLayout({ file_path: 'diag/flow.drawio' }, fx.main, resolver));
-    expect(out.error).toBeUndefined();
-    expect(fs.readFileSync(path.join(fx.main, 'diag', 'flow.drawio'), 'utf-8')).not.toBe(BAD_LAYOUT);
-  });
-
-  it('S4/S5 (AC4): absolute outside + ../ traversal rejected (containment)', async () => {
-    const out = JSON.parse(await handleDrawioLayout({ file_path: path.join(fx.outside, 'evil.drawio'), base_dir: fx.wtB }, fx.main, resolver));
-    expect(String(out.error)).toContain('PATH_REJECTED_OUTSIDE_ALLOWLIST');
-    expect(String(out.error)).toContain(CONTAINMENT_MSG);
-    const out2 = JSON.parse(await handleDrawioLayout({ file_path: '../../outside/x.drawio', base_dir: fx.wtB }, fx.main, resolver));
-    expect(String(out2.error)).toContain('PATH_REJECTED_OUTSIDE_ALLOWLIST');
-  });
-});
-
 describe('TC-310 — drawio_export_png (file_path reference-only, DISC-4)', () => {
   const b64 = Buffer.from(BAD_LAYOUT).toString('base64');
 
@@ -178,7 +147,6 @@ describe('TC-310 — drawio_export_png (file_path reference-only, DISC-4)', () =
 describe('TC-301/TC-5 — base_dir + workspace_root documented on backend schemas (AC5)', () => {
   const schemas: Array<[string, Record<string, unknown>]> = [
     ['code-intel stream_write_file', propsOf(CODE_INTEL_TOOL_DEFINITIONS.find(t => t.name === 'stream_write_file')!)],
-    ['drawio_auto_layout', propsOf(DRAWIO_TOOL_DEFINITION)],
     ['drawio_export_png', propsOf(DRAWIO_EXPORT_PNG_DEFINITION)],
   ];
 

@@ -23,6 +23,7 @@ import {
   FILE_PATH_SCHEMA_DESCRIPTION,
 } from '../../services/PathResolver';
 import { extractBaseDirArg } from '../../services/base-dir-resolution';
+import { findMalformedTags, sanitizeDrawioXml } from './drawio-xml-sanitize';
 
 export const DRAWIO_AUTO_LAYOUT_DEFINITION = {
   name: 'drawio_auto_layout',
@@ -76,12 +77,32 @@ export async function handleDrawioAutoLayout(args: Record<string, unknown>): Pro
 async function layoutOn(filePath: string, args: Record<string, unknown>, displayPath: string): Promise<unknown> {
   if (!fs.existsSync(filePath)) return toolError('File not found or not accessible');
   try {
+    // SA4E-406 UAT: draw.io syntax pre-flight — repair unescaped '<'/'&' in
+    // attribute values BEFORE layout, so we never build on (or re-write)
+    // a file draw.io itself cannot open. Repair is idempotent.
+    const { xml: cleaned, fixes } = sanitizeDrawioXml(fs.readFileSync(filePath, 'utf-8'));
+    if (fixes.length > 0) {
+      fs.writeFileSync(filePath, cleaned, 'utf-8');
+      console.warn(`[drawio-auto-layout] sanitized '${displayPath}' before layout — ${fixes.join('; ')}`);
+    }
+    // Tags the tolerant parser would silently skip: refuse, with an actionable message
+    const malformed = findMalformedTags(cleaned);
+    if (malformed.length > 0) {
+      const first = malformed[0];
+      return toolError(
+        `draw.io syntax error: ${malformed.length} malformed <${first.tag}> tag(s); first at line ${first.line}: ` +
+        `"${first.sample}". Fix the quoting in this file (it cannot be repaired automatically) and run again.`,
+      );
+    }
+
     const { raw, graph } = parseDrawio(filePath);
     const nodeCount = graph.nodes.length + graph.containers.length;
     if (nodeCount === 0) return toolError('No nodes found in diagram');
     const issues = detectAllIssues(graph);
-    // No issues → already_good, don't modify file
-    if (issues.length === 0) {
+    // No blocking issues → already_good, don't modify file. Low severity is
+    // cosmetic (see drawio-detect) and must not trigger a rewrite, otherwise
+    // the tool is never idempotent.
+    if (issues.every(i => i.severity === 'low')) {
       return toolText(JSON.stringify({
         status: 'already_good',
         message: 'Diagram looks good — no overlapping nodes or edge crossings detected.',

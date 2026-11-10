@@ -2,42 +2,30 @@
  * SA4E-84 — Apply orchestrator for drawio_auto_layout fix mode.
  * Strategy (minimal first): ports-only → local repair → full ELK relayout.
  * Writes fixed XML directly to file. Returns metadata only (no content_base64).
+ *
+ * Helpers live next to it: drawio-apply-args (limits, args), drawio-apply-validate
+ * (write gate), drawio-apply-relayout (full relayout strategies).
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 import type { DiagramGraph } from './drawio-parser';
-import { parseDrawio } from './drawio-parser';
+import { parseDrawio, parseDrawioXml } from './drawio-parser';
 import type { NormalizedArgs } from './drawio-layout-models';
-import { buildElkGraph, runElkLayout } from './elk-layout';
-import { applyLayoutToXml } from './drawio-writer';
 import { planLocalRepair } from './drawio-repair';
 import { applyRepairPlan, applyPortDistribution } from './drawio-patch';
 import { detectAllIssues, type LayoutIssue } from './drawio-detect';
+import { sanitizeDrawioXml } from './drawio-xml-sanitize';
+import { applyEdgePlans, planEdges } from './drawio-edge-plan';
+import { detectSequenceDiagram } from './drawio-detect-sequence';
+import { sequenceRelayout } from './drawio-sequence-apply';
+import { detectUseCaseDiagram } from './drawio-detect-usecase';
+import { useCaseRelayout } from './drawio-usecase-apply';
+import { MAX_NODES, RELAYOUT_RATIO, normalizeLayoutArgs, violationRatio } from './drawio-apply-args';
+import { error, validateReparse } from './drawio-apply-validate';
+import { elkRelayout } from './drawio-apply-relayout';
 
-/**
- * Parse an integer from environment variable with bounds validation (SEC-02).
- * Returns defaultVal if env var is missing, NaN, out of bounds, or non-finite.
- */
-function parseEnvInt(envVar: string, defaultVal: number, min: number, max: number): number {
-  const raw = process.env[envVar];
-  if (raw === undefined) return defaultVal;
-  const parsed = Number(raw);
-  if (!Number.isFinite(parsed) || parsed < min || parsed > max) return defaultVal;
-  return Math.floor(parsed);
-}
-
-// BR-7: configurable limits via env (NFR-P5) — with bounds validation (SEC-02)
-const MAX_NODES = parseEnvInt('SA4E_ELK_MAX_NODES', 500, 1, 5000);
-// SA4E-406 UAT feedback: 10s default was too short for compound diagrams
-// (architecture.drawio: 26 nodes/4 containers → ELK layered > 10s under load).
-// 30s default, hard cap 120s via env (SEC-02 bounds updated accordingly).
-const TIMEOUT_MS = parseEnvInt('SA4E_ELK_TIMEOUT_MS', 30_000, 1000, 120_000);
-/** Full relayout kicks in when more than this fraction of cells are involved. */
-const RELAYOUT_RATIO = 0.4;
-/** Maximum spacing in pixels to prevent resource exhaustion (SEC-03). */
-const MAX_SPACING = 500;
+// Public API of this module (importers use these names from './drawio-apply')
+export { normalizeLayoutArgs, violationRatio };
 
 /**
  * Orchestrate the fix: choose the minimal strategy able to resolve the issues,
@@ -49,48 +37,21 @@ export async function handleApply(
   args: Record<string, unknown>, filePath: string,
 ): Promise<string> {
   if (nodeCount > MAX_NODES) return error(`Diagram too large (${nodeCount} nodes, max ${MAX_NODES})`);
+  const sequence = detectSequenceDiagram(graph);
+  if (sequence.isSequence) return sequenceRelayout(sanitizeDrawioXml(rawXml).xml, issues, filePath, validateReparse);
+  const useCase = detectUseCaseDiagram(graph);
+  if (useCase) return useCaseRelayout(rawXml, graph, useCase, issues, filePath, validateReparse);
   const normalized = normalizeLayoutArgs(args);
   if (normalized.scope === 'ports') return handlePortsOnlyFix(rawXml, graph, issues, filePath);
   const needsFull = normalized.relayout || normalized.scope === 'positions'
+    || issues.some(i => i.type === 'extreme_aspect_ratio')
+    // Children outside their container means the band structure itself is off; local repair only
+    // nudges nodes and leaves the bands wherever they were (often far apart), the full relayout
+    // rebuilds the whole arrangement.
+    || issues.some(i => i.type === 'child_outside_container')
     || violationRatio(graph, issues) > RELAYOUT_RATIO;
   if (needsFull) return elkRelayout(rawXml, graph, issues, normalized, filePath);
   return await localRepairPath(rawXml, graph, issues, normalized, filePath);
-}
-
-/** Full ELK relayout (compound-safe: containers are laid out hierarchically). */
-async function elkRelayout(
-  rawXml: string, graph: DiagramGraph, issues: LayoutIssue[],
-  normalized: NormalizedArgs, filePath: string,
-): Promise<string> {
-  try {
-    const elkGraph = buildElkGraph(graph, normalized);
-    const laidOut = await runElkLayout(elkGraph, TIMEOUT_MS);
-    const { xml, repositionedNodes } = applyLayoutToXml(rawXml, laidOut);
-    // SA4E-406 UAT: deterministic algorithms (layered) can legitimately produce
-    // identical positions on a re-run — that is "already optimal", NOT an error.
-    // The old code returned error() here, which surfaced as a spurious failure
-    // whenever a second relayout ran on a fixed file.
-    if (repositionedNodes.length === 0 && xml === rawXml) {
-      return JSON.stringify({
-        status: 'already_good',
-        message: `ELK ${normalized.algorithm} layout produced identical positions — diagram already at layout optimum.`,
-        remaining_issues: issues.filter(i => i.severity !== 'low').length,
-      });
-    }
-    validateReparse(xml);
-    fs.writeFileSync(filePath, xml, 'utf-8');
-    // Re-detect remaining issues after fix
-    const { graph: afterGraph } = parseDrawio(filePath);
-    const remainingIssues = detectAllIssues(afterGraph).filter(i => i.severity !== 'low').length;
-    return JSON.stringify({
-      status: 'fixed',
-      message: `Fixed ${issues.length} issues with ELK ${normalized.algorithm} layout. ${repositionedNodes.length} nodes repositioned.`,
-      remaining_issues: remainingIssues,
-    });
-  } catch (e: unknown) {
-    console.error('[drawio-apply] ELK layout error:', e);
-    return error('Layout engine failed. Please check input diagram and retry.');
-  }
 }
 
 /** Minimal path: move only violating nodes and reroute affected edges. */
@@ -100,9 +61,14 @@ async function localRepairPath(
 ): Promise<string> {
   try {
     const plan = planLocalRepair(graph, issues, normalized.spacing);
-    const xml = applyRepairPlan(rawXml, plan);
-    if (xml === rawXml) {
-      // Repair could not act (e.g. router found no detour) — escalate to ELK
+    // Node moves/resizes come from the repair plan. Edges are ALWAYS re-planned by the grid
+    // router on the repaired geometry: the legacy single-obstacle detours in plan.routes
+    // routinely cut through other nodes or run diagonally.
+    const moved = applyRepairPlan(rawXml, { ...plan, routes: new Map() });
+    const edgePlans = planEdges(parseDrawioXml(moved));
+    const xml = applyEdgePlans(moved, edgePlans);
+    if (xml === rawXml || !improvesDiagram(issues, xml)) {
+      // Repair could not act, or would not help — escalate to the full relayout
       return await elkRelayout(rawXml, graph, issues, normalized, filePath);
     }
     validateReparse(xml);
@@ -112,13 +78,26 @@ async function localRepairPath(
     const remainingIssues = detectAllIssues(afterGraph).filter(i => i.severity !== 'low').length;
     return JSON.stringify({
       status: 'fixed',
-      message: `Local repair: moved ${plan.moves.size} nodes, rerouted ${plan.routes.size} edges.`,
+      message: `Local repair: moved ${plan.moves.size} nodes, re-routed ${edgePlans.length} edges.`,
       remaining_issues: remainingIssues,
     });
   } catch (e: unknown) {
     console.error('[drawio-apply] Local repair error:', e);
     return error('Local repair failed. Please check diagram structure.');
   }
+}
+
+/**
+ * True when the candidate XML is a real improvement over the diagram it repairs:
+ * fewer HIGH issues, or the same number of high and fewer medium ones. A plain total
+ * is not enough — trading 8 stacked edges for 8 new overlaps looks like progress
+ * by count but is worse.
+ */
+function improvesDiagram(before: LayoutIssue[], candidateXml: string): boolean {
+  const count = (list: LayoutIssue[], sev: string): number => list.filter(i => i.severity === sev).length;
+  const after = detectAllIssues(parseDrawioXml(candidateXml));
+  const [hb, ha] = [count(before, 'high'), count(after, 'high')];
+  return ha !== hb ? ha < hb : count(after, 'medium') < count(before, 'medium');
 }
 
 /** Ports-only path (scope='ports'): spread anchors, keep all node positions. */
@@ -142,54 +121,4 @@ function handlePortsOnlyFix(rawXml: string, graph: DiagramGraph, issues: LayoutI
     console.error('[drawio-apply] Edge-only fix error:', e);
     return error('Edge routing fix failed. Please check diagram structure.');
   }
-}
-
-/** Fraction of cells involved in at least one blocking issue. */
-export function violationRatio(graph: DiagramGraph, issues: LayoutIssue[]): number {
-  const total = graph.nodes.length + graph.containers.length;
-  if (total === 0) return 1;
-  const involved = new Set<string>();
-  for (const issue of issues) {
-    for (const key of ['node_a', 'node_b', 'child']) {
-      if (typeof issue[key] === 'string') involved.add(issue[key] as string);
-    }
-  }
-  return involved.size / total;
-}
-
-/** Normalize layout args with safe defaults and upper bounds (SEC-03). */
-export function normalizeLayoutArgs(args: Record<string, unknown>): NormalizedArgs {
-  const VALID_ALG = ['layered', 'force', 'mrtree', 'radial'];
-  const VALID_DIR = ['DOWN', 'RIGHT', 'LEFT', 'UP'];
-  const VALID_SCOPE = ['auto', 'positions', 'ports'];
-  const algorithm = typeof args.algorithm === 'string' && VALID_ALG.includes(args.algorithm)
-    ? args.algorithm : 'layered';
-  const rawSpacing = typeof args.spacing === 'number' && args.spacing > 0 ? args.spacing : 80;
-  const spacing = Math.min(rawSpacing, MAX_SPACING);
-  const direction = typeof args.direction === 'string' && VALID_DIR.includes(args.direction.toUpperCase())
-    ? args.direction.toUpperCase() : 'DOWN';
-  const scope = typeof args.scope === 'string' && VALID_SCOPE.includes(args.scope)
-    ? args.scope as NormalizedArgs['scope'] : 'auto';
-  const relayout = args.relayout === true;
-  return { algorithm, spacing, direction, scope, relayout };
-}
-
-/** BR-7: Re-parse fixed XML to ensure it's valid before writing to file. */
-function validateReparse(xml: string): void {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'drawio-fix-'));
-  try {
-    const tmpFile = path.join(tmpDir, 'fixed.drawio');
-    fs.writeFileSync(tmpFile, xml, 'utf-8');
-    parseDrawio(tmpFile); // Throws if XML is broken
-  } finally {
-    try {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
-    } catch (cleanupErr: unknown) {
-      console.error('[drawio-apply] Temp cleanup failed:', cleanupErr);
-    }
-  }
-}
-
-function error(msg: string): string {
-  return JSON.stringify({ error: msg });
 }

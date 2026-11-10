@@ -10,7 +10,6 @@ import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js
 import type { IndexingEngine } from '../indexer/indexing-engine.js';
 import type { QueryLayer } from '../query/query-layer.js';
 import type { DatabaseManager } from '../db/database-manager.js';
-import { handleDrawioLayout, DRAWIO_TOOL_DEFINITION } from './drawio-tool.js';
 import { handleDrawioExportPng, DRAWIO_EXPORT_PNG_DEFINITION } from './drawio-export-png.js';
 import { CALL_GRAPH_TOOL_DEFINITIONS, handleCodeCallers, handleCodeCallees } from './call-graph-tools.js';
 import { DEPENDENCY_TOOL_DEFINITIONS, handleCodeDependencies } from './dependency-tools.js';
@@ -75,7 +74,6 @@ export const CODE_INTEL_TOOL_DEFINITIONS = [
   { name: 'code_index_status', description: 'Get current indexing status: file count, symbol count, languages, last indexed time.', inputSchema: { type: 'object', properties: { reindex: { type: 'boolean' } } } },
   { name: 'stream_write_file', description: 'Write content directly to a file on disk. Modes: write (overwrite), append, create (fail if exists).', inputSchema: { type: 'object', properties: { file_path: { type: 'string' }, content: { type: 'string' }, mode: { type: 'string' }, encoding: { type: 'string' }, ...baseDirSchemaProperties('file_path') }, required: ['file_path'] } },
   { name: 'code_kb_export', description: 'Export code intelligence data as Knowledge Base payloads for ingestion.', inputSchema: { type: 'object', properties: { module: { type: 'string' }, format: { type: 'string' } } } },
-  DRAWIO_TOOL_DEFINITION,
   DRAWIO_EXPORT_PNG_DEFINITION,
   ...CALL_GRAPH_TOOL_DEFINITIONS,
   ...DEPENDENCY_TOOL_DEFINITIONS,
@@ -128,7 +126,6 @@ const TOOL_HANDLER_REGISTRY: Record<string, CodeIntelHandlerFn> = {
   code_index_status:  (a, ctx) => p(handleCodeIndexStatus(a, ctx.queryLayer, ctx.indexer, ctx.workspace, ctx.projectId)),
   stream_write_file:  (a, ctx) => p(handleStreamWriteFile(a, ctx.workspace, ctx.projectId, ctx.resolver)),
   code_kb_export:     (a, ctx) => p(handleCodeKbExport(a, ctx.queryLayer, ctx.workspace)),
-  drawio_auto_layout: (a, ctx) => p(handleDrawioLayout(a, ctx.workspace, ctx.resolver)),
   drawio_export_png:  (a, ctx) => p(handleDrawioExportPng(a, ctx.workspace, null as any, ctx.resolver)),
   code_callers:       (a, ctx) => p(handleCodeCallers(a, ctx.adapter, ctx.projectId)),
   code_callees:       (a, ctx) => p(handleCodeCallees(a, ctx.adapter, ctx.projectId)),

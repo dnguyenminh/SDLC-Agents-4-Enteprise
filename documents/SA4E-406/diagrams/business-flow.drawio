@@ -5,264 +5,264 @@
 
 <!-- Swimlanes -->
 <mxCell id="lane_ai" value="AI Agent" style="swimlane;horizontal=0;startSize=110;fillColor=#e8f5e9;strokeColor=#2e7d32;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-<mxGeometry x="135.3" y="2238" width="180" height="600" as="geometry"/>
+<mxGeometry x="40" y="40" width="4552" height="140" as="geometry"/>
 </mxCell>
 
 <mxCell id="lane_bridge" value="Extension MCP Bridge" style="swimlane;horizontal=0;startSize=110;fillColor=#e3f2fd;strokeColor=#1565c0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-<mxGeometry x="332.9" y="2797" width="180" height="600" as="geometry"/>
+<mxGeometry x="40" y="180" width="4552" height="180" as="geometry"/>
 </mxCell>
 
 <mxCell id="lane_engine" value="Draw.io Engine" style="swimlane;horizontal=0;startSize=110;fillColor=#fff3e0;strokeColor=#ef6c00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-<mxGeometry x="22" y="601" width="200" height="600" as="geometry"/>
+<mxGeometry x="40" y="360" width="4552" height="276" as="geometry"/>
 </mxCell>
 
 <mxCell id="lane_elk" value="ELK.js Layout Engine" style="swimlane;horizontal=0;startSize=110;fillColor=#fce4ec;strokeColor=#c2185b;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-<mxGeometry x="493.9" y="37" width="200" height="600" as="geometry"/>
+<mxGeometry x="40" y="636" width="4552" height="180" as="geometry"/>
 </mxCell>
 
 <mxCell id="lane_fs" value="File System" style="swimlane;horizontal=0;startSize=110;fillColor=#f3e5f5;strokeColor=#7b1fa2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-<mxGeometry x="135.3" y="1921" width="180" height="600" as="geometry"/>
+<mxGeometry x="40" y="816" width="4552" height="140" as="geometry"/>
 </mxCell>
 
 <mxCell id="lane_renderer" value="PNG Renderer" style="swimlane;horizontal=0;startSize=110;fillColor=#e0f2f1;strokeColor=#00695c;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-<mxGeometry x="908.1" y="2797" width="180" height="600" as="geometry"/>
+<mxGeometry x="40" y="956" width="4552" height="140" as="geometry"/>
 </mxCell>
 
 <!-- Start -->
 <mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
-<mxGeometry x="19.3" y="2016" width="20" height="20" as="geometry"/>
+<mxGeometry x="192" y="100" width="20" height="20" as="geometry"/>
 </mxCell>
 
 <!-- AI Agent Steps -->
 <mxCell id="s1" value="1. Generate/modify&#10;.drawio XML" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="lane_ai">
-<mxGeometry x="217.6" y="40" width="140" height="50" as="geometry"/>
+<mxGeometry x="222" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <mxCell id="s2" value="2. Call drawio_auto_layout&#10;(file_path, base_dir, mode)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="lane_ai">
-<mxGeometry x="217.6" y="282" width="140" height="55" as="geometry"/>
+<mxGeometry x="412" y="42.5" width="140" height="55" as="geometry"/>
 </mxCell>
 
 <mxCell id="s11" value="11. Call drawio_export_png" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="lane_ai">
-<mxGeometry x="415.2" y="40" width="140" height="50" as="geometry"/>
+<mxGeometry x="3362" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <mxCell id="s12" value="12. Embed PNG in document" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="lane_ai">
-<mxGeometry x="20" y="40" width="140" height="50" as="geometry"/>
+<mxGeometry x="4312" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <!-- Bridge Steps -->
 <mxCell id="s3" value="3. Validate base_dir&#10;against allowlist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontSize=11;" vertex="1" parent="lane_bridge">
-<mxGeometry x="20" y="40" width="140" height="50" as="geometry"/>
+<mxGeometry x="602" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <mxCell id="s4" value="4. Resolve absolute path&#10;(base_dir + file_path)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontSize=11;" vertex="1" parent="lane_bridge">
-<mxGeometry x="20" y="282" width="140" height="50" as="geometry"/>
+<mxGeometry x="792" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <mxCell id="s5" value="5. Path traversal check&#10;(CWE-22 prevention)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#c62828;fontSize=11;" vertex="1" parent="lane_bridge">
-<mxGeometry x="20" y="524" width="140" height="50" as="geometry"/>
+<mxGeometry x="982" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <mxCell id="s6" value="6. Route to engine via&#10;execute_dynamic_tool" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontSize=11;" vertex="1" parent="lane_bridge">
-<mxGeometry x="20" y="766" width="140" height="50" as="geometry"/>
+<mxGeometry x="1172" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <!-- Engine Steps -->
 <mxCell id="s7" value="7. Parse XML to&#10;DiagramGraph" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontSize=11;" vertex="1" parent="lane_engine">
-<mxGeometry x="300.9" y="46.7" width="160" height="50" as="geometry"/>
+<mxGeometry x="1362" y="50" width="160" height="50" as="geometry"/>
 </mxCell>
 
 <mxCell id="s8" value="8. Enhanced Detection&#10;(5% overlap, 40px gap,&#10;crossings, diagonals)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontSize=11;" vertex="1" parent="lane_engine">
-<mxGeometry x="33.3" y="292" width="160" height="70" as="geometry"/>
+<mxGeometry x="1572" y="40" width="160" height="70" as="geometry"/>
 </mxCell>
 
 <mxCell id="dec1" value="" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontSize=11;" vertex="1" parent="lane_engine">
-<mxGeometry x="73.3" y="554" width="80" height="50" as="geometry"/>
+<mxGeometry x="1782" y="50" width="80" height="50" as="geometry"/>
 </mxCell>
 
 <mxCell id="s9a" value="9a. Return needs_fix&#10;(mode=review)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontSize=11;" vertex="1" parent="lane_engine">
-<mxGeometry x="237.6" y="796" width="160" height="50" as="geometry"/>
+<mxGeometry x="1912" y="50" width="160" height="50" as="geometry"/>
 </mxCell>
 
 <mxCell id="s9b" value="9b. Verify Loop Start&#10;(mode=apply, max 3 iter)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontSize=11;" vertex="1" parent="lane_engine">
-<mxGeometry x="20" y="796" width="160" height="55" as="geometry"/>
+<mxGeometry x="1912" y="173.5" width="160" height="55" as="geometry"/>
 </mxCell>
 
 <mxCell id="s10" value="10. Call ELK Compound Layout&#10;(layered/stress/force/radial)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontSize=11;" vertex="1" parent="lane_engine">
-<mxGeometry x="20" y="1043" width="160" height="55" as="geometry"/>
+<mxGeometry x="2122" y="47.5" width="160" height="55" as="geometry"/>
 </mxCell>
 
 <!-- ELK Steps -->
 <mxCell id="s11elk" value="Apply selected algorithm&#10;+ compound node support" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#c2185b;fontSize=11;" vertex="1" parent="lane_elk">
-<mxGeometry x="20" y="40" width="160" height="55" as="geometry"/>
+<mxGeometry x="2332" y="42.5" width="160" height="55" as="geometry"/>
 </mxCell>
 
 <mxCell id="s12elk" value="Resize containers to&#10;encompass children + margin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#c2185b;fontSize=11;" vertex="1" parent="lane_elk">
-<mxGeometry x="20" y="287" width="160" height="55" as="geometry"/>
+<mxGeometry x="2542" y="42.5" width="160" height="55" as="geometry"/>
 </mxCell>
 
 <!-- Back to Engine for routing -->
 <mxCell id="s13" value="Orthogonal Edge Routing&#10;(L-shape/Z-shape, 40px gap)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontSize=11;" vertex="1" parent="lane_engine">
-<mxGeometry x="518.5" y="40" width="160" height="60" as="geometry"/>
+<mxGeometry x="2752" y="45" width="160" height="60" as="geometry"/>
 </mxCell>
 
 <mxCell id="s14" value="Write positioned XML&#10;(preserve styles/labels)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontSize=11;" vertex="1" parent="lane_engine">
-<mxGeometry x="518.5" y="299.5" width="160" height="55" as="geometry"/>
+<mxGeometry x="2962" y="47.5" width="160" height="55" as="geometry"/>
 </mxCell>
 
 <!-- File System -->
 <mxCell id="s15" value="Read .drawio file" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#7b1fa2;fontSize=11;" vertex="1" parent="lane_fs">
-<mxGeometry x="217.6" y="40" width="140" height="50" as="geometry"/>
+<mxGeometry x="1572" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <mxCell id="s16" value="Write updated .drawio" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#7b1fa2;fontSize=11;" vertex="1" parent="lane_fs">
-<mxGeometry x="415.2" y="40" width="140" height="55" as="geometry"/>
+<mxGeometry x="3172" y="42.5" width="140" height="55" as="geometry"/>
 </mxCell>
 
 <mxCell id="s17" value="Read .drawio for export" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#7b1fa2;fontSize=11;" vertex="1" parent="lane_fs">
-<mxGeometry x="612.8" y="42.5" width="140" height="50" as="geometry"/>
+<mxGeometry x="3552" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <mxCell id="s18" value="Write .png file" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#7b1fa2;fontSize=11;" vertex="1" parent="lane_fs">
-<mxGeometry x="20" y="42.5" width="140" height="50" as="geometry"/>
+<mxGeometry x="4122" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <!-- PNG Renderer -->
-<mxCell id="s19" value="Detect renderer&#10;(CLI > Chrome > Puppeteer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b2dfdb;strokeColor=#00695c;fontSize=11;" vertex="1" parent="lane_renderer">
-<mxGeometry x="928.1" y="2389" width="140" height="55" as="geometry"/>
+<mxCell id="s19" value="Detect renderer&#10;(CLI &amp;gt; Chrome &amp;gt; Puppeteer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b2dfdb;strokeColor=#00695c;fontSize=11;" vertex="1" parent="lane_renderer">
+<mxGeometry x="3742" y="42.5" width="140" height="55" as="geometry"/>
 </mxCell>
 
 <mxCell id="s20" value="Export PNG&#10;(--border 10)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b2dfdb;strokeColor=#00695c;fontSize=11;" vertex="1" parent="lane_renderer">
-<mxGeometry x="20" y="40" width="140" height="50" as="geometry"/>
+<mxGeometry x="3932" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
 <!-- End -->
 <mxCell id="end" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
-<mxGeometry x="215.3" y="2797" width="20" height="20" as="geometry"/>
+<mxGeometry x="4542" y="100" width="20" height="20" as="geometry"/>
 </mxCell>
 
 <!-- Edges (Connections) -->
 <!-- AI Agent flow -->
-<mxCell id="e1" edge="1" parent="1" source="start" target="s1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;exitX=0.5;exitY=1;entryX=1;entryY=1;">
-<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="29.3" y="2061"/><mxPoint x="422.9" y="2061"/></Array></mxGeometry>
+<mxCell id="e1" edge="1" parent="1" source="start" target="s1" style="rounded=1;html=1;strokeColor=#2e7d32;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+<mxGeometry relative="1" as="geometry"></mxGeometry>
 </mxCell>
-<mxCell id="e2" edge="1" parent="1" source="s1" target="s2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;">
+<mxCell id="e2" edge="1" parent="lane_ai" source="s1" target="s2" style="rounded=1;html=1;strokeColor=#2e7d32;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
 
 <!-- AI Agent to Bridge -->
-<mxCell id="e3" edge="1" parent="1" source="s2" target="s3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;">
-<mxGeometry relative="1" as="geometry"/>
+<mxCell id="e3" edge="1" parent="1" source="s2" target="s3" style="rounded=1;html=1;strokeColor=#2e7d32;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="522" y="205"/><mxPoint x="712" y="205"/></Array></mxGeometry>
 </mxCell>
 
 <!-- Bridge flow -->
-<mxCell id="e4" edge="1" parent="1" source="s3" target="s4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;">
+<mxCell id="e4" edge="1" parent="lane_bridge" source="s3" target="s4" style="rounded=1;html=1;strokeColor=#1565c0;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
-<mxCell id="e5" edge="1" parent="1" source="s4" target="s5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;">
+<mxCell id="e5" edge="1" parent="lane_bridge" source="s4" target="s5" style="rounded=1;html=1;strokeColor=#1565c0;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
-<mxCell id="e6" edge="1" parent="1" source="s5" target="s6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;">
+<mxCell id="e6" edge="1" parent="lane_bridge" source="s5" target="s6" style="rounded=1;html=1;strokeColor=#1565c0;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
 
 <!-- Bridge to Engine -->
-<mxCell id="e7" edge="1" parent="1" source="s6" target="s7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;exitX=1;exitY=1;entryX=0.64;entryY=1;">
-<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="422.9" y="3678"/><mxPoint x="1109.1" y="3678"/><mxPoint x="1109.1" y="444"/><mxPoint x="402.9" y="444"/></Array></mxGeometry>
+<mxCell id="e7" edge="1" parent="1" source="s6" target="s7" style="rounded=1;html=1;strokeColor=#1565c0;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1282" y="390"/><mxPoint x="1482" y="390"/></Array></mxGeometry>
 </mxCell>
 
 <!-- Engine to FS (read) -->
-<mxCell id="e8" edge="1" parent="1" source="s7" target="s15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;exitX=0.8;exitY=1;entryX=1;entryY=1;">
-<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="429.6" y="1764"/><mxPoint x="422.9" y="1764"/></Array></mxGeometry>
+<mxCell id="e8" edge="1" parent="1" source="s7" target="s15" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1482" y="838.5"/><mxPoint x="1682" y="838.5"/></Array></mxGeometry>
 </mxCell>
 
 <!-- Engine flow -->
-<mxCell id="e9" edge="1" parent="1" source="s7" target="s8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;exitX=0.33;exitY=1;entryX=0.67;entryY=0;">
-<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="354.3" y="120"/><mxPoint x="140" y="120"/></Array></mxGeometry>
+<mxCell id="e9" edge="1" parent="lane_engine" source="s7" target="s8" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+<mxGeometry relative="1" as="geometry"></mxGeometry>
 </mxCell>
-<mxCell id="e10" edge="1" parent="1" source="s8" target="dec1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;">
-<mxGeometry relative="1" as="geometry"/>
+<mxCell id="e10" edge="1" parent="lane_engine" source="s8" target="dec1" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.33;entryX=0;entryY=0.5;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1762" y="63.1"/><mxPoint x="1762" y="75"/></Array></mxGeometry>
 </mxCell>
 
 <!-- Decision branches -->
-<mxCell id="e11" edge="1" parent="1" source="dec1" target="s9a" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;exitX=0.67;exitY=1;entryX=0.5;entryY=0;">
-<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="126.7" y="624"/><mxPoint x="317.6" y="624"/></Array></mxGeometry>
+<mxCell id="e11" edge="1" parent="lane_engine" source="dec1" target="s9a" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+<mxGeometry relative="1" as="geometry"></mxGeometry>
 </mxCell>
-<mxCell id="e12" edge="1" parent="1" source="dec1" target="s9b" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;">
-<mxGeometry relative="1" as="geometry"/>
+<mxCell id="e12" edge="1" parent="lane_engine" source="dec1" target="s9b" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.33;entryY=0;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1822" y="125"/><mxPoint x="1964.8" y="125"/></Array></mxGeometry>
 </mxCell>
 
 <!-- Verify loop to ELK -->
-<mxCell id="e13" edge="1" parent="1" source="s9b" target="s10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;">
-<mxGeometry relative="1" as="geometry"/>
+<mxCell id="e13" edge="1" parent="lane_engine" source="s9b" target="s10" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.67;exitY=0;entryX=0.33;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="2019.2" y="122.5"/><mxPoint x="2174.8" y="122.5"/></Array></mxGeometry>
 </mxCell>
-<mxCell id="e14" edge="1" parent="1" source="s10" target="s11elk" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;exitX=0.64;exitY=1;entryX=1;entryY=0.67;">
-<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="122" y="1744"/><mxPoint x="12" y="1744"/><mxPoint x="12" y="12"/><mxPoint x="593.9" y="12"/></Array></mxGeometry>
+<mxCell id="e14" edge="1" parent="1" source="s10" target="s11elk" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.67;exitY=1;entryX=0.5;entryY=0;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="2269.2" y="628.5"/><mxPoint x="2452" y="628.5"/></Array></mxGeometry>
 </mxCell>
 
 <!-- ELK flow -->
-<mxCell id="e15" edge="1" parent="1" source="s11elk" target="s12elk" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#c2185b;">
-<mxGeometry relative="1" as="geometry"/>
+<mxCell id="e15" edge="1" parent="lane_elk" source="s11elk" target="s12elk" style="rounded=1;html=1;strokeColor=#c2185b;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.67;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="2522" y="70"/><mxPoint x="2522" y="79.4"/></Array></mxGeometry>
 </mxCell>
-<mxCell id="e16" edge="1" parent="1" source="s12elk" target="s13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#c2185b;">
-<mxGeometry relative="1" as="geometry"/>
+<mxCell id="e16" edge="1" parent="1" source="s12elk" target="s13" style="rounded=1;html=1;strokeColor=#c2185b;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=0;entryX=0.5;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="2662" y="485"/><mxPoint x="2872" y="485"/></Array></mxGeometry>
 </mxCell>
 
 <!-- Engine routing and write -->
-<mxCell id="e17" edge="1" parent="1" source="s13" target="s14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;">
+<mxCell id="e17" edge="1" parent="lane_engine" source="s13" target="s14" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
-<mxCell id="e18" edge="1" parent="1" source="s14" target="s16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;">
-<mxGeometry relative="1" as="geometry"/>
+<mxCell id="e18" edge="1" parent="1" source="s14" target="s16" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.33;entryY=0;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="3082" y="838.5"/><mxPoint x="3258.2" y="838.5"/></Array></mxGeometry>
 </mxCell>
 
 <!-- AI Agent export flow -->
-<mxCell id="e19" edge="1" parent="1" source="s16" target="s11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;">
-<mxGeometry relative="1" as="geometry"/>
+<mxCell id="e19" edge="1" parent="1" source="s16" target="s11" style="rounded=1;html=1;strokeColor=#2e7d32;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.67;exitY=0;entryX=0.33;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="3305.8" y="155"/><mxPoint x="3448.2" y="155"/></Array></mxGeometry>
 </mxCell>
-<mxCell id="e20" edge="1" parent="1" source="s11" target="s17" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;exitX=1;exitY=1;entryX=1;entryY=1;">
-<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="620.5" y="2620"/><mxPoint x="918.1" y="2620"/><mxPoint x="918.1" y="1764"/><mxPoint x="818.1" y="1764"/></Array></mxGeometry>
+<mxCell id="e20" edge="1" parent="1" source="s11" target="s17" style="rounded=1;html=1;strokeColor=#2e7d32;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.67;exitY=1;entryX=0.5;entryY=0;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="3495.8" y="838.5"/><mxPoint x="3662" y="838.5"/></Array></mxGeometry>
 </mxCell>
 
 <!-- Export to FS -->
-<mxCell id="e21" edge="1" parent="1" source="s17" target="s19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;exitX=1;exitY=1;entryX=0.5;entryY=0;">
-<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="818.1" y="2061"/><mxPoint x="998.1" y="2061"/></Array></mxGeometry>
+<mxCell id="e21" edge="1" parent="1" source="s17" target="s19" style="rounded=1;html=1;strokeColor=#2e7d32;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="3662" y="978.5"/><mxPoint x="3852" y="978.5"/></Array></mxGeometry>
 </mxCell>
 
 <!-- Renderer flow -->
-<mxCell id="e22" edge="1" parent="1" source="s19" target="s20" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#00695c;">
+<mxCell id="e22" edge="1" parent="lane_renderer" source="s19" target="s20" style="rounded=1;html=1;strokeColor=#00695c;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
-<mxCell id="e23" edge="1" parent="1" source="s20" target="s18" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#00695c;exitX=1;exitY=1;entryX=1;entryY=1;">
-<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="998.1" y="3658"/><mxPoint x="1098.1" y="3658"/><mxPoint x="1098.1" y="1744"/><mxPoint x="225.3" y="1744"/></Array></mxGeometry>
+<mxCell id="e23" edge="1" parent="1" source="s20" target="s18" style="rounded=1;html=1;strokeColor=#00695c;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=0;entryX=0.5;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="4042" y="978.5"/><mxPoint x="4232" y="978.5"/></Array></mxGeometry>
 </mxCell>
 
 <!-- FS to AI Agent -->
-<mxCell id="e24" edge="1" parent="1" source="s18" target="s12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#00695c;">
-<mxGeometry relative="1" as="geometry"/>
+<mxCell id="e24" edge="1" parent="1" source="s18" target="s12" style="rounded=1;html=1;strokeColor=#00695c;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=0;entryX=0.5;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="4232" y="157.5"/><mxPoint x="4422" y="157.5"/></Array></mxGeometry>
 </mxCell>
 
 <!-- End -->
-<mxCell id="e25" edge="1" parent="1" source="s12" target="end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;">
+<mxCell id="e25" edge="1" parent="1" source="s12" target="end" style="rounded=1;html=1;strokeColor=#2e7d32;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
 
 <!-- Loop back from ELK to Engine detection (verify loop) -->
-<mxCell id="e26" edge="1" parent="1" source="s12elk" target="s8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#fbc02d;dashed=1;exitX=1;exitY=1;entryX=0.47;entryY=1;">
-<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="567.2" y="424"/><mxPoint x="108.7" y="424"/></Array></mxGeometry>
+<mxCell id="e26" edge="1" parent="1" source="s12elk" target="s8" style="rounded=1;html=1;strokeColor=#fbc02d;dashed=1;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0;exitY=0.33;entryX=1;entryY=0.67;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="2542" y="696.7"/><mxPoint x="2542" y="472.5"/><mxPoint x="1792" y="472.5"/><mxPoint x="1792" y="446.9"/></Array></mxGeometry>
 </mxCell>
 
 <!-- Decision label -->
 <mxCell id="label_dec1" value="Issues?" style="html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;" vertex="1" parent="1">
-<mxGeometry x="95.9" y="208" width="50" height="20" as="geometry"/>
+<mxGeometry x="40" y="1136" width="50" height="20" as="geometry"/>
 </mxCell>
 
 <mxCell id="label_yes" value="Yes" style="html=1;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
-<mxGeometry x="241.9" y="208" width="30" height="20" as="geometry"/>
+<mxGeometry x="110" y="1136" width="30" height="20" as="geometry"/>
 </mxCell>
 
 <mxCell id="label_no" value="No" style="html=1;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
-<mxGeometry x="367.9" y="208" width="30" height="20" as="geometry"/>
+<mxGeometry x="160" y="1136" width="30" height="20" as="geometry"/>
 </mxCell>
 
 </root>

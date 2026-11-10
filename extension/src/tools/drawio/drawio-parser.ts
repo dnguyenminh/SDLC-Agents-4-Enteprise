@@ -4,10 +4,13 @@
  */
 
 import * as fs from 'fs';
+import { parseAttrs, parseGeometry, parseStyleAnchor, parseTerminalPoint, parseWaypoints } from './drawio-parser-attrs';
 
 export interface DiagramNode {
   id: string;
   parentId: string;
+  /** Raw `value` attribute (label text, may contain entities/HTML). */
+  label?: string;
   x: number;
   y: number;
   width: number;
@@ -46,8 +49,12 @@ export interface DiagramGraph {
 /** Parse .drawio XML file into DiagramGraph. */
 export function parseDrawio(filePath: string): { raw: string; graph: DiagramGraph } {
   const raw = fs.readFileSync(filePath, 'utf-8');
-  const graph = extractGraph(raw);
-  return { raw, graph };
+  return { raw, graph: parseDrawioXml(raw) };
+}
+
+/** Parse draw.io XML text (no file I/O) — used to re-read geometry after a relayout. */
+export function parseDrawioXml(xml: string): DiagramGraph {
+  return extractGraph(xml);
 }
 
 function extractGraph(xml: string): DiagramGraph {
@@ -67,6 +74,7 @@ function extractGraph(xml: string): DiagramGraph {
     cells.push({ attrs, body });
   }
 
+  const tableParts = tableInternals(cells);
   for (const cell of cells) {
     const id = cell.attrs['id'] ?? '';
     const style = cell.attrs['style'] ?? '';
@@ -85,11 +93,12 @@ function extractGraph(xml: string): DiagramGraph {
       if (edge.sourceId && edge.targetId) edges.push(edge);
       else if (edge.sourcePoint && edge.targetPoint) looseEdges.push(edge);
     } else if (id !== '0' && id !== '1') {
+      if (tableParts.has(id)) continue; // positioned by its table, not by us
       const geom = parseGeometry(cell.body, cell.attrs);
       if (!geom) continue;
-      const isCont = hasChildren(id, cells) || isContainerStyle(style, geom.w, geom.h);
+      const isCont = !TABLE_ROOT.test(style) && (hasChildren(id, cells) || isContainerStyle(style, geom.w, geom.h));
       const node: DiagramNode = {
-        id, parentId: parent,
+        id, parentId: parent, label: cell.attrs['value'] ?? '',
         x: geom.x, y: geom.y, width: geom.w, height: geom.h,
         style, isContainer: isCont,
       };
@@ -99,63 +108,27 @@ function extractGraph(xml: string): DiagramGraph {
   return { nodes, edges, containers, looseEdges };
 }
 
-function parseGeometry(body: string, _cellAttrs: Record<string, string>): { x: number; y: number; w: number; h: number } | null {
-  // Look for mxGeometry in body or as sibling in raw XML
-  const geomRegex = /<mxGeometry\s([^>]*?)(?:\/>|>)/;
-  const geomMatch = body.match(geomRegex);
-  if (!geomMatch) return null;
-  const attrs = parseAttrs(geomMatch[1]);
-  if (attrs['as'] !== 'geometry') return null;
-  return {
-    x: parseFloat(attrs['x'] ?? '0'),
-    y: parseFloat(attrs['y'] ?? '0'),
-    w: parseFloat(attrs['width'] ?? '80'),
-    h: parseFloat(attrs['height'] ?? '40'),
+/** draw.io tables: the table, its rows and cells are laid out by childLayout=tableLayout. */
+const TABLE_ROOT = /(?:^|;)(?:shape=table|childLayout=tableLayout)(?:;|$)/;
+const TABLE_PART = /(?:^|;)shape=(?:tableRow|tableCell|partialRectangle)(?:;|$)/;
+
+/**
+ * Ids of rows/cells that belong to a table. Their geometry omits x/width (the table
+ * computes them), so reading them as free nodes yields fake overlaps and 'outside
+ * container' reports, and moving them would corrupt the table. The table itself
+ * stays a single opaque node.
+ */
+function tableInternals(cells: Array<{ attrs: Record<string, string> }>): Set<string> {
+  const byId = new Map(cells.map(c => [c.attrs['id'] ?? '', c]));
+  const memo = new Map<string, boolean>();
+  const inside = (id: string, depth = 0): boolean => {
+    if (memo.has(id)) return memo.get(id)!;
+    const cell = byId.get(id);
+    const result = depth < 50 && !!cell && TABLE_PART.test(cell.attrs['style'] ?? '');
+    memo.set(id, result);
+    return result;
   };
-}
-
-function parseAttrs(attrStr: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  const regex = /(\w+)="([^"]*)"/g;
-  let m: RegExpExecArray | null;
-  while ((m = regex.exec(attrStr)) !== null) {
-    result[m[1]] = m[2];
-  }
-  return result;
-}
-
-/** Extract stored waypoints from an edge's <Array as="points"> section. */
-function parseWaypoints(body: string): Array<{ x: number; y: number }> {
-  const arr = /<Array\s+as="points">([\s\S]*?)<\/Array>/.exec(body);
-  if (!arr) return [];
-  const points: Array<{ x: number; y: number }> = [];
-  const pointRegex = /<mxPoint\s([^>]*?)\/?>/g;
-  let m: RegExpExecArray | null;
-  while ((m = pointRegex.exec(arr[1])) !== null) {
-    const attrs = parseAttrs(m[1]);
-    points.push({ x: parseFloat(attrs['x'] ?? '0'), y: parseFloat(attrs['y'] ?? '0') });
-  }
-  return points;
-}
-
-/** Parse exit/entry anchor fractions (exitX/exitY, entryX/entryY) from edge style. */
-function parseStyleAnchor(style: string, kind: 'exit' | 'entry'): { x: number; y: number } | null {
-  const x = new RegExp(`${kind}X=([^;]*)`).exec(style)?.[1];
-  const y = new RegExp(`${kind}Y=([^;]*)`).exec(style)?.[1];
-  if (x === undefined && y === undefined) return null;
-  return { x: parseFloat(x ?? '0.5'), y: parseFloat(y ?? '0.5') };
-}
-
-/** Extract a stored terminal hint point (as="sourcePoint"|"targetPoint"). */
-function parseTerminalPoint(body: string, kind: 'sourcePoint' | 'targetPoint'): { x: number; y: number } | null {
-  const tagRe = /<mxPoint\s([^>]*?)\/?>/g;
-  let m: RegExpExecArray | null;
-  while ((m = tagRe.exec(body)) !== null) {
-    if (!m[1].includes(`as="${kind}"`)) continue;
-    const attrs = parseAttrs(m[1]);
-    return { x: parseFloat(attrs['x'] ?? '0'), y: parseFloat(attrs['y'] ?? '0') };
-  }
-  return null;
+  return new Set([...byId.keys()].filter(id => id !== '' && inside(id)));
 }
 
 function hasChildren(nodeId: string, cells: Array<{ attrs: Record<string, string>; body: string }>): boolean {

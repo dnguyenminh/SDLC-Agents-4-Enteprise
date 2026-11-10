@@ -20,17 +20,19 @@ beforeEach(() => { original = [...CORE_TOOLS]; });
 afterEach(() => { setCore(original); });
 
 describe('CoreTools.resolveCoreToolNames', () => {
-  it('UT-01: valid CORE set resolves to exactly 10 names', () => {
+  it('UT-01: valid CORE set resolves to every CORE_TOOLS name', () => {
     const set = resolveCoreToolNames();
     expect(set).toBeInstanceOf(Set);
     expect(set.size).toBe(CORE_TOOLS.length);
     for (const name of [
       'mem_search', 'mem_ingest', 'mem_ingest_file', 'code_search',
       'get_curated_context', 'find_tools', 'execute_dynamic_tool', 'orchestration_status',
-      'drawio_export_png', 'drawio_auto_layout',
+      'drawio_export_png',
     ]) {
       expect(set.has(name)).toBe(true);
     }
+    // drawio_auto_layout is extension-local now — must NOT be advertised by the backend
+    expect(set.has('drawio_auto_layout')).toBe(false);
   });
 
   it('UT-02: empty CORE_TOOLS falls back to META_TOOLS only (BR-03/EF-1)', () => {

@@ -37,7 +37,7 @@ export type PathResolutionResult = PathResolutionOk | PathResolutionErr;
 
 /**
  * Strip control characters from a path before echoing it in an error message
- * or log line (TDD §7.4/T6 — anti log-forging; pattern of drawio-tool.ts).
+ * or log line (TDD §7.4/T6 — anti log-forging; same pattern as the extension drawio-tool.ts).
  */
 export function sanitizePathText(value: string): string {
   return String(value ?? '').replace(/[\r\n\0]/g, '?');

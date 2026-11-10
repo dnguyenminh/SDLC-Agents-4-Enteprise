@@ -90,6 +90,26 @@ export function upsertEdgeStyleKeys(xml: string, id: string, keys: Record<string
   });
 }
 
+/** Re-parent a cell (waypoints are then interpreted in the new parent's space). */
+export function setCellParent(xml: string, id: string, parentId: string): string {
+  return patchCell(xml, id, (open, body) => {
+    if (!/\sparent="[^"]*"/.test(open)) return { open: `${open} parent="${parentId}"`, body };
+    return { open: open.replace(/\sparent="[^"]*"/, ` parent="${parentId}"`), body };
+  });
+}
+
+/**
+ * Drop stale terminal hints (`as="sourcePoint"` / `as="targetPoint"`) from an
+ * edge. For connected edges they only carry the OLD layout's attachment
+ * position and would otherwise be preferred over the fresh exit/entry anchors.
+ */
+export function clearEdgeTerminalPoints(xml: string, edgeId: string): string {
+  return patchCell(xml, edgeId, (open, body) => {
+    const cleaned = body.replace(/<mxPoint\b[^>]*\bas="(?:sourcePoint|targetPoint)"[^>]*\/>/g, '');
+    return cleaned === body ? null : { open, body: cleaned };
+  });
+}
+
 /** Apply a transform to the first <mxGeometry ...> tag inside a cell body. */
 function patchGeometryTag(body: string, transform: (tag: string) => string): string | null {
   const geomRegex = /<mxGeometry\b[^>]*?(?:\/>|>)/;
