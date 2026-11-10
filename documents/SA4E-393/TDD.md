@@ -606,3 +606,44 @@ score = 1 − (unique files with findings / total files in scan scope)
 Real Impeccable WASM detector binary (Option 2) — blocked on the external
 `impeccable-skill` package; heuristics in `simulateWasmAnalysis` remain until then.
 
+---
+
+## Addendum 2 (SA4E-438, 2026-11-10) — Real Design-Quality Rules [USER-APPROVED]
+
+Supersedes the placeholder heuristic (A3 kept for the real WASM binary only).
+Follow-up ticket: SA4E-438.
+
+### B1. Rule engine — `design-rules.ts`
+
+13 rule ids applied to design artifacts (extension-aware: CSS rules don't run on TSX):
+
+| Id | Rule | Severity |
+|----|------|----------|
+| A1 | `<img>` missing `alt` | HIGH |
+| A2 | Empty `<button>`/`<a>` | HIGH |
+| A3 | `onClick` on div/span without role/tabIndex | MEDIUM |
+| B1 | Fixed pixel width ≥300px | MEDIUM |
+| B2 | `position:absolute` >5 per file | MEDIUM |
+| B3 | Stylesheet >200 lines without `@media` | MEDIUM |
+| C1 | ≥3 distinct hardcoded colors | LOW |
+| C2 | `!important` | LOW |
+| C3 | Magic spacing (off 4/8 scale) | LOW |
+| D1 | Inline `style={{…}}` | LOW |
+| D2 | `.map()` JSX without key | MEDIUM |
+| D3 | Component file >300 lines | LOW |
+| D4 | Pending-work markers TODO/FIX | LOW |
+
+### B2. Scoring amendment — significant findings only
+
+```
+score = 1 − (files with ≥1 HIGH or MEDIUM finding / total files in scope)
+```
+
+LOW findings (tokens, spacing, markers) are triage info and do not fail a file.
+Threshold semantics unchanged (BR-11).
+
+### B3. Rendered mode
+
+Phase 2: fetch page → same rule engine over fetched HTML (Lighthouse-class DOM
+analysis deferred).
+

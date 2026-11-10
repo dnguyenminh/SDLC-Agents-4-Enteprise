@@ -96,7 +96,7 @@ export interface SkillAPI {
 
 /** WASM detector runtime interface */
 export interface WasmDetectorRuntime {
-  analyze: (content: string | Uint8Array, mode: "static" | "rendered") => Promise<FindingsResult>;
+  analyze: (content: string | Uint8Array, mode: "static" | "rendered", filePath?: string) => Promise<FindingsResult>;
   getScore: () => number;
 }
 

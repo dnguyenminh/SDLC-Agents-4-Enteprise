@@ -18,7 +18,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { DetectionError, DetectionErrorException, createDetectionError, Finding, DetectionResult, QualityReport, DetectionConfig, EnvConfig, DEFAULT_THRESHOLD, LoadInstance } from "./types";
+import { DetectionError, DetectionErrorException, createDetectionError, Finding, DetectionResult, QualityReport, DetectionConfig, EnvConfig, DEFAULT_THRESHOLD, LoadInstance, SkillAPI, WasmDetectorRuntime } from "./types";
 import { loadWasmDetector, readWasmBinary, validateWasmConstraints } from "./wasm.loader";
 import { listSourceFiles, readSourceFile, getWorkspaceRoot, isPathSafe } from "./fs.adapter";
 import { fetchLocalhostPage, shouldSkipRendered, resetCircuitBreaker, isLocalhostUrl } from "./localhost-fetcher";
@@ -28,18 +28,9 @@ import { cacheResult, getCachedResult, invalidateCache, clearAllCache, listCache
 /** Cache directory relative to workspace root (mirrors detection.cache.ts). */
 const CACHE_DIR = ".code-intel/design-gate";
 
-// Import SkillAPI - in production this would come from the impeccable-skill npm package
-// For this integration, we define a local mock that matches the interface
-type SkillAPI = {
-  loadWasm: (buffer: Buffer) => Promise<WasmDetectorRuntime>;
-  isLoaded: () => boolean;
-  getInstanceId: () => string;
-};
-
-type WasmDetectorRuntime = {
-  analyze: (content: string | Uint8Array, mode: "static" | "rendered") => Promise<{ findings: Finding[]; score: number }>;
-  getScore: () => number;
-};
+// SkillAPI + WasmDetectorRuntime come from ./types (SA4E-438: analyze gained
+// an optional filePath so rules are extension-aware; local duplicate types
+// that shadowed the import and pinned the 2-arg signature were removed).
 
 /** Singleton instance */
 let serviceInstance: ImpeccableIntegrationService | null = null;
@@ -206,10 +197,12 @@ export class ImpeccableIntegrationService {
           try {
             const fileContent = readSourceFile(file, getWorkspaceRoot());
 
-            // Analyze content with WASM detector
+            // Analyze content with WASM detector (SA4E-438: pass file path —
+            // rules are extension-aware, e.g. CSS rules don't run on TSX)
             const analysisResult = await this.wasmRuntime!.analyze(
               fileContent,
-              "static"
+              "static",
+              file
             );
 
             // Map findings to standard format
@@ -349,10 +342,11 @@ export class ImpeccableIntegrationService {
         );
       }
 
-      // Analyze rendered content with WASM detector
+      // Analyze rendered content with WASM detector (HTML rule set)
       const analysisResult = await this.wasmRuntime.analyze(
         htmlContent,
-        "rendered"
+        "rendered",
+        "rendered-page.html"
       );
 
       // Build findings with relative file paths

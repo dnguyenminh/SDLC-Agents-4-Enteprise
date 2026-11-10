@@ -37,6 +37,11 @@ const DEFAULT_THRESHOLD = parseFloat(
  * same clean-file ratio get the same score. severityBreakdown is kept in the
  * report for triage but no longer drives the score.
  *
+ * SA4E-438 amendment (user-approved 2026-11-10): with real design-quality
+ * rules, only HIGH/MEDIUM findings fail a file (a11y, layout, component
+ * correctness). LOW findings (tokens, !important, magic spacing, markers)
+ * are triage info and do not lower the score.
+ *
  * Per SECURITY-REVIEW.md C5:
  * - File paths in findings are sanitized to relative paths within workspace only
  *
@@ -68,9 +73,13 @@ export function generateQualityReport(
       high: findings.filter((f) => f.severity === "high").length,
     };
 
-    // Normalized cleanliness score (SA4E-393 Addendum):
-    // ratio of scan-scope files that are free of findings.
-    const flaggedFiles = new Set(findings.map((f) => f.file)).size;
+    // Normalized cleanliness score (SA4E-393 Addendum + SA4E-438 amendment):
+    // ratio of scan-scope files FREE OF SIGNIFICANT findings. HIGH/MEDIUM
+    // findings fail a file; LOW findings are triage info that do not fail it.
+    const significantFindings = findings.filter(
+      (f) => f.severity === "high" || f.severity === "medium"
+    );
+    const flaggedFiles = new Set(significantFindings.map((f) => f.file)).size;
     let score: number;
     let message: string | undefined;
     if (totalFiles > 0) {

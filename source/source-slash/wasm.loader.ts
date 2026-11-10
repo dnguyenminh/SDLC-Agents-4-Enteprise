@@ -16,6 +16,7 @@ import { join } from "path";
 import { Buffer } from "buffer";
 
 import { WasmDetectorRuntime, FindingsResult, Finding, DetectionError, DetectionErrorException, createDetectionError, EnvConfig } from "./types";
+import { runDesignRules } from "./design-rules";
 
 // The WASM module path - configurable via ENV per DPG.md
 const WASM_BINARY_PATH = process.env[EnvConfig.IMPPECABLE_SKILL_PATH]
@@ -58,10 +59,16 @@ export async function loadWasmDetector(
 
     // For now, we create a mock runtime that respects the interface
     const runtime: WasmDetectorRuntime = {
-      analyze: async (content: string | Uint8Array, mode: "static" | "rendered"): Promise<FindingsResult> => {
-        // Simulate WASM detection - in production this would call the
-        // actual instantiated WASM module
-        return await simulateWasmAnalysis(content, mode);
+      analyze: async (
+        content: string | Uint8Array,
+        mode: "static" | "rendered",
+        filePath?: string
+      ): Promise<FindingsResult> => {
+        // SA4E-438: real design-quality rule engine (see design-rules.ts).
+        // When the real Impeccable WASM module becomes available, this call
+        // is replaced by the instantiated module — the rule engine then stays
+        // as a static pre-pass.
+        return await simulateWasmAnalysis(content, mode, filePath);
       },
       getScore: (): number => {
         // Return cached score from last analysis
@@ -78,62 +85,36 @@ export async function loadWasmDetector(
 }
 
 /**
- * Simulate WASM analysis for the integration.
- * In production, this would call the actual WASM instantiated module.
+ * Real design-quality analysis (SA4E-438): runs the rule engine from
+ * design-rules.ts against one file / one rendered page.
+ * The report-level score is computed by report.generator over the whole
+ * scope — the returned score here is a per-page vestige.
  */
 async function simulateWasmAnalysis(
   content: string | Uint8Array,
-  mode: "static" | "rendered"
+  mode: "static" | "rendered",
+  filePath?: string
 ): Promise<FindingsResult> {
-  // Mock analysis logic - replace with actual WASM call in production
-  const findings: Finding[] = [];
+  const text = typeof content === "string" ? content : "";
+  const target = filePath ?? (mode === "rendered" ? "rendered-page.html" : "unknown");
+  const ext = target.includes(".") ? target.slice(target.lastIndexOf(".") + 1).toLowerCase() : "";
 
-  // Basic static analysis heuristic for demonstration
-  if (mode === "static") {
-    // Check for common design anti-patterns in source code
-    const text = typeof content === "string" ? content : "";
-    const patterns = [
-      // \b word boundaries (SA4E-393, user-approved heuristic fix): without them
-      // /FIX\s*[:\(]/i matched the "fix(" substring inside legit identifiers like
-      // topSuffix:/subtitlePrefix:/(suffix: — 6/8 UAT findings were such false
-      // positives. \bFIX\b no longer matches Suffix/Prefix/FIXED, still matches
-      // genuine "FIX:" / "FIX(" markers.
-      {
-        pattern: /\bTODO\b\s*:/i,
-        severity: "low" as const,
-        label: "Pending-work marker (TODO) in design artifact",
-      },
-      {
-        pattern: /\bFIX\b\s*[:\(]/i,
-        severity: "medium" as const,
-        label: "Pending-fix marker (FIX) in design artifact",
-      },
-    ];
+  const ruleHits = runDesignRules(text, ext);
+  const findings: Finding[] = ruleHits.map((h) => ({
+    findingId: `find_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+    runId: "",
+    mode,
+    file: target,
+    severity: h.severity,
+    message: `${h.id} ${h.label} — ${h.detail}`,
+    line: h.line,
+  }));
 
-    for (const { pattern, severity, label } of patterns) {
-      const matches = text.match(pattern);
-      if (matches) {
-        findings.push({
-          findingId: `find_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-          runId: "",
-          mode: "static",
-          file: "unknown",
-          severity,
-          message: label,
-        });
-      }
-    }
-  }
-
-  // Calculate a mock score based on findings
-  let score = 1.0;
-  if (findings.length > 0) {
-    // Deduct score based on severity
-    const highCount = findings.filter(f => f.severity === "high").length;
-    const mediumCount = findings.filter(f => f.severity === "medium").length;
-    score -= highCount * 0.3;
-    score -= mediumCount * 0.15;
-  }
+  // Per-page vestigial score (the authoritative score is normalized across
+  // the scan scope in report.generator.ts)
+  const high = findings.filter((f) => f.severity === "high").length;
+  const medium = findings.filter((f) => f.severity === "medium").length;
+  let score = 1 - high * 0.5 - medium * 0.2;
   score = Math.max(0, Math.min(1, score));
 
   return { findings, score };
