@@ -258,11 +258,13 @@ All 17 mandatory ACs from 16K Doc §19 + the SA4E regression/build-test AC:
 
 | # | Diagram | Image | Source (editable) |
 |---|---------|-------|-------------------|
-| 1 | Architecture Overview (4-layer) | `architecture-overview.png` | `architecture-overview.drawio` |
-| 2 | Snapshot/Revision ER Diagram | `snapshot-revision-er.png` | `snapshot-revision-er.drawio` |
-| 3 | Pipeline Ordering (A–J) | `pipeline-ordering.png` | `pipeline-ordering.drawio` |
-| 4 | Agent UX Token Budget | `token-budget.png` | `token-budget.drawio` |
-| 5 | Scratchpad & Eviction | `scratchpad-eviction.png` | `scratchpad-eviction.drawio` |
+| 1 | Business Flow (Phase 0–4 Stakeholder Swimlanes) | `business-flow.png` | `business-flow.drawio` |
+| 2 | Use Case (16 Epic Stories + External Systems) | `use-case.png` | `use-case.drawio` |
+| 3 | Architecture Overview (4-layer) | `architecture-overview.png` | `architecture-overview.drawio` |
+| 4 | Snapshot/Revision ER Diagram | `snapshot-revision-er.png` | `snapshot-revision-er.drawio` |
+| 5 | Pipeline Ordering (A–J) | `pipeline-ordering.png` | `pipeline-ordering.drawio` |
+| 6 | Agent UX Token Budget | `token-budget.png` | `token-budget.drawio` |
+| 7 | Scratchpad & Eviction | `scratchpad-eviction.png` | `scratchpad-eviction.drawio` |
 
 *All diagrams stored in `documents/SA4E-411/diagrams/`. Source `.drawio` files are the editable format; `.png` files are rendered exports (re-export from `.drawio` if needed).*
 

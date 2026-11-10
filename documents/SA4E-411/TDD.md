@@ -256,11 +256,18 @@ interface RuntimeTokenizer {
 
 | Diagram | Source |
 |---------|--------|
-| Architecture Overview (4-layer) | `documents/architecture/16K_CODE_AGENT_ARCHITECTURE.md` §1 |
+| Architecture Overview (4-layer) | `documents/SA4E-411/diagrams/architecture-overview.drawio` |
+| Component Diagram (Agent UX / Engine / Storage layers) | `documents/SA4E-411/diagrams/component.drawio` |
+| Class Diagram — Core Agent Tools | `documents/SA4E-411/diagrams/class-agent-tools.drawio` |
 | Snapshot/Revision ER | `documents/SA4E-411/TDD-01-data-model.md` §2 |
-| Pipeline Ordering (A–J) | `documents/architecture/16K_CODE_AGENT_ARCHITECTURE.md` §9 |
-| Agent UX Token Budget | `documents/architecture/16K_CODE_AGENT_ARCHITECTURE.md` §4 |
-| Scratchpad/Eviction | `documents/architecture/16K_CODE_AGENT_ARCHITECTURE.md` §8 |
+| Pipeline Ordering (A–J) | `documents/SA4E-411/diagrams/pipeline-ordering.drawio` |
+| Agent UX Token Budget | `documents/SA4E-411/diagrams/token-budget.drawio` |
+| Scratchpad/Eviction | `documents/SA4E-411/diagrams/scratchpad-eviction.drawio` |
+| System Context (FSD) | `documents/SA4E-411/diagrams/system-context.drawio` |
+| Sequence — Agent Chat (FSD) | `documents/SA4E-411/diagrams/sequence-agent-chat.drawio` |
+| State Machine — Token Budget (FSD) | `documents/SA4E-411/diagrams/state-token-budget.drawio` |
+| Business Flow (BRD) | `documents/SA4E-411/diagrams/business-flow.drawio` |
+| Use Case (BRD) | `documents/SA4E-411/diagrams/use-case.drawio` |
 
 ---
 

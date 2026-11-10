@@ -355,11 +355,14 @@ Functional areas covered:
 
 | # | Diagram | Image | Source (editable) |
 |---|---------|-------|-------------------|
-| 1 | Architecture Overview (4-layer) | `diagrams/architecture-overview.png` | `diagrams/architecture-overview.drawio` |
-| 2 | Snapshot/Revision ER Diagram | `diagrams/snapshot-revision-er.png` | `diagrams/snapshot-revision-er.drawio` |
-| 3 | Pipeline Ordering (A–J) | `diagrams/pipeline-ordering.png` | `diagrams/pipeline-ordering.drawio` |
-| 4 | Agent UX Token Budget | `diagrams/token-budget.png` | `diagrams/token-budget.drawio` |
-| 5 | Scratchpad & Eviction | `diagrams/scratchpad-eviction.png` | `diagrams/scratchpad-eviction.drawio` |
+| 1 | System Context (External Systems + Agent UX + Engine + Storage) | `diagrams/system-context.png` | `diagrams/system-context.drawio` |
+| 2 | Agent Chat Sequence (18 Steps: Chat → Pin → Retrieval → Budget → Scratchpad → Tool Call → Evict) | `diagrams/sequence-agent-chat.png` | `diagrams/sequence-agent-chat.drawio` |
+| 3 | Token Budget State Machine (INIT → COMPUTE → CHECK → OK → Retrieval → Scratchpad → Tool Call → Evict → Next Turn + Escalation) | `diagrams/state-token-budget.png` | `diagrams/state-token-budget.drawio` |
+| 4 | Architecture Overview (4-layer) | `diagrams/architecture-overview.png` | `diagrams/architecture-overview.drawio` |
+| 5 | Snapshot/Revision ER Diagram | `diagrams/snapshot-revision-er.png` | `diagrams/snapshot-revision-er.drawio` |
+| 6 | Pipeline Ordering (A–J) | `diagrams/pipeline-ordering.png` | `diagrams/pipeline-ordering.drawio` |
+| 7 | Agent UX Token Budget (formula view) | `diagrams/token-budget.png` | `diagrams/token-budget.drawio` |
+| 8 | Scratchpad & Eviction (format + algorithm) | `diagrams/scratchpad-eviction.png` | `diagrams/scratchpad-eviction.drawio` |
 
 *All diagrams stored in `documents/SA4E-411/diagrams/`. Source `.drawio` files are the editable format; `.png` files are rendered exports (re-export from `.drawio` if needed).*
 

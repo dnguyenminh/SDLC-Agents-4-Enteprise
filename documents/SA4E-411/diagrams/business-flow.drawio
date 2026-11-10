@@ -1,0 +1,75 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="boundary-stakeholder" value="Stakeholder / Product Owner" style="swimlane;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="20" width="360" height="300" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary-arch" value="Architecture / SA Agent" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="340" width="360" height="300" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary-dev" value="Development / Dev Agent" style="swimlane;startSize=30;fillColor=none;strokeColor=#82b366;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="660" width="360" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary-qa" value="Quality / QA Agent" style="swimlane;startSize=30;fillColor=none;strokeColor=#d6b656;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="400" y="20" width="500" height="840" as="geometry"/>
+    </mxCell>
+    <mxCell id="stakeholder" value="Product Owner\n(Scope Decision)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="boundary-stakeholder">
+      <mxGeometry x="10" y="50" width="340" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="arch" value="Solution Architect\n(ADR-001, TDD-01)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="boundary-arch">
+      <mxGeometry x="10" y="50" width="340" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="dev" value="Dev Agent\n(18 Stories Impl)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="boundary-dev">
+      <mxGeometry x="10" y="50" width="340" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="qa" value="QA Agent\n(AC Suite + Integration + Regression)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="boundary-qa">
+      <mxGeometry x="10" y="50" width="480" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="p0" value="Phase 0: Scope Decision\n• SQLite vs PostgreSQL\n• Language MVP (17+7 grammars)\n• ADR-001 Accepted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="boundary-qa">
+      <mxGeometry x="10" y="150" width="480" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1" value="Phase 1: CR-01..06 Data Model\n• V6 Additive Migration (28→29 tables)\n• Dependency-Before-Semantic Pipeline\n• Snapshot-Scoped Retrieval\n• Agent Persistence\n• Patch Protocol &amp; Sandbox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="boundary-qa">
+      <mxGeometry x="10" y="250" width="480" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2" value="Phase 2: Agent UX\n• PageRank Repo Map\n• AST Skeleton/Body Chunking\n• 4 Core Tools (session-pinned)\n• Scratchpad + S_evict Eviction\n• Runtime Token Budget (real tokenizer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-qa">
+      <mxGeometry x="10" y="390" width="480" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="p3" value="Phase 3: Hardening\n• Agent State Recovery\n• Security Sandbox &amp; Patch Validation\n• SSE Durable Event Log + Replay\n• API Pinned index_snapshot_id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="boundary-qa">
+      <mxGeometry x="10" y="530" width="480" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="p4" value="Phase 4: Validation\n• 17 AC Acceptance Suite (SA4E-427)\n• Token/Eviction Integration (SA4E-428)\n• SA4E Regression Suite (SA4E-429)\n• Build + Test Gates Green" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="boundary-qa">
+      <mxGeometry x="10" y="670" width="480" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="gates" value="Quality Gates\n• npm run build (exit 0)\n• npm test (500f/3825p + 443f/3469p)\n• test:ac, test:token, test:regression" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="boundary-qa">
+      <mxGeometry x="10" y="810" width="480" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1"  style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stakeholder" target="p0">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2"  style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="arch" target="p1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3"  style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="dev" target="p2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4"  style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="qa" target="gates">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="Phase 0 → 1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#666666;" edge="1" parent="1" source="p0" target="p1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="Phase 1 → 2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#666666;" edge="1" parent="1" source="p1" target="p2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="Phase 2 → 3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#666666;" edge="1" parent="1" source="p2" target="p3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="Phase 3 → 4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#666666;" edge="1" parent="1" source="p3" target="p4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="Phase 4 → Gates" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#666666;" edge="1" parent="1" source="p4" target="gates">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

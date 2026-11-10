@@ -1,0 +1,96 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="boundary-ext" value="External Systems" style="swimlane;startSize=30;fillColor=none;strokeColor=#666666;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="20" width="340" height="400" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary-agent" value="Code Agent 16K System" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="380" y="20" width="640" height="840" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary-store" value="Storage Layer" style="swimlane;startSize=30;fillColor=none;strokeColor=#82b366;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="20" width="340" height="400" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext-dev" value="Developer\n(VS Code Extension)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="boundary-ext">
+      <mxGeometry x="10" y="50" width="320" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext-git" value="Git Repository\n(commits, branches, tags)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="boundary-ext">
+      <mxGeometry x="10" y="130" width="320" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext-llama" value="llama.cpp\n/tokenize endpoint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="boundary-ext">
+      <mxGeometry x="10" y="210" width="320" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext-postgres" value="PostgreSQL\n(Platform DB: tickets, KB, jobs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="boundary-ext">
+      <mxGeometry x="10" y="290" width="320" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="agent-ux" value="Agent UX Layer\n• Repo Map (PageRank)\n• 4 Core Tools\n• Scratchpad + Eviction\n• Token Budget Gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="boundary-agent">
+      <mxGeometry x="20" y="50" width="300" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="agent-engine" value="Code Intelligence Engine\n• Snapshot/Revision Model\n• 10-Stage Pipeline (A–J)\n• Snapshot-Scoped Retrieval\n• Agent Persistence\n• Patch Protocol &amp; Sandbox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="boundary-agent">
+      <mxGeometry x="20" y="220" width="300" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="agent-f2" value="F2 Code Intelligence\n(Reused: Tree-sitter, FTS5, Graph, Incremental, WAL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="boundary-agent">
+      <mxGeometry x="340" y="50" width="300" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="agent-f4" value="F4 Context Assembly\n(Reused: get_ai_context + Budget Governance)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="boundary-agent">
+      <mxGeometry x="340" y="220" width="300" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="agent-budget" value="Context Budget Governance\n(Wired: BudgetCalculator, ThresholdGate, Tiering, Steering)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="boundary-agent">
+      <mxGeometry x="340" y="390" width="300" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="store-sqlite" value="SQLite Engine Store\n(ADR-001)\n.code-intel/index.db per workspace\nWAL + Immutable File Boundary\n29 tables + 18 composite FK triggers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-store">
+      <mxGeometry x="10" y="50" width="320" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="store-pg" value="PostgreSQL Platform DB\n(Unchanged)\nsa4e-postgres (DEV + Prod)\nOrchestration, tickets, KB, jobs\npg_dump 02:00 daily" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="boundary-store">
+      <mxGeometry x="10" y="230" width="320" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="MCP bridge\nsession pin" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ext-dev" target="agent-ux">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="indexes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#666666;" edge="1" parent="1" source="ext-git" target="agent-engine">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="720" y="160"/>
+          <mxPoint x="720" y="220"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e3" value="token count" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#d6b656;" edge="1" parent="1" source="ext-llama" target="agent-budget">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="720" y="270"/>
+          <mxPoint x="720" y="390"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e4" value="orchestration" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#666666;" edge="1" parent="1" source="ext-postgres" target="agent-engine">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="720" y="350"/>
+          <mxPoint x="720" y="420"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e5" value="pins session\nqueries snapshot" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="agent-ux" target="agent-engine">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6"  style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="agent-engine" target="agent-f2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7"  style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="agent-engine" target="agent-f4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8"  style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="agent-engine" target="agent-budget">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="stores immutable\nsnapshots" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="agent-engine" target="store-sqlite">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" value="separate layer\nno cross-use" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#d6b656;" edge="1" parent="1" source="store-sqlite" target="store-pg">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="card-legend" value="Legend:\n🔵 Primary (Agent UX/Engine)\n🟢 New/Created (SQLite Store)\n🟡 Warning/External (Tokenizer, F4)\n🔵 Actor/User (Developer)\n⚪ Unchanged (PostgreSQL, F2)\n🟣 Data/Parser (Budget Gov)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="20" y="880" width="1340" height="80" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

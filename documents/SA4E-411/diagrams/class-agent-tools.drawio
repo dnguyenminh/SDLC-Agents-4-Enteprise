@@ -1,0 +1,120 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="boundary-tools" value="Core Agent Tools (backend/src/engine/agent-tools/)" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="20" y="20" width="660" height="840" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary-types" value="Shared Types (tool-context.ts)" style="swimlane;startSize=30;fillColor=none;strokeColor=#9673a6;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="20" width="680" height="400" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary-deps" value="Dependencies" style="swimlane;startSize=30;fillColor=none;strokeColor=#666666;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="440" width="680" height="420" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-core-tools" value="CoreAgentTools\n────────────────────\n- db: QueryDatabaseAdapter\n- retrieval: SnapshotRetrievalService\n- embedFn: (text) → Buffer\n- sourceLoader: (path) → Promise&lt;string&gt;\n────────────────────\n+ search_symbols(args): Promise&lt;ToolResult&gt;\n+ get_file_skeleton(fp): Promise&lt;ToolResult&gt;\n+ read_code_block(fp, start, end): Promise&lt;ToolResult&gt;\n+ query_call_graph(symbolId, dir): Promise&lt;ToolResult&gt;\n- resolveSessionPin(args): SessionPin\n- hybridSearch(q, limit): Promise&lt;SymbolHit[]&gt;\n- fuseRanked(lexical, vector, graph): SymbolHit[]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-tools">
+      <mxGeometry x="20" y="50" width="620" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-search-symbols" value="search_symbols\n────────────────────\nInput: SearchSymbolsArgs\n  q: string\n  kind?: string\n  path_filter?: string\n  limit?: number\n────────────────────\nOutput: ToolResult\n  resultId: string\n  summary: string\n  snippets: string[]\n  evidenceIds: string[]\n  truncated: boolean\n  cursor?: string\n────────────────────\nFlow:\n1. assertSessionPin(args)\n2. hybridSearch(args.q, args.limit)\n3. fuseRanked(lexical, vector, graph)\n4. pack DSL output" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-tools">
+      <mxGeometry x="20" y="290" width="300" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-get-skeleton" value="get_file_skeleton\n────────────────────\nInput: GetFileSkeletonArgs\n  file_path: string\n────────────────────\nOutput: ToolResult\n  Class/interface structure\n  Fields + signatures (no body)\n  Line ranges\n────────────────────\nFlow:\n1. assertSessionPin\n2. SnapshotRetrievalService.getFileSkeleton\n3. Pack DSL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-tools">
+      <mxGeometry x="340" y="290" width="300" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-read-block" value="read_code_block\n────────────────────\nInput: ReadCodeBlockArgs\n  file_path: string\n  start_line: number\n  end_line: number\n────────────────────\nOutput: ToolResult\n  Source lines (max 120)\n  Truncation flag\n────────────────────\nFlow:\n1. assertSessionPin\n2. Validate line range (≤120)\n3. sourceLoader(file_path)\n4. Slice lines\n5. Pack DSL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-tools">
+      <mxGeometry x="20" y="510" width="300" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-query-call-graph" value="query_call_graph\n────────────────────\nInput: QueryCallGraphArgs\n  symbol_id: string\n  direction: CALLERS|CALLEES|IMPLEMENTATIONS\n────────────────────\nOutput: ToolResult\n  Related symbols + evidence\n────────────────────\nFlow:\n1. assertSessionPin\n2. GraphRepository.query(symbolId, direction)\n3. Fuse with retrieval evidence\n4. Pack DSL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-tools">
+      <mxGeometry x="340" y="510" width="300" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-session-pin" value="SessionPin\n────────────────────\nsessionId: string\nrepositoryId: string\ncommitId: string\nindexSnapshotId: string\npinnedAt: string" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-types">
+      <mxGeometry x="20" y="50" width="280" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-tool-result" value="ToolResult\n────────────────────\nresultId: string\nsummary: string\nsnippets: string[]\nevidenceIds: string[]\ntruncated: boolean\ncursor?: string" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-types">
+      <mxGeometry x="20" y="150" width="280" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-search-args" value="SearchSymbolsArgs\n────────────────────\nq: string\nkind?: string\npath_filter?: string\nlimit?: number" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-types">
+      <mxGeometry x="320" y="50" width="280" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-skeleton-args" value="GetFileSkeletonArgs\n────────────────────\nfile_path: string" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-types">
+      <mxGeometry x="320" y="150" width="280" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-read-args" value="ReadCodeBlockArgs\n────────────────────\nfile_path: string\nstart_line: number\nend_line: number" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-types">
+      <mxGeometry x="20" y="250" width="280" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-call-graph-args" value="QueryCallGraphArgs\n────────────────────\nsymbol_id: string\ndirection: 'CALLERS'|'CALLEES'|'IMPLEMENTATIONS'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-types">
+      <mxGeometry x="320" y="250" width="280" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-symbol-hit" value="SymbolHit\n────────────────────\nid: string\nname: string\nkind: string\nsignature: string | null\nstartLine: number\nendLine: number\nrankSource: 'exact-definition'|'proven-reference'|'text-similarity'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-types">
+      <mxGeometry x="20" y="350" width="280" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="class-hybrid-hit" value="HybridHit\n────────────────────\nsymbolHit: SymbolHit\nlexicalRank: number\nvectorScore: number\ngraphScore: number\nfusedScore: number" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-types">
+      <mxGeometry x="320" y="350" width="280" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep-retrieval" value="SnapshotRetrievalService\n• pinOrThrow(snapshotId, repoId)\n• symbolByName(snapshotId, name)\n• lexicalSearch(snapshotId, query, limit)\n• vectorSearch(embeddingSetId, queryEmb, limit)\n• graphQuery(snapshotId, symbolId, direction)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-deps">
+      <mxGeometry x="20" y="50" width="320" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep-graph-repo" value="GraphRepository\n• findCallers(symbolId)\n• findCallees(symbolId)\n• findImplementations(symbolId)\n• Composite FK ownership enforced" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-deps">
+      <mxGeometry x="360" y="50" width="320" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep-ai-context" value="AIContextService\n• getContext(params: AIContextParams)\n  symbol, intent, token_budget, caller_depth\n• Assembles: source, doc_comment, callers, callees, signature\n• BudgetManager enforces token_budget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-deps">
+      <mxGeometry x="20" y="210" width="320" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep-tool-schemas" value="Tool Schemas (Zod)\n• validateToolArgs(toolName, args)\n• search_symbols: SearchSymbolsArgsSchema\n• get_file_skeleton: GetFileSkeletonArgsSchema\n• read_code_block: ReadCodeBlockArgsSchema\n• query_call_graph: QueryCallGraphArgsSchema\n• Rejects: shell metachars, absolute paths, .." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-deps">
+      <mxGeometry x="360" y="210" width="320" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep-dsl" value="DSL Output Format\n[FOUND N SYMBOLS | BUDGET_USED: X tokens]\n1. [METHOD] Class#method | file:lines (body: Y tok)\n   Sig: signature\n   Evidence: evidenceId1, evidenceId2\n   Truncated: false\n   Cursor: next_page_token" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;fontFamily=monospace;" vertex="1" parent="boundary-deps">
+      <mxGeometry x="20" y="370" width="660" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-core-tools" target="class-search-symbols">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-core-tools" target="class-get-skeleton">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-core-tools" target="class-read-block">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-core-tools" target="class-query-call-graph">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="validates with" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#b85450;" edge="1" parent="1" source="class-core-tools" target="dep-tool-schemas">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="queries" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-core-tools" target="dep-retrieval">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="queries graph" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-query-call-graph" target="dep-graph-repo">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="uses for assembly" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-core-tools" target="dep-ai-context">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="validates args" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-search-symbols" target="class-search-args">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" value="validates args" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-get-skeleton" target="class-skeleton-args">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" value="validates args" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-read-block" target="class-read-args">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" value="validates args" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-query-call-graph" target="class-call-graph-args">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" value="returns" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-core-tools" target="class-tool-result">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" value="session pin" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-core-tools" target="class-session-pin">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e15" value="returns hits" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-search-symbols" target="class-symbol-hit">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e16" value="fuses to" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="class-symbol-hit" target="class-hybrid-hit">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e17" value="outputs as" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#9673a6;" edge="1" parent="1" source="class-core-tools" target="dep-dsl">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

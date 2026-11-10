@@ -2,7 +2,7 @@
   <root>
     <mxCell id="0"/>
     <mxCell id="1" parent="0"/>
-    <mxCell id="boundary-ux" value="Phase 2–3: Agent UX & Hardening" style="swimlane;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+    <mxCell id="boundary-ux" value="Phase 2–3: Agent UX &amp; Hardening" style="swimlane;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
       <mxGeometry x="20" y="20" width="360" height="580" as="geometry"/>
     </mxCell>
     <mxCell id="boundary-engine" value="Phase 1: Code Intelligence Engine" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
@@ -26,7 +26,7 @@
     <mxCell id="ci-engine" value="Code Intel Engine&#xa;(Phase 1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="boundary-engine">
       <mxGeometry x="10" y="50" width="320" height="240" as="geometry"/>
     </mxCell>
-    <mxCell id="engine-sublabel" value="V6 Snapshot Model&#xa;10-Stage Pipeline&#xa;Snapshot Retrieval&#xa;Agent Persistence&#xa;Patch & Sandbox" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=9;fontColor=#666666;" vertex="1" parent="ci-engine">
+    <mxCell id="engine-sublabel" value="V6 Snapshot Model&#xa;10-Stage Pipeline&#xa;Snapshot Retrieval&#xa;Agent Persistence&#xa;Patch &amp; Sandbox" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=9;fontColor=#666666;" vertex="1" parent="ci-engine">
       <mxGeometry x="10" y="10" width="300" height="220" as="geometry"/>
     </mxCell>
     <mxCell id="sqlite-store" value="SQLite Store&#xa;(ADR-001)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="boundary-storage">

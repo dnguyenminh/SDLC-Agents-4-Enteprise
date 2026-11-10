@@ -5,49 +5,49 @@
     <mxCell id="boundary-format" value="Scratchpad Format (Mandatory Before Each Tool Call)" style="swimlane;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
       <mxGeometry x="20" y="20" width="560" height="280" as="geometry"/>
     </mxCell>
-    <mxCell id="boundary-eviction" value="Eviction Algorithm & Budget Interaction" style="swimlane;startSize=30;fillColor=none;strokeColor=#b85450;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+    <mxCell id="boundary-eviction" value="Eviction Algorithm &amp; Budget Interaction" style="swimlane;startSize=30;fillColor=none;strokeColor=#b85450;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
       <mxGeometry x="600" y="20" width="560" height="280" as="geometry"/>
     </mxCell>
-    <mxCell id="scratchpad-root" value="<scratchpad>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=12;fontStyle=1;" vertex="1" parent="boundary-format">
+    <mxCell id="scratchpad-root" value="&lt;scratchpad&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=12;fontStyle=1;" vertex="1" parent="boundary-format">
       <mxGeometry x="10" y="50" width="540" height="200" as="geometry"/>
     </mxCell>
-    <mxCell id="goal" value="• Goal: [1-sentence objective]&#xa;  e.g., \"Find the auth handler for JWT validation\"" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=10;fontColor=#333333;" vertex="1" parent="scratchpad-root">
+    <mxCell id="goal" value="• Goal: [1-sentence objective]&#xa;  e.g., &quot;Find the auth handler for JWT validation&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=10;fontColor=#333333;" vertex="1" parent="scratchpad-root">
       <mxGeometry x="10" y="20" width="520" height="40" as="geometry"/>
     </mxCell>
-    <mxCell id="deadends" value="• DeadEnds: [file:lines → brief reason not relevant]&#xa;  e.g., \"src/auth.ts:10-50 → only exports types, no logic\"" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=10;fontColor=#666666;" vertex="1" parent="scratchpad-root">
+    <mxCell id="deadends" value="• DeadEnds: [file:lines → brief reason not relevant]&#xa;  e.g., &quot;src/auth.ts:10-50 → only exports types, no logic&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=10;fontColor=#666666;" vertex="1" parent="scratchpad-root">
       <mxGeometry x="10" y="60" width="520" height="40" as="geometry"/>
     </mxCell>
-    <mxCell id="facts" value="• Facts: [file:lines → key logic/bug + 1-3 code lines]&#xa;  e.g., \"src/auth.ts:55-70 → validates JWT signature, calls JwksCache\"" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=10;fontColor=#000000;" vertex="1" parent="scratchpad-root">
+    <mxCell id="facts" value="• Facts: [file:lines → key logic/bug + 1-3 code lines]&#xa;  e.g., &quot;src/auth.ts:55-70 → validates JWT signature, calls JwksCache&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=10;fontColor=#000000;" vertex="1" parent="scratchpad-root">
       <mxGeometry x="10" y="100" width="520" height="40" as="geometry"/>
     </mxCell>
-    <mxCell id="plan" value="• Plan: [next tool call + reason]&#xa;  e.g., \"read_code_block(src/auth.ts, 55, 70) → inspect validate() impl\"" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=10;fontColor=#6c8ebf;" vertex="1" parent="scratchpad-root">
+    <mxCell id="plan" value="• Plan: [next tool call + reason]&#xa;  e.g., &quot;read_code_block(src/auth.ts, 55, 70) → inspect validate() impl&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=10;fontColor=#6c8ebf;" vertex="1" parent="scratchpad-root">
       <mxGeometry x="10" y="140" width="520" height="40" as="geometry"/>
     </mxCell>
     <mxCell id="eviction-formula" value="S_evict = (Age_in_Turns × 200) + Token_Count − (Is_Referenced_In_Last_Thought × 1000)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="boundary-eviction">
       <mxGeometry x="10" y="50" width="540" height="60" as="geometry"/>
     </mxCell>
-    <mxCell id="eviction-rules" value="• In-use / Exempt (referenced in scratchpad) → score = -Infinity (never evicted)&#xa;• Evidence IDs explicitly referenced → exempt from eviction&#xa;• Tombstone preserves tool_call_id: content = \"[evicted tool_call_id=<id>]\"&#xa;• Batch evict triggered at ~75% budget utilization&#xa;• No pressure (tokens < 75% budget) → no eviction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="boundary-eviction">
+    <mxCell id="eviction-rules" value="• In-use / Exempt (referenced in scratchpad) → score = -Infinity (never evicted)&#xa;• Evidence IDs explicitly referenced → exempt from eviction&#xa;• Tombstone preserves tool_call_id: content = &quot;[evicted tool_call_id=&lt;id&gt;]&quot;&#xa;• Batch evict triggered at ~75% budget utilization&#xa;• No pressure (tokens &lt; 75% budget) → no eviction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="boundary-eviction">
       <mxGeometry x="10" y="130" width="540" height="140" as="geometry"/>
     </mxCell>
-    <mxCell id="boundary-integration" value="Backend Integration (scratchpad → referencedEvidenceIds → batchEvict)" style="swimlane;startSize=30;fillColor=none;strokeColor=#82b366;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+    <mxCell id="boundary-integration" value="Backend Integration" style="swimlane;startSize=30;fillColor=none;strokeColor=#82b366;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
       <mxGeometry x="20" y="320" width="560" height="220" as="geometry"/>
     </mxCell>
-    <mxCell id="boundary-extension" value="Extension Integration (resolveContextBudget → tryRuntimeTokenCount → runSessionBudgetGate → scopedSteering → RoleScopeFilter → buildSessionToolLoadout)" style="swimlane;startSize=30;fillColor=none;strokeColor=#9673a6;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+    <mxCell id="boundary-extension" value="Extension Integration" style="swimlane;startSize=30;fillColor=none;strokeColor=#9673a6;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
       <mxGeometry x="600" y="320" width="560" height="220" as="geometry"/>
     </mxCell>
-    <mxCell id="be-1" value="1. Agent emits scratchpad (Goal/DeadEnds/Facts/Plan)&#xa;2. batchEvict parses canonical scratchpad format&#xa;3. Extracts referencedEvidenceIds from Facts/Plan&#xa;4. Computes S_evict for each entry&#xa;5. In-use/exempt entries → score = -Infinity&#xa;6. If tokens > 75% budget: evict highest S_evict entries&#xa;7. Replace evicted entries with tombstone: [evicted tool_call_id=<id>]&#xa;8. Next turn: scratchpad shows tombstones, tool_call_id preserved" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-integration">
+    <mxCell id="be-1" value="1. Agent emits scratchpad (Goal/DeadEnds/Facts/Plan)&#xa;2. batchEvict parses canonical scratchpad format&#xa;3. Extracts referencedEvidenceIds from Facts/Plan&#xa;4. Computes S_evict for each entry&#xa;5. In-use/exempt entries → score = -Infinity&#xa;6. If tokens &gt; 75% budget: evict highest S_evict entries&#xa;7. Replace evicted entries with tombstone: [evicted tool_call_id=&lt;id&gt;]&#xa;8. Next turn: scratchpad shows tombstones, tool_call_id preserved" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-integration">
       <mxGeometry x="10" y="50" width="540" height="180" as="geometry"/>
     </mxCell>
-    <mxCell id="ee-1" value="1. resolveContextBudget() — staticBudget from real n_ctx (8192/32768/128000)&#xa;2. tryRuntimeTokenCount(fetchFn) — llama.cpp /tokenize call (exact count, e.g., 4200)&#xa;3. runSessionBudgetGate() — escalation chain: compress → drop-steering → min-loadout&#xa;4. scopedSteering() — role-scope reduction: BA 5→1, SM 5→1, unknown→5 (fail-open)&#xa;5. RoleScopeFilter — 8 operating roles + fail-open for unknown&#xa;6. buildSessionToolLoadout() — BA excludes deploy/git/build; DEV keeps git/build&#xa;7. Tool schema cap: explicit cap (1000) trims loadout; minimal mode = core+discovery only&#xa;8. If unreachable → PiContextBudgetExceededError with \"Giảm steering/tools\" guidance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="boundary-extension">
+    <mxCell id="ee-1" value="1. resolveContextBudget() — staticBudget from real n_ctx (8192/32768/128000)&#xa;2. tryRuntimeTokenCount(fetchFn) — llama.cpp /tokenize call (exact count, e.g., 4200)&#xa;3. runSessionBudgetGate() — escalation chain: compress → drop-steering → min-loadout&#xa;4. scopedSteering() — role-scope reduction: BA 5→1, SM 5→1, unknown→5 (fail-open)&#xa;5. RoleScopeFilter — 8 operating roles + fail-open for unknown&#xa;6. buildSessionToolLoadout() — BA excludes deploy/git/build; DEV keeps git/build&#xa;7. Tool schema cap: explicit cap (1000) trims loadout; minimal mode = core+discovery only&#xa;8. If unreachable → PiContextBudgetExceededError with &quot;Giảm steering/tools&quot; guidance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="boundary-extension">
       <mxGeometry x="10" y="50" width="540" height="180" as="geometry"/>
     </mxCell>
     <mxCell id="boundary-scenarios" value="Integration Test Scenarios (SA4E-428)" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
       <mxGeometry x="20" y="560" width="1140" height="220" as="geometry"/>
     </mxCell>
-    <mxCell id="sc-1" value="✅ Token Budget Real Tokenizer Tiers&#xa;small (8192) / medium (32768) / large (128000) from real n_ctx&#xa;exact real count 700 → staticTokens = 700 + base + toolSchema&#xa;staticTokens ≤ staticBudget; usage < 100%" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-scenarios">
+    <mxCell id="sc-1" value="✅ Token Budget Real Tokenizer Tiers&#xa;small (8192) / medium (32768) / large (128000) from real n_ctx&#xa;exact real count 700 → staticTokens = 700 + base + toolSchema&#xa;staticTokens ≤ staticBudget; usage &lt; 100%" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-scenarios">
       <mxGeometry x="10" y="50" width="360" height="80" as="geometry"/>
     </mxCell>
-    <mxCell id="sc-2" value="✅ Eviction Algorithm Exact&#xa;S_evict = age×200 + tokens − referenced×1000 exact&#xa;in-use/exempt = -Infinity; tombstone = [evicted tool_call_id=<id>]&#xa;referenced row never evicted; unreferenced oldest evicted first&#xa;tokensAfter ≤ 70% target; no pressure → no eviction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-scenarios">
+    <mxCell id="sc-2" value="✅ Eviction Algorithm Exact&#xa;S_evict = age×200 + tokens − referenced×1000 exact&#xa;in-use/exempt = -Infinity; tombstone = [evicted tool_call_id=&lt;id&gt;]&#xa;referenced row never evicted; unreferenced oldest evicted first&#xa;tokensAfter ≤ 70% target; no pressure → no eviction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-scenarios">
       <mxGeometry x="390" y="50" width="360" height="100" as="geometry"/>
     </mxCell>
     <mxCell id="sc-3" value="✅ Scratchpad-Eviction Interaction&#xa;scratchpad evidence:abc + chunk:xyz parsed → exemption set&#xa;referenced row never evicted; unreferenced oldest evicted first&#xa;tokensAfter ≤ 70% target; no pressure → no eviction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-scenarios">
@@ -56,19 +56,19 @@
     <mxCell id="sc-4" value="✅ Budget Gate Escalation Order&#xa;real session gate fires: compress → drop-steering → min-loadout&#xa;flags shouldCompress/minLoadout true; steeringBudget halved&#xa;final staticTokens ≤ staticBudget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-scenarios">
       <mxGeometry x="10" y="150" width="360" height="80" as="geometry"/>
     </mxCell>
-    <mxCell id="sc-5" value="✅ Actionable Error&#xa;unreachable assembly throws PiContextBudgetExceededError&#xa;with \"Giảm steering/tools\" guidance instead of provider 400" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-scenarios">
+    <mxCell id="sc-5" value="✅ Actionable Error&#xa;unreachable assembly throws PiContextBudgetExceededError&#xa;with &quot;Giảm steering/tools&quot; guidance instead of provider 400" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-scenarios">
       <mxGeometry x="390" y="150" width="360" height="80" as="geometry"/>
     </mxCell>
-    <mxCell id="sc-6" value="✅ Role Scope Reduction Measured&#xa;BA filters 5 skills → 1; SM → 1; unknown → 5 (fail open)&#xa;scoped steering tokens < base tokens; out-of-phase body dropped&#xa;security line + governance file survive" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-scenarios">
+    <mxCell id="sc-6" value="✅ Role Scope Reduction Measured&#xa;BA filters 5 skills → 1; SM → 1; unknown → 5 (fail open)&#xa;scoped steering tokens &lt; base tokens; out-of-phase body dropped&#xa;security line + governance file survive" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-scenarios">
       <mxGeometry x="770" y="150" width="360" height="80" as="geometry"/>
     </mxCell>
     <mxCell id="sc-7" value="✅ Tool Schema Cap Enforced&#xa;BA excludes deploy/git/build; DEV keeps git/build&#xa;core+discovery always present; cap 1000 trims to ≤ 1000&#xa;cap 1 → capExceeded true with BR-06 minimum; minimal = core+discovery" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary-scenarios">
       <mxGeometry x="10" y="250" width="360" height="80" as="geometry"/>
     </mxCell>
-    <mxCell id="boundary-gate-backend" value="Budget Gate: Core Components (backend/src/engine/token-budget/ + scratchpad/)" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+    <mxCell id="boundary-gate-backend" value="Budget Gate: Core Components" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
       <mxGeometry x="20" y="800" width="1140" height="120" as="geometry"/>
     </mxCell>
-    <mxCell id="gb-1" value="• runtime-tokenizer.ts — injectable fetchFn → llama.cpp /tokenize&#xa;• budget-gate.ts — resolveContextBudget + tryRuntimeTokenCount + runSessionBudgetGate&#xa;• scratchpad.ts — canonical format parser & emitter&#xa;• eviction.ts — S_evict calculator + batchEvict + tombstone logic&#xa;• token-eviction.integration.test.ts — 13 backend + 9 extension tests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="boundary-gate-backend">
+    <mxCell id="gb-1" value="• runtime-tokenizer.ts — injectable fetchFn → llama.cpp /tokenize&#xa;• budget-gate.ts — resolveContextBudget + tryRuntimeTokenCount + runSessionBudgetGate&#xa;• scratchpad.ts — canonical format parser &amp; emitter&#xa;• eviction.ts — S_evict calculator + batchEvict + tombstone logic&#xa;• token-eviction.integration.test.ts — 13 backend + 9 extension tests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="boundary-gate-backend">
       <mxGeometry x="10" y="50" width="1120" height="80" as="geometry"/>
     </mxCell>
   </root>
