@@ -1,11 +1,11 @@
 {
   "ticket": "SA4E-411",
   "title": "[EPIC] Code Agent 16K — Deterministic Code Intelligence + Agent UX",
-  "version": 1,
-  "updated": "2026-11-09",
+  "version": 2,
+  "updated": "2026-11-10",
   "status": "in-review",
   "phase": "phase-4",
-  "epic_status": "all_18_child_stories_implemented",
+  "epic_status": "all_18_child_stories_implemented + epic_docs_complete",
   "child_stories": [
     { "key": "SA4E-412", "title": "[Phase 0] Scope Decision: SQLite vs PostgreSQL, Language MVP", "phase": "phase-0", "status": "done", "commit": "f599de04", "evidence": "documents/SA4E-411/ADR-001-engine-storage-and-language-mvp.md" },
     { "key": "SA4E-413", "title": "[Phase 1] CR-01..06: Snapshot/Revision Data Model Redesign", "phase": "phase-1", "status": "in-review", "commit": "edb96c66", "evidence": "documents/SA4E-413/STATUS.json, backend/src/engine/db/migration-v6.ts" },
@@ -57,14 +57,31 @@
     "BRD": "documents/SA4E-411/BRD.md",
     "FSD": "documents/SA4E-411/FSD.md",
     "TDD": "documents/SA4E-411/TDD.md (consolidated, references TDD-01-data-model.md + ADR-001)",
+    "STP": "documents/SA4E-411/STP.md",
+    "STC": "documents/SA4E-411/STC.md",
+    "DPG": "documents/SA4E-411/DPG.md",
+    "RLN": "documents/SA4E-411/RLN.md",
     "ADR-001": "documents/SA4E-411/ADR-001-engine-storage-and-language-mvp.md",
     "TDD-01": "documents/SA4E-411/TDD-01-data-model.md",
+    "ACCEPTANCE-MATRIX": "documents/SA4E-427/ACCEPTANCE-MATRIX.md",
+    "PERF-BASELINES": "documents/SA4E-427/PERF-BASELINES.md",
     "diagrams": [
       "documents/SA4E-411/diagrams/architecture-overview.drawio",
+      "documents/SA4E-411/diagrams/business-flow.drawio",
+      "documents/SA4E-411/diagrams/use-case.drawio",
+      "documents/SA4E-411/diagrams/system-context.drawio",
+      "documents/SA4E-411/diagrams/sequence-agent-chat.drawio",
+      "documents/SA4E-411/diagrams/state-token-budget.drawio",
+      "documents/SA4E-411/diagrams/component.drawio",
+      "documents/SA4E-411/diagrams/class-agent-tools.drawio",
       "documents/SA4E-411/diagrams/snapshot-revision-er.drawio",
       "documents/SA4E-411/diagrams/pipeline-ordering.drawio",
       "documents/SA4E-411/diagrams/token-budget.drawio",
-      "documents/SA4E-411/diagrams/scratchpad-eviction.drawio"
+      "documents/SA4E-411/diagrams/scratchpad-eviction.drawio",
+      "documents/SA4E-411/diagrams/deployment-flow.drawio",
+      "documents/SA4E-411/diagrams/rollback-flow.drawio",
+      "documents/SA4E-411/diagrams/test-coverage.drawio",
+      "documents/SA4E-411/diagrams/test-execution-flow.drawio"
     ]
   },
   "known_deferred_gaps": [

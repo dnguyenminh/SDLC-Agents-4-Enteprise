@@ -1,0 +1,11 @@
+test_case_id,agent_run_id,plan_id,plan_version,objective,acceptance_criteria,plan_status,step_id,dependency_ids,step_status,attempts,expected_http_code,description
+UT-026,run-001,plan-001,1,Implement feature X,["AC-1","AC-2"],APPROVED,step-001,[],DONE,1,200,Create plan - AC-12
+UT-027,run-001,plan-001,1,Implement feature X,["AC-1","AC-2"],APPROVED,step-002,["step-001"],RUNNING,1,200,Step with dependency - AC-12
+UT-028,run-001,plan-001,1,Implement feature X,["AC-1","AC-2"],APPROVED,step-003,["step-001","step-002"],PENDING,0,200,Step with multiple dependencies - AC-12
+UT-029,run-002,plan-002,1,Resume after restart,["AC-12"],DRAFT,step-001,[],PENDING,0,200,Resume agent from persist - AC-12
+UT-030,run-003,plan-003,1,Test approval flow,["AC-13"],APPROVED,step-001,[],DONE,1,200,Approval request created - AC-12
+UT-031,run-003,plan-003,1,Test approval flow,["AC-13"],APPROVED,step-002,["step-001"],PENDING,0,200,Step waiting for approval - AC-12
+UT-032,run-004,plan-004,1,Test state transition,["AC-12"],EXECUTING,step-001,[],FAILED,3,200,Step failed after retries - AC-12
+UT-033,run-005,plan-005,1,Tool execution tracking,["AC-12"],EXECUTING,step-001,[],RUNNING,1,200,Tool execution recorded - AC-12
+UT-034,run-005,plan-005,1,Tool execution tracking,["AC-12"],EXECUTING,step-002,["step-001"],DONE,1,200,Retrieval evidence linked - AC-12
+UT-035,run-006,plan-006,2,Plan versioning test,["AC-12"],APPROVED,step-001,[],DONE,1,200,Plan version increment - AC-12

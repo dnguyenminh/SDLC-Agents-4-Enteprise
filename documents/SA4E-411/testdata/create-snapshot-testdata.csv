@@ -1,0 +1,11 @@
+test_case_id,repository_id,commit_id,config_fingerprint,code_model_version,toolchain_manifest,expected_status,expected_error,description
+UT-001,repo-001,commit-001,cfg-001,model-001,toolchain-001,READY,,Valid snapshot creation - AC-01
+UT-002,repo-001,commit-001,cfg-001,model-001,toolchain-001,READY,,Re-index same commit with new adapter - AC-01
+UT-003,repo-001,commit-001,cfg-002,model-001,toolchain-001,READY,,New adapter creates new snapshot - AC-01
+UT-004,repo-001,commit-001,cfg-001,model-002,toolchain-001,READY,,Two embedding models same snapshot - AC-02
+UT-005,,commit-001,cfg-001,model-001,toolchain-001,FAILED,Missing repository_id,Invalid - missing repository_id
+UT-006,repo-001,,cfg-001,model-001,toolchain-001,FAILED,Missing commit_id,Invalid - missing commit_id
+UT-007,repo-001,commit-001,,model-001,toolchain-001,FAILED,Missing config_fingerprint,Invalid - missing config_fingerprint
+UT-008,repo-001,commit-001,cfg-001,,toolchain-001,FAILED,Missing code_model_version,Invalid - missing model version
+UT-009,repo-001,commit-001,cfg-001,model-001,,FAILED,Missing toolchain_manifest,Invalid - missing toolchain
+UT-010,repo-002,commit-003,cfg-001,model-001,toolchain-001,READY,,Merge commit indexing - AC-06

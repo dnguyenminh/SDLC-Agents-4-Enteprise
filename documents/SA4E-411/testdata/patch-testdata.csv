@@ -1,0 +1,11 @@
+test_case_id,base_commit_id,patch_content,file_path,expected_change_set_status,expected_approval_status,expected_execution_status,expected_http_code,description
+UT-036,commit-001,"@@ -1,3 +1,4 @@\n public class Test {\n+    public void newMethod() {}\n     public void existing() {}\n }","src/Test.java",OPEN,PENDING,VALIDATION,201,Valid staged patch - AC-13
+UT-037,commit-001,"@@ -1,3 +1,3 @@\n public class Test {\n-    public void existing() {}\n+    public void modified() {}\n }","src/Test.java",OPEN,PENDING,VALIDATION,201,Staged patch with modification - AC-13
+UT-038,commit-001,"@@ -1,3 +1,2 @@\n public class Test {\n-    public void toDelete() {}\n     public void existing() {}\n }","src/Test.java",OPEN,PENDING,VALIDATION,201,Staged patch with deletion - AC-13
+UT-039,commit-002,"@@ -1,3 +1,4 @@\n public class Test {\n+    public void newMethod() {}\n     public void existing() {}\n }","src/Test.java",OPEN,PENDING,VALIDATION,409,Stale base hash rejection - AC-13
+UT-040,commit-001,"@@ -1,3 +1,4 @@\n public class Test {\n+    public void newMethod() {}\n     public void existing() {}\n }","../../etc/passwd",OPEN,REJECTED,VALIDATION,400,Path traversal rejection - AC-13,AC-15
+UT-041,commit-001,"@@ -1,3 +1,4 @@\n public class Test {\n+    public void newMethod() {}\n     public void existing() {}\n }","/absolute/path/Test.java",OPEN,REJECTED,VALIDATION,400,Absolute path rejection - AC-15
+UT-042,commit-001,"@@ -1,3 +1,4 @@\n public class Test {\n+    public void newMethod() {}\n     public void existing() {}\n }","src/../Test.java",OPEN,REJECTED,VALIDATION,400,Relative path traversal - AC-15
+UT-043,commit-001,"@@ -1,3 +1,4 @@\n public class Test {\n+    public void newMethod() {}\n     public void existing() {}\n }","src/Test.java",APPLIED,APPROVED,APPLIED,200,Patch applied after approval - AC-14
+UT-044,commit-001,"@@ -1,3 +1,4 @@\n public class Test {\n+    public void newMethod() {}\n     public void existing() {}\n }","src/Test.java",OPEN,REJECTED,VALIDATION,400,Patch rejected on REJECTED approval - AC-14
+UT-045,commit-001,"@@ -1,3 +1,4 @@\n public class Test {\n+    public void newMethod() {}\n     public void existing() {}\n }","src/Test.java",DISCARDED,REJECTED,DISCARDED,200,Patch discarded after rejection - AC-14

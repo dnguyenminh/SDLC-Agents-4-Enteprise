@@ -1,0 +1,18 @@
+test_case_id,session_id,event_type,event_data,expected_event_id,description
+UT-057,session-001,CHAT_START,"{""objective"": ""Test""}",1,SSE event 1 - chat start
+UT-058,session-001,TOOL_CALL,"{""tool"": ""search_symbols""}",2,SSE event 2 - tool call
+UT-059,session-001,TOOL_RESULT,"{""result"": ""found""}",3,SSE event 3 - tool result
+UT-060,session-001,STEP_COMPLETE,"{""step"": ""step-001""}",4,SSE event 4 - step complete
+UT-061,session-001,CHAT_END,"{""summary"": ""Done""}",5,SSE event 5 - chat end
+UT-062,session-001,,,1,Replay from event 1 - AC-16
+UT-063,session-001,,,3,Replay from event 3 - AC-16
+UT-064,session-001,,,6,Replay from non-existent event - SseGapError - AC-16
+UT-065,session-002,CHAT_START,"{""objective"": ""Test 2""}",1,New session event 1
+UT-066,session-002,TOOL_CALL,"{""tool"": ""get_file_skeleton""}",2,New session event 2
+UT-067,session-002,,,1,Replay new session from event 1 - AC-16
+UT-068,session-001,CHAT_START,"{""objective"": ""Test""}",1,Disconnect after event 2
+UT-069,session-001,TOOL_CALL,"{""tool"": ""search_symbols""}",2,Disconnect after event 2
+UT-070,session-001,,,2,Reconnect with Last-Event-ID: 2 - AC-16
+UT-071,session-001,TOOL_RESULT,"{""result"": ""found""}",3,Event 3 received after reconnect - AC-16
+UT-072,session-001,STEP_COMPLETE,"{""step"": ""step-001""}",4,Event 4 received after reconnect - AC-16
+UT-073,session-001,,,0,Replay from event 0 (all events) - AC-16

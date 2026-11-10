@@ -1,0 +1,22 @@
+id,name,description,repository_id,commit_id,index_snapshot_id,status,created_at
+repo-001,Test Repository 1,Primary test repository for AC suite,repo-001,commit-001,snap-001,READY,2026-01-01T00:00:00Z
+repo-002,Test Repository 2,Secondary test repository for merge/delete tests,repo-002,commit-002,snap-002,READY,2026-01-01T00:00:00Z
+commit-001,Initial commit,Base commit for repo-001,repo-001,commit-001,,,2026-01-01T00:00:00Z
+commit-002,Initial commit,Base commit for repo-002,repo-002,commit-002,,,2026-01-01T00:00:00Z
+commit-003,Merge commit,Merge commit with two parents,repo-001,commit-003,,,2026-01-01T00:00:00Z
+commit-004,Delete file commit,Commit that deletes a file,repo-001,commit-004,,,2026-01-01T00:00:00Z
+commit-005,Rename commit,Commit that renames a file,repo-001,commit-005,,,2026-01-01T00:00:00Z
+snap-001,Snapshot 1,READY snapshot with text-embedding-3-small,repo-001,commit-001,snap-001,READY,2026-01-01T00:00:00Z
+snap-002,Snapshot 2,READY snapshot with custom embedding model,repo-001,commit-001,snap-002,READY,2026-01-01T00:00:00Z
+snap-003,Snapshot 3,PENDING snapshot for testing,repo-001,commit-002,snap-003,PENDING,2026-01-01T00:00:00Z
+snap-004,Snapshot 4,READY snapshot for merge commit,repo-001,commit-003,snap-004,READY,2026-01-01T00:00:00Z
+snap-005,Snapshot 5,READY snapshot for delete file,repo-001,commit-004,snap-005,READY,2026-01-01T00:00:00Z
+snap-006,Snapshot 6,READY snapshot for rename,repo-001,commit-005,snap-006,READY,2026-01-01T00:00:00Z
+snap-007,Snapshot 7,PENDING snapshot for AC-09,repo-002,commit-002,snap-007,PENDING,2026-01-01T00:00:00Z
+snap-008,Snapshot 8,READY snapshot for AC-09 multi-snapshot,repo-002,commit-002,snap-008,READY,2026-01-01T00:00:00Z
+embedding-set-001,Embedding Set 1,text-embedding-3-small on snap-001,snap-001,text-embedding-3-small,1536,1,1,1
+embedding-set-002,Embedding Set 2,custom-model on snap-001,snap-001,custom-model,1024,1,1,1
+embedding-set-003,Embedding Set 3,text-embedding-3-small on snap-008,snap-008,text-embedding-3-small,1536,1,1,1
+chat-session-001,Chat Session 1,Pinned to snap-001,repo-001,commit-001,snap-001,model-config-001,2026-01-01T00:00:00Z
+chat-session-002,Chat Session 2,Pinned to snap-001 (old commit),repo-001,commit-001,snap-001,model-config-001,2026-01-01T00:00:00Z
+chat-session-003,Chat Session 3,Pinned to snap-008,repo-002,commit-002,snap-008,model-config-002,2026-01-01T00:00:00Z

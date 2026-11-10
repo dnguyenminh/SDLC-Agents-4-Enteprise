@@ -1,0 +1,12 @@
+test_case_id,model_n_ctx,max_output_tokens,safety_margin,system_prompt_tokens,tool_schema_tokens,history_tokens,user_message_tokens,framing_tokens,tool_results_tokens,expected_available_tokens,expected_tier,description
+UT-046,8192,1024,512,2048,1024,1024,512,256,1024,2816,small,Small model (8K) tier - AC-17
+UT-047,32768,2048,1024,4096,2048,4096,1024,512,2048,17920,medium,Medium model (32K) tier - AC-17
+UT-048,128000,4096,2048,8192,4096,8192,2048,1024,4096,100096,large,Large model (128K) tier - AC-17
+UT-049,8192,1024,512,4096,2048,4096,2048,512,2048,-3072,min-loadout,Escalation to min loadout - AC-17
+UT-050,32768,2048,1024,4096,2048,4096,1024,512,2048,17920,medium,Normal tier resolution - AC-17
+UT-051,32768,2048,1024,8192,4096,8192,2048,1024,4096,3392,high,Escalation 1: compress - AC-17
+UT-052,32768,2048,1024,8192,4096,8192,2048,1024,4096,3392,high,Escalation 2: drop steering - AC-17
+UT-053,32768,2048,1024,8192,4096,8192,2048,1024,4096,3392,min-loadout,Escalation 3: min loadout - AC-17
+UT-054,8192,1024,512,2048,1024,1024,512,256,1024,2816,small,Role-scope reduction 5->1 - AC-17,AC-15
+UT-055,8192,1024,512,2048,2048,1024,512,256,1024,1792,small,Tool schema cap 1000 tokens - AC-17
+UT-056,8192,1024,512,2048,1024,1024,512,256,1024,2816,small,Real tokenizer llama.cpp - AC-17

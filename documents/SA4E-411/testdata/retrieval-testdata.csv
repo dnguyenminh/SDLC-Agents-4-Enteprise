@@ -1,0 +1,16 @@
+test_case_id,query_type,index_snapshot_id,query,embedding_model_key,limit,direction,expected_http_code,expected_result_count,description
+UT-011,exact_symbol,snap-001,PaymentService#processTransaction,,10,,200,1,Exact symbol lookup - AC-07
+UT-012,lexical,snap-001,processTransaction,,10,,200,3,Lexical BM25 search - AC-07
+UT-013,vector,snap-001,,text-embedding-3-small,10,,200,5,Vector exact cosine - AC-08
+UT-014,graph,snap-001,PaymentService#processTransaction,,10,CALLEES,200,2,Graph query CALLEES - AC-07
+UT-015,graph,snap-001,PaymentService#processTransaction,,10,CALLERS,200,1,Graph query CALLERS - AC-07
+UT-016,graph,snap-001,PaymentService#processTransaction,,10,IMPLEMENTATIONS,200,0,Graph query IMPLEMENTATIONS - AC-07
+UT-017,vector,snap-001,,text-embedding-3-small,10,,400,0,Vector query without embedding_model_key - error
+UT-018,vector,snap-002,,custom-model,10,,200,5,Vector query with custom model - AC-02
+UT-019,vector,snap-008,,text-embedding-3-small,10,,200,5,Filtered exact cosine multi-snapshot - AC-09
+UT-020,lexical,snap-005,deletedFile,,10,,200,0,Delete file not queryable at new commit - AC-05
+UT-021,lexical,snap-001,deletedFile,,10,,200,1,Delete file queryable at old commit - AC-05
+UT-022,lexical,snap-006,oldPath,,10,,200,1,Rename file old path - AC-04
+UT-023,lexical,snap-006,newPath,,10,,200,1,Rename file new path - AC-04
+UT-024,exact_symbol,snap-001,NonExistentSymbol,,10,,404,0,Exact symbol not found
+UT-025,vector,snap-001,,text-embedding-3-small,1000,,200,100,Vector query with large limit - AC-09

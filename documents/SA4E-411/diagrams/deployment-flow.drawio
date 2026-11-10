@@ -1,0 +1,282 @@
+<mxGraphModel adaptiveColors="auto">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<!-- Swimlanes -->
+<mxCell id="swimlane-devops" value="DevOps" style="swimlane;html=1;startSize=26;fillColor=#e1f5fe;strokeColor=#01579b;fontColor=#01579b;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="20" y="20" width="200" height="600" as="geometry"/>
+</mxCell>
+<mxCell id="swimlane-dba" value="DBA" style="swimlane;html=1;startSize=26;fillColor=#f3e5f5;strokeColor=#4a148c;fontColor=#4a148c;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="240" y="20" width="200" height="600" as="geometry"/>
+</mxCell>
+<mxCell id="swimlane-dev" value="Developer" style="swimlane;html=1;startSize=26;fillColor=#e8f5e9;strokeColor=#1b5e20;fontColor=#1b5e20;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="460" y="20" width="200" height="600" as="geometry"/>
+</mxCell>
+<mxCell id="swimlane-qa" value="QA" style="swimlane;html=1;startSize=26;fillColor=#fff3e0;strokeColor=#e65100;fontColor=#e65100;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="680" y="20" width="200" height="600" as="geometry"/>
+</mxCell>
+<mxCell id="swimlane-pm" value="PM / Business" style="swimlane;html=1;startSize=26;fillColor=#fce4ec;strokeColor=#880e4f;fontColor=#880e4f;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="900" y="20" width="200" height="600" as="geometry"/>
+</mxCell>
+
+<!-- Pre-Deployment Phase -->
+<mxCell id="pre-start" value="Start Deployment Process" style="ellipse;html=1;fillColor=#4caf50;strokeColor=#2e7d32;fontColor=white;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="40" y="50" width="140" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="pre-checklist" value="Pre-Deployment Checklist\n(§3 All items ✓)" style="rounded=1;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontColor=#0d47a1;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="40" y="120" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<mxCell id="pre-backup-pg" value="Backup PostgreSQL\nPlatform DB\n(npm run db:backup)" style="rounded=1;html=1;fillColor=#ce93d8;strokeColor=#6a1b9a;fontColor=#4a148c;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="260" y="50" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<mxCell id="pre-backup-sqlite" value="Backup SQLite\nEngine Stores\n(cp .code-intel)" style="rounded=1;html=1;fillColor=#ce93d8;strokeColor=#6a1b9a;fontColor=#4a148c;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="260" y="130" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<mxCell id="pre-merge" value="Code Merged to\nRelease Branch" style="rounded=1;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontColor=#1b5e20;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="480" y="50" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<mxCell id="pre-tests" value="All Tests Pass\n(npm test, test:ac,\ntest:token, test:regression)" style="rounded=1;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontColor=#1b5e20;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="480" y="130" width="140" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="pre-build" value="Build Successful\n(npm run build)" style="rounded=1;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontColor=#1b5e20;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="480" y="220" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<mxCell id="pre-config" value="Config Files Prepared\nper Environment" style="rounded=1;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontColor=#0d47a1;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="40" y="200" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<mxCell id="pre-approval" value="Deployment Window\nConfirmed + Approvals" style="rounded=1;html=1;fillColor=#f8bbd0;strokeColor=#c2185b;fontColor=#880e4f;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="920" y="50" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<!-- Decision Gate 1 -->
+<mxCell id="gate1" value="Go/No-Go\nGate 1" style="rhombus;html=1;fillColor=#ffeb3b;strokeColor=#f57f17;fontColor=#f57f17;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="460" y="300" width="100" height="60" as="geometry"/>
+</mxCell>
+
+<!-- Deployment Phase -->
+<mxCell id="deploy-stop" value="Stop Existing\nBackend Service\n(docker compose down)" style="rounded=1;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontColor=#0d47a1;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="40" y="390" width="140" height="55" as="geometry"/>
+</mxCell>
+
+<mxCell id="deploy-pull" value="Pull New Docker Image\n(docker pull ${REGISTRY}/sa4e-backend:${VERSION})" style="rounded=1;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontColor=#0d47a1;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="40" y="470" width="140" height="55" as="geometry"/>
+</mxCell>
+
+<mxCell id="deploy-migrate" value="Run Database Migration\n(backend auto-runs\nmigrations.ts)" style="rounded=1;html=1;fillColor=#ce93d8;strokeColor=#6a1b9a;fontColor=#4a148c;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="260" y="390" width="140" height="55" as="geometry"/>
+</mxCell>
+
+<mxCell id="deploy-verify-mig" value="Verify Migration\n(V6 tables, triggers,\nFTS5, schema_version=6)" style="rounded=1;html=1;fillColor=#ce93d8;strokeColor=#6a1b9a;fontColor=#4a148c;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="260" y="470" width="140" height="55" as="geometry"/>
+</mxCell>
+
+<mxCell id="deploy-start" value="Start New Backend\nContainer\n(docker compose up -d)" style="rounded=1;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontColor=#0d47a1;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="40" y="550" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<mxCell id="deploy-health" value="Health Check\n(curl /health → 200 OK)" style="rounded=1;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontColor=#0d47a1;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="40" y="620" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<mxCell id="deploy-mcp" value="Verify MCP Servers\nSpawned\n(markitdown + markdown-exporter)" style="rounded=1;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontColor=#0d47a1;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="40" y="690" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<mxCell id="deploy-llama" value="Verify llama.cpp\nConnectivity\n(/tokenize endpoint)" style="rounded=1;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontColor=#0d47a1;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="40" y="760" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<!-- Decision Gate 2 -->
+<mxCell id="gate2" value="Health Check\nPass?" style="rhombus;html=1;fillColor=#ffeb3b;strokeColor=#f57f17;fontColor=#f57f17;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="260" y="680" width="100" height="60" as="geometry"/>
+</mxCell>
+
+<!-- Verification Phase -->
+<mxCell id="verify-smoke" value="Run Smoke Tests\n(§7.2: indexing, search,\nchat, budget, patch, SSE, resume)" style="rounded=1;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontColor=#e65100;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="700" y="390" width="140" height="70" as="geometry"/>
+</mxCell>
+
+<mxCell id="verify-logs" value="Log Verification\n(§7.3: server start, migration,\nMCP spawn, WAL, llama.cpp)" style="rounded=1;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontColor=#e65100;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="700" y="480" width="140" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="verify-dash" value="Monitoring Dashboard\n(§7.4: metrics, error rate,\nlatency, alerts, token budget)" style="rounded=1;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontColor=#e65100;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="700" y="560" width="140" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="verify-ext" value="Deploy VS Code\nExtension\n(vsce package + publish)" style="rounded=1;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontColor=#1b5e20;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="480" y="390" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<!-- Decision Gate 3 -->
+<mxCell id="gate3" value="All Verification\nPass?" style="rhombus;html=1;fillColor=#ffeb3b;strokeColor=#f57f17;fontColor=#f57f17;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="700" y="650" width="100" height="60" as="geometry"/>
+</mxCell>
+
+<!-- Success / Rollback -->
+<mxCell id="success" value="✅ Deployment\nSUCCESS\nProceed to Release\nProcess" style="ellipse;html=1;fillColor=#4caf50;strokeColor=#2e7d32;fontColor=white;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="700" y="730" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<mxCell id="rollback-trigger" value="❌ Trigger\nRollback Plan\n(§8)" style="ellipse;html=1;fillColor=#f44336;strokeColor=#c62828;fontColor=white;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="920" y="680" width="120" height="50" as="geometry"/>
+</mxCell>
+
+<!-- Edges - Pre-Deployment -->
+<mxCell id="e1" edge="1" parent="1" source="pre-start" target="pre-checklist" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e2" edge="1" parent="1" source="pre-checklist" target="pre-config" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e3" edge="1" parent="1" source="pre-start" target="pre-backup-pg" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6a1b9a;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e4" edge="1" parent="1" source="pre-backup-pg" target="pre-backup-sqlite" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6a1b9a;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e5" edge="1" parent="1" source="pre-start" target="pre-merge" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e6" edge="1" parent="1" source="pre-merge" target="pre-tests" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e7" edge="1" parent="1" source="pre-tests" target="pre-build" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e8" edge="1" parent="1" source="pre-start" target="pre-approval" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#c2185b;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Converge to Gate 1 -->
+<mxCell id="e9" edge="1" parent="1" source="pre-config" target="gate1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e10" edge="1" parent="1" source="pre-backup-sqlite" target="gate1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e11" edge="1" parent="1" source="pre-build" target="gate1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e12" edge="1" parent="1" source="pre-approval" target="gate1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Deployment Phase -->
+<mxCell id="e13" edge="1" parent="1" source="gate1" target="deploy-stop" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4caf50;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e14" edge="1" parent="1" source="deploy-stop" target="deploy-pull" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e15" edge="1" parent="1" source="deploy-pull" target="deploy-migrate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6a1b9a;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e16" edge="1" parent="1" source="deploy-migrate" target="deploy-verify-mig" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6a1b9a;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e17" edge="1" parent="1" source="deploy-verify-mig" target="deploy-start" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e18" edge="1" parent="1" source="deploy-start" target="deploy-health" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e19" edge="1" parent="1" source="deploy-health" target="deploy-mcp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e20" edge="1" parent="1" source="deploy-mcp" target="deploy-llama" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Gate 2 -->
+<mxCell id="e21" edge="1" parent="1" source="deploy-health" target="gate2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e22" edge="1" parent="1" source="deploy-mcp" target="gate2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e23" edge="1" parent="1" source="deploy-llama" target="gate2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Verification Phase -->
+<mxCell id="e24" edge="1" parent="1" source="gate2" target="verify-smoke" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4caf50;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e25" edge="1" parent="1" source="gate2" target="verify-ext" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e26" edge="1" parent="1" source="verify-smoke" target="verify-logs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#e65100;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e27" edge="1" parent="1" source="verify-logs" target="verify-dash" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#e65100;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e28" edge="1" parent="1" source="verify-ext" target="verify-dash" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#e65100;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e29" edge="1" parent="1" source="verify-smoke" target="gate3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e30" edge="1" parent="1" source="verify-logs" target="gate3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e31" edge="1" parent="1" source="verify-dash" target="gate3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e32" edge="1" parent="1" source="verify-ext" target="gate3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Gate 3 Outcomes -->
+<mxCell id="e33" edge="1" parent="1" source="gate3" target="success" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4caf50;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e34" edge="1" parent="1" source="gate3" target="rollback-trigger" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f44336;strokeWidth=2;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Gate 1 No-Go -->
+<mxCell id="gate1-no" value="No-Go → Fix Issues" style="ellipse;html=1;fillColor=#ff9800;strokeColor=#e65100;fontColor=white;fontSize=10;" vertex="1" parent="1">
+<mxGeometry x="580" y="300" width="100" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="e35" edge="1" parent="1" source="gate1" target="gate1-no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ff9800;strokeWidth=2;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Gate 2 No-Go -->
+<mxCell id="gate2-no" value="Fail → Rollback" style="ellipse;html=1;fillColor=#ff9800;strokeColor=#e65100;fontColor=white;fontSize=10;" vertex="1" parent="1">
+<mxGeometry x="380" y="680" width="100" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="e36" edge="1" parent="1" source="gate2" target="gate2-no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ff9800;strokeWidth=2;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e37" edge="1" parent="1" source="gate2-no" target="rollback-trigger" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f44336;strokeWidth=2;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Gate 3 No-Go -->
+<mxCell id="gate3-no" value="Fail → Rollback" style="ellipse;html=1;fillColor=#ff9800;strokeColor=#e65100;fontColor=white;fontSize=10;" vertex="1" parent="1">
+<mxGeometry x="820" y="650" width="100" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="e38" edge="1" parent="1" source="gate3" target="gate3-no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ff9800;strokeWidth=2;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e39" edge="1" parent="1" source="gate3-no" target="rollback-trigger" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f44336;strokeWidth=2;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Legend -->
+<mxCell id="legend" value="Legend: 🟦 DevOps (Automated) | 🟪 DBA | 🟩 Developer | 🟧 QA | 🟨 PM/Business | 🟢 Success | 🔴 Rollback | ⬡ Decision Gate" style="rounded=1;html=1;fillColor=#fafafa;strokeColor=#9e9e9e;fontColor=#424242;fontSize=10;" vertex="1" parent="1">
+<mxGeometry x="20" y="840" width="1100" height="40" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

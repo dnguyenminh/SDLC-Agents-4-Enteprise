@@ -1,0 +1,13 @@
+test_case_id,session_id,index_snapshot_id,expected_http_code,expected_error_code,description
+UT-074,session-001,snap-001,200,,Valid session with matching snapshot - AC-13
+UT-075,,snap-001,400,MISSING_SESSION_ID,Missing session_id - AC-13
+UT-076,session-001,,400,MISSING_INDEX_SNAPSHOT_ID,Missing index_snapshot_id - AC-13
+UT-077,session-001,snap-002,400,SNAPSHOT_MISMATCH,Snapshot mismatch with session pin - AC-13
+UT-078,session-001,snap-003,400,SNAPSHOT_NOT_READY,Snapshot not READY - AC-13
+UT-079,session-002,snap-001,200,,Valid session-002 with snap-001 - AC-13
+UT-080,session-003,snap-008,200,,Valid session-003 with snap-008 - AC-13
+UT-081,session-001,non-existent,404,SNAPSHOT_NOT_FOUND,Snapshot does not exist - AC-13
+UT-082,session-004,snap-001,400,SNAPSHOT_MISMATCH,Session-004 pinned to different snapshot - AC-13
+UT-083,session-005,snap-004,200,,Merge commit session with snap-004 - AC-13
+UT-084,session-006,snap-005,200,,Delete file commit session with snap-005 - AC-13
+UT-085,session-007,snap-006,200,,Rename commit session with snap-006 - AC-13
