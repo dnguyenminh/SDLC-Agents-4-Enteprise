@@ -647,3 +647,46 @@ Threshold semantics unchanged (BR-11).
 Phase 2: fetch page → same rule engine over fetched HTML (Lighthouse-class DOM
 analysis deferred).
 
+---
+
+## Addendum 3 (SA4E-438, 2026-11-11) — Impeccable-derived slop rules [USER-APPROVED: learn the ideas, implement natively]
+
+User decision: port the IDEAS from github.com/pbakaus/impeccable (Apache-2.0,
+107k stars — "the design vocabulary for your coding agent") into OUR extension
+natively — **no external CLI/binary dependency at runtime**. Attribution:
+rule ideas adapted from the Impeccable detector (62 deterministic rules).
+
+### C1. New rules added to `design-rules.ts` (batch 1 — 17 rules)
+
+| Id | Rule | Severity | Detection |
+|----|------|----------|-----------|
+| overused-font | Inter/Roboto/Fraunces/Geist/Plus Jakarta/Space Grotesk/Montserrat/Poppins | LOW | font-family + fonts.googleapis links |
+| gradient-text | `bg-clip-text` / `background-clip: text` | LOW | regex |
+| ai-color-palette | purple/violet Tailwind classes + violet hexes | LOW | regex |
+| cream-palette | cream hexes + `bg-stone/amber-50/100` | LOW | regex |
+| side-tab | one-side `border-{side}: Npx solid` + `border-[lrtb]-4..8` | LOW | regex |
+| dark-glow | `box-shadow: 0 0 Npx` + colored text-shadow | LOW | regex |
+| radial-halo | `radial-gradient(…transparent)` | LOW | regex |
+| hard-offset-shadow | unblurred `Npx Npx 0` | LOW | regex (style files) |
+| broken-image | empty/placeholder `src` | MEDIUM | regex |
+| skipped-heading | h1→h3 level skip | MEDIUM | heading-sequence walk |
+| tight-leading | line-height <1.3 / `leading-none|tighter|tight` | LOW | regex |
+| tiny-text | font-size <12px / `text-[Npx]` <12 | MEDIUM | regex |
+| justified-text | `text-align: justify` / `text-justify` | LOW | regex |
+| extreme-negative-tracking | negative letter-spacing / `tracking-tighter` | LOW | regex |
+| marketing-buzzword | streamline/empower/supercharge/world-class/… | LOW | regex (UI copy) |
+| bounce-easing | `animate-bounce` / overshoot cubic-bezier | LOW | regex |
+| marquee | marquee animation | LOW | regex |
+
+Full 62-rule reference captured at `documents/SA4E-393/impeccable-rules-reference.txt`.
+Rendered-only rules (low-contrast, text-occlusion, cramped-padding geometry,
+content-hidden-at-rest, script-error…) = phase 2 — need a rendered page.
+
+### C2. Verified real run (this workspace)
+
+`FAIL - Score 0.79 - Findings 1839` in ~8s across ~447 design files: D1 776,
+C1 320, tight-leading 209, overused-font 149, ai-color-palette 106, tiny-text 105,
+D3 71, skipped-heading 33, A3 27, B1 14, cream-palette 11, side-tab 5,
+buzzword 6, bounce 3, D4 4 — 0 absolute paths (C5). The FAIL is the gate
+working: real, actionable design debt with file:line.
+
