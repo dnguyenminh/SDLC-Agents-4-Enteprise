@@ -31,7 +31,17 @@ export class ToolRouter {
   private async dispatch(params: any): Promise<any> {
     const name = params.name as string;
     const args = (params.arguments || {}) as Record<string, unknown>;
-    if (isLocalTool(name)) return await executeLocalTool(name, args);
+    if (isLocalTool(name)) {
+      // Set workspace root for local tools (design_gate_run, etc.)
+      if (this.deps.workspaceRoot) {
+        process.env.WORKSPACE_ROOT = this.deps.workspaceRoot;
+      }
+      // Also pass IMPPECABLE_SKILL_PATH from extension host if available
+      if (this.deps.wasmPath) {
+        process.env.IMPPECABLE_SKILL_PATH = this.deps.wasmPath;
+      }
+      return await executeLocalTool(name, args);
+    }
     if (name === "find_tools") return await this.handleFindTools(args);
     if (name === "execute_dynamic_tool") return await this.handleDynamic(args);
     return await this.callWithProxy(name, args);

@@ -62,18 +62,30 @@ export const FILE_PATH_SCHEMA_DESCRIPTION =
 // NOTE: `require("vscode")` is unresolvable outside the extension host
 // (vitest alias mock is import-only). The root-selection LOGIC this feeds is
 // fully covered via mock-backed providers in path-resolver.test.ts.
+// We defer the require until the function is actually called (per-call lazy)
+// to avoid module-load-time errors in contexts where vscode is not available.
 /* v8 ignore start */
-let vscode: any;
-try {
-  vscode = require("vscode");
-} catch {
-  /* stay undefined — fallback cwd */
+function getVscode(): any {
+  try {
+    return require("vscode");
+  } catch (e: any) {
+    // Catch ALL errors including ReferenceError (which can occur in some contexts)
+    console.debug(`[PathResolver] vscode require failed: ${e?.message ?? e}`);
+    return undefined;
+  }
 }
 
 export function defaultWorkspaceRootProvider(): string | undefined {
+  // First check if WORKSPACE_ROOT env var is set (set by tool-router for local tools)
+  const envRoot = process.env["WORKSPACE_ROOT"];
+  if (envRoot && envRoot.length > 0) {
+    return envRoot;
+  }
   try {
+    const vscode = getVscode();
     return vscode?.workspace?.workspaceFolders?.[0]?.uri?.fsPath; // per-call, no cache
-  } catch {
+  } catch (e: any) {
+    console.debug(`[PathResolver] defaultWorkspaceRootProvider failed: ${e?.message ?? e}`);
     return undefined; // UC-05 EF-2
   }
 }

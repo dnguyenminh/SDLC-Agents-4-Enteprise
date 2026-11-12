@@ -13,6 +13,7 @@ import { getWorkspaceRoot, checkForUpgrade } from "./activation-helpers";
 import { runDetection } from "./slash";
 import { QualityReport as DesignQualityReport, EnvConfig, DEFAULT_THRESHOLD } from "./slash/types";
 import { resolveWasmPath } from "./slash/detector-env";
+import { initDesignGateEnv } from "./tools/design-gate/design-gate-env";
 import type { RenderedDetectionResult } from "./slash/integration.service";
 import { SettingsPanel } from "./panels/settings/SettingsPanel";
 import { ProxyAgentFactory } from "./proxy/ProxyAgentFactory";
@@ -81,6 +82,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const workspaceRoot = getWorkspaceRoot();
   if (workspaceRoot) {
+    // Set env vars for design-gate tools (used by LOCAL_TOOL_REGISTRY in wrapper server)
+    process.env[EnvConfig.WORKSPACE_ROOT] = workspaceRoot;
+    resolveWasmPath(context.extensionPath);
+    initDesignGateEnv(context.extensionPath);
     await initializeWorkspace(context, workspaceRoot);
   }
 

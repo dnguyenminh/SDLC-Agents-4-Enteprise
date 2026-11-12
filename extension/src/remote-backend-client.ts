@@ -166,6 +166,10 @@ export class RemoteBackendClient implements vscode.Disposable {
       // SA4E-363 §4: optional cap override — validated + clamped in code
       // (resolveMcpMaxBodyBytes); restart-to-apply (read at construction).
       maxBodyBytes: resolveMcpMaxBodyBytes(vscode.workspace.getConfiguration("sdlcAgents")),
+      // Workspace root for local tools (design_gate_run, etc.)
+      workspaceRoot: this.workspaceFolder,
+      // WASM detector path for design-gate tools (set during extension activation)
+      wasmPath: process.env.IMPPECABLE_SKILL_PATH,
     });
     await this.wrapperServer.start(port);
     writeRuntimeSettings(this.workspaceFolder, { port: this.wrapperServer.listeningPort ?? port });

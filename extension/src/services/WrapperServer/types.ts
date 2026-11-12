@@ -9,4 +9,8 @@ export interface WrapperServerDeps {
   /** Optional body-cap override in bytes (SA4E-363 §4) — tests inject a small
    *  cap to exercise byte-exact boundaries without allocating 64 MB. */
   maxBodyBytes?: number;
+  /** Workspace root for local tools (design_gate_run, etc.) — passed from extension host. */
+  workspaceRoot?: string;
+  /** WASM detector path for design-gate tools — passed from extension host. */
+  wasmPath?: string;
 }

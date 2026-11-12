@@ -80,16 +80,16 @@ export async function handleDesignGateRun(args: Record<string, unknown>): Promis
   let workspaceRoot: string | undefined;
   try {
     // 1. Workspace root from live VS Code workspace (per-call, SA4E-356)
-    workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    workspaceRoot = process.env[EnvConfig.WORKSPACE_ROOT];
     if (!workspaceRoot) {
-      return toolError('No workspace folder open. Open a project folder first.');
+      return toolError('WORKSPACE_ROOT not set in wrapper server environment');
     }
 
     // 2. Set WORKSPACE_ROOT for pipeline (fs.adapter validates against this)
     process.env[EnvConfig.WORKSPACE_ROOT] = workspaceRoot;
 
     // 3. Detector env: resolve WASM path (shared helper, 3-tier)
-    resolveWasmPath(vscode.extensions.getExtension('dnguyenminh.sdlc-agents-4-enterprise')?.extensionPath ?? path.dirname(workspaceRoot));
+    resolveWasmPath(workspaceRoot);
 
     // 4. Parse & validate args
     const { mode, sourcePath, threshold, findingsLimit } = parseRunArgs(args);
@@ -113,7 +113,7 @@ export async function handleDesignGateRun(args: Record<string, unknown>): Promis
       : undefined;
     return toolText(mapReportToPayload(result.report, mode, findingsLimit, fetchStatus));
   } catch (e: any) {
-    console.warn(`[design-gate] run failed: ${e?.message ?? e}`);
+    console.error(`[design-gate] run failed: ${e?.message ?? e}`, e?.stack);
     return toolError(sanitizeErrorText(e, workspaceRoot));
   }
 }
@@ -129,6 +129,3 @@ export function registerDesignGateLocalTools(): void {
   registerLocalTool('design_gate_run', handleDesignGateRun, DESIGN_GATE_RUN_DEFINITION);
   registerLocalTool('design_gate_list_rules', handleDesignGateListRules, DESIGN_GATE_LIST_RULES_DEFINITION);
 }
-
-// vscode namespace is available in extension host — declare for TS compile
-declare const vscode: any;

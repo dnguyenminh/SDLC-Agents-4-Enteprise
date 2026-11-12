@@ -66,7 +66,9 @@ function readSettingRoots(): string[] {
     const cfg = vscode?.workspace?.getConfiguration?.("sdlcAgents.workspace");
     const value = cfg?.get?.("workspaceRoots");
     return Array.isArray(value) ? value.filter((v: unknown): v is string => typeof v === "string") : [];
-  } catch {
+  } catch (e: any) {
+    // Catch ALL errors including ReferenceError
+    console.debug(`[base-dir-resolution] vscode require failed: ${e?.message ?? e}`);
     return []; // non-extension-host context (tests) — env fallback applies
   }
 }
