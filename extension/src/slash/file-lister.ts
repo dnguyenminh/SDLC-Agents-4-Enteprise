@@ -24,8 +24,11 @@ const DESIGN_FILE_EXTENSIONS = new Set([
 /** Options for {@link listSourceFiles}. */
 export interface ListOptions {
   maxFiles?: number;
-  /** Explicit workspace root (SEC-F08); defaults to env/cwd fallback. */
-  workspaceRoot?: string;
+  /**
+   * Explicit workspace root (SEC-F08). Required: there is no env/cwd fallback;
+   * requireWorkspaceRoot() still throws at runtime for JS/any callers that omit it.
+   */
+  workspaceRoot: string;
 }
 
 interface WalkState { root: string; max: number; files: string[] }
@@ -91,7 +94,7 @@ function assertRealPathInside(sourceRoot: string, root: string): void {
  * List design artifacts under `sourceRoot` (workspace-relative paths).
  * @throws DetectionError.INVALID_PATH if sourceRoot escapes the workspace / cannot be read
  */
-export async function listSourceFiles(sourceRoot: string, options: ListOptions = {}): Promise<string[]> {
+export async function listSourceFiles(sourceRoot: string, options: ListOptions): Promise<string[]> {
   const root = requireWorkspaceRoot(options.workspaceRoot);
   assertListable(sourceRoot, root);
   const state: WalkState = { root, max: options.maxFiles ?? MAX_FILES, files: [] };

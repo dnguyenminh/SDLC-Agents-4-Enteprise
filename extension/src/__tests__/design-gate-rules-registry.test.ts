@@ -3,7 +3,7 @@
  * Design rules are mocked: 13 base + 17 impeccable (fixtures).
  */
 import { describe, it, expect, vi } from "vitest";
-import { payloadOf } from "./design-gate-tools.fixtures";
+import { payloadOf, ToolResult } from "./design-gate-tools.fixtures";
 
 vi.mock("../slash", async () => (await import("./design-gate-tools.fixtures")).slashModuleMock(vi.fn()));
 vi.mock("../services/PathResolver", async () => (await import("./design-gate-tools.fixtures")).pathResolverMock(vi.fn()));
@@ -13,9 +13,11 @@ vi.mock("../backend-local-tools/registry", () => ({ registerLocalTool: vi.fn() }
 
 import { handleDesignGateListRules, registerDesignGateLocalTools } from "../tools/design-gate/design-gate-tool";
 
+/** WHY: handler is typed unknown (LocalToolHandler); narrow once to the real result shape. */
+const list = () => handleDesignGateListRules({}) as ToolResult;
 describe("design_gate_list_rules", () => {
   it("6. returns ruleCount=30 (13 base + 17 impeccable)", async () => {
-    const result = await handleDesignGateListRules({});
+    const result = await list();
     const p = payloadOf(result);
     expect(result.isError).toBe(false);
     expect([p.ok, p.ruleCount, p.rules.length]).toEqual([true, 30, 30]);
@@ -24,7 +26,7 @@ describe("design_gate_list_rules", () => {
   });
 
   it("6b. every entry has ruleId/severity/message/appliesTo; formula + scope are described", async () => {
-    const p = payloadOf(await handleDesignGateListRules({}));
+    const p = payloadOf(await list());
     for (const r of p.rules) {
       expect(Object.keys(r)).toEqual(expect.arrayContaining(["ruleId", "severity", "message", "appliesTo"]));
     }

@@ -29,7 +29,7 @@ let ws: string;
 let spy: ReturnType<typeof vi.spyOn>;
 let prevSkill: string | undefined;
 
-const logged = () => spy.mock.calls.map((c) => c.map((a) => String(a)).join(" ")).join("\n");
+const logged = () => spy.mock.calls.map((c: unknown[]) => c.map((a: unknown) => String(a)).join(" ")).join("\n");
 function expectNoAbsolutePath(text: string): void {
   expect(text).not.toContain(ws);
   expect(text).not.toMatch(DRIVE_PATH);
@@ -55,7 +55,9 @@ describe("console.error never carries an absolute path", () => {
     expect(res.loadStatus).toBe("error");
     expect(spy).toHaveBeenCalled();
     expectNoAbsolutePath(logged());
-    expectNoAbsolutePath(res.message);
+    // message is optional in the type; on loadStatus "error" it must be present.
+    expect(res.message).toBeDefined();
+    expectNoAbsolutePath(res.message as string);
   });
 
   it("detection.cache write failure (node error message embeds the path)", () => {

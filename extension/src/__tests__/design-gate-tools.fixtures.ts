@@ -12,7 +12,6 @@ export function slashModuleMock(runDetection: unknown): Record<string, unknown> 
   return {
     runDetection,
     EnvConfig: {
-      WORKSPACE_ROOT: "WORKSPACE_ROOT",
       IMPPECABLE_SKILL_PATH: "IMPPECABLE_SKILL_PATH",
       QUALITY_GATE_THRESHOLD: "QUALITY_GATE_THRESHOLD",
     },
@@ -73,3 +72,9 @@ export function payloadOf(result: { content: unknown[] }): any {
 export function textOf(result: { content: unknown[] }): string {
   return (result.content[0] as { text: string }).text;
 }
+
+/**
+ * Shape every design-gate handler really returns. The production handlers are typed
+ * `unknown` (LocalToolHandler contract), so tests narrow once here instead of per call.
+ */
+export interface ToolResult { isError: boolean; content: { type: string; text: string }[] }

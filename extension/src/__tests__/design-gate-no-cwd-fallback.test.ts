@@ -64,6 +64,7 @@ describe("design-gate: workspace root is required (no cwd/env fallback)", () => 
   }
 
   it("listSourceFiles without workspaceRoot throws", async () => {
+    // @ts-expect-error WHY: deliberately omits the now-required workspaceRoot to exercise the runtime guard (JS/any callers).
     await expectRejectsTyped(listSourceFiles(emptyDir, {}));
     expectNoStore();
   });
@@ -87,8 +88,11 @@ describe("design-gate: workspace root is required (no cwd/env fallback)", () => 
 
   it("service entry points without workspaceRoot throw", async () => {
     const svc = new ImpeccableIntegrationService();
+    // @ts-expect-error WHY: deliberately omits the now-required workspaceRoot to exercise the runtime guard (JS/any callers).
     await expectRejectsTyped(svc.runStaticDetection(emptyDir, {}));
+    // @ts-expect-error WHY: deliberately omits the now-required workspaceRoot to exercise the runtime guard (JS/any callers).
     await expectRejectsTyped(svc.runRenderedDetection("http://localhost:1", [], {}));
+    // @ts-expect-error WHY: deliberately omits the now-required workspaceRoot to exercise the runtime guard (JS/any callers).
     await expectRejectsTyped(svc.runFullDetection(emptyDir, "http://localhost:1", [], {}));
     expectTyped(() => svc.getReport("run_1_a", undefined as unknown as string));
     expectTyped(() => svc.listReports(undefined as unknown as string));
@@ -96,6 +100,7 @@ describe("design-gate: workspace root is required (no cwd/env fallback)", () => 
   });
 
   it("runDetection without workspaceRoot throws (no process.cwd() default)", async () => {
+    // @ts-expect-error WHY: deliberately omits the now-required workspaceRoot to exercise the runtime guard (JS/any callers).
     await expectRejectsTyped(runDetection({ detectionMode: "static", sourceRoot: emptyDir }));
     expectNoStore();
   });
