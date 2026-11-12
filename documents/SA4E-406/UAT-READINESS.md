@@ -11,7 +11,7 @@ Tài liệu này xác nhận tính sẵn sàng cho User Acceptance Testing (UAT)
 ## **Thông tin chung**
 - **Ticket**: SA4E-406
 - **Ngày tạo**: 2026-11-08
-- **Phiên bản**: 1.0
+- **Phiên bản**: 1.1
 - **Trạng thái**: Sẵn sàng cho UAT
 - **Environment**: Staging / Local development
 - **Merge Commit**: 3061986b
@@ -86,7 +86,7 @@ Tài liệu này xác nhận tính sẵn sàng cho User Acceptance Testing (UAT)
 ### **Scenario 4: Verify Loop — Fix → Re-detect**
 **Mục tiêu**: Verify vòng lặp verify: fix xong → re-parse → re-detect remaining issues
 **Steps**:
-1. Dùng file `golden-deployment.drawio` (có sẵn trong test fixtures)
+1. Dùng file `documents/SA4E-406/diagrams/deployment.drawio` (thay thế fixture `golden-deployment.drawio` đã bị xóa)
 2. Gọi tool `drawio_auto_layout`
 3. **Expected**: 
    - `status: "fixed"` hoặc `"partially_fixed"`
@@ -209,7 +209,7 @@ curl -X POST http://localhost:9183/mcp \
       "name": "execute_dynamic_tool",
       "arguments": {
         "toolName": "drawio_auto_layout",
-        "arguments": { "file_path": "backend/src/engine/tools/__tests__/fixtures/golden-deployment.drawio" }
+        "arguments": { "file_path": "documents/SA4E-406/diagrams/deployment.drawio" }
       }
     },
     "id": 1
@@ -217,8 +217,8 @@ curl -X POST http://localhost:9183/mcp \
 ```
 
 ### **Test Fixtures Available**
-- `backend/src/engine/tools/__tests__/fixtures/golden-deployment.drawio` — deployment diagram với overlaps thật
-- `backend/src/engine/tools/__tests__/fixtures/golden-sequence.drawio` — sequence diagram clean layout
+- `documents/SA4E-406/diagrams/deployment.drawio` — deployment diagram với overlaps thật (thay thế `golden-deployment.drawio` đã bị xóa)
+- `documents/SA4E-406/diagrams/sequence-verify-loop.drawio` — sequence diagram với layout sạch (thay thế `golden-sequence.drawio` đã bị xóa)
 - `documents/SA4E-124/diagrams/*.drawio` — diagrams thực tế cho extension test
 
 ---
@@ -253,6 +253,7 @@ curl -X POST http://localhost:9183/mcp \
 
 ## **Lịch sử thay đổi**
 - **2026-11-08**: Tạo UAT-READINESS.md ban đầu. Sẵn sàng cho UAT gate.
+- **2026-11-12**: Cập nhật tham chiếu test fixtures bị xóa: `golden-deployment.drawio` → `documents/SA4E-406/diagrams/deployment.drawio`, `golden-sequence.drawio` → `documents/SA4E-406/diagrams/sequence-verify-loop.drawio` (sau khi legacy backend engine fixtures bị xóa). Bump phiên bản 1.0 → 1.1.
 
 ---
 

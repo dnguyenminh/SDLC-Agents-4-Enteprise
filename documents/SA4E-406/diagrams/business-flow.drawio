@@ -38,7 +38,7 @@
 <mxGeometry x="222" y="45" width="140" height="50" as="geometry"/>
 </mxCell>
 
-<mxCell id="s2" value="2. Call drawio_auto_layout&#10;(file_path, base_dir, mode)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="lane_ai">
+<mxCell id="s2" value="2. Call drawio_auto_layout&#10;(file_path, base_dir, algorithm)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="lane_ai">
 <mxGeometry x="412" y="42.5" width="140" height="55" as="geometry"/>
 </mxCell>
 
@@ -76,19 +76,19 @@
 <mxGeometry x="1572" y="40" width="160" height="70" as="geometry"/>
 </mxCell>
 
-<mxCell id="dec1" value="" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontSize=11;" vertex="1" parent="lane_engine">
+<mxCell id="dec1" value="Issues?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontSize=11;" vertex="1" parent="lane_engine">
 <mxGeometry x="1782" y="50" width="80" height="50" as="geometry"/>
 </mxCell>
 
-<mxCell id="s9a" value="9a. Return needs_fix&#10;(mode=review)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontSize=11;" vertex="1" parent="lane_engine">
+<mxCell id="s9a" value="9a. Return already_good&#10;(no issues)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontSize=11;" vertex="1" parent="lane_engine">
 <mxGeometry x="1912" y="50" width="160" height="50" as="geometry"/>
 </mxCell>
 
-<mxCell id="s9b" value="9b. Verify Loop Start&#10;(mode=apply, max 3 iter)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontSize=11;" vertex="1" parent="lane_engine">
+<mxCell id="s9b" value="9b. Verify Loop Start&#10;(always-fix, max 3 iter)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontSize=11;" vertex="1" parent="lane_engine">
 <mxGeometry x="1912" y="173.5" width="160" height="55" as="geometry"/>
 </mxCell>
 
-<mxCell id="s10" value="10. Call ELK Compound Layout&#10;(layered/stress/force/radial)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontSize=11;" vertex="1" parent="lane_engine">
+<mxCell id="s10" value="10. Call ELK Compound Layout&#10;(layered/stress/force/mrtree/radial)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontSize=11;" vertex="1" parent="lane_engine">
 <mxGeometry x="2122" y="47.5" width="160" height="55" as="geometry"/>
 </mxCell>
 
@@ -185,10 +185,10 @@
 </mxCell>
 
 <!-- Decision branches -->
-<mxCell id="e11" edge="1" parent="lane_engine" source="dec1" target="s9a" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+<mxCell id="e11" value="No" edge="1" parent="lane_engine" source="dec1" target="s9a" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
 <mxGeometry relative="1" as="geometry"></mxGeometry>
 </mxCell>
-<mxCell id="e12" edge="1" parent="lane_engine" source="dec1" target="s9b" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.33;entryY=0;">
+<mxCell id="e12" value="Yes" edge="1" parent="lane_engine" source="dec1" target="s9b" style="rounded=1;html=1;strokeColor=#ef6c00;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.33;entryY=0;">
 <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1822" y="125"/><mxPoint x="1964.8" y="125"/></Array></mxGeometry>
 </mxCell>
 

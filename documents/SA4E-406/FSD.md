@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-406 |
 | Title | drawio_auto_layout: detector precision + verify loop + ELK compound + extension migration |
 | Author | BA Agent |
-| Version | 1.0 |
-| Date | 2026-11-09 |
+| Version | 1.1 |
+| Date | 2026-11-11 |
 | Status | Draft |
 | Related BRD | documents/SA4E-406/BRD.md |
 
@@ -23,6 +23,8 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-11-09 | BA Agent | Initiate document — auto-generated from BRD and Jira tickets |
+| 1.1 | 2026-11-11 | BA Agent | Specification reconciliation to the real implemented contract: §3.1.4/§3.1.5 input+output tables rebuilt (`mode`/`auto_fix`/`detect_*`/`container_margin`/`elk_options` removed; `relayout`/`scope`/thresholds added; 5 algorithms incl. `stress`; `mrtree` restored); §12.1.1 usage example fixed; §12.1.2 documents BOTH drawio_export_png contracts (extension client file_path+output_path → PNG on disk `{success,file_path,size_bytes,renderer}`; RAW backend `content_base64` → `output_base64`); §3.2/§3.3/§6/§9.1/§11.3/§12.2.1/§12.5 mode and removed-error-code references purged; §12.6 OI-2/OI-7 status reconciled, OI-11 added (fields to be emitted in the fix round); §12.7.1 note states `<mxGraphModel>` root + 10 px grid acceptance criteria, §12.7 samples unwrapped |
+| 1.2 | 2026-11-12 | BA Agent | Continuation reconciliation against the fix-round code now in the working tree (`drawio-verify-loop.ts` + `drawio-result.ts`, wired via `handleApply(..., root)` in `drawio-tool.ts`): §3.1.4/§12.1.1 output emission statuses flipped **Fix round → Emitted** (all 11 contract fields are now returned; path nuance: the early `already_good` short-circuit returns only `{status, message}`); `strategy_used` enum corrected to the real values (`sequence`, `use_case`, `ports_only`, `local_repair`, `humanized_layered`, `elk_<algorithm>`); `iteration_history` item shape corrected to `{iteration, action, issues_before, issues_after, spacing}` (matches `IterationRecord`); `repositioned_nodes` corrected to `RepositionedNode[]` (`{id, x_old, y_old, x_new, y_new}`); §3.2.1/§6.2/§12.3.1/§12.7.2 verify-loop wording aligned to the implementation (additive +40 px spacing step, keep-best + rollback-if-worse via `restoreBest`, root fields in the response); §12.2.1/BR-18/EF-1/§6.3 ELK timeout corrected to default 30,000 ms, bounds 1,000–120,000 ms; OI-4/OI-11 updated (what the fix round has landed vs. what remains: `stress`, `max_iterations`/`spacing_increment` parsing, threshold wiring) |
 
 ---
 
@@ -47,7 +49,7 @@ The FSD specifies:
 **In Scope (per BRD Section 1.1):**
 1. **Detector Precision Improvements** — Reduce overlap threshold from 50% to 5% (OVERLAP_EPS = 0.05); introduce 40px gap threshold (MIN_GAP = 40) for edge routing decisions
 2. **Verify Loop** — After auto-layout execution, automatically verify layout quality and re-run if issues persist (maximum 3 iterations, configurable via `max_iterations`)
-3. **ELK Compound Layout** — Integrate ELK.js layout engine with 4 algorithms (layered, stress, force, radial) supporting compound nodes (containers/swimlanes)
+3. **ELK Compound Layout** — Integrate ELK.js layout engine with 5 algorithms (layered, stress, force, mrtree, radial) supporting compound nodes (containers/swimlanes)
 4. **Extension MCP Bridge Migration** — Migrate from legacy extension architecture to new MCP-based bridge for draw.io integration with proper multi-worktree path resolution
 5. **Multi-worktree Path Resolution** — Implement per-call `base_dir` parameter (alias `workspace_root`) on all MCP tools accepting `file_path`
 6. **Security Enhancement** — Path traversal prevention (CWE-22) with strict file path validation against workspace allowlist
@@ -196,13 +198,13 @@ All detections use absolute coordinates (resolved from parent hierarchy) via `dr
 - File contains valid mxGraphModel XML with at least one node
 **Postconditions:**
 - Detection results returned with issue list and fix hints
-- If `mode=apply` and issues found: verify loop initiated (see UC-02)
+- If issues found: verify loop initiated (see UC-02)
 
 **Main Flow:**
 
 | Step | Actor | System | Description |
 |------|-------|--------|-------------|
-| 1 | AI Agent | | Calls `drawio_auto_layout` with `file_path`, optional `base_dir`, `mode=review` |
+| 1 | AI Agent | | Calls `drawio_auto_layout` with `file_path`, optional `base_dir` |
 | 2 | | Extension Bridge | Validates `base_dir` against workspace allowlist; resolves absolute path |
 | 3 | | Backend | Parses XML → DiagramGraph (nodes, edges, containers) |
 | 4 | | Backend | Computes absolute rects for all cells via `absoluteRects()` |
@@ -213,7 +215,7 @@ All detections use absolute coordinates (resolved from parent hierarchy) via `dr
 
 | ID | Condition | Steps |
 |----|-----------|-------|
-| AF-1 | `mode=apply` (or `auto_fix=true`) | After step 5, if issues found → initiate Verify Loop (UC-02) |
+| AF-1 | High/medium issues found (always-fix — v1.1) | After step 5 → initiate Verify Loop (UC-02) |
 | AF-2 | No nodes in diagram | Return error: "No nodes found in diagram" |
 | AF-3 | File not found | Return error: "File not found or not accessible" |
 | AF-4 | `base_dir` not in allowlist | Return error: "PATH_REJECTED_OUTSIDE_ALLOWLIST" |
@@ -242,47 +244,57 @@ All detections use absolute coordinates (resolved from parent hierarchy) via `dr
 | BR-10 | Detection completes within 500ms for 50-node diagrams | BRD STORY 1, AC-6 |
 | BR-11 | Fix hints include actionable coordinates for 5% threshold sensitivity | BRD STORY 1, AC-5 |
 
+**Worked example (detector input sample).** `documents/SA4E-406/diagrams/test-overlap.drawio` is the UAT input that deliberately carries the blocking defect classes — node overlap (Node B over Node A), an edge crossing through a node, a diagonal edge and off-grid coordinates (`x=12`, `y=12`, …) — and is used to demonstrate BR-01 / BR-05 / BR-08 / BR-62 detection precision before the fix pass runs.
+
+![Detector precision sample — overlapping nodes, crossing edge, diagonal edge](diagrams/test-overlap.png)
+*[Edit in draw.io](diagrams/test-overlap.drawio)*
+
 #### 3.1.4 Data Specifications
+
+> **Reconciled (v1.1).** The tables below describe the contract implemented after the SA4E-406 fix round. The removed properties (`mode`, `auto_fix`, `detect_overlaps`, `detect_crossings`, `detect_diagonals`, `container_margin`, `elk_options`) are documented with reasons in §12.1.1 — they are not part of the tool schema and no caller may rely on them. Out-of-range optional values never raise an error; they silently fall back to the compiled defaults.
 
 **Input Data:**
 
 | Field | Type | Required | Validation | Description |
 |-------|------|----------|------------|-------------|
 | file_path | string | Yes | Must end with .drawio; resolved via base_dir or primary workspace | Path to .drawio file |
-| base_dir | string | No | Absolute path; must be in workspace allowlist | Workspace root for multi-worktree path resolution |
-| workspace_root | string | No | Deprecated alias for base_dir | Legacy compatibility |
-| overlap_threshold | number | No | Range (0, 0.5], default 0.05 | Overlap ratio threshold |
-| gap_threshold | number | No | Positive integer ≥ 10, default 40 | Minimum edge-to-node clearance in pixels |
-| detect_overlaps | boolean | No | Default true | Enable overlap detection |
-| detect_crossings | boolean | No | Default true | Enable edge crossing detection |
-| detect_diagonals | boolean | No | Default true | Enable diagonal edge detection |
-| mode | string | No | "review" or "apply", default "review" | Detection-only or auto-fix mode |
-| algorithm | string | No | "layered" \| "stress" \| "force" \| "radial", default "layered" | ELK layout algorithm |
-| spacing | number | No | > 0, default 80, max 500 | Base node spacing in pixels |
-| direction | string | No | "DOWN" \| "RIGHT" \| "LEFT" \| "UP", default "DOWN" | Layout direction |
-| container_margin | number | No | ≥ 0, default 40 | Margin inside containers in pixels |
-| elk_options | object | No | Passed through to ELK.js | Advanced ELK tuning options |
+| base_dir | string | No | Absolute path; must be in workspace allowlist | Workspace root for multi-worktree path resolution (takes precedence over workspace_root) |
+| workspace_root | string | No | Deprecated alias for base_dir | Legacy compatibility (ignored when base_dir is present) |
+| algorithm | string | No | One of `layered` \| `stress` \| `force` \| `mrtree` \| `radial`; unrecognised value falls back to `layered`; default `layered` | ELK layout algorithm used for a full relayout |
+| spacing | number | No | > 0, capped at 500; default 80 | Base node spacing in pixels (full relayout) |
+| direction | string | No | `DOWN` \| `RIGHT` \| `LEFT` \| `UP`; unrecognised value falls back to `DOWN`; default `DOWN` | Layout direction (full relayout) |
+| relayout | boolean | No | Default false | true = skip minimal repair and force a full ELK relayout |
+| scope | string | No | `auto` \| `positions` \| `ports`, default `auto` | Fix-strategy scope override (parsed by `normalizeLayoutArgs()`) |
+| max_iterations | number | No | Integer [1, 5]; out-of-range value IGNORED — default 3 used, no error raised | Max verify loop iterations |
+| spacing_increment | number | No | Integer [10, 50]; out-of-range value IGNORED — default 20 used, no error raised | Spacing increase % per verify-loop iteration |
+| overlap_threshold | number | No | (0, 0.5]; out-of-range value IGNORED — default 0.05 used, no error raised | Overlap ratio threshold (OVERLAP_EPS) |
+| gap_threshold | number | No | ≥ 10; out-of-range value IGNORED — default 40 used, no error raised | Minimum edge-to-node clearance in pixels (MIN_GAP) |
 
 **Output Data:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| status | string | "already_good" \| "needs_fix" \| "fixed" \| "partial" \| "error" |
-| message | string | Human-readable summary |
-| nodes | number | Total node count (nodes + containers) |
-| edges | number | Total edge count |
-| issues | LayoutIssue[] | Array of detected issues (type, severity, node/edge IDs, fix_hint) |
-| repositioned_nodes | string[] | Node IDs that were moved (only in apply mode) |
-| remaining_issues | number | Count of high/medium issues remaining after fix (apply mode) |
-| iteration_history | object[] | Per-iteration issue counts (verify loop) |
+| Field | Type | Emission | Description |
+|-------|------|----------|-------------|
+| status | string | Emitted | `already_good` \| `fixed` \| `partial` — `needs_fix` / `error` removed in v1.1 (no code path produces them) |
+| message | string | Emitted | Human-readable summary |
+| remaining_issues | number | Emitted | Count of high/medium issues remaining after the fix |
+| nodes | number | Emitted | Total node count (content nodes + containers) |
+| edges | number | Emitted | Total edge count |
+| issues | LayoutIssue[] | Emitted | Array of detected issues (type, severity, node/edge IDs, fix_hint) |
+| repositioned_nodes | RepositionedNode[] | Emitted | Nodes that were moved — each `{id, x_old, y_old, x_new, y_new}` (`drawio-layout-models.ts`) |
+| iteration_history | object[] | Emitted | Per-iteration verify-loop record: `{iteration, action, issues_before, issues_after, spacing}` (`IterationRecord` in `drawio-result.ts`) |
+| strategy_used | string | Emitted | Strategy of the final pass — one of `sequence`, `use_case`, `ports_only`, `local_repair`, `humanized_layered`, `elk_<algorithm>` (e.g. `elk_stress`) — see `drawio-apply-strategy.ts` dispatch |
+| effective_root | string | Emitted | Workspace root actually used for path resolution |
+| root_source | string | Emitted | `legacy` \| `base_dir` |
+
+> **Path nuance (v1.2).** The full 11-field contract is assembled on the **fix path** (`drawio-verify-loop.ts` → `outcomeJson()`). The early `already_good` short-circuit in `drawio-tool.ts` (no high/medium issue found) returns only `{status, message}`; MCP tool errors return `isError: true` with a plain-text message, not the JSON contract.
 
 **LayoutIssue Structure:**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| type | string | Issue type: `node_overlap`, `node_proximity`, `child_outside_container`, `node_containment_hint`, `edge_node_crossing`, `edge_edge_crossing`, `edge_container_crossing`, `diagonal_edge` |
+| type | string | Issue type: `node_overlap`, `node_proximity`, `child_outside_container`, `node_containment_hint`, `edge_node_crossing`, `edge_edge_crossing`, `edge_container_crossing`, `diagonal_edge`, `extreme_aspect_ratio`, `label_on_header`, `label_on_node`, plus the SA4E-406 defect classes `band_oversize`, `children_corner_cluster`, `stale_edge_waypoints`, `wrong_edge_parent`, `stack_layout_container`, `off_grid_alignment`, `empty_lane_title`, `missing_decision_label`, `mxfile_root` (BR-57..BR-65) |
 | severity | string | `high` \| `medium` \| `low` |
-| node_a / node_b / child / edge_id | string | Affected element IDs |
+| node_a / node_b / child / container / edge_id | string | Affected element IDs |
 | ratio / gap | number | Overlap ratio or gap in pixels |
 | fix_hint | string | Actionable suggestion for fixing |
 
@@ -295,40 +307,44 @@ All detections use absolute coordinates (resolved from parent hierarchy) via `dr
 
 **Input Parameters:**
 
+> **Reconciled (v1.1).** `mode`, `auto_fix`, `detect_overlaps`, `detect_crossings`, `detect_diagonals` and `container_margin` were removed from this contract (never parsed by the implementation — see §12.1.1 for the disposition table). The tool has a single always-fix behaviour.
+
 | Parameter | Type | Required | Business Rule | Description |
 |-----------|------|----------|---------------|-------------|
 | file_path | string | Yes | Must be .drawio file | Path to diagram file |
 | base_dir | string | No | Must be in workspace allowlist | Multi-worktree workspace root |
-| workspace_root | string | No | Deprecated alias | Legacy compatibility |
-| mode | string | No | "review" \| "apply" | Detection or auto-fix |
-| algorithm | string | No | One of 4 ELK algorithms | Layout algorithm |
+| workspace_root | string | No | Deprecated alias | Legacy compatibility (ignored when base_dir is present) |
+| algorithm | string | No | One of 5 ELK algorithms: layered, stress, force, mrtree, radial | Layout algorithm (full relayout) |
 | spacing | number | No | > 0, ≤ 500 | Node spacing |
 | direction | string | No | DOWN/RIGHT/LEFT/UP | Layout direction |
-| container_margin | number | No | ≥ 0 | Container inner margin |
-| overlap_threshold | number | No | (0, 0.5] | Overlap sensitivity |
-| gap_threshold | number | No | ≥ 10 | Edge-to-node gap |
-| detect_overlaps | boolean | No | Default true | Enable overlap detection |
-| detect_crossings | boolean | No | Default true | Enable crossing detection |
-| detect_diagonals | boolean | No | Default true | Enable diagonal detection |
-| max_iterations | number | No | [1, 5], default 3 | Verify loop max iterations |
-| spacing_increment | number | No | [10, 50], default 20 | Spacing increase % per iteration |
-| auto_fix | boolean | No | Legacy alias for mode=apply | Backward compatibility |
+| relayout | boolean | No | Default false | Force full ELK relayout |
+| scope | string | No | auto \| positions \| ports | Fix strategy scope |
+| overlap_threshold | number | No | (0, 0.5]; out-of-range silently falls back to 0.05 | Overlap sensitivity |
+| gap_threshold | number | No | ≥ 10; out-of-range silently falls back to 40 | Edge-to-node gap |
+| max_iterations | number | No | [1, 5], default 3; out-of-range silently falls back to 3 | Verify loop max iterations |
+| spacing_increment | number | No | [10, 50], default 20; out-of-range silently falls back to 20 | Spacing increase % per iteration |
 
 **Output Data:** (see Output Data table above)
 
 **Business Error Scenarios:**
 
+> Only codes the implementation can emit are listed (v1.1). Out-of-range optional parameters (`overlap_threshold`, `gap_threshold`, `max_iterations`, `spacing_increment`) never raise an error — the compiled default is used silently. ELK-internal failures surface as the generic `LAYOUT_FAILED` code (see §12.1.1).
+
 | Scenario | User Message | Trigger Condition |
 |----------|--------------|-------------------|
 | PATH_REJECTED_OUTSIDE_ALLOWLIST | File path not allowed: path traversal detected | `base_dir` not in allowlist or resolved path escapes |
+| PATH_REJECTED_OUTSIDE_WORKSPACE | File path not allowed: path traversal detected | Legacy pinned-root mode: resolved path outside the single pinned root |
+| PATH_EMPTY | File path is required | `file_path` is empty / whitespace only |
+| PATH_INVALID | File path is not valid | `file_path` contains a NUL byte or other invalid characters |
+| PATH_NO_WORKSPACE | No workspace folder is open — pass base_dir | No workspace folder open and no `base_dir` supplied |
 | FILE_NOT_FOUND | File not found or not accessible | File does not exist at resolved path |
 | INVALID_XML | Analysis failed: <details> | XML parsing or mxGraphModel validation failure |
+| MALFORMED_XML | draw.io syntax error: N malformed <tag> tag(s)… | Malformed tags the tolerant parser would silently skip |
 | NO_NODES | No nodes found in diagram | Diagram has zero nodes/containers |
-| INVALID_THRESHOLD | Overlap threshold must be between 0 and 0.5 | `overlap_threshold` > 0.5 or ≤ 0 |
-| INVALID_GAP | Gap threshold must be ≥ 10 | `gap_threshold` < 10 |
-| INVALID_ITERATIONS | Max iterations must be 1-5 | `max_iterations` outside [1,5] |
-| INVALID_SPACING_INCREMENT | Spacing increment must be 10-50 | `spacing_increment` outside [10,50] |
-| RENDERER_UNAVAILABLE | Export unavailable: no renderer configured | draw.io CLI not found and no browser MCP servers |
+| DIAGRAM_TOO_LARGE | Diagram too large (N nodes, max M) | Node count > SA4E_ELK_MAX_NODES (default 500) |
+| LAYOUT_FAILED | Layout engine failed. Please check input diagram and retry. | Fix strategy failure (covers ELK init failure, timeout, invalid output) |
+| REPAIR_FAILED | Local repair failed. Please check diagram structure. | Local repair exception |
+| EDGE_ROUTING_FAILED | Edge routing fix failed. Please check diagram structure. | Ports-only edge-routing fix exception |
 
 ---
 
@@ -338,32 +354,32 @@ All detections use absolute coordinates (resolved from parent hierarchy) via `dr
 
 #### 3.2.1 Description
 
-When `mode=apply` (or `auto_fix=true`) and layout issues are detected, the tool enters a verify loop that automatically applies layout fixes and re-validates up to a maximum number of iterations. This eliminates manual iteration cycles for AI agents.
+When layout issues are detected, the tool enters a verify loop that automatically applies layout fixes and re-validates up to a maximum number of iterations. This eliminates manual iteration cycles for AI agents.
+
+> **Reconciled (v1.1).** There is no `mode=apply` gate and no `auto_fix` flag — the tool has a single always-fix behaviour (see §12.1.1 disposition table).
 
 **Verify Loop Algorithm:**
 1. Initial detection → issues found
 2. Apply fix strategy (ports-only → local repair → ELK relayout)
 3. Re-parse fixed XML → re-run full detection
 4. If 0 high/medium issues → `status=fixed`, return
-5. If issues remain and iteration < max_iterations:
-   - Increase spacing by `spacing_increment`% (default 20%)
+5. If issues remain and the pass budget is not exhausted (compiled budget: 3 passes — the target contract exposes this as `max_iterations`, see §12.6 OI-11):
+   - Increase spacing by a fixed additive step between passes (implemented: `SPACING_STEP = 40` px — a grid multiple, so the snap is preserved; the target contract exposes this knob as `spacing_increment`, see §12.6 OI-4/OI-11)
    - Repeat from step 2
-6. If iteration = max_iterations:
-   - Compare final issue count with initial
-   - If final > initial: restore original XML, return `status=partial` with original issues
-   - Else: return `status=partial` with best result
+6. When the budget is exhausted (or a pass returns `already_good`):
+   - The best pass (fewest blocking issues) is kept; if the file holds a worse last pass it is rolled back to the best one (`restoreBest`)
+   - Return `status=fixed` if 0 high/medium issues remain, else `status=partial` with `remaining_issues` and the full `iteration_history`
 
 **Fix Strategies (in escalation order):**
 - **Ports Only** (`scope=ports`): Redistribute edge anchor ports, keep all node positions
 - **Local Repair**: Move only violating nodes, reroute affected edges (via `drawio-repair.ts`)
-- **Full ELK Relayout**: Complete compound-aware layout with ELK.js (all 4 algorithms)
+- **Full ELK Relayout**: Complete compound-aware layout with ELK.js (all 5 algorithms)
 
 #### 3.2.2 Use Case
 
 **Use Case ID:** UC-02
 **Actor:** AI Agent
 **Preconditions:**
-- `mode=apply` or `auto_fix=true`
 - Initial detection found high/medium severity issues
 **Postconditions:**
 - Diagram fixed and written to file, or best effort returned with iteration history
@@ -372,14 +388,14 @@ When `mode=apply` (or `auto_fix=true`) and layout issues are detected, the tool 
 
 | Step | Actor | System | Description |
 |------|-------|--------|-------------|
-| 1 | AI Agent | | Calls `drawio_auto_layout` with `mode=apply`, `file_path`, optional `base_dir` |
+| 1 | AI Agent | | Calls `drawio_auto_layout` with `file_path`, optional `base_dir` |
 | 2 | | System | Runs initial detection (UC-01 steps 2-5) |
 | 3 | | System | Issues found → select fix strategy based on issue types and `violationRatio()` |
 | 4 | | System | Apply fix (ports/local/ELK) → write positioned XML to file |
 | 5 | | System | Re-parse file → re-run full detection |
 | 6 | | System | If 0 high/medium issues → return `status=fixed` with `iteration_history` |
 | 7 | | System | If issues remain & iter < max → increase spacing, repeat from step 3 |
-| 8 | | System | If iter = max → compare with initial, return `status=fixed` or `partial` |
+| 8 | | System | If the pass budget is exhausted → keep the best pass, return `status=fixed` or `partial` |
 
 **Alternative Flows:**
 
@@ -388,7 +404,7 @@ When `mode=apply` (or `auto_fix=true`) and layout issues are detected, the tool 
 | AF-1 | Local repair produces no changes | Escalate to ELK relayout |
 | AF-2 | ELK layout fails (timeout/error) | Return best result so far, log error |
 | AF-3 | Spacing increment causes canvas overflow | Cap at maximum canvas bounds |
-| AF-4 | Final iteration worse than initial | Restore original XML, return `status=partial` with original issues |
+| AF-4 | Final pass worse than the best pass | Roll back to the best pass (`restoreBest`), return `status=partial` with `remaining_issues` |
 
 **Exception Flows:**
 
@@ -405,10 +421,10 @@ When `mode=apply` (or `auto_fix=true`) and layout issues are detected, the tool 
 | BR-12 | Verify loop maximum iterations = 3 (configurable 1-5 via `max_iterations`) | BRD STORY 2, AC-4, VR-1 |
 | BR-13 | Each iteration increases node spacing by configured increment (default 20%) | BRD STORY 2, AC-4, VR-2 |
 | BR-14 | Response includes `iteration_history` array with issues count per round | BRD STORY 2, AC-5 |
-| BR-15 | Original diagram restored if final iteration has MORE issues than initial | BRD STORY 2, AC-6 |
+| BR-15 | The best pass is kept; if the file holds a worse last pass it is rolled back to the best result (`restoreBest`) | BRD STORY 2, AC-6 |
 | BR-16 | Status = "fixed" if all high/medium issues resolved; "partial" if issues remain after max iterations | BRD STORY 2, AC-1, AC-2, AC-3 |
 | BR-17 | Fix strategy selection: ports-only for edge routing issues; local repair for few node violations; ELK relayout for >40% cells involved or explicit `relayout=true` | Code: `drawio-apply.ts` lines 49-53 |
-| BR-18 | ELK timeout default 10s (configurable via SA4E_ELK_TIMEOUT_MS env, 1-60s) | Code: `drawio-apply.ts` line 33 |
+| BR-18 | ELK timeout default 30s (configurable via SA4E_ELK_TIMEOUT_MS env, bounds 1,000–120,000 ms — SA4E-406 UAT raised the default from 10s because compound diagrams such as `architecture.drawio` exceeded 10s under load) | Code: `drawio-apply-args.ts` `TIMEOUT_MS` |
 | BR-19 | Maximum diagram size 500 nodes (configurable via SA4E_ELK_MAX_NODES env, 1-5000) | Code: `drawio-apply.ts` line 32 |
 | BR-20 | Maximum spacing capped at 500px (SEC-03 resource exhaustion prevention) | Code: `drawio-apply.ts` line 37 |
 
@@ -418,23 +434,23 @@ When `mode=apply` (or `auto_fix=true`) and layout issues are detected, the tool 
 
 | Field | Type | Required | Validation | Description |
 |-------|------|----------|------------|-------------|
-| mode | string | No | "review" \| "apply", default "review" | Auto-fix mode |
-| auto_fix | boolean | No | Legacy alias for mode=apply | Backward compatibility |
-| max_iterations | number | No | Integer [1, 5], default 3 | Max verify loop iterations |
-| spacing_increment | number | No | Integer [10, 50], default 20 | Spacing increase % per iteration |
+| max_iterations | number | No | Integer [1, 5]; out-of-range value IGNORED — default 3 used, no error raised | Max verify loop iterations |
+| spacing_increment | number | No | Integer [10, 50]; out-of-range value IGNORED — default 20 used, no error raised | Spacing increase % per iteration |
 | relayout | boolean | No | Default false | Force full ELK relayout |
-| scope | string | No | "auto" \| "positions" \| "ports" | Fix strategy scope |
+| scope | string | No | `auto` \| `positions` \| `ports`, default `auto` | Fix strategy scope |
+
+> **Removed (v1.1):** `mode` and `auto_fix` — never parsed; the verify loop runs whenever high/medium issues are found (see §12.1.1).
 
 **Additional Output Fields:**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| iteration_history | object[] | `[{iteration: 1, issues_before: 5, issues_after: 2}, ...]` |
-| strategy_used | string | "ports" \| "local" \| "elk" | Fix strategy that succeeded |
+| iteration_history | object[] | `[{iteration: 1, action: "local_repair", issues_before: 5, issues_after: 2, spacing: 80}, ...]` — one record per verify-loop pass |
+| strategy_used | string | Strategy of the final pass: `sequence` \| `use_case` \| `ports_only` \| `local_repair` \| `humanized_layered` \| `elk_<algorithm>` |
 
 #### 3.2.5 API Contract (Functional View)
 
-**Tool:** `drawio_auto_layout` (with `mode=apply`)
+**Tool:** `drawio_auto_layout` (verify loop path)
 **Purpose:** Auto-fix diagram layout with verification loop
 
 **Input Parameters:** (see 3.1.4 + verify loop fields above)
@@ -451,19 +467,20 @@ When `mode=apply` (or `auto_fix=true`) and layout issues are detected, the tool 
 
 ---
 
-### 3.3 Feature: ELK Compound Layout (4 Algorithms + Container Support)
+### 3.3 Feature: ELK Compound Layout (5 Algorithms + Container Support)
 
 **Source:** BRD Section 2.3 — STORY 3: ELK Compound Layout
 
 #### 3.3.1 Description
 
-The ELK.js layout engine provides 4 layout algorithms with full compound node (container/swimlane) support. The integration builds an ELK graph from the DiagramGraph, preserving container hierarchy, and applies the selected algorithm.
+The ELK.js layout engine provides 5 layout algorithms with full compound node (container/swimlane) support. The integration builds an ELK graph from the DiagramGraph, preserving container hierarchy, and applies the selected algorithm.
 
 **Algorithms:**
 1. **Layered** (default): `org.eclipse.elk.layered` — Topological sort + BFS layer assignment. Direction: DOWN/RIGHT/LEFT/UP. Best for hierarchical/flow diagrams.
 2. **Stress**: `org.eclipse.elk.stress` — Force-directed with stress majorization. High quality, slower. Best for general graphs.
 3. **Force**: `org.eclipse.elk.force` — Classic force-directed (repulsion/attraction, 100 iterations, damping). Good for organic layouts.
 4. **Radial**: `org.eclipse.elk.radial` — Root at center, concentric rings (max 8 nodes/ring). Best for tree/radial diagrams.
+5. **MrTree**: `org.eclipse.elk.mrtree` — Tree layout retained from the implementation (see §12.6 OI-3). Best for hierarchy/tree diagrams.
 
 **Compound Node Support:**
 - Containers (swimlanes, groups) mapped to ELK nodes with `children` array
@@ -486,7 +503,7 @@ The ELK.js layout engine provides 4 layout algorithms with full compound node (c
 **Actor:** AI Agent
 **Preconditions:**
 - Diagram has containers/swimlanes (compound nodes) or complex hierarchy
-- `mode=apply` or explicit `relayout=true`
+- Full relayout selected: explicit `relayout=true`, `scope=positions`, or `violationRatio() > 40%`
 **Postconditions:**
 - ELK layout applied, container bounds updated, edges routed orthogonally
 
@@ -494,7 +511,7 @@ The ELK.js layout engine provides 4 layout algorithms with full compound node (c
 
 | Step | Actor | System | Description |
 |------|-------|--------|-------------|
-| 1 | AI Agent | | Calls `drawio_auto_layout` with `algorithm`, `direction`, `spacing`, `container_margin` |
+| 1 | AI Agent | | Calls `drawio_auto_layout` with `algorithm`, `direction`, `spacing` |
 | 2 | | System | `buildElkGraph()` — maps DiagramGraph to ElkNode hierarchy |
 | 3 | | System | Containers → ElkNode with `children`, `layoutOptions` (padding, spacing) |
 | 4 | | System | Nodes → ElkNode with width/height |
@@ -518,33 +535,33 @@ The ELK.js layout engine provides 4 layout algorithms with full compound node (c
 
 | ID | Condition | Steps |
 |----|-----------|-------|
-| EF-1 | ELK layout timeout (>10s default) | Return error: "Layout engine timed out" |
+| EF-1 | ELK layout timeout (>30s default, `SA4E_ELK_TIMEOUT_MS`) | Return error: "Layout engine timed out" |
 | EF-2 | ELK returns invalid coordinates (NaN, ≤0 dimensions) | Throw error: "ELK returned invalid coordinates for node 'X'" |
-| EF-3 | Invalid elk_options keys | Ignore invalid keys, apply valid ones |
+| EF-3 | Invalid ELK output (NaN / non-positive coordinates) | Throw error: "ELK returned invalid coordinates for node 'X'" — surfaced as `LAYOUT_FAILED` (see §12.1.1); no `elk_options` pass-through exists since v1.1 |
 
 #### 3.3.3 Business Rules
 
 | Rule ID | Rule | Source |
 |---------|------|--------|
-| BR-21 | Algorithm must be one of: layered, stress, force, radial (default: layered) | BRD STORY 3, AC-6, VR-1 |
+| BR-21 | Algorithm must be one of: layered, stress, force, mrtree, radial (default: layered; unrecognised value falls back to layered) | BRD STORY 3, AC-6, VR-1 |
 | BR-22 | Direction must be one of: DOWN, RIGHT, LEFT, UP (default: DOWN) | BRD STORY 3, VR-2 |
 | BR-23 | Spacing must be > 0 (default: 80, max: 500) | BRD STORY 3, VR-3, SEC-03 |
-| BR-24 | Container margin must be ≥ 0 (default: 40) | BRD STORY 3, VR-4 |
+| BR-24 | Container padding is a compiled ELK layout option (`elk.padding=[top=40,left=20,bottom=20,right=20]`) — there is no `container_margin` input parameter | BRD STORY 3 (v1.1 reconciliation), §12.1.1 |
 | BR-25 | All algorithms: container bounds encompass all children + margin | BRD STORY 3, AC-5 |
 | BR-26 | Nested containers: inner positioned within outer, both resize correctly | BRD STORY 3, AC-6 |
 | BR-27 | Layered: topological sort + BFS layer assignment | BRD STORY 3, AC-1 |
 | BR-28 | Stress: converges with stress value < 0.01 for ≤30 nodes | BRD STORY 3, AC-2 |
 | BR-29 | Force: completes 100 iterations with damping, no node drift | BRD STORY 3, AC-3 |
 | BR-30 | Radial: max 8 nodes per ring, root at center | BRD STORY 3, AC-4 |
-| BR-31 | ELK options passed through for advanced tuning | BRD STORY 3, AC-7 |
+| BR-31 | There is no `elk_options` pass-through — raw ELK option tuning was never wired and the property was removed from the contract (v1.1) | BRD STORY 3, §12.1.1 |
 | BR-32 | Orthogonal edge routing enforced for all algorithms | Code: `elk-layout.ts` line 79 |
 | BR-33 | Cross-container edges routed at root level | Code: `elk-layout.ts` lines 57-70 |
 
 #### 3.3.4 Data Specifications
 
-**Input Fields:** (see 3.1.4 — algorithm, direction, spacing, container_margin, elk_options)
+**Input Fields:** (see 3.1.4 — algorithm, direction, spacing, relayout, scope)
 
-**Output Fields:** (see 3.1.4 — repositioned_nodes, remaining_issues)
+**Output Fields:** (see 3.1.4 — repositioned_nodes, remaining_issues, strategy_used)
 
 #### 3.3.5 API Contract (Functional View)
 
@@ -557,11 +574,11 @@ The ELK.js layout engine provides 4 layout algorithms with full compound node (c
 
 **Business Error Scenarios:** (see 3.1.4 +)
 
+> **Reconciled (v1.1):** ELK initialization failure, ELK timeout and invalid ELK output are internally caught and surfaced as the generic `LAYOUT_FAILED` error code (see §12.1.1 error-code mapping) — they are not distinct user-facing codes.
+
 | Scenario | User Message | Trigger Condition |
 |----------|--------------|-------------------|
-| ELK_INIT_FAILED | Layout engine failed to initialize | ELK.js import/constructor failure |
-| ELK_TIMEOUT | Layout engine timed out after Xms | ELK layout exceeds SA4E_ELK_TIMEOUT_MS |
-| ELK_INVALID_OUTPUT | Layout engine produced invalid output | NaN coordinates or non-positive dimensions |
+| LAYOUT_FAILED | Layout engine failed. Please check input diagram and retry. | ELK init failure, ELK timeout (SA4E_ELK_TIMEOUT_MS), or invalid ELK output (NaN / non-positive dimensions) |
 
 ---
 
@@ -1067,13 +1084,12 @@ Comprehensive path traversal prevention for all file operations in drawio tools.
 | 2 | Parse XML to DiagramGraph (nodes, edges, containers) | Return INVALID_XML error |
 | 3 | Compute absolute rects for all cells | Internal error → return analysis failed |
 | 4 | Run detectAllIssues() — all detectors | Continue on partial failure, log exceptions |
-| 5 | If no issues → return already_good | — |
-| 6 | If mode=review → return needs_fix with issues | — |
-| 7 | If mode=apply → enter verify loop (max 3 iterations) | See verify loop steps |
-| 8 | Select fix strategy: ports-only / local repair / ELK relayout | Escalate on failure |
-| 9 | Apply fix, write positioned XML to file | Validate re-parse before write |
-| 10 | Re-detect issues on fixed diagram | Compare with initial, rollback if worse |
-| 11 | Return final status (fixed/partial) with iteration history | — |
+| 5 | If no high/medium issues → return already_good | — |
+| 6 | Issues found → enter verify loop (max 3 iterations, always-fix — v1.1) | See verify loop steps |
+| 7 | Select fix strategy: ports-only / local repair / ELK relayout | Escalate on failure |
+| 8 | Apply fix, write positioned XML to file | Validate re-parse before write |
+| 9 | Re-detect issues on fixed diagram | Compare with initial, rollback if worse |
+| 10 | Return final status (fixed/partial) with iteration history | — |
 
 **Activity Diagram:**
 
@@ -1082,7 +1098,7 @@ Comprehensive path traversal prevention for all file operations in drawio tools.
 
 ### 6.2 Verify Loop Processing
 
-**Trigger:** Issues detected + mode=apply
+**Trigger:** High/medium issues detected (always-fix — v1.1)
 **Schedule:** Synchronous within tool call
 **Input:** Initial issues, DiagramGraph, layout args
 **Output:** Fixed diagram or best effort with history
@@ -1096,8 +1112,8 @@ Comprehensive path traversal prevention for all file operations in drawio tools.
 | 3 |   Apply fix strategy with current spacing | On ELK failure → return best so far |
 | 4 |   Re-parse fixed XML, re-run detection | On parse failure → return error |
 | 5 |   If 0 high/medium issues → return fixed | — |
-| 6 |   If issues remain & iter < max → increase spacing by increment% | Cap at MAX_SPACING (500px) |
-| 7 | After loop: compare final vs initial issue count | If final > initial → restore original |
+| 6 |   If issues remain & pass budget not exhausted → increase spacing by the additive step (+40 px, grid multiple — target contract knob: `spacing_increment`, OI-11) | — |
+| 7 | After loop: keep the best pass; if the file holds a worse last pass → roll back to best (`restoreBest`) | — |
 | 8 | Return partial with best result and iteration_history | — |
 
 ### 6.3 ELK Compound Layout Processing
@@ -1117,16 +1133,16 @@ Comprehensive path traversal prevention for all file operations in drawio tools.
 | 4 | Map edges: same-container → container edges; cross-container → root edges | — |
 | 5 | Set root layoutOptions: algorithm, direction, spacing, orthogonal routing | — |
 | 6 | Load ELK.js (lazy singleton) | On failure → fallback to legacy layered |
-| 7 | Run elk.layout() with timeout (default 10s) | On timeout → error |
+| 7 | Run elk.layout() with timeout (default 30s, `SA4E_ELK_TIMEOUT_MS`) | On timeout → error |
 | 8 | Validate output: finite x,y, positive width/height | On invalid → error |
 | 9 | Flatten hierarchy for position extraction | — |
 
 ### 6.4 PNG Export Processing
 
-**Trigger:** AI agent calls `drawio_export_png` with `content_base64`
+**Trigger:** AI agent calls `drawio_export_png` with `content_base64` (Contract B, RAW backend) or with `file_path` + `output_path` (Contract A, extension client — see §12.1.2)
 **Schedule:** On-demand
-**Input:** Base64 .drawio XML, optional file_path reference
-**Output:** Base64 PNG bytes
+**Input:** Base64 .drawio XML (Contract B) or source .drawio file path (Contract A); optional `base_dir`; optional `output_path`
+**Output:** Base64 PNG bytes in `output_base64` (Contract B) or PNG written to `output_path` and its path returned in `file_path` (Contract A)
 
 **Processing Steps:**
 
@@ -1138,7 +1154,7 @@ Comprehensive path traversal prevention for all file operations in drawio tools.
 | 4 | Write to temp .drawio file | FS error → return error |
 | 5 | Detect renderer: CLI → Chrome DevTools MCP → Puppeteer MCP | If none → RENDERER_UNAVAILABLE |
 | 6 | Render PNG via selected engine | On failure → try next fallback |
-| 7 | Read PNG, base64 encode, return output_base64 | If no PNG → export failed |
+| 7 | Read PNG → Contract B: base64-encode and return in `output_base64`; Contract A: return written PNG path in `file_path` | If no PNG → export failed |
 | 8 | Cleanup temp directory | Best effort |
 
 ---
@@ -1192,7 +1208,7 @@ Comprehensive path traversal prevention for all file operations in drawio tools.
 | Security | No network calls in layout | Pure local computation (BRD NFR-6) |
 | Security | CLI stdio piped | Prevent output leakage (BRD NFR-7) |
 | Reliability | Graceful degradation | CLI unavailable → browser fallback; none → tool hidden (BRD NFR-8) |
-| Reliability | Verify loop rollback | Restore original if final iteration worse than initial (BRD NFR-9) |
+| Reliability | Verify loop rollback | Best pass kept; a worse last pass is rolled back (`restoreBest`) (BRD NFR-9) |
 | Maintainability | No external XML deps | Regex-based parsing (existing) (BRD NFR-10) |
 | Compatibility | Cross-platform path detection | Windows, macOS, Linux CLI paths detected (BRD NFR-11) |
 | Compatibility | Backward compatible | Existing calls without base_dir work unchanged (BRD NFR-12) |
@@ -1213,18 +1229,13 @@ Comprehensive path traversal prevention for all file operations in drawio tools.
 | FILE_NOT_FOUND | Warning | File not found or not accessible | Suggest checking base_dir and relative path |
 | INVALID_XML | Warning | Analysis failed: <details> | Show parsing error, suggest valid .drawio file |
 | NO_NODES | Info | No nodes found in diagram | Inform agent diagram is empty |
-| INVALID_THRESHOLD | Warning | Overlap threshold must be between 0 and 0.5 | Show valid range, use default |
-| INVALID_GAP | Warning | Gap threshold must be ≥ 10 | Show valid range, use default |
-| INVALID_ITERATIONS | Warning | Max iterations must be 1-5 | Show valid range, use default |
-| INVALID_SPACING_INCREMENT | Warning | Spacing increment must be 10-50 | Show valid range, use default |
 | LAYOUT_FAILED | Critical | Layout engine failed. Please check input diagram and retry. | Log full error, suggest simpler diagram |
 | DIAGRAM_TOO_LARGE | Warning | Diagram too large (N nodes, max M) | Suggest splitting diagram |
 | REPAIR_FAILED | Warning | Local repair failed. Please check diagram structure. | Escalate to ELK or return issues |
-| ELK_INIT_FAILED | Critical | Layout engine failed to initialize | Log error, fallback if possible |
-| ELK_TIMEOUT | Critical | Layout engine timed out after Xms | Increase timeout or simplify diagram |
-| ELK_INVALID_OUTPUT | Critical | Layout engine produced invalid output | Log error, fallback to legacy |
 | RENDERER_UNAVAILABLE | Warning | Export unavailable: no renderer configured | Install draw.io CLI or configure browser MCP |
 | BASE64_DECODE_ERROR | Warning | Invalid base64 content | Check content encoding |
+
+> **Removed in v1.1:** `INVALID_THRESHOLD`, `INVALID_GAP`, `INVALID_ITERATIONS`, `INVALID_SPACING_INCREMENT` — out-of-range optional parameters are silently ignored and the compiled default is used; no error code is emitted (see §12.1.1). `ELK_INIT_FAILED`, `ELK_TIMEOUT`, `ELK_INVALID_OUTPUT` are internally caught and surfaced as the generic `LAYOUT_FAILED` message (see §12.1.1).
 
 ### 9.2 Notification Requirements
 
@@ -1257,7 +1268,7 @@ Comprehensive path traversal prevention for all file operations in drawio tools.
 | TC-12 | Verify loop resolves in 1 iteration | 3 overlaps, simple layout | status=fixed, iteration_history[1] | High |
 | TC-13 | Verify loop requires 2 iterations | Complex overlaps | status=fixed, iteration_history[2] | High |
 | TC-14 | Verify loop partial after 3 iterations | Persistent issues | status=partial, history[3] | High |
-| TC-15 | Verify loop rollback | Final iteration worse than initial | Original restored, status=partial | High |
+| TC-15 | Verify loop rollback | Last pass worse than the best pass | Best pass written (`restoreBest`), status=partial | High |
 | TC-16 | ELK layered algorithm with containers | Swimlane diagram | Containers resized, children positioned | High |
 | TC-17 | ELK stress algorithm convergence | ≤30 nodes | Stress < 0.01 | Medium |
 | TC-18 | ELK force algorithm 100 iterations | Any diagram | Completes, no drift | Medium |
@@ -1379,7 +1390,7 @@ sequenceDiagram
     participant ELK as ELK.js
     participant FS as Filesystem
 
-    Agent->>Bridge: drawio_auto_layout(file_path, mode=apply)
+    Agent->>Bridge: drawio_auto_layout(file_path)
     Bridge->>Tool: Resolved path + args
     Tool->>Detector: detectAllIssues(graph)
     Detector-->>Tool: issues[]
@@ -1400,12 +1411,12 @@ sequenceDiagram
             Tool->>Detector: Re-detect on fixed diagram
             alt 0 high/medium issues
                 Tool-->>Agent: status=fixed + iteration_history
-            else Issues remain & iter < max
-                Fixer->>Fixer: Increase spacing by increment%
-            else Iteration = max
-                Tool->>Tool: Compare final vs initial issues
-                alt Final > Initial
-                    Tool->>FS: Restore original XML
+            else Issues remain & budget not exhausted
+                Fixer->>Fixer: Increase spacing (+40 px additive step)
+            else Budget exhausted
+                Tool->>Tool: Keep best pass, roll back worse last pass
+                alt Last pass worse than best
+                    Tool->>FS: restoreBest — rewrite best pass
                 end
                 Tool-->>Agent: status=partial + iteration_history
             end
@@ -1475,8 +1486,7 @@ stateDiagram-v2
 stateDiagram-v2
     [*] --> DETECT
     DETECT --> ALREADY_GOOD: 0 issues
-    DETECT --> NEEDS_FIX: Issues found, mode=review
-    DETECT --> APPLY_FIX: Issues found, mode=apply
+    DETECT --> APPLY_FIX: High/medium issues found (always-fix)
     APPLY_FIX --> SELECT_STRATEGY: violationRatio check
     SELECT_STRATEGY --> PORTS_ONLY: scope=ports
     SELECT_STRATEGY --> LOCAL_REPAIR: few violations
@@ -1486,15 +1496,14 @@ stateDiagram-v2
     ELK_RELAYOUT --> RE_DETECT: Apply + validate
     RE_DETECT --> FIXED: 0 high/medium issues
     RE_DETECT --> CHECK_ITER: Issues remain
-    CHECK_ITER --> ELK_RELAYOUT: iter < max, increase spacing
-    CHECK_ITER --> COMPARE_FINAL: iter = max
-    COMPARE_FINAL --> RESTORE_ORIGINAL: final > initial
-    COMPARE_FINAL --> PARTIAL: final <= initial
-    RESTORE_ORIGINAL --> PARTIAL
+    CHECK_ITER --> ELK_RELAYOUT: budget not exhausted, +40px step
+    CHECK_ITER --> COMPARE_FINAL: budget exhausted
+    COMPARE_FINAL --> RESTORE_BEST: last pass worse than best
+    COMPARE_FINAL --> PARTIAL: last pass is the best
+    RESTORE_BEST --> PARTIAL
     PARTIAL --> [*]: Return best + history
     FIXED --> [*]: Return success + history
     ALREADY_GOOD --> [*]: Return success
-    NEEDS_FIX --> [*]: Return issues to agent
 ```
 
 ---
@@ -1522,6 +1531,8 @@ The following sections provide **complete, implementation-ready** API contracts 
 
 ##### Input Schema (JSON Schema Draft-07)
 
+> **Reconciled (v1.1).** This schema now describes the contract that **exists after the SA4E-406 code fix round**. The previous revision advertised 19 input properties, 7 of which were never parsed by the implementation (`max_iterations`, `spacing_increment`, `overlap_threshold`, `gap_threshold`, `auto_fix`, `elk_options`, `container_margin`) and 4 more that were parsed but not advertised (`scope`, `mode`/`auto_fix` semantics). All of them are listed in the *Removed / Added* table below so nothing disappears silently.
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -1529,61 +1540,75 @@ The following sections provide **complete, implementation-ready** API contracts 
   "title": "drawio_auto_layout Input",
   "required": ["file_path"],
   "properties": {
-    "file_path": { "type": "string", "description": "Path to .drawio file (relative to workspace root or absolute). Must end with .drawio extension.", "pattern": "\\.drawio$", "minLength": 1, "maxLength": 4096 },
-    "base_dir": { "type": "string", "description": "Workspace root for multi-worktree path resolution. Must be an absolute path registered in MCP_WORKSPACE_ROOTS allowlist. Takes precedence over workspace_root.", "format": "uri-reference", "minLength": 1 },
-    "workspace_root": { "type": "string", "description": "Deprecated alias for base_dir. Kept for backward compatibility. Ignored if base_dir is present.", "format": "uri-reference", "deprecated": true },
-    "mode": { "type": "string", "enum": ["review", "apply"], "default": "review", "description": "Detection-only (review) or auto-fix with verify loop (apply)" },
-    "auto_fix": { "type": "boolean", "default": false, "description": "Legacy alias for mode=apply. If true, behaves as mode=apply.", "deprecated": true },
-    "algorithm": { "type": "string", "enum": ["layered", "force", "mrtree", "radial"], "default": "layered", "description": "ELK layout algorithm. layered=hierarchical, force=force-directed, mrtree=tree, radial=circular" },
-    "spacing": { "type": "number", "default": 80, "minimum": 1, "maximum": 500, "description": "Base node spacing in pixels. Capped at 500px (SEC-03 resource exhaustion prevention)." },
-    "direction": { "type": "string", "enum": ["DOWN", "RIGHT", "LEFT", "UP"], "default": "DOWN", "description": "Layout direction for layered/mrtree algorithms." },
-    "container_margin": { "type": "number", "default": 40, "minimum": 0, "maximum": 200, "description": "Inner margin for containers (swimlanes, groups) in pixels." },
-    "overlap_threshold": { "type": "number", "default": 0.05, "minimum": 0.001, "maximum": 0.5, "description": "Overlap ratio threshold (OVERLAP_EPS). Fraction of smaller node area that must be intersected to flag overlap. Default 5% (0.05)." },
-    "gap_threshold": { "type": "number", "default": 40, "minimum": 10, "maximum": 200, "description": "Minimum edge-to-node clearance in pixels (MIN_GAP). Edges within this distance of non-endpoint nodes are flagged." },
-    "detect_overlaps": { "type": "boolean", "default": true, "description": "Enable node overlap detection." },
-    "detect_crossings": { "type": "boolean", "default": true, "description": "Enable edge crossing detection (edge-node, edge-edge, edge-container)." },
-    "detect_diagonals": { "type": "boolean", "default": true, "description": "Enable diagonal edge detection (dx>20 AND dy>20)." },
-    "max_iterations": { "type": "integer", "default": 3, "minimum": 1, "maximum": 5, "description": "Maximum verify loop iterations (only used when mode=apply)." },
-    "spacing_increment": { "type": "integer", "default": 20, "minimum": 10, "maximum": 50, "description": "Percentage spacing increase per verify loop iteration (e.g., 20 = 20% increase)." },
-    "relayout": { "type": "boolean", "default": false, "description": "Force full ELK relayout regardless of violation ratio." },
-    "scope": { "type": "string", "enum": ["auto", "positions", "ports"], "default": "auto", "description": "Fix strategy scope: auto=select by violationRatio, positions=full relayout, ports=ports-only redistribution" },
-    "elk_options": { "type": "object", "description": "Advanced ELK.js layout options passed through directly. See ELK.js documentation for available keys.", "additionalProperties": true }
+    "file_path": { "type": "string", "description": "Path to the .drawio file to analyse and rewrite in place. Relative paths resolve against base_dir (or the first workspace folder).", "pattern": "\\.drawio$", "minLength": 1, "maxLength": 4096 },
+    "base_dir": { "type": "string", "description": "Workspace root for multi-worktree path resolution. Must be an absolute path inside the registered workspace allowlist. Takes precedence over workspace_root.", "minLength": 1 },
+    "workspace_root": { "type": "string", "description": "Deprecated alias for base_dir. Kept for backward compatibility. Ignored if base_dir is present.", "deprecated": true },
+    "algorithm": { "type": "string", "enum": ["layered", "stress", "force", "mrtree", "radial"], "default": "layered", "description": "ELK layout algorithm used when a full relayout is needed. layered = hierarchical flows, stress = stress majorisation, force = force-directed, mrtree = tree, radial = circular. An unrecognised value falls back to layered." },
+    "spacing": { "type": "number", "default": 80, "minimum": 1, "maximum": 500, "description": "Node spacing in pixels for a full relayout. Capped at 500px (SEC-03 resource exhaustion prevention)." },
+    "direction": { "type": "string", "enum": ["DOWN", "RIGHT", "LEFT", "UP"], "default": "DOWN", "description": "Flow direction for a full relayout." },
+    "relayout": { "type": "boolean", "default": false, "description": "true = skip minimal repair and force a full relayout even if the diagram looks fine." },
+    "scope": { "type": "string", "enum": ["auto", "positions", "ports"], "default": "auto", "description": "Fix strategy scope: auto = selected by violationRatio(), positions = full relayout, ports = ports-only redistribution. Parsed by normalizeLayoutArgs()." },
+    "max_iterations": { "type": "integer", "default": 3, "minimum": 1, "maximum": 5, "description": "Maximum verify-loop iterations. A value outside [1,5] is IGNORED and the default 3 is used — no error code is raised." },
+    "spacing_increment": { "type": "integer", "default": 20, "minimum": 10, "maximum": 50, "description": "Percentage spacing increase per verify-loop iteration (e.g. 20 = 20% increase). A value outside [10,50] is IGNORED and the default 20 is used — no error code is raised." },
+    "overlap_threshold": { "type": "number", "default": 0.05, "minimum": 0.001, "maximum": 0.5, "description": "Overlap ratio threshold (OVERLAP_EPS). Fraction of the smaller node's area that must be intersected to flag node_overlap. A value outside the range is IGNORED and the default 0.05 is used — no error code is raised." },
+    "gap_threshold": { "type": "number", "default": 40, "minimum": 10, "maximum": 200, "description": "Minimum edge-to-node clearance in pixels (MIN_GAP). A value outside the range is IGNORED and the default 40 is used — no error code is raised." }
   },
   "additionalProperties": false
 }
 ```
 
+**Removed / added input properties (v1.1):**
+
+| Property | Disposition | Reason | Source of truth |
+|----------|-------------|--------|-----------------|
+| `mode` | **REMOVED** | Never parsed. The tool has a single always-fix behaviour: *issues found → always fix*. Advertising `review` / `apply` implied a review-only path that does not exist. | `drawio-tool.ts` L136–L143 |
+| `auto_fix` | **REMOVED** | Legacy alias for `mode=apply`; never parsed either. | `drawio-tool.ts` L142 |
+| `detect_overlaps` | **REMOVED** | Never parsed. Every detector always runs. | `drawio-detect.ts` `detectAllIssues()` |
+| `detect_crossings` | **REMOVED** | Never parsed. Every detector always runs. | `drawio-detect.ts` `detectAllIssues()` |
+| `detect_diagonals` | **REMOVED** | Never parsed. Every detector always runs. | `drawio-detect.ts` `detectAllIssues()` |
+| `elk_options` | **REMOVED** | Raw ELK option pass-through was never wired. Container padding is a compiled ELK layout option. | `elk-layout.ts` `buildElkGraph()` |
+| `container_margin` | **REMOVED** | Never parsed. Padding is compiled (`elk.padding = [top=40,left=20,bottom=20,right=20]`). | `elk-layout.ts` `buildElkGraph()` |
+| `scope` | **ADDED** | Was already parsed by `normalizeLayoutArgs()` but not advertised. Now part of the public schema. | `drawio-apply-args.ts` L57–L60 |
+| `overlap_threshold` | **ADDED** | Optional detector-precision parameter. Default = the compiled `OVERLAP_EPS = 0.05`. Subject of BRD STORY 1. | `drawio-detect.ts` L27 |
+| `gap_threshold` | **ADDED** | Optional detector-precision parameter. Default = the compiled `MIN_GAP = 40`. Subject of BRD STORY 1. | `drawio-detect.ts` L25 |
+| `max_iterations` | **KEPT** | Part of the target contract; the fix round wires it as a parsed input. Today the pass budget is the compiled constant `MAX_ITERATIONS = 3` (`drawio-verify-loop.ts`). | FSD §12.6 OI-11 |
+| `spacing_increment` | **KEPT** | Part of the target contract; the fix round wires it as a parsed input. Today the per-pass growth is the compiled constant `SPACING_STEP = 40` px, additive and grid-aligned (`drawio-verify-loop.ts`). | FSD §12.6 OI-4, OI-11 |
+| `stress` algorithm | **KEPT / ADDED to enum** | `org.eclipse.elk.stress` is added to the algorithm map by the SA4E-406 code fix round. `mrtree` is retained from the implementation. | FSD §12.6 OI-2, OI-3 |
+
+> **Runtime note (v1.2):** the handler does **not** enforce the JSON Schema. Unknown properties are ignored (they never reach the engine). `max_iterations`, `spacing_increment`, `overlap_threshold` and `gap_threshold` are **not yet read by the live handler path** — `parseThresholdArgs()` exists in `drawio-apply-args.ts` but nothing wires it into the detector yet (`configureDetectThresholds()` has no production caller; see §12.6 OI-11) — so the effective behavior is identical to using the compiled defaults (`MIN_GAP = 40` px, `OVERLAP_EPS = 0.05`, 3 passes, +40 px per pass). **No validation error code is raised for any of them.**
+
 ##### Output Schema (JSON Schema Draft-07)
+
+> **Reconciled (v1.2).** The previous revision advertised 13 output fields, of which only `status`, `message` and `remaining_issues` were actually emitted. The SA4E-406 fix round has now **landed in the working tree** (`drawio-verify-loop.ts` + `drawio-result.ts`, wired through `handleApply(..., root)` in `drawio-tool.ts`) and **emits every field below** — each row states where it is produced. The `needs_fix` status and the `error` status were removed because no code path produces them (the tool always fixes, and failures are returned as MCP tool errors with `isError: true`, not as a success payload).
 
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "title": "drawio_auto_layout Output",
-  "oneOf": [ { "$ref": "#/definitions/SuccessResponse" }, { "$ref": "#/definitions/ErrorResponse" } ],
   "definitions": {
     "SuccessResponse": {
       "type": "object",
-      "required": ["status", "message", "nodes", "edges"],
+      "required": ["status", "message"],
       "properties": {
-        "status": { "type": "string", "enum": ["already_good", "needs_fix", "fixed", "partial"], "description": "Layout status: already_good=no issues; needs_fix=issues found (review mode); fixed=all high/medium resolved; partial=issues remain after max iterations" },
+        "status": { "type": "string", "enum": ["already_good", "fixed", "partial"], "description": "already_good = nothing to improve (no high/medium issue found, file untouched); fixed = all high/medium issues resolved; partial = issues remain after the maximum number of verify-loop iterations." },
         "message": { "type": "string", "description": "Human-readable summary of the operation result." },
+        "remaining_issues": { "type": "integer", "minimum": 0, "description": "Count of high/medium severity issues remaining after the fix." },
+        "issues": { "type": "array", "items": { "$ref": "#/definitions/LayoutIssue" }, "description": "Array of detected layout issues." },
+        "repositioned_nodes": { "type": "array", "items": { "type": "object", "required": ["id", "x_old", "y_old", "x_new", "y_new"], "properties": { "id": { "type": "string" }, "x_old": { "type": "number" }, "y_old": { "type": "number" }, "x_new": { "type": "number" }, "y_new": { "type": "number" } } }, "description": "Nodes that were moved, with previous and new absolute coordinates (RepositionedNode in drawio-layout-models.ts)." },
+        "iteration_history": { "type": "array", "items": { "type": "object", "required": ["iteration", "action", "issues_before", "issues_after", "spacing"], "properties": { "iteration": { "type": "integer", "minimum": 1 }, "action": { "type": "string", "description": "Strategy executed in this pass (same value domain as strategy_used)." }, "issues_before": { "type": "integer", "minimum": 0 }, "issues_after": { "type": "integer", "minimum": 0 }, "spacing": { "type": "number", "description": "Spacing used in this pass (px)." } } }, "description": "One record per verify-loop pass — IterationRecord in drawio-result.ts." },
+        "strategy_used": { "type": "string", "description": "Strategy of the final pass: sequence | use_case | ports_only | local_repair | humanized_layered | elk_<algorithm> (e.g. elk_stress) — see the dispatch in drawio-apply-strategy.ts." },
+        "effective_root": { "type": "string", "description": "Workspace root actually used for path resolution." },
+        "root_source": { "type": "string", "enum": ["legacy", "base_dir"], "description": "Source of the workspace root used." },
         "nodes": { "type": "integer", "minimum": 0, "description": "Total node count (content nodes + containers)." },
-        "edges": { "type": "integer", "minimum": 0, "description": "Total edge count." },
-        "issues": { "type": "array", "items": { "$ref": "#/definitions/LayoutIssue" }, "description": "Array of detected layout issues (present in review mode or when issues remain)." },
-        "repositioned_nodes": { "type": "array", "items": { "type": "string" }, "description": "Node IDs that were moved during auto-fix (apply mode only)." },
-        "remaining_issues": { "type": "integer", "minimum": 0, "description": "Count of high/medium severity issues remaining after fix (apply mode only)." },
-        "iteration_history": { "type": "array", "items": { "type": "object", "required": ["iteration", "issues_before", "issues_after"], "properties": { "iteration": { "type": "integer", "minimum": 1 }, "issues_before": { "type": "integer", "minimum": 0 }, "issues_after": { "type": "integer", "minimum": 0 }, "strategy_used": { "type": "string", "enum": ["ports", "local", "elk"] } } }, "description": "Per-iteration issue counts and strategy used (verify loop only)." },
-        "strategy_used": { "type": "string", "enum": ["ports", "local", "elk"], "description": "Fix strategy that succeeded on the final iteration." },
-        "effective_root": { "type": "string", "description": "Workspace root used for path resolution (present when base_dir provided)." },
-        "root_source": { "type": "string", "enum": ["legacy", "base_dir"], "description": "Source of the workspace root used." }
+        "edges": { "type": "integer", "minimum": 0, "description": "Total edge count." }
       }
     },
     "ErrorResponse": {
       "type": "object",
       "required": ["error"],
       "properties": {
-        "error": { "type": "string", "enum": ["PATH_REJECTED_OUTSIDE_ALLOWLIST", "FILE_NOT_FOUND", "INVALID_XML", "NO_NODES", "INVALID_THRESHOLD", "INVALID_GAP", "INVALID_ITERATIONS", "INVALID_SPACING_INCREMENT", "LAYOUT_FAILED", "DIAGRAM_TOO_LARGE", "REPAIR_FAILED", "ELK_INIT_FAILED", "ELK_TIMEOUT", "ELK_INVALID_OUTPUT"], "description": "Machine-readable error code." },
+        "error": { "type": "string", "enum": ["PATH_REJECTED_OUTSIDE_ALLOWLIST", "PATH_REJECTED_OUTSIDE_WORKSPACE", "PATH_EMPTY", "PATH_INVALID", "PATH_NO_WORKSPACE", "FILE_NOT_FOUND", "NO_NODES", "INVALID_XML", "MALFORMED_XML", "DIAGRAM_TOO_LARGE", "LAYOUT_FAILED", "REPAIR_FAILED", "EDGE_ROUTING_FAILED"], "description": "Machine-readable error code." },
         "message": { "type": "string", "description": "Human-readable error message (generic for security errors)." },
         "details": { "type": "object", "description": "Optional additional context (not present for security errors)." }
       }
@@ -1592,13 +1617,13 @@ The following sections provide **complete, implementation-ready** API contracts 
       "type": "object",
       "required": ["type", "severity", "fix_hint"],
       "properties": {
-        "type": { "type": "string", "enum": ["node_overlap", "node_proximity", "child_outside_container", "node_containment_hint", "edge_node_crossing", "edge_edge_crossing", "edge_container_crossing", "diagonal_edge"] },
+        "type": { "type": "string", "enum": ["node_overlap", "node_proximity", "child_outside_container", "node_containment_hint", "edge_node_crossing", "edge_edge_crossing", "edge_container_crossing", "diagonal_edge", "extreme_aspect_ratio", "label_on_header", "label_on_node", "band_oversize", "children_corner_cluster", "stale_edge_waypoints", "wrong_edge_parent", "stack_layout_container", "off_grid_alignment", "empty_lane_title", "missing_decision_label", "mxfile_root"] },
         "severity": { "type": "string", "enum": ["high", "medium", "low"] },
-        "node_a": { "type": "string", "description": "First node ID (node-node issues)" },
-        "node_b": { "type": "string", "description": "Second node ID (node-node issues)" },
-        "child": { "type": "string", "description": "Child node ID (containment issues)" },
-        "container": { "type": "string", "description": "Container node ID (containment issues)" },
-        "edge_id": { "type": "string", "description": "Edge ID (edge issues)" },
+        "node_a": { "type": "string", "description": "First node id (node-node issues)" },
+        "node_b": { "type": "string", "description": "Second node id (node-node issues)" },
+        "child": { "type": "string", "description": "Child node id (containment issues)" },
+        "container": { "type": "string", "description": "Container node id (containment issues)" },
+        "edge_id": { "type": "string", "description": "Edge id (edge issues)" },
         "ratio": { "type": "number", "minimum": 0, "maximum": 1, "description": "Overlap ratio (0-1) for overlap issues" },
         "gap": { "type": "number", "minimum": 0, "description": "Gap in pixels for proximity/gap issues" },
         "fix_hint": { "type": "string", "description": "Actionable suggestion for fixing this issue" }
@@ -1608,24 +1633,45 @@ The following sections provide **complete, implementation-ready** API contracts 
 }
 ```
 
-##### Error Codes — Detailed Mapping
+##### Output Field — Emission Status (v1.1)
+
+| Field | Type | Emission status | Notes |
+|-------|------|-----------------|-------|
+| `status` | string | **Emitted** | `fixed` \| `already_good` \| `partial`. The set is exactly the set the implementation can produce after the fix round — `needs_fix` and `error` were removed in v1.1 because no code path produces them. |
+| `message` | string | **Emitted** | Human-readable summary. |
+| `remaining_issues` | number | **Emitted** | Count of high/medium issues left after the fix. |
+| `iteration_history` | object[] | **Emitted** | One record per verify-loop pass: `{iteration, action, issues_before, issues_after, spacing}` (`IterationRecord`, `drawio-result.ts`). |
+| `issues` | LayoutIssue[] | **Emitted** | Full issue array of the final graph (`finalize()` in `drawio-verify-loop.ts`). |
+| `repositioned_nodes` | RepositionedNode[] | **Emitted** | `{id, x_old, y_old, x_new, y_new}` for every moved node (`movedNodes()` in `drawio-verify-loop.ts`). |
+| `strategy_used` | string | **Emitted** | Strategy of the final pass: `sequence` \| `use_case` \| `ports_only` \| `local_repair` \| `humanized_layered` \| `elk_<algorithm>` (`drawio-apply-strategy.ts` dispatch). |
+| `effective_root` | string | **Emitted** | Resolved workspace root — `root.effective_root` passed by `drawio-tool.ts` and attached by `outcomeJson()`. |
+| `root_source` | string | **Emitted** | `legacy` \| `base_dir` — same path. |
+| `nodes` | number | **Emitted** | Node count (content nodes + containers), final graph. |
+| `edges` | number | **Emitted** | Edge count, final graph. |
+
+> **Path nuance (v1.2).** The full contract is assembled on the **fix path**. The early `already_good` short-circuit in `drawio-tool.ts` (all issues `low`) returns only `{status, message}`; tool errors return `isError: true` with plain text. QA should assert the full contract only on fix-path responses.
+
+##### Error Codes — Detailed Mapping (v1.1 — emittable codes only)
+
+> The previous revision listed 14 error codes. Four of them (`INVALID_THRESHOLD`, `INVALID_GAP`, `INVALID_ITERATIONS`, `INVALID_SPACING_INCREMENT`) could never be produced — the corresponding parameters were never validated — and three more (`ELK_INIT_FAILED`, `ELK_TIMEOUT`, `ELK_INVALID_OUTPUT`) are internally caught and surfaced as the generic `LAYOUT_FAILED` message. All seven have been removed. Five codes that the implementation **does** produce (`PATH_REJECTED_OUTSIDE_WORKSPACE`, `PATH_EMPTY`, `PATH_INVALID`, `PATH_NO_WORKSPACE`, `MALFORMED_XML`, `EDGE_ROUTING_FAILED`) have been added.
 
 | Error Code | HTTP Equivalent | Trigger Condition | User Message (Generic) | Audit Logged? |
 |------------|-----------------|-------------------|------------------------|---------------|
 | `PATH_REJECTED_OUTSIDE_ALLOWLIST` | 403 Forbidden | `base_dir` not in allowlist; resolved path escapes workspace; NUL byte in path; non-string `base_dir` | "File path not allowed: path traversal detected" | **Yes** (SEC-01) |
-| `FILE_NOT_FOUND` | 404 Not Found | File does not exist at resolved path | "File not found or not accessible" | No |
-| `INVALID_XML` | 400 Bad Request | XML parsing fails or no `mxGraphModel` root | "Analysis failed: <details>" | No |
+| `PATH_REJECTED_OUTSIDE_WORKSPACE` | 403 Forbidden | Legacy pinned-root mode: resolved path outside the single pinned root | "File path not allowed: path traversal detected" | **Yes** (SEC-01) |
+| `PATH_EMPTY` | 400 Bad Request | `file_path` is empty / whitespace only | "File path is required" | No |
+| `PATH_INVALID` | 400 Bad Request | `file_path` contains a NUL byte or other invalid characters | "File path is not valid" | **Yes** (SEC-01) |
+| `PATH_NO_WORKSPACE` | 400 Bad Request | No workspace folder is open and no `base_dir` was supplied | "No workspace folder is open — pass base_dir" | No |
+| `FILE_NOT_FOUND` | 404 Not Found | File does not exist at the resolved path | "File not found or not accessible" | No |
+| `INVALID_XML` | 400 Bad Request | XML parsing fails, or the file has no `mxGraphModel` root | "Analysis failed: <details>" | No |
+| `MALFORMED_XML` | 400 Bad Request | The file contains malformed tags that the tolerant parser would silently skip | "draw.io syntax error: N malformed <tag> tag(s); first at line L … Fix the quoting in this file and run again." | No |
 | `NO_NODES` | 400 Bad Request | Diagram has 0 nodes + containers | "No nodes found in diagram" | No |
-| `INVALID_THRESHOLD` | 400 Bad Request | `overlap_threshold` ≤ 0 or > 0.5 | "Overlap threshold must be between 0 and 0.5" | No |
-| `INVALID_GAP` | 400 Bad Request | `gap_threshold` < 10 | "Gap threshold must be ≥ 10" | No |
-| `INVALID_ITERATIONS` | 400 Bad Request | `max_iterations` < 1 or > 5 | "Max iterations must be 1-5" | No |
-| `INVALID_SPACING_INCREMENT` | 400 Bad Request | `spacing_increment` < 10 or > 50 | "Spacing increment must be 10-50" | No |
-| `LAYOUT_FAILED` | 500 Internal Server Error | All fix strategies exhausted, ELK throws | "Layout engine failed. Please check input diagram and retry." | Yes |
 | `DIAGRAM_TOO_LARGE` | 413 Payload Too Large | Node count > `SA4E_ELK_MAX_NODES` (default 500) | "Diagram too large (N nodes, max M)" | No |
-| `REPAIR_FAILED` | 500 Internal Server Error | Local repair throws exception | "Local repair failed. Please check diagram structure." | Yes |
-| `ELK_INIT_FAILED` | 503 Service Unavailable | ELK.js import/constructor fails | "Layout engine failed to initialize" | Yes |
-| `ELK_TIMEOUT` | 504 Gateway Timeout | ELK layout exceeds `SA4E_ELK_TIMEOUT_MS` (default 10s) | "Layout engine timed out after Xms" | Yes |
-| `ELK_INVALID_OUTPUT` | 500 Internal Server Error | ELK returns NaN coordinates or non-positive dimensions | "Layout engine produced invalid output" | Yes |
+| `LAYOUT_FAILED` | 500 Internal Server Error | The fix strategy failed — covers ELK init failure, ELK timeout and invalid ELK output | "Layout engine failed: <details>" / "Layout engine failed. Please check input diagram and retry." | Yes |
+| `REPAIR_FAILED` | 500 Internal Server Error | Local repair threw an exception | "Local repair failed. Please check diagram structure." | Yes |
+| `EDGE_ROUTING_FAILED` | 500 Internal Server Error | The ports-only edge-routing fix threw an exception | "Edge routing fix failed. Please check diagram structure." | Yes |
+
+> **Error envelope:** the handler returns an MCP tool result with `isError: true` and the human-readable message as the text content. The path-resolution codes are embedded in that message with a `CODE: <CODE>` prefix (see `PathResolver.formatFsError`); the apply-path codes (`DIAGRAM_TOO_LARGE`, `LAYOUT_FAILED`, `REPAIR_FAILED`, `EDGE_ROUTING_FAILED`) are implied by the message text. The `{error, message}` JSON envelope above is the **logical** mapping used by the STC/RTM — it is the set of codes a test may assert on, not a second wire format.
 
 ##### Authentication & Authorization
 
@@ -1642,7 +1688,6 @@ The following sections provide **complete, implementation-ready** API contracts 
   "arguments": {
     "file_path": "diagrams/architecture.drawio",
     "base_dir": "/home/user/project-worktree-B",
-    "mode": "apply",
     "algorithm": "layered",
     "spacing": 100,
     "direction": "DOWN",
@@ -1664,10 +1709,10 @@ The following sections provide **complete, implementation-ready** API contracts 
   "repositioned_nodes": ["node-3", "node-7", "container-1", "..."],
   "remaining_issues": 0,
   "iteration_history": [
-    { "iteration": 1, "issues_before": 5, "issues_after": 2, "strategy_used": "local" },
-    { "iteration": 2, "issues_before": 2, "issues_after": 0, "strategy_used": "elk" }
+    { "iteration": 1, "action": "local_repair", "issues_before": 5, "issues_after": 2, "spacing": 80 },
+    { "iteration": 2, "action": "humanized_layered", "issues_before": 2, "issues_after": 0, "spacing": 120 }
   ],
-  "strategy_used": "elk",
+  "strategy_used": "humanized_layered",
   "effective_root": "/home/user/project-worktree-B",
   "root_source": "base_dir"
 }
@@ -1690,6 +1735,14 @@ The following sections provide **complete, implementation-ready** API contracts 
 **Category:** Diagram Export
 **Transport:** MCP (stdio/JSON-RPC via orchestration engine)
 
+> **Reconciled (v1.1) — TWO contracts on one tool.** The implemented tool serves two callers (both captured from the running build, see UG §4.2 / §5.7 / §8.2):
+>
+> | | Contract A — Extension client (file-based) | Contract B — RAW backend (content-based) |
+> |---|---|---|
+> | **Input** | `file_path` (source `.drawio`) + `output_path` (+ optional `base_dir`/`workspace_root`) | `content_base64` (base64 XML source) + optional `file_path`/`base_dir` reference |
+> | **PNG destination** | **Written to `output_path`** (defaults to `<file_path>` with `.drawio`→`.png` swapped) | Temp file; bytes returned in the response |
+> | **Response** | `{success, file_path (written PNG path), size_bytes, renderer}` | `{success, output_base64, size_bytes, renderer}` (+ `file_path` when `output_path` was supplied) |
+
 ##### Input Schema (JSON Schema Draft-07)
 
 ```json
@@ -1699,15 +1752,17 @@ The following sections provide **complete, implementation-ready** API contracts 
   "title": "drawio_export_png Input",
   "required": ["content_base64"],
   "properties": {
-    "content_base64": { "type": "string", "description": "Base64-encoded .drawio XML content. Must decode to valid UTF-8 XML.", "minLength": 1, "format": "base64" },
-    "file_path": { "type": "string", "description": "Original file path (reference only, used for logging/debugging). Not read from filesystem.", "minLength": 0, "maxLength": 4096 },
-    "base_dir": { "type": "string", "description": "Workspace root for validating file_path reference (if provided). Must be in allowlist.", "format": "uri-reference" },
-    "workspace_root": { "type": "string", "description": "Deprecated alias for base_dir.", "format": "uri-reference", "deprecated": true },
-    "output_base64": { "type": "boolean", "default": true, "description": "Always true for this tool — returns PNG as base64." }
+    "content_base64": { "type": "string", "description": "Base64-encoded .drawio XML content (Contract B). Must decode to valid UTF-8 XML.", "minLength": 1, "format": "base64" },
+    "file_path": { "type": "string", "description": "Contract A: source .drawio path — the handler reads this file when content_base64 is omitted. Contract B: original path reference (logging/validation only). Validated against base_dir when provided.", "minLength": 0, "maxLength": 4096 },
+    "base_dir": { "type": "string", "description": "Workspace root for multi-worktree path resolution of file_path/output_path. Must be in allowlist. Takes precedence over workspace_root.", "format": "uri-reference" },
+    "workspace_root": { "type": "string", "description": "Deprecated alias for base_dir. Ignored if base_dir is present.", "format": "uri-reference", "deprecated": true },
+    "output_path": { "type": "string", "description": "PNG output path (both contracts). Relative paths resolve against the primary workspace folder; absolute paths pass through; paths outside the workspace root are rejected. Defaults to <file_path> with extension swapped (.drawio→.png)." }
   },
   "additionalProperties": false
 }
 ```
+
+> **Removed from this section (v1.1):** the `output_base64` **input** boolean property — it is not part of the implemented schema (see UG §8.2 tool definition). `output_base64` exists only as an **output** field of Contract B.
 
 ##### Output Schema (JSON Schema Draft-07)
 
@@ -1716,17 +1771,32 @@ The following sections provide **complete, implementation-ready** API contracts 
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "title": "drawio_export_png Output",
-  "oneOf": [ { "$ref": "#/definitions/SuccessResponse" }, { "$ref": "#/definitions/ErrorResponse" } ],
+  "oneOf": [ { "$ref": "#/definitions/FileBasedSuccess" }, { "$ref": "#/definitions/ContentBasedSuccess" }, { "$ref": "#/definitions/ErrorResponse" } ],
   "definitions": {
-    "SuccessResponse": {
+    "FileBasedSuccess": {
       "type": "object",
+      "description": "Contract A (extension client): PNG written to output_path.",
+      "required": ["success", "file_path", "size_bytes", "renderer"],
+      "properties": {
+        "success": { "const": true },
+        "file_path": { "type": "string", "description": "Absolute path of the PNG that was written to output_path." },
+        "size_bytes": { "type": "integer", "minimum": 1, "description": "PNG file size in bytes." },
+        "renderer": { "type": "string", "enum": ["drawio-cli", "chrome-devtools-mcp", "puppeteer-mcp"], "description": "Renderer engine used for this export." },
+        "effective_root": { "type": "string", "description": "Workspace root used for path resolution (when base_dir provided)." },
+        "root_source": { "type": "string", "enum": ["legacy", "base_dir"] }
+      }
+    },
+    "ContentBasedSuccess": {
+      "type": "object",
+      "description": "Contract B (RAW backend): PNG bytes returned in the response.",
       "required": ["success", "output_base64", "size_bytes", "renderer"],
       "properties": {
         "success": { "const": true },
         "output_base64": { "type": "string", "description": "Base64-encoded PNG bytes (ready for embedding in documents).", "format": "base64" },
         "size_bytes": { "type": "integer", "minimum": 1, "description": "PNG file size in bytes." },
         "renderer": { "type": "string", "enum": ["drawio-cli", "chrome-devtools-mcp", "puppeteer-mcp"], "description": "Renderer engine used for this export." },
-        "effective_root": { "type": "string", "description": "Workspace root used for path validation (if base_dir provided)." },
+        "file_path": { "type": "string", "description": "Absolute path of the written PNG (present when output_path was supplied)." },
+        "effective_root": { "type": "string", "description": "Workspace root used for path resolution (when base_dir provided)." },
         "root_source": { "type": "string", "enum": ["legacy", "base_dir"] }
       }
     },
@@ -1761,7 +1831,30 @@ The following sections provide **complete, implementation-ready** API contracts 
 3. **Puppeteer MCP** — `orchestrationEngine.executeUpstreamTool('puppeteer', ...)`. Requires upstream server `puppeteer` in ACTIVE state.
 4. **None** — Tool hidden from MCP tool list via `isExportPngAvailable()`.
 
-##### Usage Example
+##### Usage Example — Contract A (Extension client, file-based)
+
+```json
+{
+  "toolName": "drawio_export_png",
+  "arguments": {
+    "file_path": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\documents\\SA4E-406\\diagrams\\ug-multi-worktree.drawio",
+    "output_path": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\documents\\SA4E-406\\diagrams\\ug-multi-worktree.png"
+  }
+}
+```
+
+**Response Example (captured from the running build):**
+
+```json
+{
+  "success": true,
+  "size_bytes": 287331,
+  "renderer": "drawio-cli",
+  "file_path": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\documents\\SA4E-406\\diagrams\\ug-multi-worktree.png"
+}
+```
+
+##### Usage Example — Contract B (RAW backend, content-based)
 
 ```json
 {
@@ -1769,21 +1862,21 @@ The following sections provide **complete, implementation-ready** API contracts 
   "arguments": {
     "content_base64": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPG14ZmlsZSBob3N0PSJhcHAuZGlhZ3JhbXMubmV0Ij4KPGRpYWdyYW0gbmFtZT0iUGFnZS0xIj4KPG14R3JhcGhNb2RlbD4KPG14Q2VsbCBpZD0iMSIvPgo8bXhDZWxsIGlkPSIyIiBwYXJlbnQ9IjEiLz4KPC9teEdyYXBoTW9kZWw+CjwvZGlhZ3JhbT4KPC9teGZpbGU+",
     "file_path": "diagrams/architecture.drawio",
-    "base_dir": "/home/user/project-worktree-B"
+    "base_dir": "/home/user/project-worktree-B",
+    "output_path": "documents/SA4E-406/diagrams/ug-architecture.png"
   }
 }
 ```
 
-##### Response Example (Success)
+**Response Example (captured from the running build):**
 
 ```json
 {
   "success": true,
   "output_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
-  "size_bytes": 45231,
+  "size_bytes": 69466,
   "renderer": "drawio-cli",
-  "effective_root": "/home/user/project-worktree-B",
-  "root_source": "base_dir"
+  "file_path": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\documents\\SA4E-406\\diagrams\\ug-architecture.png"
 }
 ```
 
@@ -1799,10 +1892,10 @@ The following sections provide **complete, implementation-ready** API contracts 
 |--------|---------------|
 | **Integration Type** | In-process Node.js module (`elkjs/lib/elk.bundled.js`) |
 | **Communication** | Direct function calls (async/await) |
-| **Timeout** | `SA4E_ELK_TIMEOUT_MS` env var (default 10,000ms, range 1,000–60,000ms) |
+| **Timeout** | `SA4E_ELK_TIMEOUT_MS` env var (default 30,000ms, bounds 1,000–120,000ms — SA4E-406 UAT raised the default from 10,000ms) |
 | **Retry Policy** | None (synchronous, deterministic). Failures caught and escalated to next fix strategy. |
 | **Circuit Breaker** | N/A (in-process) |
-| **Error Handling** | `ELK_INIT_FAILED`, `ELK_TIMEOUT`, `ELK_INVALID_OUTPUT` propagated as tool errors |
+| **Error Handling** | ELK init failure, timeout and invalid output are internally caught and surfaced as the generic `LAYOUT_FAILED` tool error (§12.1.1 error-code mapping, v1.1) |
 
 **Request (Internal — `buildElkGraph` + `runElkLayout`):**
 
@@ -1855,9 +1948,9 @@ interface ElkLayoutResponse {
 **Error Response:**
 
 ```typescript
-- Error: "ELK layout timed out after 10000ms" → ELK_TIMEOUT
-- Error: "ELK returned invalid coordinates for node 'X'" → ELK_INVALID_OUTPUT
-- Import/constructor failure → ELK_INIT_FAILED
+- Error: "ELK layout timed out after 10000ms" → internally ELK_TIMEOUT, surfaced to the caller as LAYOUT_FAILED
+- Error: "ELK returned invalid coordinates for node 'X'" → internally ELK_INVALID_OUTPUT, surfaced as LAYOUT_FAILED
+- Import/constructor failure → internally ELK_INIT_FAILED, surfaced as LAYOUT_FAILED
 ```
 
 #### 12.2.2 draw.io Desktop CLI (External Process)
@@ -1958,56 +2051,92 @@ await orchestrationEngine.executeUpstreamTool('puppeteer', 'screenshot', {
 #### 12.3.1 Verify Loop Algorithm (Core Orchestration)
 
 ```typescript
+// Mirrors drawio-verify-loop.ts (working tree, SA4E-406 fix round).
+const MAX_ITERATIONS = 3;   // verify-loop budget (BRD STORY 2) — target contract: max_iterations (OI-11)
+const SPACING_STEP = 40;    // additive px between passes, grid multiple — target contract: spacing_increment (OI-4/OI-11)
+
 async function handleApply(
   rawXml: string, graph: DiagramGraph, issues: LayoutIssue[],
-  nodeCount: number, args: Record<string, unknown>, filePath: string
+  nodeCount: number, args: Record<string, unknown>, filePath: string, root: RootInfo
 ): Promise<string> {
   if (nodeCount > MAX_NODES) return error(`Diagram too large (${nodeCount} nodes, max ${MAX_NODES})`);
-  
-  const normalized = normalizeLayoutArgs(args);
-  const originalXml = rawXml;
-  const initialHighMedIssues = issues.filter(i => i.severity !== 'low').length;
-  let currentXml = rawXml, currentIssues = issues, currentGraph = graph;
-  const iterationHistory = [];
+  const spacing = normalizeLayoutArgs(args).spacing;
+  const history: IterationRecord[] = [];
+  let currentRaw = rawXml, currentIssues = issues, step = spacing;
+  let best: { xml: string; blocking: number } | null = null;
+  let last: StrategySignal | null = null;
 
-  for (let iteration = 1; iteration <= normalized.maxIterations; iteration++) {
-    const strategy = selectFixStrategy(currentGraph, currentIssues, normalized);
-    let result;
-    switch (strategy) {
-      case 'ports': result = await applyPortsOnlyFix(currentXml, currentGraph, currentIssues, filePath); break;
-      case 'local': result = await applyLocalRepair(currentXml, currentGraph, currentIssues, normalized, filePath); break;
-      case 'elk': result = await applyElkRelayout(currentXml, currentGraph, currentIssues, normalized, filePath); break;
-    }
-    if (!result.changed) { if (strategy === 'ports') continue; if (strategy === 'local') continue; return result.errorResponse; }
-    validateReparse(result.xml);
-    fs.writeFileSync(filePath, result.xml, 'utf-8');
-    currentXml = result.xml;
-    const { graph: afterGraph } = parseDrawio(filePath);
-    currentGraph = afterGraph;
-    currentIssues = detectAllIssues(afterGraph);
-    const remainingHighMed = currentIssues.filter(i => i.severity !== 'low').length;
-    iterationHistory.push({ iteration, issues_before: currentIssues.length, issues_after: remainingHighMed, strategy_used: strategy });
-    if (remainingHighMed === 0) return successResponse({ status: 'fixed', message: `Fixed ${issues.length} issues with ${strategy} strategy. ${result.repositionedNodes.length} nodes repositioned.`, remaining_issues: 0, iteration_history: iterationHistory, strategy_used: strategy });
-    normalized.spacing = Math.min(Math.round(normalized.spacing * (1 + normalized.spacingIncrement / 100)), MAX_SPACING);
+  for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
+    const signal = await runStrategy(currentRaw, currentIssues, nodeCount, { ...args, spacing: step }, filePath, iteration > 1);
+    if (signal.error) return error(signal.error);
+    last = signal;
+    const afterXml = signal.wrote ? fs.readFileSync(filePath, 'utf-8') : currentRaw;
+    const afterIssues = detectAllIssues(parseDrawioXml(afterXml));
+    const blocking = blockingCount(afterIssues);            // high/medium only — low is cosmetic
+    history.push({ iteration, action: signal.strategy, issues_before: blockingCount(currentIssues), issues_after: blocking, spacing: step });
+    if (blocking === 0) { best = { xml: afterXml, blocking: 0 }; break; }
+    if (!best || blocking < best.blocking) best = { xml: afterXml, blocking };
+    if (signal.status === 'already_good' || iteration === MAX_ITERATIONS) break;
+    currentRaw = afterXml; currentIssues = afterIssues;
+    step += SPACING_STEP;                                    // additive, grid-aligned
   }
-  
-  const finalHighMed = currentIssues.filter(i => i.severity !== 'low').length;
-  if (finalHighMed > initialHighMed) {
-    fs.writeFileSync(filePath, originalXml, 'utf-8');
-    return successResponse({ status: 'partial', message: `Partial fix: ${initialHighMed} initial issues → ${finalHighMed} after ${normalized.maxIterations} iterations. Original restored.`, remaining_issues: initialHighMed, iteration_history: iterationHistory });
-  }
-  return successResponse({ status: 'partial', message: `Partial fix: ${initialHighMed} initial issues → ${finalHighMed} after ${normalized.maxIterations} iterations.`, remaining_issues: finalHighMed, iteration_history: iterationHistory });
+  return finalize(best!, last!, history, rawXml, issues, graph, filePath, root);
 }
 
-function selectFixStrategy(graph: DiagramGraph, issues: LayoutIssue[], normalized: NormalizedArgs): 'ports' | 'local' | 'elk' {
-  if (normalized.scope === 'ports') return 'ports';
-  if (normalized.scope === 'positions') return 'elk';
-  const ratio = violationRatio(graph, issues);
-  if (normalized.relayout || ratio > RELAYOUT_RATIO) return 'elk';
-  const hasEdgeRoutingIssues = issues.some(i => ['edge_node_crossing', 'edge_edge_crossing', 'edge_container_crossing'].includes(i.type));
-  const hasNodePositionIssues = issues.some(i => ['node_overlap', 'child_outside_container'].includes(i.type));
-  if (hasEdgeRoutingIssues && !hasNodePositionIssues) return 'ports';
-  return 'local';
+/** Keep the best pass, roll back a worse last one, assemble the A2 contract. */
+function finalize(best, last, history, initialRaw, initialIssues, initialGraph, filePath, root): string {
+  const rolledBack = restoreBest(best, filePath);            // rewrite best.xml if the file holds a worse pass
+  const finalGraph = parseDrawioXml(fs.readFileSync(filePath, 'utf-8'));
+  const finalIssues = detectAllIssues(finalGraph);
+  const finalBlocking = blockingCount(finalIssues);
+  const wrote = fs.readFileSync(filePath, 'utf-8') !== initialRaw;
+  const status: LayoutStatus = !wrote && blockingCount(initialIssues) === 0
+    ? 'already_good'
+    : finalBlocking === 0 ? 'fixed' : 'partial';
+  return outcomeJson({                                       // drawio-result.ts — fixed key order
+    status,
+    message: messageOf(last, status, finalBlocking, rolledBack),
+    remaining_issues: finalBlocking,
+    iteration_history: history,
+    issues: finalIssues,
+    repositioned_nodes: movedNodes(initialGraph, finalGraph), // {id, x_old, y_old, x_new, y_new}
+    strategy_used: last.strategy,
+    effective_root: root.effective_root,
+    root_source: root.root_source,
+    nodes: finalGraph.nodes.length + finalGraph.containers.length,
+    edges: finalGraph.edges.length,
+  }, root);
+}
+```
+
+```typescript
+// Mirrors the dispatch in drawio-apply-strategy.ts — the real strategy value domain.
+async function dispatch(rawXml, graph, issues, nodeCount, args, filePath, forceRelayout): Promise<Dispatch> {
+  // Free-floating sequence diagram (lifelines/messages without terminals): connect it first
+  const drawn = normalizePointSequence(sanitizeDrawioXml(rawXml).xml);
+  if (drawn) return { strategy: 'sequence', json: sequenceRelayout(drawn.xml, issues, filePath, validateReparse) };
+  const sequence = detectSequenceDiagram(graph);
+  if (sequence.isSequence) {
+    return { strategy: 'sequence', json: sequenceRelayout(sanitizeDrawioXml(rawXml).xml, issues, filePath, validateReparse) };
+  }
+  const useCase = detectUseCaseDiagram(graph);
+  if (useCase) return { strategy: 'use_case', json: useCaseRelayout(rawXml, graph, useCase, issues, filePath, validateReparse) };
+  const normalized = normalizeLayoutArgs(args);
+  if (normalized.scope === 'ports') {
+    return { strategy: 'ports_only', json: handlePortsOnlyFix(rawXml, graph, issues, filePath) };
+  }
+  if (needsFullRelayout(graph, issues, normalized, forceRelayout)) {
+    const name = normalized.algorithm === 'layered' ? 'humanized_layered' : `elk_${normalized.algorithm}`;
+    return { strategy: name, json: await elkRelayout(rawXml, graph, issues, normalized, filePath) };
+  }
+  return { strategy: 'local_repair', json: await localRepairPath(rawXml, graph, issues, normalized, filePath) };
+}
+
+/** Full relayout when forced, or when the damage is structural/widespread. */
+function needsFullRelayout(graph, issues, normalized, forceRelayout): boolean {
+  return forceRelayout || normalized.relayout || normalized.scope === 'positions'
+    || issues.some(i => i.type === 'extreme_aspect_ratio')
+    || violationRatio(graph, issues) > RELAYOUT_RATIO;   // RELAYOUT_RATIO = 0.4
 }
 ```
 
@@ -2194,7 +2323,7 @@ function containsFolded(root, candidate) {
 | Category | ID | Requirement | Quantified Target | Measurement Method | Source |
 |----------|----|-------------|-------------------|-------------------|--------|
 | **Performance** | NFR-P1 | Detection pipeline latency | < 500ms p95 for ≤50 nodes | Tool call timing | BRD NFR-1 |
-| **Performance** | NFR-P2 | Verify loop (3 iterations) | < 2s p95 for ≤50 nodes | Tool call timing (mode=apply) | BRD NFR-2 |
+| **Performance** | NFR-P2 | Verify loop (3 iterations) | < 2s p95 for ≤50 nodes | Tool call timing (verify loop) | BRD NFR-2 |
 | **Performance** | NFR-P3 | ELK layered layout | < 1s p95 for ≤50 nodes | `runElkLayout` timing | BRD NFR-3 |
 | **Performance** | NFR-P4 | ELK stress layout | < 3s p95 for ≤30 nodes | `runElkLayout` timing | BRD NFR-3 |
 | **Performance** | NFR-P5 | PNG export (CLI) | < 10s p95 | `exportWithCli` timing | BRD NFR-4 |
@@ -2204,7 +2333,7 @@ function containsFolded(root, candidate) {
 | **Security** | NFR-S2 | No network in layout | Zero outbound connections during layout | Network monitor during test | BRD NFR-6 |
 | **Security** | NFR-S3 | CLI stdio not logged | Zero CLI output in logs | Log inspection | BRD NFR-7 |
 | **Security** | NFR-S4 | Error messages generic | No filesystem paths in security errors | Error response inspection | BRD NFR-5, SEC-05 |
-| **Reliability** | NFR-R1 | Verify loop rollback | 100% restore when final > initial | TC-15 test case | BRD NFR-9 |
+| **Reliability** | NFR-R1 | Verify loop rollback | 100% rollback of a worse last pass to the best result (`restoreBest`) | TC-15 test case | BRD NFR-9 |
 | **Reliability** | NFR-R2 | Graceful renderer degradation | CLI→Chrome→Puppeteer→hidden | Renderer unavailable simulation | BRD NFR-8 |
 | **Reliability** | NFR-R3 | ELK timeout handling | Returns error, not hang | `SA4E_ELK_TIMEOUT_MS=1000` test | BRD NFR-3, BR-18 |
 | **Maintainability** | NFR-M1 | No external XML deps | 0 XML parser dependencies | `package.json` audit | BRD NFR-10 |
@@ -2222,15 +2351,16 @@ function containsFolded(root, candidate) {
 | ID | Issue | Description | Impact | Owner | Target Date | Status |
 |----|-------|-------------|--------|-------|-------------|--------|
 | OI-1 | Legacy resolve behavior discrepancy | SA4E-356: Legacy `resolveFilePath` error message echoes resolved path (potential info leak). New resolver uses generic message. Need to align or document intentional difference. | Medium | TA / DEV | 2026-11-16 | Open |
-| OI-2 | `stress` algorithm not in ALGORITHM_MAP | Code `elk-layout.ts` maps `layered/force/mrtree/radial` but BRD/FSD mention `stress`. `org.eclipse.elk.stress` exists in ELK.js. | Medium | DEV | 2026-11-16 | Open |
+| OI-2 | `stress` algorithm not in ALGORITHM_MAP | Code `elk-layout.ts` maps `layered/force/mrtree/radial` but BRD/FSD mention `stress`. `org.eclipse.elk.stress` exists in ELK.js. **Being implemented:** the SA4E-406 fix round adds `stress` to the algorithm map and enum (see §12.1.1 disposition table). | Medium | DEV | 2026-11-16 | In progress — fix round |
 | OI-3 | `mrtree` vs `radial` algorithm naming | Code uses `mrtree` (ELK: `org.eclipse.elk.mrtree`), FSD says `radial` is circular. Actually `mrtree` is tree layout, `radial` is circular. Both exist. | Low | TA | 2026-11-16 | Open |
-| OI-4 | Verify loop spacing increment logic | Current: `spacing = Math.min(spacing * (1 + increment/100), MAX_SPACING)`. Is compounding correct? Or should increment be additive? | Low | DEV | 2026-11-23 | Open |
+| OI-4 | Verify loop spacing increment logic | **Updated (v1.2).** The landed verify loop uses an **additive** step: `step += SPACING_STEP` with `SPACING_STEP = 40` px per pass (a 10px-grid multiple, so the snap is preserved — `drawio-verify-loop.ts`). The compounding %-formula question is moot for the current code. Remaining decision for DEV: when the fix round wires the `spacing_increment` input (OI-11), decide whether it replaces the 40 px constant (and with what semantics — % of base spacing vs. px) or stays a no-op. | Low | DEV | 2026-11-23 | Open |
 | OI-5 | `drawio_export_png` tool hidden when no renderer | Current: `isExportPngAvailable()` caches result. If renderer becomes available later, tool stays hidden until restart. | Medium | DEV | 2026-11-23 | Open |
 | OI-6 | Chrome/Puppeteer MCP 3s sleep hardcoded | `sleep(3000)` before screenshot. May be too short for complex diagrams, too long for simple ones. | Low | DEV | 2026-11-30 | Open |
-| OI-7 | ELK `elk_options` passthrough validation | Currently any keys passed through. Invalid keys silently ignored by ELK. Should validate allowlisted keys? | Low | DEV | 2026-11-30 | Open |
+| OI-7 | ELK `elk_options` passthrough validation | **Resolved (v1.1):** `elk_options` was removed from the tool contract (§12.1.1) — nothing is passed through to ELK.js, so there is nothing to validate. | Low | DEV | 2026-11-30 | Resolved |
 | OI-8 | Multi-worktree allowlist registration API | `register_workspace` tool mentioned in BR-37 but not implemented in backend. Extension bridge needs this. | High | DEV / Extension | 2026-11-16 | Open |
 | OI-9 | Symlink escape check performance | `symlinkEscape()` walks up directory tree + `realpathSync`. Could be slow for deep paths. | Low | DEV | 2026-11-30 | Open |
 | OI-10 | `content_base64` + `output_base64` round-trip | Extension bridge sends `content_base64`, expects `output_base64`. Backend `drawio_auto_layout` doesn't support `content_base64` input (file-only). Gap for pure in-memory flow. | Medium | TA / DEV | 2026-11-16 | Open |
+| OI-11 | Contract items still pending from the fix round | **Updated (v1.2).** The **output** contract is now fully emitted by the fix-round code in the working tree (`drawio-verify-loop.ts` + `drawio-result.ts`, wired through `handleApply(..., root)` in `drawio-tool.ts`): `iteration_history`, `issues`, `repositioned_nodes`, `strategy_used`, `effective_root`, `root_source`, `nodes`, `edges` — QA may assert on them for fix-path responses (the early `already_good` short-circuit returns only `{status, message}`). **Still pending in the fix round:** (1) `stress` algorithm in the map + enum (OI-2); (2) `max_iterations` / `spacing_increment` as parsed inputs — today compiled constants `MAX_ITERATIONS = 3` / `SPACING_STEP = 40` px (`drawio-verify-loop.ts`); (3) `gap_threshold` / `overlap_threshold` wiring — `parseThresholdArgs()` exists in `drawio-apply-args.ts` but `configureDetectThresholds()` has no production caller, so detector thresholds stay at the compiled defaults. QA must not assert on these three until the fix round lands them. | High | DEV | 2026-11-16 | In progress — fix round |
 
 ---
 
@@ -2238,69 +2368,67 @@ function containsFolded(root, candidate) {
 
 > **Note:** The following draw.io XML diagrams should be created and placed in `documents/SA4E-406/diagrams/`. They are referenced in the Appendix (Section 11.1) but the XML source is provided here for version control.
 
+> **Diagram acceptance criteria (v1.1 — applies to every `.drawio` file in this ticket, including the samples below):**
+> 1. **Bare `<mxGraphModel>` root.** The file MUST start with `<mxGraphModel>` and contain a bare `<mxGraphModel><root>…</root></mxGraphModel>` structure — no `<mxfile>` wrapper, no `<diagram>` element (project rule `.code-intel/steering/shared-diagrams.md`; requirement BR-65 / `mxfile_root` in BRD STORY 7). `<mxfile>`-wrapped inputs are unwrapped preserving every cell exactly.
+> 2. **10 px grid.** Every node `x`/`y` coordinate MUST be a multiple of the 10 px grid (`gridSize="10"`) — no fractional values such as 2371.7 or 3575.7 (requirement BR-62 / `off_grid_alignment` in BRD STORY 7).
+
 #### 12.7.1 System Context Diagram (draw.io XML)
 
 ```xml
-<mxfile host="app.diagrams.net">
-  <diagram name="System Context" id="system-context">
-    <mxGraphModel dx="1000" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827">
-      <root>
-        <mxCell id="0"/><mxCell id="1" parent="0"/>
-        <mxCell id="ai-layer" value="AI Agent Layer" style="swimlane;html=1;startSize=26;fillColor=#E8F0FE;strokeColor=#1A73E8;" vertex="1" parent="1"><mxGeometry x="20" y="20" width="500" height="200" as="geometry"/></mxCell>
-        <mxCell id="ba" value="BA Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#1A73E8;" vertex="1" parent="ai-layer"><mxGeometry x="20" y="40" width="100" height="40" as="geometry"/></mxCell>
-        <mxCell id="sa" value="SA Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#1A73E8;" vertex="1" parent="ai-layer"><mxGeometry x="140" y="40" width="100" height="40" as="geometry"/></mxCell>
-        <mxCell id="qa" value="QA Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#1A73E8;" vertex="1" parent="ai-layer"><mxGeometry x="260" y="40" width="100" height="40" as="geometry"/></mxCell>
-        <mxCell id="devops" value="DevOps Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#1A73E8;" vertex="1" parent="ai-layer"><mxGeometry x="380" y="40" width="100" height="40" as="geometry"/></mxCell>
-        <mxCell id="bridge" value="Extension MCP Bridge" style="swimlane;html=1;startSize=26;fillColor=#FFF3E0;strokeColor=#F57C00;" vertex="1" parent="1"><mxGeometry x="560" y="20" width="300" height="200" as="geometry"/></mxCell>
-        <mxCell id="resolver" value="MultiWorktreePathResolver" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#F57C00;" vertex="1" parent="bridge"><mxGeometry x="20" y="40" width="130" height="40" as="geometry"/></mxCell>
-        <mxCell id="allowlist" value="WorkspaceAllowlist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#F57C00;" vertex="1" parent="bridge"><mxGeometry x="170" y="40" width="110" height="40" as="geometry"/></mxCell>
-        <mxCell id="orch" value="MCP Orchestration Engine" style="swimlane;html=1;startSize=26;fillColor=#E8F5E9;strokeColor=#388E3C;" vertex="1" parent="1"><mxGeometry x="20" y="250" width="400" height="150" as="geometry"/></mxCell>
-        <mxCell id="tools" value="Tool Registry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#388E3C;" vertex="1" parent="orch"><mxGeometry x="20" y="280" width="120" height="40" as="geometry"/></mxCell>
-        <mxCell id="findtools" value="find_tools" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#388E3C;" vertex="1" parent="orch"><mxGeometry x="160" y="280" width="100" height="40" as="geometry"/></mxCell>
-        <mxCell id="execdyn" value="execute_dynamic_tool" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#388E3C;" vertex="1" parent="orch"><mxGeometry x="280" y="280" width="100" height="40" as="geometry"/></mxCell>
-        <mxCell id="backend" value="Backend Services" style="swimlane;html=1;startSize=26;fillColor=#FCE4EC;strokeColor=#C2185B;" vertex="1" parent="1"><mxGeometry x="460" y="250" width="400" height="300" as="geometry"/></mxCell>
-        <mxCell id="layout" value="drawio_auto_layout" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#C2185B;" vertex="1" parent="backend"><mxGeometry x="20" y="280" width="150" height="40" as="geometry"/></mxCell>
-        <mxCell id="export" value="drawio_export_png" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#C2185B;" vertex="1" parent="backend"><mxGeometry x="20" y="340" width="150" height="40" as="geometry"/></mxCell>
-        <mxCell id="elk" value="ELK.js Layout Engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#C2185B;" vertex="1" parent="backend"><mxGeometry x="200" y="280" width="150" height="40" as="geometry"/></mxCell>
-        <mxCell id="renderers" value="Renderer Chain" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#C2185B;" vertex="1" parent="backend"><mxGeometry x="200" y="340" width="150" height="40" as="geometry"/></mxCell>
-        <mxCell id="ext" value="External Systems" style="swimlane;html=1;startSize=26;fillColor=#F3E5F5;strokeColor=#7B1FA2;" vertex="1" parent="1"><mxGeometry x="20" y="430" width="840" height="150" as="geometry"/></mxCell>
-        <mxCell id="cli" value="draw.io Desktop CLI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#7B1FA2;" vertex="1" parent="ext"><mxGeometry x="20" y="460" width="150" height="40" as="geometry"/></mxCell>
-        <mxCell id="chrome" value="Chrome DevTools MCP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#7B1FA2;" vertex="1" parent="ext"><mxGeometry x="190" y="460" width="150" height="40" as="geometry"/></mxCell>
-        <mxCell id="puppeteer" value="Puppeteer MCP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#7B1FA2;" vertex="1" parent="ext"><mxGeometry x="360" y="460" width="150" height="40" as="geometry"/></mxCell>
-        <mxCell id="fs" value="Workspace Filesystem" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#7B1FA2;" vertex="1" parent="ext"><mxGeometry x="530" y="460" width="150" height="40" as="geometry"/></mxCell>
-        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1A73E8;strokeWidth=2;" edge="1" parent="1" source="ai-layer" target="bridge"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F57C00;strokeWidth=2;" edge="1" parent="1" source="bridge" target="orch"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#388E3C;strokeWidth=2;" edge="1" parent="1" source="orch" target="layout"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#388E3C;strokeWidth=2;" edge="1" parent="1" source="orch" target="export"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;" edge="1" parent="1" source="layout" target="elk"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;" edge="1" parent="1" source="export" target="renderers"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7B1FA2;strokeWidth=2;" edge="1" parent="1" source="renderers" target="cli"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7B1FA2;strokeWidth=2;" edge="1" parent="1" source="renderers" target="chrome"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7B1FA2;strokeWidth=2;" edge="1" parent="1" source="renderers" target="puppeteer"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;" edge="1" parent="1" source="layout" target="fs"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;" edge="1" parent="1" source="export" target="fs"><mxGeometry relative="1" as="geometry"/></mxCell>
-      </root>
-    </mxGraphModel>
-  </diagram>
-</mxfile>
+<mxGraphModel dx="1000" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827">
+  <root>
+    <mxCell id="0"/><mxCell id="1" parent="0"/>
+    <mxCell id="ai-layer" value="AI Agent Layer" style="swimlane;html=1;startSize=26;fillColor=#E8F0FE;strokeColor=#1A73E8;" vertex="1" parent="1"><mxGeometry x="20" y="20" width="500" height="200" as="geometry"/></mxCell>
+    <mxCell id="ba" value="BA Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#1A73E8;" vertex="1" parent="ai-layer"><mxGeometry x="20" y="40" width="100" height="40" as="geometry"/></mxCell>
+    <mxCell id="sa" value="SA Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#1A73E8;" vertex="1" parent="ai-layer"><mxGeometry x="140" y="40" width="100" height="40" as="geometry"/></mxCell>
+    <mxCell id="qa" value="QA Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#1A73E8;" vertex="1" parent="ai-layer"><mxGeometry x="260" y="40" width="100" height="40" as="geometry"/></mxCell>
+    <mxCell id="devops" value="DevOps Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#1A73E8;" vertex="1" parent="ai-layer"><mxGeometry x="380" y="40" width="100" height="40" as="geometry"/></mxCell>
+    <mxCell id="bridge" value="Extension MCP Bridge" style="swimlane;html=1;startSize=26;fillColor=#FFF3E0;strokeColor=#F57C00;" vertex="1" parent="1"><mxGeometry x="560" y="20" width="300" height="200" as="geometry"/></mxCell>
+    <mxCell id="resolver" value="MultiWorktreePathResolver" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#F57C00;" vertex="1" parent="bridge"><mxGeometry x="20" y="40" width="130" height="40" as="geometry"/></mxCell>
+    <mxCell id="allowlist" value="WorkspaceAllowlist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#F57C00;" vertex="1" parent="bridge"><mxGeometry x="170" y="40" width="110" height="40" as="geometry"/></mxCell>
+    <mxCell id="orch" value="MCP Orchestration Engine" style="swimlane;html=1;startSize=26;fillColor=#E8F5E9;strokeColor=#388E3C;" vertex="1" parent="1"><mxGeometry x="20" y="250" width="400" height="150" as="geometry"/></mxCell>
+    <mxCell id="tools" value="Tool Registry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#388E3C;" vertex="1" parent="orch"><mxGeometry x="20" y="280" width="120" height="40" as="geometry"/></mxCell>
+    <mxCell id="findtools" value="find_tools" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#388E3C;" vertex="1" parent="orch"><mxGeometry x="160" y="280" width="100" height="40" as="geometry"/></mxCell>
+    <mxCell id="execdyn" value="execute_dynamic_tool" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#388E3C;" vertex="1" parent="orch"><mxGeometry x="280" y="280" width="100" height="40" as="geometry"/></mxCell>
+    <mxCell id="backend" value="Backend Services" style="swimlane;html=1;startSize=26;fillColor=#FCE4EC;strokeColor=#C2185B;" vertex="1" parent="1"><mxGeometry x="460" y="250" width="400" height="300" as="geometry"/></mxCell>
+    <mxCell id="layout" value="drawio_auto_layout" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#C2185B;" vertex="1" parent="backend"><mxGeometry x="20" y="280" width="150" height="40" as="geometry"/></mxCell>
+    <mxCell id="export" value="drawio_export_png" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#C2185B;" vertex="1" parent="backend"><mxGeometry x="20" y="340" width="150" height="40" as="geometry"/></mxCell>
+    <mxCell id="elk" value="ELK.js Layout Engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#C2185B;" vertex="1" parent="backend"><mxGeometry x="200" y="280" width="150" height="40" as="geometry"/></mxCell>
+    <mxCell id="renderers" value="Renderer Chain" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#C2185B;" vertex="1" parent="backend"><mxGeometry x="200" y="340" width="150" height="40" as="geometry"/></mxCell>
+    <mxCell id="ext" value="External Systems" style="swimlane;html=1;startSize=26;fillColor=#F3E5F5;strokeColor=#7B1FA2;" vertex="1" parent="1"><mxGeometry x="20" y="430" width="840" height="150" as="geometry"/></mxCell>
+    <mxCell id="cli" value="draw.io Desktop CLI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#7B1FA2;" vertex="1" parent="ext"><mxGeometry x="20" y="460" width="150" height="40" as="geometry"/></mxCell>
+    <mxCell id="chrome" value="Chrome DevTools MCP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#7B1FA2;" vertex="1" parent="ext"><mxGeometry x="190" y="460" width="150" height="40" as="geometry"/></mxCell>
+    <mxCell id="puppeteer" value="Puppeteer MCP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#7B1FA2;" vertex="1" parent="ext"><mxGeometry x="360" y="460" width="150" height="40" as="geometry"/></mxCell>
+    <mxCell id="fs" value="Workspace Filesystem" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#7B1FA2;" vertex="1" parent="ext"><mxGeometry x="530" y="460" width="150" height="40" as="geometry"/></mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1A73E8;strokeWidth=2;" edge="1" parent="1" source="ai-layer" target="bridge"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F57C00;strokeWidth=2;" edge="1" parent="1" source="bridge" target="orch"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#388E3C;strokeWidth=2;" edge="1" parent="1" source="orch" target="layout"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#388E3C;strokeWidth=2;" edge="1" parent="1" source="orch" target="export"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;" edge="1" parent="1" source="layout" target="elk"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;" edge="1" parent="1" source="export" target="renderers"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7B1FA2;strokeWidth=2;" edge="1" parent="1" source="renderers" target="cli"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7B1FA2;strokeWidth=2;" edge="1" parent="1" source="renderers" target="chrome"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7B1FA2;strokeWidth=2;" edge="1" parent="1" source="renderers" target="puppeteer"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;" edge="1" parent="1" source="layout" target="fs"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;" edge="1" parent="1" source="export" target="fs"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
 ```
 
 #### 12.7.2 Verify Loop Sequence Diagram (draw.io XML)
 
 ```xml
-<mxfile host="app.diagrams.net">
-  <diagram name="Verify Loop Sequence" id="sequence-verify-loop">
-    <mxGraphModel dx="1200" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827">
-      <root>
-        <mxCell id="0"/><mxCell id="1" parent="0"/>
-        <mxCell id="agent" value="AI Agent" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="40" y="20" width="120" height="1300" as="geometry"/></mxCell>
-        <mxCell id="bridge" value="Extension Bridge" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="200" y="20" width="150" height="1300" as="geometry"/></mxCell>
-        <mxCell id="tool" value="drawio_auto_layout" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="20" width="160" height="1300" as="geometry"/></mxCell>
-        <mxCell id="detector" value="Detection Engine" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="600" y="20" width="160" height="1300" as="geometry"/></mxCell>
-        <mxCell id="fixer" value="Fix Orchestrator" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="800" y="20" width="160" height="1300" as="geometry"/></mxCell>
-        <mxCell id="elk" value="ELK.js" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="1000" y="20" width="120" height="1300" as="geometry"/></mxCell>
-        <mxCell id="fs" value="Filesystem" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="1150" y="20" width="120" height="1300" as="geometry"/></mxCell>
-        <mxCell id="m1" value="drawio_auto_layout(file_path, mode=apply)" style="umlMessage;html=1;" edge="1" parent="1" source="agent" target="bridge"><mxGeometry y="60" relative="1" as="geometry"/></mxCell>
+<mxGraphModel dx="1200" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827">
+  <root>
+    <mxCell id="0"/><mxCell id="1" parent="0"/>
+    <mxCell id="agent" value="AI Agent" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="40" y="20" width="120" height="1300" as="geometry"/></mxCell>
+    <mxCell id="bridge" value="Extension Bridge" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="200" y="20" width="150" height="1300" as="geometry"/></mxCell>
+    <mxCell id="tool" value="drawio_auto_layout" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="20" width="160" height="1300" as="geometry"/></mxCell>
+    <mxCell id="detector" value="Detection Engine" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="600" y="20" width="160" height="1300" as="geometry"/></mxCell>
+    <mxCell id="fixer" value="Fix Orchestrator" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="800" y="20" width="160" height="1300" as="geometry"/></mxCell>
+    <mxCell id="elk" value="ELK.js" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="1000" y="20" width="120" height="1300" as="geometry"/></mxCell>
+    <mxCell id="fs" value="Filesystem" style="umlLifeline;html=1;" vertex="1" parent="1"><mxGeometry x="1150" y="20" width="120" height="1300" as="geometry"/></mxCell>
+    <mxCell id="m1" value="drawio_auto_layout(file_path)" style="umlMessage;html=1;" edge="1" parent="1" source="agent" target="bridge"><mxGeometry y="60" relative="1" as="geometry"/></mxCell>
         <mxCell id="m2" value="Resolved path + args" style="umlMessage;html=1;" edge="1" parent="1" source="bridge" target="tool"><mxGeometry y="100" relative="1" as="geometry"/></mxCell>
         <mxCell id="m3" value="detectAllIssues(graph)" style="umlMessage;html=1;" edge="1" parent="1" source="tool" target="detector"><mxGeometry y="140" relative="1" as="geometry"/></mxCell>
         <mxCell id="m4" value="issues[]" style="umlMessage;html=1;dashed=1;" edge="1" parent="1" source="detector" target="tool"><mxGeometry y="180" relative="1" as="geometry"/></mxCell>
@@ -2323,13 +2451,11 @@ function containsFolded(root, candidate) {
         <mxCell id="m16" value="NO & iter < max → increase spacing" style="umlMessage;html=1;" edge="1" parent="dec1" source="tool" target="tool"><mxGeometry y="570" relative="1" as="geometry"/></mxCell>
         <mxCell id="dec2" value="iter = max?" style="umlFrame;html=1;dashed=1;" vertex="1" parent="loop"><mxGeometry x="40" y="620" width="500" height="100" as="geometry"/></mxCell>
         <mxCell id="m17" value="Compare final vs initial" style="umlMessage;html=1;" edge="1" parent="dec2" source="tool" target="tool"><mxGeometry y="650" relative="1" as="geometry"/></mxCell>
-        <mxCell id="dec3" value="final > initial?" style="umlFrame;html=1;dashed=1;" vertex="1" parent="loop"><mxGeometry x="40" y="700" width="500" height="100" as="geometry"/></mxCell>
-        <mxCell id="m18" value="YES → restore original XML" style="umlMessage;html=1;" edge="1" parent="dec3" source="tool" target="fs"><mxGeometry y="730" relative="1" as="geometry"/></mxCell>
+        <mxCell id="dec3" value="last pass worse than best?" style="umlFrame;html=1;dashed=1;" vertex="1" parent="loop"><mxGeometry x="40" y="700" width="500" height="100" as="geometry"/></mxCell>
+        <mxCell id="m18" value="YES → roll back to best pass (restoreBest)" style="umlMessage;html=1;" edge="1" parent="dec3" source="tool" target="fs"><mxGeometry y="730" relative="1" as="geometry"/></mxCell>
         <mxCell id="m19" value="status=partial + best history" style="umlMessage;html=1;" edge="1" parent="dec3" source="tool" target="agent"><mxGeometry y="770" relative="1" as="geometry"/></mxCell>
-      </root>
-    </mxGraphModel>
-  </diagram>
-</mxfile>
+  </root>
+</mxGraphModel>
 ```
 
 ---
@@ -2373,13 +2499,13 @@ function containsFolded(root, candidate) {
 {
   "tc-12-verify-1-iter": {
     "description": "3 overlaps resolved in 1 iteration",
-    "input": { "mode": "apply", "max_iterations": 3, "xml": "simple-overlap-diagram" },
-    "expected": { "status": "fixed", "iteration_history": [{ "iteration": 1, "issues_before": 3, "issues_after": 0 }] }
+    "input": { "max_iterations": 3, "xml": "simple-overlap-diagram" },
+    "expected": { "status": "fixed", "iteration_history": [{ "iteration": 1, "action": "local_repair", "issues_before": 3, "issues_after": 0, "spacing": 80 }] }
   },
   "tc-15-verify-rollback": {
-    "description": "Final iteration worse than initial → rollback",
-    "input": { "mode": "apply", "max_iterations": 3, "xml": "complex-diagram" },
-    "expected": { "status": "partial", "message": "contains 'Original restored'" }
+    "description": "Last pass worse than the best pass → roll back to best (restoreBest)",
+    "input": { "max_iterations": 3, "xml": "complex-diagram" },
+    "expected": { "status": "partial", "message": "contains 'rolled back to the best result'" }
   }
 }
 ```
@@ -2400,9 +2526,9 @@ function containsFolded(root, candidate) {
 #### 12.9.2 Tool Definition Constants (Source of Truth)
 
 ```typescript
-export const DRAWIO_TOOL_DEFINITION = { name: 'drawio_auto_layout', description: 'Analyze and auto-fix draw.io diagram layout...', inputSchema: { type: 'object', properties: { file_path: { type: 'string', description: 'Path to .drawio file...' }, algorithm: { type: 'string', enum: ['layered', 'force', 'mrtree', 'radial'], default: 'layered' }, spacing: { type: 'number', default: 80 }, direction: { type: 'string', enum: ['DOWN', 'RIGHT', 'LEFT', 'UP'], default: 'DOWN' }, ...baseDirSchemaProperties('file_path'), }, required: ['file_path'], } };
+export const DRAWIO_TOOL_DEFINITION = { name: 'drawio_auto_layout', description: 'Analyze and auto-fix draw.io diagram layout...', inputSchema: { type: 'object', properties: { file_path: { type: 'string', description: 'Path to .drawio file...' }, algorithm: { type: 'string', enum: ['layered', 'stress', 'force', 'mrtree', 'radial'], default: 'layered', description: 'stress added to the enum by the SA4E-406 fix round (see §12.6 OI-2)' }, spacing: { type: 'number', default: 80 }, direction: { type: 'string', enum: ['DOWN', 'RIGHT', 'LEFT', 'UP'], default: 'DOWN' }, ...baseDirSchemaProperties('file_path') }, required: ['file_path'] } };
 
-export const DRAWIO_EXPORT_PNG_DEFINITION = { name: 'drawio_export_png', description: 'Export .drawio XML content (base64) to PNG...', inputSchema: { type: 'object', properties: { content_base64: { type: 'string', description: 'Base64-encoded .drawio XML content' }, file_path: { type: 'string', description: 'Original file path (reference only)' }, ...baseDirSchemaProperties('file_path'), }, required: ['content_base64'], } };
+export const DRAWIO_EXPORT_PNG_DEFINITION = { name: 'drawio_export_png', description: 'Export .drawio XML content (base64) to PNG...', inputSchema: { type: 'object', properties: { content_base64: { type: 'string', description: 'Base64-encoded .drawio XML content' }, file_path: { type: 'string', description: 'Source .drawio path (extension-client contract) or reference path for logging (see §12.1.2)' }, output_path: { type: 'string', description: 'PNG output path; defaults to <file_path> with extension swapped (.drawio→.png)' }, ...baseDirSchemaProperties('file_path') }, required: ['content_base64'] } };
 ```
 
 #### 12.9.3 Detector Constants (Source of Truth)
@@ -2435,7 +2561,7 @@ const DEFAULT_SPACING_INCREMENT = 20;
 | All 6 Use Cases have Exception Flows | ✅ | UC-01..UC-06 all have EF/EF |
 | API Contracts complete (input/output/error schemas) | ✅ | Section 12.1 |
 | Integration specs have request/response schemas | ✅ | Section 12.2 |
-| Pseudocode provided for complex logic | ✅ | Section 12.3 (4 algorithms) |
+| Pseudocode provided for complex logic | ✅ | Section 12.3 (verify loop + 3 fix strategies) |
 | Data model verified against codebase | ✅ | Section 12.4 (3 discrepancies noted) |
 | NFRs quantified with measurement methods | ✅ | Section 12.5 (22 NFRs) |
 | Open issues documented with owners/dates | ✅ | Section 12.6 (10 issues) |

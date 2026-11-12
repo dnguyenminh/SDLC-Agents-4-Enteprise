@@ -1,6 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2026-11-09T00:00:00.000Z" agent="5.0 (Windows)" etag="sequence-verify-loop" version="24.7.6" type="device">
-  <diagram name="Verify Loop Sequence" id="verify-loop">
-    <mxGraphModel dx="1422" dy="784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+<mxGraphModel dx="1422" dy="784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
@@ -10,7 +8,7 @@
         <mxCell id="elk" value="elk-layout.ts" style="shape=umlLifeline;perimeter=lifelinePerimeter;container=0;collapsible=0;size=80;rounded=1;whiteSpace=wrap;html=1;fillColor=#ce93d8;strokeColor=#6a1b9a;fontSize=11;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="1148.4" y="40" width="160" height="1136" as="geometry"/></mxCell>
         <mxCell id="detection" value="drawio-detection.ts" style="shape=umlLifeline;perimeter=lifelinePerimeter;container=0;collapsible=0;size=80;rounded=1;whiteSpace=wrap;html=1;fillColor=#ffb74d;strokeColor=#e65100;fontSize=11;" vertex="1" parent="1"><mxGeometry x="587.4" y="40" width="180" height="1136" as="geometry"/></mxCell>
         <mxCell id="writer" value="drawio-writer.ts" style="shape=umlLifeline;perimeter=lifelinePerimeter;container=0;collapsible=0;size=80;rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a;fontSize=11;" vertex="1" parent="1"><mxGeometry x="1404.2" y="40" width="160" height="1136" as="geometry"/></mxCell>
-        <mxCell id="msg1" value="drawio_auto_layout(mode=apply, file_path)" style="html=1;fontSize=10;strokeColor=#e65100;strokeWidth=2;endArrow=block;exitX=0.5;exitY=0.1092;exitDx=0;exitDy=0;entryX=0.5;entryY=0.1092;entryDx=0;entryDy=0;verticalAlign=bottom;" edge="1" parent="1" source="agent" target="tool"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="msg1" value="drawio_auto_layout(file_path)" style="html=1;fontSize=10;strokeColor=#e65100;strokeWidth=2;endArrow=block;exitX=0.5;exitY=0.1092;exitDx=0;exitDy=0;entryX=0.5;entryY=0.1092;entryDx=0;entryDy=0;verticalAlign=bottom;" edge="1" parent="1" source="agent" target="tool"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="msg2" value="parseDrawio → DiagramGraph" style="html=1;fontSize=10;strokeColor=#e65100;strokeWidth=2;endArrow=block;exitX=0.5;exitY=0.1479;exitDx=0;exitDy=0;entryX=0.5;entryY=0.1725;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;rounded=0;align=left;verticalAlign=middle;spacingLeft=4;" edge="1" parent="1" source="tool" target="tool"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="486.6" y="208"/><mxPoint x="486.6" y="236"/></Array></mxGeometry></mxCell>
         <mxCell id="msg3" value="detectAllIssues(graph)" style="html=1;fontSize=10;strokeColor=#e65100;strokeWidth=2;endArrow=block;exitX=0.5;exitY=0.2113;exitDx=0;exitDy=0;entryX=0.5;entryY=0.2113;entryDx=0;entryDy=0;verticalAlign=bottom;" edge="1" parent="1" source="tool" target="detection"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="msg4" value="issues[] (3 high)" style="html=1;fontSize=10;strokeColor=#e65100;strokeWidth=2;endArrow=block;exitX=0.5;exitY=0.25;exitDx=0;exitDy=0;entryX=0.5;entryY=0.25;entryDx=0;entryDy=0;verticalAlign=bottom;" edge="1" parent="1" source="detection" target="tool"><mxGeometry relative="1" as="geometry"/></mxCell>
@@ -33,5 +31,3 @@
         <mxCell id="note3" value="ELK Graph Building:&#xa;• Containers → children + padding&#xa;• Edges: internal vs cross-container&#xa;• Root: algorithm, direction, spacing&#xa;• hierarchyHandling: INCLUDE_CHILDREN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a;fontSize=10;" vertex="1" parent="1"><mxGeometry x="1604.2" y="320" width="220" height="140" as="geometry"/></mxCell>
       </root>
     </mxGraphModel>
-  </diagram>
-</mxfile>

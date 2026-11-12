@@ -4,16 +4,16 @@
   "phases": {
     "requirements": { "status": "done", "file": "BRD.md", "version": 1, "completedAt": "2026-11-09T00:00:00Z" },
     "specification": { "status": "done", "file": "FSD.md", "version": 1, "completedAt": "2026-11-09T00:00:00Z" },
-    "design": { "status": "done", "file": "TDD.md", "version": 1, "completedAt": "2026-11-09T00:30:00Z" },
-    "feedback_loop": { "status": "done", "iterations": 0, "maxIterations": 5 },
-    "test_planning": { "status": "done", "file": "STP.md, STC.md", "version": 1, "completedAt": "2026-11-09T01:30:00Z", "review": "approved" },
-    "implementation": { "status": "done", "file": "source code", "version": 1, "completedAt": "2026-11-09T02:00:00Z" },
+    "design": { "status": "done", "file": "TDD.md", "version": 1, "completedAt": "2026-11-09T00:30:00Z", "note": "TDD v1.1 (2026-11-12) — stale backend fixture references re-pointed to the ticket diagram corpus" },
+    "feedback_loop": { "status": "done", "iterations": 4, "maxIterations": 5 },
+    "test_planning": { "status": "done", "file": "STP.md, STC.md", "version": 2, "completedAt": "2026-11-12T16:45:00Z", "review": "approved", "note": "STP v2.2 / STC v2.2 — PD-QA1 closed, QA-20 regression lock added" },
+    "implementation": { "status": "done", "file": "source code", "version": 4, "completedAt": "2026-11-12T16:20:00Z", "note": "Fix round 4 complete: 30-item defect round + F1 batch writer (158,092 ms -> 26 ms) + F2 file-level symlink guard + F3 backend execFileSync + F4 ctx.sessionRoot threading + F5 handler signature + F9 sanitizeLogText + PD-QA1 ports-only snap-only gate. Compile 0 errors, drawio suite 171/171 green" },
     "user_guide": { "status": "done", "file": "UG.md", "version": 1, "completedAt": "2026-11-09T03:30:00Z", "review": "BA approved, QA verified" },
-    "testing": { "status": "done", "file": "TEST-REPORT.md", "version": 1, "completedAt": "2026-11-09T04:00:00Z" },
-    "uat": { "status": "not_started", "file": "UAT-CHECKLIST.md, UAT-READINESS.md", "version": null },
-    "deployment": { "status": "done", "file": "DPG.md, RLN.md", "version": 1, "completedAt": "2026-11-08T23:45:00Z" }
+    "testing": { "status": "done", "file": "TEST-REPORT.md", "version": 3, "completedAt": "2026-11-12T17:00:00Z", "review": "approved", "note": "TEST-REPORT v3.2 — verdict PASS (was CONDITIONAL PASS). All prior blockers closed: dev FAIL 8 blockers -> 0, qa FAIL 5 blockers/14 gaps -> 0, security 1 HIGH/3 MED/2 LOW -> 0 open (F1 HIGH fixed by batch writer, F2/F3/F4/F5/F9 fixed). QA-11 re-enabled and passing, 0 defect-gated skips (6 env-gated live-proxy skips only)" },
+    "uat": { "status": "not_started", "file": "UAT-CHECKLIST.md, UAT-READINESS.md", "version": 1, "note": "Manual SIT-01..08 scheduled 2026-11-13/14 (TEST-REPORT v3.2 section 3). UAT-READINESS v1.1 — stale fixture references re-pointed to the ticket corpus" },
+    "deployment": { "status": "done", "file": "DPG.md, RLN.md", "version": 2, "completedAt": "2026-11-08T23:45:00Z", "note": "DPG v1.1 / RLN v1.0.1 (2026-11-12) — stale fixture references re-pointed; release tag v1.55.18 to be re-pointed to the new merge commit" }
   },
-  "lastUpdated": "2026-11-09T04:00:00Z",
-  "jiraStatus": "Done",
+  "lastUpdated": "2026-11-12T17:05:00Z",
+  "jiraStatus": "In Progress",
   "lastCommentProcessed": "2026-11-08T14:00:00Z"
 }

@@ -1,11 +1,9 @@
-<mxfile host="app.diagrams.net" modified="2026-11-09T00:00:00.000Z" agent="5.0 (Windows)" etag="deployment-diagram" version="24.7.6" type="device">
-  <diagram name="Deployment Diagram" id="deployment">
-    <mxGraphModel dx="1422" dy="784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+<mxGraphModel dx="1422" dy="784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         <!-- AI Agent Process -->
-        <mxCell id="agent-process" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#f3e5f5;strokeColor=#6a1b9a;" vertex="1" parent="1">
+        <mxCell id="agent-process" value="AI Agent Process" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#f3e5f5;strokeColor=#6a1b9a;" vertex="1" parent="1">
           <mxGeometry x="40" y="40" width="2208" height="230" as="geometry"/>
         </mxCell>
         <mxCell id="agent" value="BA/SA/QA/DevOps Agent&#xa;- Calls MCP tools&#xa;- Generates/modifies .drawio XML" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a;fontSize=11;" vertex="1" parent="agent-process">
@@ -13,7 +11,7 @@
         </mxCell>
 
         <!-- Extension Host -->
-        <mxCell id="ext-host" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#e3f2fd;strokeColor=#1565c0;" vertex="1" parent="1">
+        <mxCell id="ext-host" value="Extension Host" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#e3f2fd;strokeColor=#1565c0;" vertex="1" parent="1">
           <mxGeometry x="40" y="270" width="2208" height="180" as="geometry"/>
         </mxCell>
         <mxCell id="bridge" value="Extension MCP Bridge&#xa;- Intercepts tool calls&#xa;- Extracts base_dir/workspace_root&#xa;- Validates against allowlist&#xa;- Resolves absolute path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontSize=11;" vertex="1" parent="ext-host">
@@ -27,7 +25,7 @@
         </mxCell>
 
         <!-- MCP Orchestration Engine -->
-        <mxCell id="orch" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fff3e0;strokeColor=#e65100;" vertex="1" parent="1">
+        <mxCell id="orch" value="MCP Orchestration Engine" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fff3e0;strokeColor=#e65100;" vertex="1" parent="1">
           <mxGeometry x="40" y="450" width="2208" height="180" as="geometry"/>
         </mxCell>
         <mxCell id="orch-server" value="Orchestration Server&#xa;- Tool Registry&#xa;- Request routing&#xa;- Upstream server management" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=11;fontStyle=1;" vertex="1" parent="orch">
@@ -41,7 +39,7 @@
         </mxCell>
 
         <!-- Backend Process -->
-        <mxCell id="backend" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fce4ec;strokeColor=#c2185b;" vertex="1" parent="1">
+        <mxCell id="backend" value="Backend Process" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fce4ec;strokeColor=#c2185b;" vertex="1" parent="1">
           <mxGeometry x="40" y="630" width="2208" height="180" as="geometry"/>
         </mxCell>
         <mxCell id="http" value="Backend HTTP Server&#xa;- Port 3000 (configurable)&#xa;- /health endpoint&#xa;- /api/health endpoint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#c2185b;fontSize=11;" vertex="1" parent="backend">
@@ -53,7 +51,7 @@
         <mxCell id="drawio-tools" value="Draw.io Tools&#xa;- drawio_auto_layout&#xa;- drawio_export_png" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ec407a;strokeColor=#c2185b;fontSize=11;fontStyle=1;" vertex="1" parent="backend">
           <mxGeometry x="1358" y="55" width="260" height="70" as="geometry"/>
         </mxCell>
-        <mxCell id="elk-engine" value="ELK.js Layout Engine&#xa;- elkjs (npm package)&#xa;- 4 algorithms: layered, stress, force, radial&#xa;- Compound node support (INCLUDE_CHILDREN)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ce93d8;strokeColor=#6a1b9a;fontSize=11;" vertex="1" parent="backend">
+        <mxCell id="elk-engine" value="ELK.js Layout Engine&#xa;- elkjs (npm package)&#xa;- 5 algorithms: layered, stress, force, mrtree, radial&#xa;- Compound node support (INCLUDE_CHILDREN)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ce93d8;strokeColor=#6a1b9a;fontSize=11;" vertex="1" parent="backend">
           <mxGeometry x="1668" y="50" width="260" height="80" as="geometry"/>
         </mxCell>
         <mxCell id="edge3" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e65100;strokeWidth=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="orch-server" target="http">
@@ -70,7 +68,7 @@
         </mxCell>
 
         <!-- Renderers -->
-        <mxCell id="renderers" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1">
+        <mxCell id="renderers" value="PNG Renderer Chain" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1">
           <mxGeometry x="40" y="810" width="2208" height="336" as="geometry"/>
         </mxCell>
         <mxCell id="renderer-detect" value="Renderer Detection (drawio-renderers.ts)&#xa;Priority: 1) draw.io CLI → 2) Chrome DevTools MCP → 3) Puppeteer MCP&#xa;Cached after first detection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;fontStyle=1;" vertex="1" parent="renderers">
@@ -96,7 +94,7 @@
         </mxCell>
 
         <!-- File System / Workspaces -->
-        <mxCell id="fs" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#f5f5f5;strokeColor=#616161;" vertex="1" parent="1">
+        <mxCell id="fs" value="File System" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#f5f5f5;strokeColor=#616161;" vertex="1" parent="1">
           <mxGeometry x="40" y="1146" width="2208" height="210" as="geometry"/>
         </mxCell>
         <mxCell id="allowlist" value="Workspace Allowlist (MCP_WORKSPACE_ROOTS)&#xa;- Configured at startup (env var or config file)&#xa;- Immutable in-memory Set&#xa;- Win32 case-fold membership&#xa;- Legacy mode: empty = single-root" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e0e0e0;strokeColor=#616161;fontSize=11;" vertex="1" parent="fs">
@@ -113,7 +111,7 @@
         </mxCell>
 
         <!-- Configuration -->
-        <mxCell id="config" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fff8e1;strokeColor=#f57f17;" vertex="1" parent="1">
+        <mxCell id="config" value="Configuration" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fff8e1;strokeColor=#f57f17;" vertex="1" parent="1">
           <mxGeometry x="40" y="1356" width="2208" height="230" as="geometry"/>
         </mxCell>
         <mxCell id="env" value="Environment Variables&#xa;MCP_WORKSPACE_ROOTS=path1:path2:path3&#xa;MCP_WORKSPACE_ROOTS_FILE=/etc/mcp/roots.txt&#xa;SA4E_ELK_MAX_NODES=500&#xa;SA4E_ELK_TIMEOUT_MS=10000&#xa;LOG_LEVEL=info&#xa;PORT=3000" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#f57f17;fontSize=11;" vertex="1" parent="config">
@@ -121,5 +119,3 @@
         </mxCell>
       </root>
     </mxGraphModel>
-  </diagram>
-</mxfile>

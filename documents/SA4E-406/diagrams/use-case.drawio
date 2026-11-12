@@ -30,7 +30,7 @@
 <mxGeometry x="231.8" y="244" width="180" height="70" as="geometry"/>
 </mxCell>
 
-<mxCell id="uc4" value="UC-04: ELK Compound Layout&#10;(layered/stress/force/radial&#10;+ compound nodes)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#1a73e8;fontSize=11;" vertex="1" parent="system_boundary">
+<mxCell id="uc4" value="UC-04: ELK Compound Layout&#10;(layered/stress/force/mrtree/radial&#10;+ compound nodes)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#1a73e8;fontSize=11;" vertex="1" parent="system_boundary">
 <mxGeometry x="276.4" y="344" width="200" height="80" as="geometry"/>
 </mxCell>
 

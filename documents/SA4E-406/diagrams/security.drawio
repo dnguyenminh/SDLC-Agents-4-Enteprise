@@ -1,13 +1,11 @@
-<mxfile host="app.diagrams.net" modified="2026-11-09T00:00:00.000Z" agent="5.0 (Windows)" etag="security-diagram" version="24.7.6" type="device">
-  <diagram name="Security Flow" id="security">
-    <mxGraphModel dx="1422" dy="784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+<mxGraphModel dx="1422" dy="784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         <mxCell id="input" value="Malicious Input&#xa;file_path, base_dir" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#c62828;fontSize=12;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="40" y="40" width="140" height="80" as="geometry"/>
         </mxCell>
-        <mxCell id="pipeline" value="" style="swimlane;fontStyle=1;horizontal=1;startSize=26;collapsible=1;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1">
+        <mxCell id="pipeline" value="Path Validation Pipeline (CWE-22)" style="swimlane;fontStyle=1;horizontal=1;startSize=26;collapsible=1;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1">
           <mxGeometry x="260" y="40" width="982" height="514" as="geometry"/>
         </mxCell>
         <mxCell id="step1" value="1. Input Validation&#xa;extractBaseDir()&#xa;- Reject non-string&#xa;- Reject empty/whitespace&#xa;- Reject NUL bytes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="pipeline">
@@ -81,5 +79,3 @@
         </mxCell>
       </root>
     </mxGraphModel>
-  </diagram>
-</mxfile>

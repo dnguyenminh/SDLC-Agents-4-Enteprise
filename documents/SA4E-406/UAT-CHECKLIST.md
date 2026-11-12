@@ -22,7 +22,7 @@
 
 | # | Scenario | Test Case | Pass/Fail | Notes |
 |---|----------|-----------|-----------|-------|
-| 6 | Fix → Re-detect | golden-deployment.drawio → fix → `remaining_issues` < original issues | ☐ | |
+| 6 | Fix → Re-detect | `documents/SA4E-406/diagrams/deployment.drawio` → fix → `remaining_issues` < original issues | ☐ | |
 | 7 | XML Valid After Fix | File sau fix parse được, không lỗi XML | ☐ | |
 | 8 | remaining_issues Match | `remaining_issues` count = actual issues sau re-detect | ☐ | |
 

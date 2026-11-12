@@ -9,8 +9,8 @@
 | Jira Ticket | SA4E-406 |
 | Title | drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration |
 | Author | DevOps Agent |
-| Version | 1.0 |
-| Date | 2026-11-08 |
+| Version | 1.1 |
+| Date | 2026-11-12 |
 | Status | Draft |
 | Related TDD | documents/SA4E-406/TDD.md (if exists) |
 
@@ -21,6 +21,7 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-11-08 | DevOps Agent | Initiate document — based on merge commit 3061986b |
+| 1.1 | 2026-11-12 | DevOps Agent | Re-pointed stale backend test-fixture references to surviving diagram corpus (deployment.drawio, sequence-verify-loop.drawio) |
 
 ---
 
@@ -148,7 +149,7 @@ SA4E-406 delivers critical improvements to the `drawio_auto_layout` MCP tool:
 
 ### 4.3 Verification Queries
 
-> Verification: Run drawio tools on test fixtures, verify output XML validity.
+> Verification: Run drawio tools on `documents/SA4E-406/diagrams/deployment.drawio` and `documents/SA4E-406/diagrams/sequence-verify-loop.drawio`, verify output XML validity.
 
 ### 4.4 Rollback Scripts
 

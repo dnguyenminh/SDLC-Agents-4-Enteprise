@@ -1,11 +1,9 @@
-<mxfile host="app.diagrams.net" modified="2026-11-09T00:00:00.000Z" agent="5.0 (Windows)" etag="component-diagram" version="24.7.6" type="device">
-  <diagram name="Component Diagram" id="component">
-    <mxGraphModel dx="1122" dy="684" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+<mxGraphModel dx="1122" dy="684" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         <!-- Shared Infrastructure -->
-        <mxCell id="shared" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#e3f2fd;strokeColor=#1565c0;" vertex="1" parent="1">
+        <mxCell id="shared" value="Shared Infrastructure (backend/src/shared/)" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#e3f2fd;strokeColor=#1565c0;" vertex="1" parent="1">
           <mxGeometry x="932" y="1286.3" width="932" height="544" as="geometry"/>
         </mxCell>
         <mxCell id="resolver" value="MultiWorktreePathResolver&#xa;- resolve()&#xa;- allowlistRoots()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontSize=11;" vertex="1" parent="shared">
@@ -43,7 +41,7 @@
         </mxCell>
 
         <!-- Draw.io Layout Engine -->
-        <mxCell id="engine" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fff3e0;strokeColor=#e65100;" vertex="1" parent="1">
+        <mxCell id="engine" value="Draw.io Layout Engine (backend/src/engine/tools/)" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fff3e0;strokeColor=#e65100;" vertex="1" parent="1">
           <mxGeometry x="40" y="322" width="2372" height="884.3" as="geometry"/>
         </mxCell>
         <mxCell id="tool" value="drawio-tool.ts&#xa;- handleDrawioLayout()&#xa;- DRAWIO_TOOL_DEFINITION" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=11;fontStyle=1;" vertex="1" parent="engine">
@@ -96,7 +94,7 @@
         </mxCell>
 
         <!-- Export Pipeline -->
-        <mxCell id="export" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1">
+        <mxCell id="export" value="Export Pipeline (backend/src/engine/tools/)" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1">
           <mxGeometry x="40" y="1286.3" width="812" height="344" as="geometry"/>
         </mxCell>
         <mxCell id="export-png" value="drawio-export-png.ts&#xa;- handleDrawioExportPng()&#xa;- DRAWIO_EXPORT_PNG_DEFINITION" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;fontStyle=1;" vertex="1" parent="export">
@@ -116,7 +114,7 @@
         </mxCell>
 
         <!-- MCP Integration -->
-        <mxCell id="mcp" value="" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fce4ec;strokeColor=#c2185b;" vertex="1" parent="1">
+        <mxCell id="mcp" value="MCP Integration (backend/src/engine/tools/)" style="swimlane;fontStyle=1;horizontal=0;startSize=26;collapsible=1;fillColor=#fce4ec;strokeColor=#c2185b;" vertex="1" parent="1">
           <mxGeometry x="40" y="40" width="252" height="202" as="geometry"/>
         </mxCell>
         <mxCell id="register" value="register-tools.ts&#xa;- CODE_INTEL_TOOL_DEFINITIONS&#xa;- TOOL_HANDLER_REGISTRY&#xa;- dispatchCodeIntelTool()&#xa;- CodeIntelContext injection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#c2185b;fontSize=11;fontStyle=1;" vertex="1" parent="mcp">
@@ -195,5 +193,3 @@
         </mxCell>
       </root>
     </mxGraphModel>
-  </diagram>
-</mxfile>

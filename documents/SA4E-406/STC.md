@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-406 |
 | Title | drawio_auto_layout: detector precision + verify loop + ELK compound + extension migration |
 | Author | QA Agent |
-| Version | 1.0 |
-| Date | 2026-11-09 |
+| Version | 2.2 |
+| Date | 2026-11-12 |
 | Status | Draft |
 | Related STP | STP-v1.0-SA4E-406.docx |
 | Related FSD | FSD-v1.0-SA4E-406.docx |
@@ -24,6 +24,9 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-11-09 | QA Agent | Initiate document — auto-generated from FSD use cases and business rules |
+| 2.0 | 2026-11-12 | QA Agent | QA rounds 1–3: added §11 QA Verification Suite — 15 tests across the 4 QA files + 7 dev-round verification tests reused as QA evidence (QA-D-01..07); documented skipped test QA-11 (PD-QA1 suspected production defect, scope=ports node move); RTM extended with BR-57..BR-65 and Story 7 AC-1..AC-9; execution counts recomputed 2026-11-12 |
+| 2.1 | 2026-11-12 | QA Agent | QA round 4 follow-up (SA4E-406 QA follow-up): re-enabled QA-11 in drawio-scope-args.test.ts — test still FAILS (node c moves 400,80→400,100) because `enforceFinalGate()` in drawio-verify-loop.ts:87 re-snaps the ports-only file WITHOUT `opts`, re-running `debunch()`; PD-QA1 remains OPEN (Major), test left skipped with updated TODO, production code NOT touched (role boundary); added QA-16..QA-19 to §11 (F1 drawio-xml-rewrite batch rewrite + 2,000-cell timing guard; F2 fs-guards file-level symlink escape; F4 drawio session-root threading); flipped TEST-REPORT verdict stays CONDITIONAL PASS (QA-11 skipped for unresolved PD-QA1); RTM coverage recomputed 128/128 and 162/162 = 100% (new test cases add coverage within existing requirements, no new requirements) |
+| 2.2 | 2026-11-12 | QA Agent | QA FINAL (close PD-QA1 + final verdict): QA-11 re-enabled and now PASS (drawio-verify-loop.ts:50-54 computes `portsOnly` once from original request scope; :79 passes `{portsOnly}` into `finalize`; :86,:89 forward `{portsOnly}` into `enforceFinalGate`; drawio-apply-validate.ts:79-86 `enforceFinalGate(filePath, opts?)` forwards `opts` to `snapDiagramToGrid`; drawio-grid-snap.ts:23-33 skips `debunch`/`separateContainers` when `opts?.portsOnly`); measured evidence — node c stays (400,80), honest `status='partial'`, `node_proximity` still reported, 3 distinct edge anchors (0.25/0.5/0.75). PD-QA1 → CLOSED (Major, fixed by DEV round 4c). Added regression lock `drawio-ports-only-positions.test.ts` as QA-20 (§11.1). QA-11 listed as ACTIVE (not skipped). Full suite re-measured: 462 files / 3,602 passed / 6 skipped (3,608), 0 failures; drawio suite 24 files / 171 passed / 0 skipped. RTM totals recomputed: 128/128 = 100% (Story 7 row extended with QA-20 within existing BR-57..BR-65, no new requirements). TEST-REPORT verdict → PASS (no test skipped due to unresolved production defect; 6 env-gated live-proxy skips remain, environment-gated not defect-gated). |
 
 ---
 
@@ -41,6 +44,7 @@
 | Regression Testing | TC-800 to TC-810 | 11 | Medium | IT, E2E-API |
 | E2E-API Test Cases | E2E-API-01 to E2E-API-10 | 10 | High | E2E-API |
 | SIT Manual Test Cases | SIT-01 to SIT-08 | 8 | Medium | SIT |
+| QA Verification Suite (rounds 1–3 + F1/F2/F4 hardening + QA-20 regression lock) | QA-01 to QA-20, QA-D-01 to QA-D-07 | 27 | High | UT/IT (tool-level, vitest) |
 
 ---
 
@@ -4580,7 +4584,72 @@ test("SA4E_ELK_TIMEOUT_MS and SA4E_ELK_MAX_NODES respected", async () => {
 
 ---
 
-## 11. Requirements Traceability Matrix (RTM)
+## 11. QA Verification Suite — Diagram Quality Guarantees (BRD STORY 7, BR-57..BR-65)
+
+Added in v2.0 (QA rounds 1–3, 2026-11-11/12) and extended in v2.1 (QA round 4 follow-up, 2026-11-12) with the F1/F2/F4 hardening tests. These test cases verify the STORY 7 guarantees **end-to-end through the real tool** (`executeLocalTool('drawio_auto_layout', …)` on temp-copy fixtures under an allowlisted `MCP_WORKSPACE_ROOTS`) and through the pure detectors. All are automated vitest tests; measured this session: **27/27 defined (QA-01..QA-20 plus QA-D-01..QA-D-07), 27 pass + 0 skipped** (QA-11 now ACTIVE and passing, PD-QA1 closed — see §11.3). New files: `drawio-xml-rewrite.test.ts` (F1), `fs-guards.symlink-file.test.ts` (F2, under `extension/src/services/__tests__/`), `drawio-session-root-f4.test.ts` (F4), `drawio-ports-only-positions.test.ts` (QA-20 regression lock for the `enforceFinalGate` fix).
+
+### 11.1 QA Round-3 Test Cases (the 4 QA files — 15 tests)
+
+| ID | Vitest File | Test | Requirement | Level | Priority | Status |
+|----|-------------|------|-------------|-------|----------|--------|
+| QA-01 | drawio-session-root-binding.test.ts | resolves and fixes a file whose base_dir sits under a trusted parent | BR-55, A6/A7 | IT | High | ✅ PASS |
+| QA-02 | drawio-session-root-binding.test.ts | rejects a base_dir under no parent with the exact allowlist code | BR-51, A6/A7 | IT | High | ✅ PASS |
+| QA-03 | drawio-final-gate.test.ts | snaps off-grid vertices, labels the unambiguous branch and drops stale hints | BR-62, BR-64 | UT | High | ✅ PASS |
+| QA-04 | drawio-final-gate.test.ts | already_good exit leaves a clean diagram byte-identical | BR-62 (idempotency gate) | UT | High | ✅ PASS |
+| QA-05 | drawio-final-gate.test.ts | preflight unwrap + repair: wrapped off-grid input ends unwrapped and on-grid | BR-65, BR-62 | IT | High | ✅ PASS |
+| QA-06 | drawio-final-gate.test.ts | adopt rewrite: boxes drawn over an empty band are adopted, then land on-grid | BR-62, BR-57 | IT | High | ✅ PASS |
+| QA-07 | drawio-final-gate.test.ts | report-only exit: positions stay untouched, titles are never invented | BR-63 (CONTENT-OWNED) | IT | High | ✅ PASS |
+| QA-08 | drawio-scope-args.test.ts | absent or unknown scope normalizes to auto | FSD 3.1.4 | UT | Medium | ✅ PASS |
+| QA-09 | drawio-scope-args.test.ts | accepts the three documented values verbatim | FSD 3.1.4 | UT | Medium | ✅ PASS |
+| QA-10 | drawio-scope-args.test.ts | spacing above the 500px cap is clamped, not rejected (BR-23) | BR-23 | UT | Medium | ✅ PASS |
+| QA-11 | drawio-scope-args.test.ts | writes one distinct exit anchor per fan edge and moves no node | BR-16 (honesty), FSD 3.1 ports-only contract | IT | High | ✅ **PASS — ACTIVE** (PD-QA1 closed by DEV round 4c, see 11.3) |
+| QA-12 | drawio-scope-args.test.ts | escalates to humanized_layered only when scope=positions asks for it | FSD 3.1.4 scope=positions | IT | High | ✅ PASS |
+| QA-13 | drawio-corridor-invariants.test.ts | re-plans every edge through the corridors: no edge over unrelated content | BR-59, BR-60 | IT | High | ✅ PASS |
+| QA-14 | drawio-corridor-invariants.test.ts | the skip edge detours around the middle lane step (background only) | BR-59 | IT | High | ✅ PASS |
+| QA-15 | drawio-corridor-invariants.test.ts | an unrelated edge-less band never becomes a corridor for lane edges | BR-59, BR-57 | IT | High | ✅ PASS |
+| QA-16 | drawio-xml-rewrite.test.ts | rewriteCells: multiple patches in one pass; untouched cells byte-identical; unknown id tolerated; duplicate last-wins; body replacement; self-closing skipped; unterminated cell completes; empty map identity (9 vitest tests) | BR-62 (grid-safe rewrite), BR-65 (bare mxGraphModel) | UT | High | ✅ PASS |
+| QA-17 | drawio-xml-rewrite.test.ts | scaled timing guard: 2,000-cell table completes < 2 s (no quadratic regression) | FSD §8 performance, BR-10 | UT | High | ✅ PASS |
+| QA-18 | fs-guards.symlink-file.test.ts | checkSymlinkGuardForPath: rejects workspace file that is itself a symlink outside root; allows regular file; allows non-existent path (ENOENT → new-file writes) (3 vitest tests) | BR-43, BR-55 (symlink escape), UC-06 | UT | Critical | ✅ PASS |
+| QA-19 | drawio-session-root-f4.test.ts | drawio_auto_layout resolves and rewrites a file under the bound ctx.sessionRoot (root_source=session), not legacy folders[0] | BR-39, BR-40, BR-41 (multi-worktree / session-root binding) | UT/IT | High | ✅ PASS |
+| QA-20 | drawio-ports-only-positions.test.ts | regression lock: on scope='ports' the apply→verify-loop→enforceFinalGate flow keeps all node positions (node c stays 400,80), spreads anchors (3 distinct exits), status='partial', node_proximity reported (FSD §3.1 ports-only contract) | BR-16 (honesty), FSD 3.1 ports-only contract | IT | High | ✅ PASS (QA-11 regression lock, DEV round 4c) |
+
+### 11.2 Dev-Round Verification Tests Reused as QA Evidence (QA-D-01..07)
+
+The dev round (2026-11-11) implemented the STORY 7 fixes; QA rounds 1–2 verified these tests against the BRD/FSD semantics and they are green in the 2026-11-12 full run. They provide the direct BR-57/58/61/64 coverage.
+
+| ID | Vitest File | Test | Requirement | Level | Priority | Status |
+|----|-------------|------|-------------|-------|----------|--------|
+| QA-D-01 | drawio-sa406-defects.test.ts | flags an oversized plain band and skips shared-length swimlanes | BR-57 | UT | High | ✅ PASS |
+| QA-D-02 | drawio-sa406-defects.test.ts | treats tight siblings as a medium issue and spreads them apart | BR-58 | UT | High | ✅ PASS |
+| QA-D-03 | drawio-sa406-defects.test.ts | reports (never labels) a decision with three branches | BR-64 (CONTENT-OWNED) | UT | High | ✅ PASS |
+| QA-D-04 | drawio-humanize-e2e.test.ts | leaves no blocking issues / no stale edge hints; re-parents cross-container edges to the root; output has no `childLayout=` | BR-59, BR-60, BR-61 | IT | High | ✅ PASS |
+| QA-D-05 | drawio-sa406-defects.test.ts | detects a cross-lane edge parented to one endpoint lane and repairs it | BR-60 | IT | High | ✅ PASS |
+| QA-D-06 | drawio-sa406-defects.test.ts | writes the bare `<mxGraphModel>` and never reintroduces `<mxfile>` | BR-65 | UT | High | ✅ PASS |
+| QA-D-07 | drawio-sa406-defects.test.ts | snaps every vertex to the grid so no off-grid cell remains | BR-62 | UT | High | ✅ PASS |
+
+### 11.3 PD-QA1 — Test QA-11 → CLOSED (fixed by DEV round 4c)
+
+| Field | Value |
+|-------|-------|
+| **ID** | PD-QA1 (test QA-11, now ACTIVE — `it.skip` removed) |
+| **Severity** | Major (contract violation, silent behaviour change) → **CLOSED** |
+| **Contract** | FSD §3.1 fix strategies: *"Ports Only (`scope=ports`): Redistribute edge anchor ports, **keep all node positions**"* |
+| **Observed (before fix)** | `repositioned_nodes=[{id:'c', x_old:400, y_old:80, x_new:400, y_new:100}]` — node `c` moves 20px although `scope='ports'`; `status='fixed'` instead of `'partial'`; `node_proximity` silently fixed, honesty contract broken |
+| **Observed (after DEV round 4c fix, measured this session)** | Node `c` stays (400,80); honest `status='partial'`; `node_proximity` still reported; 3 distinct edge anchors (exit y = 0.25/0.5/0.75), no entry keys; `repositioned_nodes=[]`. QA-11 assertions all pass. |
+| **Minimal repro** | Nodes `a(0,150) b(400,0) c(400,80) d(400,300)`, edges a→b/c/d, call `scope:'ports'`; node `c` sits 20px under `b` (< 40px gap threshold) |
+| **DEV round 4c fix references** | `drawio-verify-loop.ts:50-54` computes `portsOnly` once from the original request scope; `:79` passes `{portsOnly}` into `finalize`; `:86,:89` forward `{portsOnly}` into `enforceFinalGate`; `drawio-apply-validate.ts:79-86` `enforceFinalGate(filePath, opts?)` forwards `opts` to `snapDiagramToGrid`; `drawio-grid-snap.ts:23-33` skips `debunch()`/`separateContainers()` when `opts?.portsOnly`. (Round 4b partial: `drawio-grid-snap.ts:27-30`, `drawio-apply-validate.ts:59-65`, `drawio-apply-strategy.ts:173`.) |
+| **Root cause (resolved)** | `drawio-verify-loop.ts:87` `finalize()` called `enforceFinalGate(filePath)` **WITHOUT `opts`**, so `debunch()` re-ran on the ports-only file after `commitLayout` preserved positions. Now `opts` is forwarded through the final gate. |
+| **Verified correct parts** | Anchor redistribution honours the contract (e1/e2/e3 exit y = 0.25/0.5/0.75, no entry keys) — unchanged by the fix. |
+| **Regression lock** | `drawio-ports-only-positions.test.ts` (QA-20, §11.1): 2 tests — positions preserved through apply+verify+final-gate, anchors spread, final-gate invariants (on-grid, `<mxfile>`-free) enforced on the ports path. |
+| **QA action** | QA-11 re-enabled (`it.skip` removed), assertions unchanged, now **PASS**. PD-QA1 → CLOSED. QA-11 listed as ACTIVE (not skipped). Production code NOT touched by QA (role boundary); fix authored by DEV round 4c. |
+
+### 11.4 QA Round-3 Test-Fix Note (QA-15 fixture)
+
+QA-15 initially failed because its fixture band (400×180 = 72,000 px² ≥ `MIN_BAND_AREA` 60,000, single 120×60 child → fill 0.1 < `MIN_FILL` 0.2) is **genuinely oversized** — the detector correctly reports `band_oversize` (medium), a defect class orthogonal to the corridor invariant under test. Resolution: **test fixture fixed** (band resized to 200×150 = 30,000 px² < 60,000), expectation unchanged. QA-15 now passes and still asserts zero medium+ issues.
+
+---
+
+## 12. Requirements Traceability Matrix (RTM)
 
 | Requirement | Source | Test Cases | Coverage |
 |-------------|--------|------------|----------|
@@ -4597,6 +4666,7 @@ test("SA4E_ELK_TIMEOUT_MS and SA4E_ELK_MAX_NODES respected", async () => {
 | Story 4 AC-1 to AC-6 | BRD 2.3 | TC-025, TC-028, TC-333 to TC-337 | ✅ |
 | Story 5 AC-1 to AC-6 | BRD 2.3 | TC-022, TC-023, TC-024, TC-338 to TC-345 | ✅ |
 | Story 6 AC-1 to AC-6 | BRD 2.3 | TC-202, TC-209, TC-210, TC-211, TC-350, TC-351, TC-613 | ✅ |
+| Story 7 AC-1 to AC-9 (BR-57 to BR-65) | BRD 2.7 | QA-01 to QA-15, QA-D-01 to QA-D-07, QA-16 (F1 drawio-xml-rewrite), QA-17 (F1 2,000-cell timing guard), QA-18 (F2 fs-guards symlink), QA-19 (F4 session-root threading), QA-20 (ports-only positions regression lock, PD-QA1 close evidence) (STC §11) | ✅ |
 | NFR Performance | BRD 6, TDD 8 | TC-600 to TC-608 | ✅ |
 | NFR Security | BRD 6, TDD 7 | TC-609 to TC-615 | ✅ |
 | Error Codes | FSD 3.1.5, 3.2.5, 3.3.5, 3.4.5, 3.5.5, 3.6.5 | TC-200 to TC-225, TC-406 to TC-414, TC-810 | ✅ |
@@ -4606,14 +4676,16 @@ test("SA4E_ELK_TIMEOUT_MS and SA4E_ELK_MAX_NODES respected", async () => {
 | Category | Total | Covered | Coverage % |
 |----------|-------|---------|------------|
 | Use Cases | 6 | 6 | 100% |
-| Business Rules | 56 | 56 | 100% |
-| Acceptance Criteria | 26 | 26 | 100% |
+| Business Rules | 65 (BR-01..BR-65) | 65 | 100% |
+| Acceptance Criteria | 35 (Stories 1–7) | 35 | 100% |
 | Error Codes | 22 | 22 | 100% |
-| **Overall** | **110** | **110** | **100%** |
+| **Overall** | **128** | **128** | **100%** |
+
+> **Honesty note (recomputed 2026-11-12):** BR-63/BR-64 are CONTENT-OWNED — coverage means the tool **detects and reports** the issue and never invents content (QA-07, QA-D-03); the human/author supplies titles and Yes/No labels. All other STORY 7 guarantees are tool-owned and verified end-to-end. All 27 QA-suite tests pass (QA-01..QA-20 plus QA-D-01..QA-D-07), 0 skipped — QA-11 is ACTIVE and passing (PD-QA1 closed by DEV round 4c: `enforceFinalGate` in drawio-verify-loop.ts now forwards `portsOnly` to `snapDiagramToGrid`, so the final gate no longer re-runs `debunch` on the ports path; measured node c stays (400,80), honest `status='partial'`, `node_proximity` still reported). Regression lock QA-20 (`drawio-ports-only-positions.test.ts`) guards against reintroduction. New hardening tests QA-16..QA-19 add coverage for F1 (batch XML rewrite + timing guard), F2 (file-level symlink guard), and F4 (session-root threading) within existing requirements — no new requirements added, so the requirement totals are unchanged at 128/128 = 100%.
 
 ---
 
-## 12. Appendix
+## 13. Appendix
 
 ### Test Data Setup Scripts
 
@@ -4650,17 +4722,14 @@ export LOG_LEVEL=debug
 ### Test Execution Commands
 
 ```bash
-# Run all test levels
-npm run test:pbt      # Property-based tests
-npm run test:ut       # Unit tests
-npm run test:it       # Integration tests
-npm run test:e2e      # E2E-API tests
+# Drawio tool suite (QA verification suite included) — measured 2026-11-12 v2.1
+npx vitest run src/tools/drawio          # 23 files — 168 pass + 1 skipped (QA-11/PD-QA1)
 
-# Run specific test file
-npx vitest run tests/e2e/drawio-crud.e2e.test.ts
+# Full extension suite — measured 2026-11-12 v2.1
+npx vitest run                            # 460 files passed | 1 skipped (461); 3,599 tests passed | 7 skipped (3,606)
 
-# Run with coverage
-npm run test:coverage
+# Run one QA verification file
+npx vitest run src/tools/drawio/__tests__/drawio-final-gate.test.ts
 ```
 
 ---

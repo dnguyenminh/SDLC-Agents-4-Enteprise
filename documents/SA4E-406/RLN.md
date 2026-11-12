@@ -6,8 +6,8 @@
 
 | Field | Value |
 |-------|-------|
-| Version | v1.0.0 |
-| Release Date | 2026-11-08 |
+| Version | v1.0.1 |
+| Release Date | 2026-11-12 |
 | Jira Ticket | SA4E-406 |
 | Author | DevOps Agent |
 | Status | Released |
@@ -16,7 +16,7 @@
 
 ## Header
 
-### v1.0.0 — 2026-11-08
+### v1.0.1 — 2026-11-12
 
 **Release Notes for:** SDLC Agents 4 Enterprise — Backend MCP Server  
 **Ticket:** SA4E-406 — drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration
@@ -117,7 +117,7 @@
 | Test Level | Tests | Passed | Failed |
 |------------|-------|--------|--------|
 | Unit Tests (detect, repair, geometry, parser, writer, apply, tool) | 80 | 80 | 0 |
-| Golden Tests (deployment + sequence fixtures) | 4 | 4 | 0 |
+| Golden Tests (documents/SA4E-406/diagrams/deployment.drawio + sequence-verify-loop.drawio) | 4 | 4 | 0 |
 | Integration Tests (apply, export-png) | 3 | 3 | 0 |
 | E2E Tests (extension MCP bridge) | 2 | 2 | 0 |
 | **UAT Automation Tests** | **34** | **34** | **0** |

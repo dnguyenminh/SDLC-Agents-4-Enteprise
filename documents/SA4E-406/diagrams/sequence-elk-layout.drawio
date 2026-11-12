@@ -1,6 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2026-11-09T00:00:00.000Z" agent="5.0 (Windows)" etag="sequence-elk-layout" version="24.7.6" type="device">
-  <diagram name="ELK Layout Sequence" id="elk-layout">
-    <mxGraphModel dx="1422" dy="784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+<mxGraphModel dx="1422" dy="784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
@@ -36,5 +34,3 @@
         <mxCell id="note3" value="Compound Node Support:&#xa;• Containers mapped to ElkNode with children[]&#xa;• Single algorithm drives entire hierarchy&#xa;• Container resized to encompass children + margin&#xa;• Nested containers supported&#xa;• Cross-container edges at root level&#xa;• Internal edges within container" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#6a1b9a;fontSize=10;" vertex="1" parent="1"><mxGeometry x="1514.2" y="480" width="220" height="180" as="geometry"/></mxCell>
       </root>
     </mxGraphModel>
-  </diagram>
-</mxfile>
