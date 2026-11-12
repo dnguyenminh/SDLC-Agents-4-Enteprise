@@ -116,6 +116,7 @@ export function generateQualityReport(
       findings: sanitizedFindings,
       totalIssues: findings.length,
       severityBreakdown,
+      fileCount: totalFiles,
     };
     if (message) {
       report.message = message;

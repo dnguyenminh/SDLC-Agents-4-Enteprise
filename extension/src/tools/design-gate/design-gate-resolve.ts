@@ -36,9 +36,12 @@ export function resolveSourceRoot(
   const resolution = resolveWorkspacePath(sourcePath, { rootProvider: () => workspaceRoot });
   if (!resolution.ok) return genericReject(resolution.message);
   try {
-    // Nonexistent targets throw ENOENT: surfaced later by the scan, not a symlink escape.
-    if (fs.existsSync(resolution.resolvedPath)
-      && !isRealPathInside(workspaceRoot, resolution.resolvedPath)) {
+    // F-3: nonexistent target → isError with a workspace-RELATIVE path only.
+    if (!fs.existsSync(resolution.resolvedPath)) {
+      const rel = path.relative(workspaceRoot, resolution.resolvedPath);
+      return { ok: false, message: `PATH_NOT_FOUND: source_path does not exist: ${rel}` };
+    }
+    if (!isRealPathInside(workspaceRoot, resolution.resolvedPath)) {
       return genericReject(undefined);
     }
   } catch {

@@ -143,10 +143,12 @@ export class ImpeccableIntegrationService {
       let result: DetectionResult;
       if (cacheReuse) {
         const cached = getCachedResult(sourcePath, "static");
-        if (cached) {
+        // F-2: entries without a real fileCount (legacy cache) are a miss —
+        // never derive the scan scope from findings.length (false PASS).
+        if (cached && typeof cached.fileCount === "number") {
           result = {
             findings: cached.findings,
-            fileCount: cached.findings.length,
+            fileCount: cached.fileCount,
             durationMs: cached.durationMs || 0,
             cacheHit: true,
             partial: false,
@@ -157,7 +159,7 @@ export class ImpeccableIntegrationService {
             "static",
             threshold,
             undefined,
-            cached.fileCount ?? 0
+            cached.fileCount
           );
           return { result, report };
         }
@@ -166,13 +168,13 @@ export class ImpeccableIntegrationService {
       // Validate source path (C3: workspace-scoped)
       if (!isPathSafe(sourcePath)) {
         throw createDetectionError(DetectionError.INVALID_PATH,
-          `Source path escapes workspace root: ${sourcePath}`
+          "Source path escapes workspace root"
         );
       }
 
       if (!fs.existsSync(sourcePath)) {
         throw createDetectionError(DetectionError.INVALID_PATH,
-          `Source path does not exist: ${sourcePath}`
+          `Source path does not exist: ${path.relative(getWorkspaceRoot(), sourcePath)}`
         );
       }
 

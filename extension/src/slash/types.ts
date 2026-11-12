@@ -56,6 +56,8 @@ export interface QualityReport {
     medium: number;
     high: number;
   };
+  /** Number of files in the scan scope (denominator of the score). */
+  fileCount?: number;
   /** C6: sanitized error/fallback notice (never raw stack traces) */
   message?: string;
 }
