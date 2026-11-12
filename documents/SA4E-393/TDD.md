@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-393 |
 | Title | Integrate Impeccable design detection into SDLC Agents 4 Enterprise extension |
 | Author | SA Agent |
-| Version | 1.0 |
-| Date | 2026-10-31 |
+| Version | 1.1 |
+| Date | 2026-11-12 |
 | Status | Draft |
 | Related BRD | documents/SA4E-393/BRD.md |
 | Related FSD | documents/SA4E-393/FSD.md |
@@ -33,6 +33,7 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-10-31 | SA Agent | Initiate document — auto-generated from BRD and FSD |
+| 1.1 | 2026-11-12 | SA Agent | Addendum 4: post-implementation as-built notes for D1, D3, D5, D6 (root causes from commits dd1c5e5d, 88892218) + Open Issues. No diagram changes. |
 
 ---
 
@@ -817,6 +818,27 @@ internal paths. Cases:
 **Performance:** static full-workspace run ≈ 8s / ~447 design files (Addendum 3 C2 evidence).
 In-process call — zero backend round-trip; §8.3 concurrency caps unchanged.
 
+**As-built correction (v1.1) — bare `vscode` identifier (commit dd1c5e5d):**
+
+- *Symptom:* first real `execute_dynamic_tool("design_gate_run")` returned `vscode is not defined`.
+- *Root cause:* the handler path (wrapper server → `LOCAL_TOOL_REGISTRY`) touched a bare `vscode`
+  identifier. In the esbuild CJS bundle `vscode` exists only via `require("vscode")`; there is no
+  global, so a bare reference throws `ReferenceError`. The earlier workaround (tool-router writing
+  `process.env.WORKSPACE_ROOT` / `IMPPECABLE_SKILL_PATH` from `deps.workspaceRoot` / `deps.wasmPath`,
+  and `defaultWorkspaceRootProvider()` reading the `WORKSPACE_ROOT` env first) masked the real defect
+  and could return a stale root.
+- *Fix:* (1) no tool code references a bare `vscode`; PathResolver keeps its lazy `require` (SA4E-356).
+  (2) New `design-gate-env.ts`: `initDesignGateEnv(context.extensionPath)` is called once in
+  `activate()` (before the workspace check); `prepareDesignGateRunEnv()` runs per call → live root via
+  `defaultWorkspaceRootProvider()`, then sets `EnvConfig.WORKSPACE_ROOT` and calls
+  `resolveWasmPath(extensionPath)`. This is the "thread `context.extensionPath`" variant of D3, not
+  `vscode.extensions.getExtension(...)`. (3) Workaround removed: `workspaceRoot`/`wasmPath` deps dropped
+  from RemoteBackendClient/WrapperServer types, the env branch dropped from `defaultWorkspaceRootProvider`,
+  and the `isLocalTool` branch in tool-router reduced to `executeLocalTool(name, args)`.
+  (4) Guard test `design-gate-no-vscode.test.ts`. Same commit hardened SEC-F01 (generic reject with
+  code only, no absolute path), SEC-F02 (realpath containment, junction `source_path` rejected) and
+  SEC-F03 (`sanitizeErrorText`: escaped regex, both separators, case-insensitive on win32).
+
 ### D2. Tool spec — `design_gate_list_rules`
 
 Purpose (FR-AG2): lets an agent learn the rules BEFORE writing design code — cheaper than
@@ -906,6 +928,27 @@ OCP respected: registry.ts untouched (`registerLocalTool` is the extension point
 server; `hidden` unset → tools appear in tools/list (getVisibleLocalToolDefinitions) AND stay
 callable via execute_dynamic_tool.
 
+**As-built correction (v1.1) — false PASS from fileCount=0 / cache (commit 88892218):**
+
+- *Symptom:* `both` runs scored differently from `static` on the same tree and could PASS vacuously
+  (fileCount 0) while `static` FAILed.
+- *Root cause (`slash/integration.service.ts`, cache branch with `cacheReuse: true`):* on a cache hit
+  `fileCount` was derived as `cached.findings.length`, and the report was built with
+  `cached.fileCount ?? 0`. `fileCount` is the DENOMINATOR of
+  `score = 1 − failing files / files in scope`: findings.length (or 0) is not the scan scope, so
+  score/pass were wrong, and 0 → vacuous-pass 1.0. Legacy cache entries without `fileCount` triggered
+  this. Cache key = sha256(`sourcePath:mode`) (`detection.cache.ts`), so static and both runs reuse
+  per-mode entries.
+- *Fix:* a cache entry is a HIT only if `typeof cached.fileCount === "number"`; otherwise it is a miss
+  and the scan re-runs. Both `result.fileCount` and the report use `cached.fileCount` (no `?? 0`,
+  no findings.length fallback). `QualityReport` gained optional `fileCount` (types.ts), set by
+  `generateQualityReport` (`fileCount: totalFiles`), so the payload exposes the real denominator.
+- *Limit:* the payload has no `cacheHit` field, so a cache hit can only be inferred (matching
+  `fileCount`/score and shorter `durationMs`), not read directly.
+- *Same commit, path text:* integration.service errors no longer embed absolute paths
+  ("Source path escapes workspace root"; "does not exist: <relative>").
+- *Tests:* `design-gate-addendum4-fix.test.ts`.
+
 ### D4. Security mapping — all four conditions preserved intact
 
 | Condition | Where enforced in the tool flow |
@@ -951,6 +994,21 @@ mcp/atlassian/index):
    semantics preserved (AF-1 / TC-03).
 6. `execute_dynamic_tool("design_gate_list_rules")` → 30 rules + formula string present.
 
+**As-built additions (v1.1) — PATH_NOT_FOUND (commit 88892218, `design-gate-resolve.ts`):**
+
+10. `source_path` that passes lexical resolution but does not exist → `isError: true`,
+    `PATH_NOT_FOUND: source_path does not exist: <workspace-relative path>`. Before the fix the
+    nonexistent target skipped the realpath check and surfaced later from the scan with an absolute
+    path (`Source path does not exist: <abs>`). The message is built with
+    `path.relative(workspaceRoot, resolvedPath)`; no absolute path or workspace root. `runDetection`
+    is NOT called. Existing targets still go through `isRealPathInside` (SEC-F02), failure →
+    generic reject.
+11. Negative matrix (no absolute path in any error text): `../..`, absolute path outside workspace,
+    junction `source_path`, `does-not-exist-xyz`, regex metacharacters in `source_path`.
+
+Process note: the 88892218 tests were written AFTER the fix (deviation from `dev-bug-diagnosis.md`,
+see Open Issues).
+
 **Agent-loop demo (FR-AG2 evidence):** find_tools → design_gate_list_rules (read rules) → write a
 small design file violating A1+A2 → design_gate_run → FAIL read → fix the file → design_gate_run →
 PASS. Transcripts stored as test evidence for this ticket.
@@ -966,6 +1024,33 @@ PASS. Transcripts stored as test evidence for this ticket.
 | v | Lint + extension test suite pass; ≤200 lines/file, ≤20 lines/function. |
 | vi | Rebuilt VSIX contains the tools (bundle includes design-gate-tool + registration call). |
 | vii | FR-AG2 enforcement wired: AGENTS.md Key Rule 8 — agents editing design artifacts MUST run design_gate_run before completion; every FAIL fixed or justified; SM blocks Phase 5/6 without gate evidence. |
+
+**As-built e2e result (v1.1)** — fresh instance, root `c:\projects\kiro\SDLC-Agents-4-Enterprise`,
+MCP port 9183:
+
+| Run | runId | score | pass | fileCount | totalIssues |
+|-----|-------|-------|------|-----------|-------------|
+| static | `run_1794496832524_lu5m1z95` | 0 | false | 3 | 9 |
+| both #1 | `run_1794496981974_lab651sw` | 0 | false | 3 | 9 |
+| both #2 | `run_1794496982501_mfd6u0lh` | 0 | false | 3 | 9 |
+
+- static and both (x2) agree on score 0 and fileCount 3 → the D3 false-pass is gone. The payload has
+  no `cacheHit`, so whether both #2 used the cache is inferred only.
+- Negative cases `../..`, absolute path outside workspace, junction, `does-not-exist-xyz`, regex
+  characters → all rejected (`isError: true`), none exposes an absolute path (criterion iv).
+- Quality: vitest design-gate 26 tests pass, `tsc` OK, eslint 0 errors, 1 warning
+  (`max-lines` 300/200 in `design-gate-tools.test.ts`, criterion v partially: warning accepted, see
+  Open Issues).
+
+### Open Issues (Addendum 4, v1.1)
+
+| # | Sev | Issue | Action |
+|---|-----|-------|--------|
+| a | Medium | `settings.json` is written/read at worktree vs root level: the worktree instance listens on 9181, the root instance on 9183 (`settings.json-worktree`). Agents resolving `mcpUrl` may hit the wrong instance. | Document; confirm instance/port before gate evidence (ug-evidence §2). Follow-up SA4E-438. |
+| b | Low | `fs.adapter.ts` and `wasm.loader.ts` still put absolute paths in error text. Sanitized at tool layer (`sanitizeErrorText`) but `console.error` logs the raw text. | Sanitize at source / log relative. |
+| c | Low | SEC-F04..F08 remain open (cache file naming/absolute `runId` field, `getReport` runId validation, localhost-fetcher `throw` in event callback + Content-Type regex, `validateFilePath` startsWith, process-global `WORKSPACE_ROOT`). | Triage in SA4E-438. |
+| d | Low | `mapReportToPayload` is 42 lines (> 20-line limit, BR-18). `design-gate-tools.test.ts` triggers `max-lines` warning (300/200). | Split into helpers / split test file. |
+| e | Process | Fix 88892218 wrote tests after the fix, deviating from `dev-bug-diagnosis.md` ("no red-capable command, no fix"). | Recorded as deviation; follow the loop for future bug fixes. |
 
 ### Traceability
 
