@@ -17,7 +17,7 @@
 
 import { cellsOf, Geo, isPart, readCells, ROW, rowsOf, TABLE, TCell } from './drawio-table-cells';
 import { splitMixedTable } from './drawio-table-split';
-import { clearEdgeTerminalPoints, patchCell, setCellParent, setEdgePointsXml } from './drawio-xml-utils';
+import { rewriteCells, type CellPatch } from './drawio-xml-rewrite';
 
 const DEFAULT_CELL_W = 100;
 const DEFAULT_ROW_H = 40;
@@ -68,15 +68,53 @@ function differs(cell: TCell, want: Geo): boolean {
   return !(eq(have.x ?? 0, want.x) && eq(have.y ?? 0, want.y) && eq(have.width, want.width) && eq(have.height, want.height));
 }
 
-/** Rewrite x/y/width/height of one cell's <mxGeometry>, keeping its other attributes. */
-function setGeometry(xml: string, id: string, g: Geo): string {
-  return patchCell(xml, id, (open, body) => {
-    const re = /<mxGeometry\b([^>]*?)(\/?)>/;
-    const m = re.exec(body);
-    if (!m) return null;
-    const rest = m[1].replace(/\s(?:x|y|width|height)="[^"]*"/g, '');
-    const attrs = ` x="${round(g.x)}" y="${round(g.y)}" width="${round(g.width)}" height="${round(g.height)}"${rest}`;
-    return { open, body: body.replace(re, `<mxGeometry${attrs}${m[2]}>`) };
+/** Write x/y/width/height into a cell's <mxGeometry>, keeping its other attributes. */
+function setGeometry(body: string, g: Geo): string {
+  const re = /<mxGeometry\b([^>]*?)(\/?)>/;
+  const m = re.exec(body);
+  if (!m) return body;
+  const rest = m[1].replace(/\s(?:x|y|width|height)="[^"]*"/g, '');
+  const attrs = ` x="${round(g.x)}" y="${round(g.y)}" width="${round(g.width)}" height="${round(g.height)}"${rest}`;
+  return body.replace(re, `<mxGeometry${attrs}${m[2]}>`);
+}
+
+/** Drop stale terminal hints and reset waypoints of a lifted edge (the old layout's attachment points no longer apply). */
+function liftEdgeBody(body: string): string {
+  let out = body.replace(/<mxPoint\b[^>]*\bas="(?:sourcePoint|targetPoint)"[^>]*\/>/g, '');
+  const geomRegex = /<mxGeometry\b([^>]*?)(\/>|>([\s\S]*?)<\/mxGeometry>)/;
+  const geom = geomRegex.exec(out);
+  if (!geom) return out;
+  const [full, attrs, ending, inner = ''] = geom;
+  const cleaned = inner
+    .replace(/<Array\s+as="points"\s*\/>/g, '')
+    .replace(/<Array\s+as="points">[\s\S]*?<\/Array>/g, '');
+  const replacement = ending === '/>' ? full : `<mxGeometry${attrs}>${cleaned}</mxGeometry>`;
+  return `${out.slice(0, geom.index)}${replacement}${out.slice(geom.index + full.length)}`;
+}
+
+/** Re-parent the open tag: move `c` into the table's parent. */
+function reparentOpen(open: string, table: TCell): string {
+  const parentId = table.parent || '1';
+  return /\sparent="[^"]*"/.test(open)
+    ? open.replace(/\sparent="[^"]*"/, ` parent="${parentId}"`)
+    : `${open} parent="${parentId}"`;
+}
+
+/**
+ * One combined patch per lifted cell: new parent (open tag) + re-anchored
+ * geometry (body). Every lifted cell is rewritten by a single rewriteCells
+ * pass — no per-cell full-string rescan.
+ */
+function liftCellPatch(c: TCell, table: TCell, origin: { x: number; y: number }): (open: string, body: string) => CellPatch | null {
+  const g = {
+    x: (c.geo.x ?? 0) + origin.x,
+    y: (c.geo.y ?? 0) + origin.y,
+    width: c.geo.width ?? DEFAULT_SHAPE_W,
+    height: c.geo.height ?? DEFAULT_SHAPE_H,
+  };
+  return (open, body) => ({
+    open: reparentOpen(open, table),
+    body: c.edge ? liftEdgeBody(body) : setGeometry(body, g),
   });
 }
 
@@ -95,16 +133,6 @@ function foreignChildren(table: TCell, all: TCell[]): TCell[] {
   return all.filter(c => inside.has(c.parent) && c.id !== table.id && !isPart(c.style));
 }
 
-/** Move one foreign cell to the table's parent with absolute coordinates. */
-function liftCell(xml: string, c: TCell, table: TCell, origin: { x: number; y: number }): string {
-  const out = setCellParent(xml, c.id, table.parent || '1');
-  // Waypoints belong to the old coordinate space; the layout re-plans routed edges anyway
-  if (c.edge) return clearEdgeTerminalPoints(setEdgePointsXml(out, c.id, []), c.id);
-  return setGeometry(out, c.id, {
-    x: (c.geo.x ?? 0) + origin.x, y: (c.geo.y ?? 0) + origin.y,
-    width: c.geo.width ?? DEFAULT_SHAPE_W, height: c.geo.height ?? DEFAULT_SHAPE_H,
-  });
-}
 
 /** Remove the `<mxCell id=… …>…</mxCell>` element of a row left without cells. */
 function removeCell(xml: string, id: string): string {
@@ -119,7 +147,9 @@ function liftForeign(xml: string, table: TCell): { xml: string; changed: boolean
   if (lifted.length === 0) return { xml, changed: false };
   const byId = new Map(all.map(c => [c.id, c]));
   const target = normalize(table, all);
-  let out = lifted.reduce((x, c) => liftCell(x, c, table, originInTable(c.parent, table, byId, target)), xml);
+  const patches = new Map<string, (open: string, body: string) => CellPatch | null>();
+  for (const c of lifted) patches.set(c.id, liftCellPatch(c, table, originInTable(c.parent, table, byId, target)));
+  let out = rewriteCells(xml, patches);
   const after = readCells(out);
   for (const id of new Set(lifted.map(c => c.parent))) {
     const row = byId.get(id);
@@ -128,24 +158,31 @@ function liftForeign(xml: string, table: TCell): { xml: string; changed: boolean
   return { xml: out, changed: true };
 }
 
-/** Append `startSize=value` to a cell's style when the style has none. */
-function ensureStartSize(xml: string, cell: TCell, value: number): string {
-  if (/(?:^|;)startSize=/.test(cell.style)) return xml;
-  const style = `${cell.style.replace(/;?$/, ';')}startSize=${value};`;
-  return patchCell(xml, cell.id, (open, body) => ({ open: open.replace(/\sstyle="[^"]*"/, ` style="${style}"`), body }));
-}
-
 /**
  * draw.io computes a table's grid lines from the `startSize` of the table and of
  * each row (default 40 when absent), not from row geometry. Without an explicit
  * value every column line overshoots the table bottom by 40 px.
+ *
+ * SA4E-406 (F1): batch every startSize insertion into ONE rewriteCells pass
+ * instead of one patchCell (full-string rescan) per table row.
  */
 function pinStartSizes(xml: string, tableId: string): string {
   const all = readCells(xml);
   const table = all.find(c => c.id === tableId)!;
-  let out = ensureStartSize(xml, table, table.value.trim() === '' ? 0 : DEFAULT_TITLE_H);
-  for (const row of rowsOf(tableId, all)) out = ensureStartSize(out, row, 0);
-  return out;
+  const patches = new Map<string, (open: string, body: string) => CellPatch | null>();
+  const tableValue = table.value.trim() === '' ? 0 : DEFAULT_TITLE_H;
+  if (!/(?:^|;)startSize=/.test(table.style)) {
+    const style = `${table.style.replace(/;?$/, ';')}startSize=${tableValue};`;
+    patches.set(table.id, (_o, _b) => ({ open: _o.replace(/\sstyle="[^"]*"/, ` style="${style}"`), body: _b }));
+  }
+  for (const row of rowsOf(tableId, all)) {
+    if (!/(?:^|;)startSize=/.test(row.style)) {
+      const style = `${row.style.replace(/;?$/, ';')}startSize=0;`;
+      patches.set(row.id, (_o, _b) => ({ open: _o.replace(/\sstyle="[^"]*"/, ` style="${style}"`), body: _b }));
+    }
+  }
+  if (patches.size === 0) return xml;
+  return rewriteCells(xml, patches);
 }
 
 /** Step 3: write the target geometry of each part; parts after the first stack below it. */
@@ -164,7 +201,18 @@ function layoutParts(xml: string, partIds: string[]): { xml: string; changed: bo
     nextY = own.y + own.height + PART_GAP;
     const byId = new Map(all.map(c => [c.id, c]));
     if (![...target].some(([cid, want]) => differs(byId.get(cid)!, want))) continue;
-    for (const [cid, want] of target) out = setGeometry(out, cid, want);
+    const patches = new Map<string, (open: string, body: string) => CellPatch | null>();
+    for (const [cid, want] of target) {
+      patches.set(cid, (_open, body) => {
+        const re = /<mxGeometry\b([^>]*?)(\/?)>/;
+        const m = re.exec(body);
+        if (!m) return null;
+        const rest = m[1].replace(/\s(?:x|y|width|height)="[^"]*"/g, '');
+        const attrs = ` x="${round(want.x)}" y="${round(want.y)}" width="${round(want.width)}" height="${round(want.height)}"${rest}`;
+        return { open: _open, body: body.replace(re, `<mxGeometry${attrs}${m[2]}>`) };
+      });
+    }
+    out = rewriteCells(out, patches);
     changed = true;
   }
   return { xml: out, changed };

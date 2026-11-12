@@ -61,3 +61,14 @@ export function parseTerminalPoint(body: string, kind: 'sourcePoint' | 'targetPo
   }
   return null;
 }
+
+/**
+ * Label position along an edge: the `x` of its relative mxGeometry, -1 (source)
+ * … 0 (middle, draw.io default) … 1 (target).
+ */
+export function parseLabelPosition(body: string): number {
+  const geom = /<mxGeometry\s([^>]*?)\/?>/.exec(body);
+  const x = geom ? /(?:^|\s)x="([^"]*)"/.exec(geom[1]) : null;
+  const v = x ? Number(x[1]) : 0;
+  return Number.isFinite(v) ? Math.max(-1, Math.min(1, v)) : 0;
+}

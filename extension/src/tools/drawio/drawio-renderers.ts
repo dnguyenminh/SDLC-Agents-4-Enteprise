@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 
 let _cachedDrawioCliPath: string | null = null;
 
@@ -47,8 +47,11 @@ export function findDrawioCli(): string | null {
 
 export async function exportWithCli(inputPath: string, outputPath: string): Promise<void> {
   if (!_cachedDrawioCliPath) throw new Error('draw.io CLI path not cached');
-  const cmd = `"${_cachedDrawioCliPath}" --export --format png --border 10 --output "${outputPath}" "${inputPath}"`;
-  execSync(cmd, { timeout: 30000, stdio: 'pipe' });
+  // SA4E-406 (L2): execFileSync with an argument ARRAY — no shell interpolation,
+  // so paths with spaces/quotes cannot turn into command syntax.
+  execFileSync(_cachedDrawioCliPath,
+    ['--export', '--format', 'png', '--border', '10', '--output', outputPath, inputPath],
+    { timeout: 30000, stdio: 'pipe' });
 }
 
 export async function exportWithChrome(

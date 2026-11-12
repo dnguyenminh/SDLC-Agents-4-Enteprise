@@ -4,14 +4,13 @@
  * this lays the diagram out the way people draw it (drawio-usecase-plan).
  */
 
-import * as fs from 'fs';
 import type { LayoutIssue } from './drawio-detect';
 import { detectAllIssues } from './drawio-detect';
 import type { UseCaseModel } from './drawio-detect-usecase';
 import type { DiagramGraph } from './drawio-parser';
-import { parseDrawioXml } from './drawio-parser';
 import { planUseCase } from './drawio-usecase-plan';
 import { applyUseCasePlan } from './drawio-usecase-xml';
+import { commitLayout } from './drawio-apply-validate';
 
 const significant = (list: LayoutIssue[]): number => list.filter(i => i.severity !== 'low').length;
 
@@ -36,12 +35,11 @@ export function useCaseRelayout(
     if (xml === rawXml) {
       return JSON.stringify({ status: 'already_good', message: 'Use-case diagram already in canonical layout.', remaining_issues: significant(issues) });
     }
-    validate(xml);
-    fs.writeFileSync(filePath, xml, 'utf-8');
+    const { graph: afterGraph } = commitLayout(xml, filePath);
     return JSON.stringify({
       status: 'fixed',
       message: `Use-case layout: ${model.cases.length} use cases in ${model.groups.length} group(s), ${model.actors.length} actors, ${plan.associations.length} associations.`,
-      remaining_issues: significant(detectAllIssues(parseDrawioXml(xml))),
+      remaining_issues: significant(detectAllIssues(afterGraph)),
     });
   } catch (e: unknown) {
     console.error('[drawio-usecase-apply] use-case layout error:', e);

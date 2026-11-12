@@ -5,8 +5,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { parseDrawio } from './drawio-parser';
+import { parseDrawio, parseDrawioXml } from './drawio-parser';
+import type { DiagramGraph } from './drawio-parser';
 import { findMalformedTags, findXmlEscapingIssues } from './drawio-xml-sanitize';
+import { snapDiagramToGrid } from './drawio-grid-snap';
+import { applyDecisionLabels } from './drawio-decision-labels';
+import { planEdges, applyEdgePlans } from './drawio-edge-plan';
+import { placeLabels } from './drawio-label-place';
+import { detectSequenceDiagram } from './drawio-detect-sequence';
+import { detectUseCaseDiagram } from './drawio-detect-usecase';
 
 /** BR-7: Re-parse fixed XML to ensure it's valid before writing to file. */
 export function validateReparse(xml: string): void {
@@ -42,4 +49,51 @@ export function validateReparse(xml: string): void {
 /** JSON error payload returned to the MCP caller. */
 export function error(msg: string): string {
   return JSON.stringify({ error: msg });
+}
+
+/**
+ * Final write gate for every fix strategy (SA4E-406 f): snap the produced XML
+ * to the 10px grid, validate, write, and return the graph of what was written.
+ * Every write path goes through HERE — no strategy writes the file directly.
+ */
+export function commitLayout(xml: string, filePath: string, opts?: { portsOnly?: boolean }): { graph: DiagramGraph } {
+  // SA4E-406 (h): label unambiguous decision branches on the final geometry —
+  // before the grid snap, so a second run sees settled, labeled edges.
+  const finalXml = snapDiagramToGrid(applyDecisionLabels(xml, parseDrawioXml(xml)), opts);
+  validateReparse(finalXml);
+  fs.writeFileSync(filePath, finalXml, 'utf-8');
+  return { graph: parseDrawioXml(finalXml) };
+}
+
+/**
+ * Final gate (SA4E-406 f/i): EVERY tool exit leaves the file on-grid with
+ * unambiguous decision labels — including exits that bypass the strategies'
+ * commitLayout (preflight/adopt rewrites, already_good, report-only, verify-loop
+ * rollbacks). Write-only-when-changed keeps clean runs byte-identical.
+ *
+ * When the snap MOVED vertices, edge routes planned for the old geometry go
+ * stale (crossings the router never saw), so they are re-planned on the final
+ * geometry — except in sequence/use-case layouts, whose anchored message edges
+ * and actor/boundary structure must not be re-routed.
+ */
+export function enforceFinalGate(filePath: string, opts?: { portsOnly?: boolean }): void {
+  const before = fs.readFileSync(filePath, 'utf-8');
+  // Forward the original request scope (portsOnly) so the final gate's grid snap
+  // skips debunch/separateContainers on the ports path — node positions must be
+  // preserved (FSD §3.1 L374). Only debunch/subtree-separation movement is
+  // suppressed; on-grid alignment, mxfile-free output and re-parse validity are
+  // still enforced.
+  let after = snapDiagramToGrid(applyDecisionLabels(before, parseDrawioXml(before)), opts);
+  if (after !== before && !hasSpecialLayout(after)) {
+    after = placeLabels(applyEdgePlans(after, planEdges(parseDrawioXml(after))));
+  }
+  if (after === before) return;
+  validateReparse(after);
+  fs.writeFileSync(filePath, after, 'utf-8');
+}
+
+/** Sequence/use-case diagrams get dedicated layouts — never re-route their edges. */
+function hasSpecialLayout(xml: string): boolean {
+  const graph = parseDrawioXml(xml);
+  return detectSequenceDiagram(graph).isSequence || detectUseCaseDiagram(graph) !== null;
 }

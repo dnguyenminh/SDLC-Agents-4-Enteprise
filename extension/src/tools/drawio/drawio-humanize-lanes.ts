@@ -18,6 +18,7 @@ import type { DiagramGraph, DiagramNode } from './drawio-parser';
 import type { ElkNode, NormalizedArgs } from './drawio-layout-models';
 import { flatPositions, type Pair } from './drawio-humanize-elk';
 import { headerThickness, isSwimlane, titleOnTop } from './drawio-container-insets';
+import { detectArrangement } from './drawio-arrangement';
 
 const MARGIN = 40;
 // Cross-axis padding inside a lane. Edges entering a lane turn in this strip;
@@ -70,8 +71,23 @@ export function detectLanes(graph: DiagramGraph, args: NormalizedArgs): LaneInfo
   const crossing = stepEdges.filter(e => !laneOf.has(e.sourceId) || laneOf.get(e.sourceId) !== laneOf.get(e.targetId));
   if (crossing.length / stepEdges.length < CROSS_LANE_RATIO) return null;
   const dir = args.directionExplicit ? args.direction : null;
+  if (!dir && contradictsTitles(lanes)) return null;
   const vertical = dir ? dir === 'DOWN' || dir === 'UP' : titleOnTop(lanes[0].style);
   return { lanes, vertical };
+}
+
+/**
+ * Actor lanes run ALONG their title strip: title on top → columns side by side,
+ * title on the left → rows stacked. Only a STACKED column of title-on-top lanes
+ * contradicts that (those are layer bands, not actors — leave them to band
+ * mode). Side-by-side title-on-top lanes are legitimate actors and must stay in
+ * lane mode (deployment-flow regression: they were dropped, then packed
+ * overlapping).
+ */
+function contradictsTitles(lanes: DiagramNode[]): boolean {
+  const arrangement = detectArrangement(lanes);
+  if (!arrangement) return false;
+  return titleOnTop(lanes[0].style) && arrangement === 'column';
 }
 
 /** Synthetic laid-out ELK tree: lanes (absolute) holding their steps (lane-relative). */

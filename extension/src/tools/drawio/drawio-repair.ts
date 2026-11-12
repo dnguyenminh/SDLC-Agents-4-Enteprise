@@ -8,8 +8,7 @@ import type { DiagramGraph } from './drawio-parser';
 import { absoluteRects, cellIndex } from './drawio-geometry';
 import type { Point, Rect } from './drawio-geometry';
 import { computeRoute } from './drawio-router';
-import { MIN_GAP } from './drawio-detect';
-import type { LayoutIssue } from './drawio-detect';
+import { detectThresholds, type LayoutIssue } from './drawio-detect';
 import { addShift, curRect, type Ctx } from './drawio-repair-ctx';
 import { rerouteEdges } from './drawio-repair-routes';
 
@@ -63,7 +62,9 @@ function pushApart(ctx: Ctx, pairs: Array<{ a: string; b: string; kind: 'overlap
   for (let pass = 0; pass < PUSH_PASSES; pass++) {
     for (const pair of pairs) {
       const ra = curRect(ctx, pair.a), rb = curRect(ctx, pair.b);
-      const required = pair.kind === 'overlap' ? Math.max(ctx.spacing * 0.5, MIN_GAP) : MIN_GAP;
+      const required = pair.kind === 'overlap'
+        ? Math.max(ctx.spacing * 0.5, detectThresholds().gap)
+        : detectThresholds().gap;
       const { da, db } = separationDelta(ra, rb, required);
       if (da.x === 0 && da.y === 0) continue;
       addShift(ctx.shift, pair.a, da);

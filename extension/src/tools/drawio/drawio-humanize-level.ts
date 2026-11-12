@@ -59,15 +59,24 @@ const SHELF_GAP = 40;
 /** Shelf rows wrap at the flow width, but never narrower than this. */
 const SHELF_MIN_WIDTH = 480;
 
-/** Place edge-less nodes in wrapped rows below the laid-out flow (mutates `pos`). */
-export function shelveOrphans(orphans: ElkNode[], flow: ElkNode[], pos: Positions): void {
+/**
+ * Place edge-less nodes in wrapped rows below the laid-out flow (mutates `pos`).
+ * The shelf coordinates CARRY the container insets (`insets`): the caller adds
+ * no further pad, so the shelf can neither slide under the title strip nor run
+ * past the right inset (SA4E-406). `minWrap` is the container's interior width.
+ */
+export function shelveOrphans(
+  orphans: ElkNode[], flow: ElkNode[], pos: Positions, insets: Insets, minWrap = 0,
+): void {
   if (orphans.length === 0) return;
   const bottom = Math.max(0, ...flow.map(n => (pos.get(n.id)?.y ?? 0) + n.height));
   const right = Math.max(0, ...flow.map(n => (pos.get(n.id)?.x ?? 0) + n.width));
-  const wrapAt = Math.max(right, SHELF_MIN_WIDTH);
-  let x = 0, y = flow.length > 0 ? bottom + SHELF_GAP : 0, rowH = 0;
+  // minWrap = interior width the author gave the container: a shelf as wide as the drawn band
+  const wrapAt = Math.max(right, SHELF_MIN_WIDTH, minWrap);
+  const x0 = insets.left;
+  let x = x0, y = (flow.length > 0 ? bottom + SHELF_GAP : 0) + insets.top, rowH = 0;
   for (const n of orphans) {
-    if (x > 0 && x + n.width > wrapAt) { x = 0; y += rowH + SHELF_GAP; rowH = 0; }
+    if (x > x0 && x + n.width - x0 > wrapAt) { x = x0; y += rowH + SHELF_GAP; rowH = 0; }
     pos.set(n.id, { x, y });
     x += n.width + SHELF_GAP;
     rowH = Math.max(rowH, n.height);

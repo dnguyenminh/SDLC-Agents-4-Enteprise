@@ -10,6 +10,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { parseDrawio } from '../drawio-parser';
 import { detectAllIssues } from '../drawio-detect';
+import { REPORT_ONLY_ISSUE_TYPES } from '../drawio-detect-structure';
 import { handleApply } from '../drawio-apply';
 import { sanitizeDrawioXml } from '../drawio-xml-sanitize';
 
@@ -45,11 +46,14 @@ async function run(xml: string, file?: string): Promise<{ file: string; result: 
 describe('humanize + edge routing (LLM-style input)', () => {
   it('leaves no blocking issues and no stale edge hints', async () => {
     const { file, result } = await run(FIXTURE);
-    expect(result.status).toBe('fixed');
+    // SA4E-406 (g/h): empty lane titles and unlabelled decision branches are
+    // report-only (medium) — the status is honestly "partial", not "fixed".
+    expect(result.status).toBe('partial');
     const text = fs.readFileSync(file, 'utf-8');
     expect(text).not.toMatch(/childLayout=/);
     expect(text).not.toMatch(/as="sourcePoint"/);
-    const blocking = detectAllIssues(parseDrawio(file).graph).filter(i => i.severity !== 'low');
+    const blocking = detectAllIssues(parseDrawio(file).graph)
+      .filter(i => i.severity !== 'low' && !REPORT_ONLY_ISSUE_TYPES.has(i.type));
     expect(blocking).toEqual([]);
   }, 60_000);
 
@@ -69,10 +73,12 @@ describe('humanize + edge routing (LLM-style input)', () => {
     expect(/id="e1"[^>]*parent="L2"/.test(text)).toBe(false);
   }, 60_000);
 
-  it('output has only cosmetic (low) issues left, so layoutOn reports already_good next run', async () => {
+  it('output has only cosmetic or report-only issues left, so layoutOn reports partial next run', async () => {
     const first = await run(FIXTURE);
     const issues = detectAllIssues(parseDrawio(first.file).graph);
-    expect(issues.every(i => i.severity === 'low')).toBe(true);
+    // SA4E-406 (g/h): lane titles / branch labels are content decisions — they
+    // stay flagged (medium) so the next run reports partial, not already_good.
+    expect(issues.every(i => i.severity === 'low' || REPORT_ONLY_ISSUE_TYPES.has(i.type))).toBe(true);
   }, 60_000);
 
   it('lays out a container-free flow chart left intact in order', async () => {

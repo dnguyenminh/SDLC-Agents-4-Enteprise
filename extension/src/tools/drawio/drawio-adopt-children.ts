@@ -12,7 +12,8 @@
  */
 
 import { parseDrawioXml, type DiagramNode } from './drawio-parser';
-import { replaceCellGeometryXy, setCellParent } from './drawio-xml-utils';
+import { patchGeometryTag, hasAttr, replaceAttr, insertAttrs, round } from './drawio-xml-utils';
+import { rewriteCells, type CellPatch } from './drawio-xml-rewrite';
 
 /** Result of the pass: the rewritten XML and how many boxes moved into which container. */
 export interface AdoptResult { xml: string; adopted: Map<string, string[]>; }
@@ -34,13 +35,26 @@ export function adoptVisualChildren(xml: string): AdoptResult {
   const empties = graph.containers.filter(c => c.parentId === '1' && !parents.has(c.id));
   const adopted = new Map<string, string[]>();
   if (empties.length === 0) return { xml, adopted };
-  let out = xml;
+  const patches = new Map<string, (open: string, body: string) => CellPatch | null>();
   for (const node of graph.nodes.filter(n => n.parentId === '1')) {
     // the smallest empty container that holds the node's centre wins (inner bands before outer)
     const owner = empties.filter(c => centreIn(node, c)).sort((a, b) => area(a) - area(b))[0];
     if (!owner) continue;
-    out = replaceCellGeometryXy(setCellParent(out, node.id, owner.id), node.id, node.x - owner.x, node.y - owner.y);
+    const nx = node.x - owner.x;
+    const ny = node.y - owner.y;
+    patches.set(node.id, (open, body) => {
+      const newOpen = /\sparent="[^"]*"/.test(open)
+        ? open.replace(/\sparent="[^"]*"/, ` parent="${owner.id}"`)
+        : `${open} parent="${owner.id}"`;
+      const patched = patchGeometryTag(body, (tag) => {
+        let out = hasAttr(tag, 'x') ? replaceAttr(tag, 'x', nx) : insertAttrs(tag, ` x="${round(nx)}"`);
+        out = hasAttr(out, 'y') ? replaceAttr(out, 'y', ny) : insertAttrs(out, ` y="${round(ny)}"`);
+        return out;
+      });
+      return patched === null ? null : { open: newOpen, body: patched };
+    });
     adopted.set(owner.id, [...(adopted.get(owner.id) ?? []), node.id]);
   }
-  return { xml: out, adopted };
+  if (patches.size === 0) return { xml, adopted };
+  return { xml: rewriteCells(xml, patches), adopted };
 }

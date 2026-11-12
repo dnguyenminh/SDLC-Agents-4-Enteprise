@@ -110,17 +110,38 @@ const STRICT_TAG = /<([A-Za-z][\w:.-]*)((?:\s+[\w:.-]+="[^"<]*")*)\s*\/?>/y;
  * Open tags whose attribute list is not well-formed (stray quote, missing `=`…).
  * The tolerant regex parsers used elsewhere silently SKIP such cells, so a layout
  * run would "succeed" while leaving them untouched; callers should report these.
+ *
+ * SA4E-406 (H1): line numbers come from PRECOMPUTED offsets (binary search) —
+ * the old `slice(0, i).split('\n').length` per malformed tag was quadratic on
+ * files with many broken tags (2 MB ≈ 129 s).
  */
 export function findMalformedTags(xml: string): MalformedTag[] {
   const scan = xml.replace(/<!--[\s\S]*?-->/g, c => c.replace(/[^\n]/g, ' '));
+  const lineStarts = lineOffsets(scan);
   const bad: MalformedTag[] = [];
   for (const m of scan.matchAll(/<([A-Za-z][\w:.-]*)/g)) {
     STRICT_TAG.lastIndex = m.index!;
     if (STRICT_TAG.test(scan)) continue;
-    const line = scan.slice(0, m.index).split('\n').length;
-    bad.push({ line, tag: m[1], sample: scan.slice(m.index, m.index! + 100).replace(/\s+/g, ' ') });
+    bad.push({ line: lineOf(lineStarts, m.index!), tag: m[1], sample: scan.slice(m.index, m.index! + 100).replace(/\s+/g, ' ') });
   }
   return bad;
+}
+
+/** Offsets of every line start, computed in ONE O(n) pass. */
+function lineOffsets(text: string): number[] {
+  const starts = [0];
+  for (let i = text.indexOf('\n'); i !== -1; i = text.indexOf('\n', i + 1)) starts.push(i + 1);
+  return starts;
+}
+
+/** 1-based line number of an offset via binary search over the line starts. */
+function lineOf(starts: number[], index: number): number {
+  let lo = 0, hi = starts.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (starts[mid] <= index) lo = mid; else hi = mid - 1;
+  }
+  return lo + 1;
 }
 
 /** Give every self-closing edge cell an `<mxGeometry relative="1" as="geometry"/>` child. */

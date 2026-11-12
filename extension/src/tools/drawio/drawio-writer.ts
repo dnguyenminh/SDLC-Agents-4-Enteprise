@@ -11,7 +11,8 @@
  */
 
 import type { ElkNode, ElkEdge, RepositionedNode } from './drawio-layout-models';
-import { setEdgePointsXml, upsertEdgeStyleKeys, replaceCellGeometryXy, replaceCellSize } from './drawio-xml-utils';
+import { setEdgePointsXml, upsertEdgeStyleKeys, patchGeometryTag, hasAttr, replaceAttr, insertAttrs, round } from './drawio-xml-utils';
+import { rewriteCells, type CellPatch } from './drawio-xml-rewrite';
 
 export interface XmlWriteResult {
   xml: string;
@@ -30,20 +31,35 @@ export function applyLayoutToXml(rawXml: string, laidOut: ElkNode): XmlWriteResu
   const oldPos = readCurrentPositions(rawXml);
 
   let xml = rawXml;
-  for (const [id, p] of positions) xml = replaceCellGeometryXy(xml, id, p.x, p.y);
-  // SA4E-406 UAT fix: ELK compound layout returns CONTAINERS with enlarged
-  // width/height that encompass their children — the writer MUST apply them,
-  // otherwise children laid out inside the container still render OUTSIDE the
-  // (too-small) band and child_outside_container issues never resolve.
-  // Size is parent-space-independent (w/h carry no coordinate offset).
+  const geometryPatches = new Map<string, (open: string, body: string) => CellPatch | null>();
+  for (const [id, p] of positions) {
+    geometryPatches.set(id, (_open, body) => {
+      const patched = patchGeometryTag(body, (tag) => {
+        let out = hasAttr(tag, 'x') ? replaceAttr(tag, 'x', p.x) : insertAttrs(tag, ` x="${round(p.x)}"`);
+        out = hasAttr(out, 'y') ? replaceAttr(out, 'y', p.y) : insertAttrs(out, ` y="${round(p.y)}"`);
+        return out;
+      });
+      return patched === null ? null : { open: _open, body: patched };
+    });
+  }
+  const sizePatches = new Map<string, (open: string, body: string) => CellPatch | null>();
   for (const node of flattenAll(laidOut)) {
     if (node.id === 'root') continue;
     if (node.children && node.children.length > 0
       && Number.isFinite(node.width) && Number.isFinite(node.height)
       && node.width > 0 && node.height > 0) {
-      xml = replaceCellSize(xml, node.id, node.width, node.height);
+      sizePatches.set(node.id, (_open, body) => {
+        const patched = patchGeometryTag(body, (tag) => {
+          let out = hasAttr(tag, 'width') ? replaceAttr(tag, 'width', node.width) : tag;
+          out = hasAttr(out, 'height') ? replaceAttr(out, 'height', node.height) : out;
+          return out;
+        });
+        return patched === null ? null : { open: _open, body: patched };
+      });
     }
   }
+  xml = rewriteCells(xml, geometryPatches);
+  xml = rewriteCells(xml, sizePatches);
   for (const route of collectEdgeRoutes(laidOut)) xml = writeEdgeRoute(xml, route, positions, dx, dy);
   return { xml, repositionedNodes: buildRepositioned(oldPos, positions) };
 }

@@ -11,6 +11,14 @@ import type { DiagramGraph, DiagramNode, DiagramEdge } from './drawio-parser';
 export interface Rect { x: number; y: number; w: number; h: number; }
 export interface Point { x: number; y: number; }
 
+/** Grid step of the layout writer (px) — every vertex coordinate is a multiple of it (SA4E-406 f). */
+export const GRID_STEP = 10;
+
+/** Snap a coordinate to the nearest multiple of the grid step. */
+export function snapToGrid(v: number, step = GRID_STEP): number {
+  return Math.round(v / step) * step;
+}
+
 /** Map every vertex/container id to its absolute rect (parent offsets applied). */
 export function absoluteRects(graph: DiagramGraph): Map<string, Rect> {
   const byId = new Map<string, DiagramNode>();

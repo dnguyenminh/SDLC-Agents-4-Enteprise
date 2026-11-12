@@ -3,9 +3,8 @@
  * humanized (layered, default) and classic nested ELK (force/mrtree/radial).
  */
 
-import * as fs from 'fs';
 import type { DiagramGraph } from './drawio-parser';
-import { parseDrawio, parseDrawioXml } from './drawio-parser';
+import { parseDrawioXml } from './drawio-parser';
 import type { NormalizedArgs } from './drawio-layout-models';
 import { buildElkGraph, runElkLayout } from './elk-layout';
 import { humanizeLayout } from './drawio-humanize';
@@ -13,8 +12,10 @@ import { applyLayoutToXml } from './drawio-writer';
 import { detectAllIssues, type LayoutIssue } from './drawio-detect';
 import { sanitizeDrawioXml } from './drawio-xml-sanitize';
 import { applyEdgePlans, planEdges } from './drawio-edge-plan';
+import { optimizeSlots } from './drawio-slot-swap';
+import { placeLabels } from './drawio-label-place';
 import { TIMEOUT_MS } from './drawio-apply-args';
-import { error, validateReparse } from './drawio-apply-validate';
+import { commitLayout, error } from './drawio-apply-validate';
 
 /** Full ELK relayout (compound-safe: containers are laid out hierarchically). */
 export async function elkRelayout(
@@ -46,7 +47,8 @@ async function humanizeRelayout(
     // Old waypoints/terminals/parents are meaningless after the move: re-plan
     // every edge from the geometry that was actually written.
     const plans = planEdges(parseDrawioXml(placed));
-    const xml = applyEdgePlans(placed, plans);
+    // Interchangeable grid slots may still leave a label on a title or a crossing: try swaps
+    const xml = optimizeSlots(placeLabels(applyEdgePlans(placed, plans)));
     if (repositionedNodes.length === 0 && xml === rawXml) {
       return JSON.stringify({
         status: 'already_good',
@@ -54,9 +56,7 @@ async function humanizeRelayout(
         remaining_issues: issues.filter(i => i.severity !== 'low').length,
       });
     }
-    validateReparse(xml);
-    fs.writeFileSync(filePath, xml, 'utf-8');
-    const { graph: afterGraph } = parseDrawio(filePath);
+    const { graph: afterGraph } = commitLayout(xml, filePath);
     const remainingIssues = detectAllIssues(afterGraph).filter(i => i.severity !== 'low').length;
     return JSON.stringify({
       status: 'fixed',
@@ -89,10 +89,7 @@ async function nestedElkRelayout(
         remaining_issues: issues.filter(i => i.severity !== 'low').length,
       });
     }
-    validateReparse(xml);
-    fs.writeFileSync(filePath, xml, 'utf-8');
-    // Re-detect remaining issues after fix
-    const { graph: afterGraph } = parseDrawio(filePath);
+    const { graph: afterGraph } = commitLayout(xml, filePath);
     const remainingIssues = detectAllIssues(afterGraph).filter(i => i.severity !== 'low').length;
     return JSON.stringify({
       status: 'fixed',
