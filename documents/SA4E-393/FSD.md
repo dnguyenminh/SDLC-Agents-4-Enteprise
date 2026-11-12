@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-393 |
 | Title | Integrate Impeccable design detection into SDLC Agents 4 Enterprise extension |
 | Author | BA Agent |
-| Version | 1.0 |
-| Date | 2026-10-31 |
+| Version | 1.1 |
+| Date | 2026-11-12 |
 | Status | Draft |
 | Related BRD | documents/SA4E-393/BRD.md |
 
@@ -23,6 +23,7 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-10-31 | BA Agent | Initiate document — auto-generated from BRD and Jira tickets |
+| 1.1 | 2026-11-12 | BA Agent | Addendum 4 — Agent-Invocable Design Gate + Agent Self-Check (scope extension, USER-approved per RUN-LOG #43) |
 
 ---
 
@@ -772,4 +773,146 @@ function determinePassFail(score: number, threshold?: number, failOpen = false):
 **TA Notes:**
 - OI-01 requires spike to confirm WASM loading in VSCode extension host Node version.
 - OI-04 impacts Security Requirements §7.3 and NFR Availability.
+
+---
+
+## Addendum 4 (SA4E-393 Scope Extension, 2026-11-12) — Agent-Invocable Design Gate + Agent Self-Check
+
+**Status:** Draft — pending SM review · **Enforcement:** MUST + SM blocker (USER-APPROVED, RUN-LOG #43) · **TDD counterpart:** TDD Addendum 4 (sa-agent, parallel) owns technical design and implementation detail.
+
+> **USER finding (verbatim, RUN-LOG #43):** "Chúng ta làm chức năng này để các AI agent dùng để đảm bảo UI code được thiết kế đúng, nhưng với cách dùng hiện tại thì AI agent không thể dùng được."
+>
+> **Traceability:** BRD Story 1 original purpose — the gate exists so AI agents ensure UI/design code is designed correctly. FSD BR-03 ("Quality gate must be invocable from SDLC pipeline") is implemented for the AI-agent actor by this addendum.
+
+### A4.1 Background
+
+The design quality gate (native 30-rule engine derived from Impeccable ideas, running inside the extension — no npx/external binary dependency, see TDD Addendum 3) is currently invocable only manually, via VSCode/Kiro commands ("SDLC Agents: Run Design Quality Gate (Static/Rendered/Both)"). AI agents in the SDLC pipeline therefore cannot use it, which leaves the BRD's original purpose unmet. This addendum extends the functional scope (same ticket SA4E-393 — scope extension, no new ticket):
+
+1. **Expose the gate as agent-callable tools** through the extension's existing `LOCAL_TOOL_REGISTRY` (`extension/src/backend-local-tools/registry.ts`, OCP pattern — already used by SA4E-406 drawio tools and SA4E-110 jira/confluence tools). Agents call them through the standard `find_tools` → `execute_dynamic_tool` transport, exactly like `jira_get_issue`. No new MCP server is required.
+2. **Mandate agent self-check:** every agent that creates or edits design artifacts MUST run the gate on those artifacts before reporting completion; SM enforces gate evidence at Phase 5/6 completion.
+
+### A4.2 FR-AG1 — Agents invoke the design gate via extension local tools
+
+**Requirement:** Any AI agent in the SDLC pipeline can invoke the design quality gate through the extension-local tools `design_gate_run` and `design_gate_list_rules`, transported via `execute_dynamic_tool` (discovery via `find_tools`), and receives a real report JSON in the same session.
+
+**Actor:** AI agent (primarily dev-agent and ui-agent; any agent per steering rule `.opencode/rules/sdlc/ui-design-gate.md`).
+
+**Use Case UC-AG1 — Agent runs the design gate:**
+
+| Step | Actor | System | Description |
+|------|-------|--------|-------------|
+| 1 | AI Agent | | Discovers tools: `find_tools("design gate")` |
+| 2 | | Extension (LOCAL_TOOL_REGISTRY) | Returns `design_gate_run`, `design_gate_list_rules` |
+| 3 | AI Agent | | Calls `execute_dynamic_tool(toolName: "design_gate_run", arguments: { mode, source_path?, threshold? })` |
+| 4 | | WASM Detector / native rule engine | Runs locally in the extension host; no npx/external binary |
+| 5 | AI Agent | | Receives report JSON (runId, score, pass, findings) in the same session |
+
+**Functional contract (FSD level — TDD Addendum 4 owns exact schemas):**
+
+Tool `design_gate_run` — input arguments (an OBJECT, never a JSON string):
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| mode | string | No | both | static / rendered / both |
+| source_path | string | No | "" | Workspace-relative path to scan; omitted/empty = whole workspace |
+| threshold | number | No | 0.8 | Pass threshold, 0–1 |
+
+Tool `design_gate_run` — output report JSON:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| runId | string | Run identifier — required part of agent gate evidence |
+| mode | string | Echoed mode |
+| score | number | 0–1 (normalized scoring per TDD Addendum (A1)/Addendum 2) |
+| pass | boolean | score ≥ threshold |
+| threshold | number | Threshold applied |
+| findings | array | { file, line?, rule, severity (high/medium/low), message } |
+| fileCount / totalFiles | number | Scope accounting |
+| severityBreakdown | object | Count per severity (triage) |
+
+Tool `design_gate_list_rules` — input: `{}`; output: catalog of 30 rules (id, severity, description) for triage and traceability to the Impeccable-derived rule set.
+
+**Business Rules:**
+
+| Rule ID | Rule | Source |
+|---------|------|--------|
+| BR-AG1 | Tools are registered in LOCAL_TOOL_REGISTRY, discoverable via `find_tools`, invocable via `execute_dynamic_tool` — no new MCP server | RUN-LOG #43 (SM verification) |
+| BR-AG2 | The gate runs locally inside the extension host; no npx/external binary dependency | RUN-LOG #40 (native decision) |
+| BR-AG3 | All report/finding paths are workspace-relative (constraint C5); never absolute paths | RUN-LOG #34/#40; C5 |
+| BR-AG4 | Honest reporting: a FAIL on dirty input MUST be returned as FAIL with full findings — never masked, filtered, or force-passed | USER finding; RUN-LOG #40 (FAIL 0.79 = real design debt) |
+| BR-AG5 | `arguments` passed to `execute_dynamic_tool` MUST be an object, not a JSON string | tool-usage-dynamic.md |
+| BR-AG6 | `design_gate_list_rules` returns the 30-rule catalog | RUN-LOG #43 |
+
+**Acceptance Criteria (FR-AG1):**
+
+| AC ID | Criterion |
+|-------|-----------|
+| AC-AG1.1 | An agent calling `design_gate_run` via `execute_dynamic_tool` receives, in the same session, a real report JSON containing runId, score, pass, findings |
+| AC-AG1.2 | `design_gate_list_rules` returns the rule catalog (30 rules) |
+| AC-AG1.3 | Every finding path in the report is workspace-relative |
+| AC-AG1.4 | A run over intentionally dirty input returns pass=false with truthful findings (no masking) |
+| AC-AG1.5 | `find_tools("design gate")` discovery returns both tools |
+
+### A4.3 FR-AG2 — Agent self-check enforcement (MUST + SM blocker)
+
+**Requirement:** Every agent that creates or edits design artifacts MUST run `design_gate_run` on those artifacts BEFORE reporting done. A FAIL result must be handled by (a) fixing the findings, or (b) a written acceptance justification recorded in RUN-LOG/phase report. Missing gate evidence is an SM blocker for Phase 5 Implementation and Phase 6 Testing completion.
+
+**Trigger scope — design artifacts:**
+
+| Extensions |
+|------------|
+| .html, .htm, .css, .scss, .sass, .less, .vue, .svelte, .tsx, .jsx |
+
+(Consistent with scan scope TDD Addendum (A1) — `DESIGN_FILE_EXTENSIONS` in `fs.adapter.ts`.)
+
+**FAIL handling — one of the two, no silent acceptance:**
+
+| Option | Requirement | Recorded in |
+|--------|-------------|-------------|
+| (a) Fix | Fix the findings in the same change/commit and re-run the gate until PASS (LOW findings may be triaged only) | Commit |
+| (b) Justify | Written justification (biên bản lý do chấp nhận) for remaining HIGH/MEDIUM findings + follow-up ticket in the shared backlog (SA4E-438) | RUN-LOG / phase report |
+
+**Severity semantics:** HIGH/MEDIUM findings fail the file; LOW is triage-only.
+
+**Gate evidence required in every agent completion report that touches design artifacts:**
+
+| Evidence field | Source |
+|----------------|--------|
+| tool | "design_gate_run" |
+| runId | report JSON |
+| score | report JSON |
+| pass/fail | report JSON |
+
+**Business Rules:**
+
+| Rule ID | Rule | Source |
+|---------|------|--------|
+| BR-AG7 | Agents MUST run `design_gate_run` on design artifacts they create/edit before reporting done | USER-APPROVED MUST (RUN-LOG #43) |
+| BR-AG8 | FAIL → fix in same change OR written justification + follow-up ticket (SA4E-438 shared backlog) | USER-APPROVED (RUN-LOG #43) |
+| BR-AG9 | SM blocks Phase 5 Implementation and Phase 6 Testing completion if the phase report lacks gate evidence (tool name, runId, score, pass/fail) | USER-APPROVED blocker (RUN-LOG #43) |
+| BR-AG10 | The steering rule file `.opencode/rules/sdlc/ui-design-gate.md` exists and is loaded in `.opencode/rules` so every agent session carries the obligation | This addendum; AC-AG2.3 |
+
+**Acceptance Criteria (FR-AG2):**
+
+| AC ID | Criterion |
+|-------|-----------|
+| AC-AG2.1 | An agent that creates/edits a design artifact has gate evidence (tool name, runId, score, pass) in its completion report |
+| AC-AG2.2 | Any FAIL is either fixed in the same change or covered by a written justification plus a follow-up ticket (SA4E-438) — never silently accepted |
+| AC-AG2.3 | `.opencode/rules/sdlc/ui-design-gate.md` exists and is loaded under `.opencode/rules` |
+| AC-AG2.4 | A phase report for Phase 5/6 without gate evidence is blocked by SM |
+
+### A4.4 Scope Boundary
+
+- No changes to the business rules or behavior of FR-01…FR-04 (Sections 3.1–3.4); this addendum adds new actors (AI agents) and enforcement on top of the existing gate.
+- Technical wiring (registry registration, exact tool schemas, argument validation) is specified in TDD Addendum 4 (sa-agent).
+- No new external dependency; no new MCP server.
+
+### A4.5 Addendum Open Issues
+
+| Issue ID | Description | Owner | Target Date | Severity |
+|----------|-------------|-------|-------------|----------|
+| OI-AG1 | Confirm `design_gate_list_rules` output shape (id/severity/description vs raw rule text) | SA | before dev hand-off | Low |
+| OI-AG2 | Decide whether qa-agent (Phase 6) requires a gate re-run or may reuse the dev-agent runId for the same artifact set | SM/QA | before Phase 6 | Medium |
+
+---
 
