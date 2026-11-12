@@ -36,6 +36,7 @@
 | 1.1 | 2026-11-12 | SA Agent | Addendum 4: post-implementation as-built notes for D1, D3, D5, D6 (root causes from commits dd1c5e5d, 88892218) + Open Issues. No diagram changes. |
 | 1.2 | 2026-11-13 | SA Agent | Addendum 4: Open Issues rewritten from FIX-EVIDENCE (batches 1-3), DESIGN-addendum4-openissues-fix, ANALYSIS-settings-worktree, SECURITY-ASSESSMENT-addendum4-fix (re-review PASS), TEST-REPORT-addendum4-fix. SEC-F04..F08, log redaction, size 200/20 → CLOSED; D1 as-built (explicit workspaceRoot, `{runId}.json` + `cache/{sha}.json`). Remaining items stated with residual risk; e2e D6 on this build PENDING. No diagram changes. |
 | 1.3 | 2026-11-13 | SA Agent | Addendum 5 (batch 1/2, design only): auto-trust git worktree for `base_dir` — module design, decisions OI-WT1..6, pseudocode, security analysis, test plan + RTM. New diagrams `sequence-worktree-trust`, `component-worktree-trust`. Earlier sections unchanged. |
+| 1.4 | 2026-11-13 | SA Agent | Addendum 5 (batch 1/2, design only): resolution of SECURITY-REVIEW-addendum5 (APPROVED-WITH-CONDITIONS, 3 High). New section E11 (Gate A: C1 trusted-first + lstat-before-open, C2 UNC/device guard both surfaces with OI-WT8 in scope, C3 fail-closed `symlinkEscape`; Gate B: C4..C9; SEC-WT -> TDD mapping). E11 supersedes conflicting text in E2.5, E3, E4, E5, E8, E10. Sequence diagram `sequence-worktree-trust` redrawn (guard, trusted-first, identity, overlap); component diagram unchanged. |
 
 ---
 
@@ -1247,6 +1248,8 @@ Rejected alternative: hand-copied mirror (what SA4E-394 did for the resolver). I
 **Modify — extension / repo:** `extension/src/services/base-dir-resolution.ts`, `extension/src/services/PathResolver.ts`, `extension/src/mcp-config-builder.ts`, `extension/package.json` (setting), root `package.json` (`sync:worktree-trust`, `check:worktree-trust` scripts).
 **Must remain unmodified and green:** `extension/src/__tests__/backend-local-tools.base-dir.test.ts` (TC-702/TC-309, includes an exact-message `toBe`), `backend/src/shared/__tests__/{multi-worktree-path-resolver,per-tool-base-dir.*}.test.ts`.
 
+**v1.4 additions to the DEV file list (security review, see E11.9):** also MODIFY `backend/src/shared/workspace-allowlist.ts` (UNC/device guard before `realpathSync` in `contains`; previously "not modified"), `extension/src/fs-guards.ts` (path of the extension `symlinkEscape` parity; confirm exact file at implementation, it is keyed on `rootSource === "workspace"`) and `extension/package.json` setting with `"scope": "machine"`; CREATE `backend/src/shared/worktree-trust/__tests__/worktree-security.test.ts` and `extension/src/__tests__/{symlink-escape.worktree,unc-guard.worktree}.test.ts`; CREATE `backend/src/shared/__tests__/{symlink-escape.worktree,unc-guard.worktree}.test.ts`. Backend `multi-worktree-path-resolver.ts` also gets the hardened `symlinkEscape`. If a file would pass 200 lines, extract `symlink-containment.ts` (backend) with the extension copy added to the generator.
+
 **Docs (owners other than DEV):** UG/DPG note for the two switches and `MCP_OPEN_WORKSPACE_FOLDERS` (DevOps/BA).
 
 ![Component - worktree trust](diagrams/component-worktree-trust.png)
@@ -1584,7 +1587,8 @@ Regression gates: all existing tests listed under "Must remain unmodified and gr
 | ID | Issue | Owner | Severity |
 |----|-------|-------|----------|
 | OI-WT7 | Main worktree / open folder as `base_dir` is not auto-trusted (FSD scope). Propose: trust `base_dir == open folder`. | SM/BA | Low |
-| OI-WT8 | `WorkspaceAllowlist.contains` calls `realpathSync` on an unlisted UNC `base_dir` (pre-existing; possible SMB/NTLM touch and hang). Recommend a UNC pre-guard in the resolver for non-allowlisted UNC paths. Not changed here. | Security/SA | Medium (pre-existing) |
+| OI-WT8 | **v1.4: IN SCOPE, High (SEC-WT-2).** UNC/device pre-guard before `allowlist.contains`/`isRootAllowlisted` and any `realpath`, both surfaces. Designed in E11.2; DEV batch 2. | DEV batch 2 | High |
+| OI-WT11 | Open folder that is itself a linked worktree: siblings rejected (`parent_not_trusted`). Future: derive `repoRoot` via `verifyWorktree(openFolder)`, never by directory proximity (SEC-WT-13). | SM/SA | Info |
 | OI-WT9 | Sync fs cannot be pre-empted by the 250 ms budget on a hung mapped network drive (non-UNC). Accepted residual. | SA | Low |
 | OI-WT10 | `mcp.json` env (`MCP_OPEN_WORKSPACE_FOLDERS`) is writable by anyone with workspace write access, like the existing `MCP_WORKSPACE_ROOTS`. Same trust class; documented. | Security | Low |
 | D-WT1..4 | FSD wording/number deviations in E3.2 need BA acknowledgement. | BA | Low |
@@ -1605,3 +1609,152 @@ Regression gates: all existing tests listed under "Must remain unmodified and gr
 | FR-WT14 / BR-WT13 | E2.4, WT-IT-21/22 |
 | FR-WT15 | E3 (OI-WT3), E6 |
 | OI-WT1..6 | E3; OI-WT4 also E7 |
+
+### E11. Security review resolution (v1.4) [SECURITY-REVIEW-addendum5, C1..C9]
+
+**Precedence.** E11 supersedes any conflicting text in E2-E10. Gate A (E11.1-E11.3) must be implemented before anything else in batch 2; Gate B (E11.4-E11.8) is checked at Phase 5.7. Summary of numeric changes: positive TTL **10 s** (was 30 s, within FSD "<= 30 s"), cache buckets **positive 128 / negative 64** (was 256 shared), cache-hit cost **3 metadata calls** (2 `lstat` + 1 `realpath(baseDir)`), 0 content reads, metadata calls per cold verification **<= 13** (trusted-first removes some; D-WT4 stands).
+
+#### E11.1 Gate A / C1 (SEC-WT-1): trusted-first ordering and safe reads
+
+**Rule 1: lstat-first for EVERY evidence file** (`.git`, `<admin>/commondir`, `<admin>/gitdir`). `FsLike.readSmall(p, maxBytes)` contract becomes:
+
+```typescript
+function readSmall(p, maxBytes): ReadResult {
+  const l = lstatSync(p, { bigint: true });                    // ENOENT -> {ok:false,reason:'missing'}
+  if (!l.isFile() || l.size > BigInt(maxBytes)) return fail(l.isFile() ? 'limit_exceeded' : 'not_a_worktree'); // FIFO, device, dir, symlink: NEVER opened
+  const flags = O_RDONLY | O_NONBLOCK | (O_NOFOLLOW ?? 0);    // O_NOFOLLOW undefined on win32: the lstat isFile check carries it
+  const fd = openSync(p, flags);
+  try { const f = fstatSync(fd, { bigint: true });             // identity: f.dev === l.dev && f.ino === l.ino && f.isFile()
+        if (!sameIdentity(f, l) || !f.isFile()) return fail('not_a_worktree');
+        return readAll(fd, Number(f.size)); } finally { closeSync(fd); }
+}
+```
+
+`readBounded(p, d)` therefore no longer takes a caller-supplied lstat signature (the `...` in E4.2 steps 3-4 is replaced by this internal lstat). A FIFO or device named `commondir`/`gitdir`/`.git` returns `not_a_worktree` without `open`.
+
+**Rule 2: trusted-first lexical gate BEFORE any fs call on the pointer target.** New step `stepTrustedPrefix` runs between `stepGitFile` (which only touches `base_dir`) and `stepAdmin`:
+
+```typescript
+// Candidates computed once per verification (no request input): for each T in allowlist roots ∪ openFolders (<= 16):
+//   spellings = {resolve(T), realpath(T)}   // realpath of trusted configured entries only (after E11.2 guard; cached, see E11.7)
+//   accepted parents P(T) = { join(S,'.git','worktrees'), join(S,'worktrees') }  for S in spellings   // main layout and bare layout
+function stepTrustedPrefix(s) {
+  const lex = normalizeLexical(isAbsolute(s.pointer) ? s.pointer : resolve(s.realBase, s.pointer)); // path.resolve only, NO fs
+  if (isUncOrDevice(lex) || hasBadWinComponent(lex)) return fail('unc_unsupported');
+  const ok = candidates.some((P) => samePathLexical(dirname(lex), P));                              // fold-compare, no fs
+  return ok ? pass({ admin0: lex }) : fail('parent_not_trusted');   // also covers submodule_or_unknown_layout (.git/modules/x) cases
+}
+```
+
+After this step every remaining syscall touches `base_dir` itself or a file inside a repository the user already trusts; attacker-chosen network paths, FIFOs and forged admin dirs are unreachable (zero fs calls on them). The old checks (realpath, `worktrees` layout, back-link, `commondir`) stay as defence in depth; `stepAdmin` realpaths `admin0`. Reason mapping for the client is unchanged: both `parent_not_trusted` and `submodule_or_unknown_layout` keep their message groups, so no new oracle. Known false negative: worktree registered via a spelling that is neither the resolved nor the realpath spelling of a trusted root (e.g. 8.3 or a different junction); remedy documented in UG: `git worktree repair` from the trusted repo or add the root to `MCP_WORKSPACE_ROOTS`. Verifier step order is now: `stepGitFile -> stepTrustedPrefix -> stepAdmin -> stepCommon -> stepBacklink -> stepParent`; `stepParent` keeps the realpath-based allowlist/open-folder check (a prefix match alone never grants trust).
+
+**Tests:** WT-UT-19 (FIFO/device/dir/symlink for each evidence file via fake `FsLike`: `open` call count 0), WT-UT-20 (pointer outside every trusted prefix -> spy `FsLike`: zero calls with that path or any of its parents), WT-IT-25 (POSIX real `mkfifo` as `commondir` and as `gitdir`, with a pointer inside a trusted repo, hard test timeout 2 s, asserts rejection without hang), extends WT-UT-16.
+
+#### E11.2 Gate A / C2 (SEC-WT-2): UNC/device guard on both surfaces (OI-WT8 in scope)
+
+New shared function `assertNoRemotePath(p, platform): boolean` (= `!isUncOrDevice(stripped p)`; also true-rejects `//host/x`, `\\?\UNC\h\x`, `\\.\dev`, `\\?\GLOBALROOT`). It lives in `worktree-path-fold.ts` and is exported via `index.ts`.
+
+Call order in BOTH resolvers (backend `resolveWithBaseDir`, extension `resolveWithBaseDir`), on `path.resolve(raw.trim())`:
+
+1. `if (platform==='win32' && !literalAllowlistHit(baseDir) && isUncOrDevice(baseDir)) return LEGACY rejection` (byte-identical message, no new oracle). `literalAllowlistHit` is a pure Set lookup on the folded string (no fs), so an administrator who listed a UNC root in `MCP_WORKSPACE_ROOTS` keeps working.
+2. Only then `allowlist.contains` / `isRootAllowlisted` (these may `realpath`).
+3. Only then `trust.check`.
+
+Further hardening in the same files: `WorkspaceAllowlist.contains` (modify `backend/src/shared/workspace-allowlist.ts`) applies the same guard internally before its `realpathSync` fallback, so any other caller is also safe (defence in depth); `file_path` absolute passthrough reaching `symlinkEscape` `existsSync`/`realpathSync` is guarded by the same predicate on win32 (UNC/device -> treated as escape/reject, fail-closed). Extension: OI-WT2 realpath of the candidate in `isRootAllowlisted` runs strictly after the guard. **Extension allowlist realpaths are computed once** per distinct setting/env string and cached in `getExtensionWorkspaceRoots` (invalidated by `onDidChangeConfiguration`), never per request (also SEC-WT-8). Tests: WT-UT-21 (spy on `fs.realpathSync`/`FsLike`: zero calls for `\\h\x`, `//h/x`, `\\?\UNC\h\x`, `\\.\pipe\x` on both surfaces; literal allowlisted UNC still accepted), WT-UT-31 (extension root set cached, single realpath per entry).
+
+#### E11.3 Gate A / C3 (SEC-WT-3): `symlinkEscape` fail-closed
+
+This changes the shared containment helper (backend `multi-worktree-path-resolver.ts`, extension `fs-guards.ts` path); E2.3 is widened to touch it. New algorithm:
+
+```typescript
+const MAX_LINK_DEPTH = 40;   // ELOOP-like bound, prevents link cycles
+function symlinkEscape(root: string, target: string): Escape | null {
+  let cursor = target; let hops = 0;
+  for (;;) {
+    let st; try { st = lstatSync(cursor); }
+    catch (e) { if (code(e) === 'ENOENT' || code(e) === 'ENOTDIR') { cursor = dirname(cursor); if (cursor === dirname(cursor)) break; continue; }
+                return ESCAPE('fs_error'); }                           // any other error: fail-closed (was: null)
+    if (st.isSymbolicLink()) {                                          // dangling or not: follow the link text, not the target
+      if (++hops > MAX_LINK_DEPTH) return ESCAPE('link_depth');
+      cursor = resolve(dirname(cursor), readlinkSync(cursor));          // readlink failure -> ESCAPE('fs_error')
+      if (!isInside(realRoot, cursor)) return ESCAPE('link_outside');   // lexical check of the link target, even if it does not exist
+      continue;
+    }
+    return isInside(realRoot, realpathSync(cursor)) ? null : ESCAPE('real_outside');
+  }
+  return null;
+}
+```
+
+Behavior pinned: dangling link pointing outside is rejected for read and write; chained links and symlinked ancestors are resolved hop by hop; exceptions other than ENOENT/ENOTDIR reject. `rootSource` stays `'workspace'` (extension) for worktree trust, which keeps the extension guard keyed on `rootSource === "workspace"` active; WT-UT-22 pins this (worktree-trusted result has `rootSource==='workspace'` and the guard is invoked). Scenarios added to the shared matrix: `danglingSymlinkOutside`, `symlinkChain`, `symlinkCycle`, `symlinkedAncestor`, `symlinkEscapeErrorFailClosed` (fake fs throwing EACCES). Tests: WT-IT-26 (dangling outside, write and read, both surfaces, worktree root created by real `git worktree add` with a committed symlink), WT-IT-27 (chain depth 41 rejected, cycle rejected, ancestor), WT-UT-22.
+
+#### E11.4 Gate B / C4 (SEC-WT-4): file identity
+
+In `stepBacklink` after the string compare passes, additionally require `statSig(lstat(<realBase>/.git)).dev/ino === statSig(stat(backlinkTarget)).dev/ino` (bigint; NTFS file IDs, Node >= 12; if `ino === 0n` on a filesystem, fall back to string equality only and log `debug`). String compare remains the fast negative. `precheck` and pointer validation (win32) additionally reject any path component that ends with `.` or space, or matches `/~\d+/` (8.3), except `.` / `..` components and drive prefix; reason `malformed` for `base_dir`, `unc_unsupported`-group for pointers (LEGACY/GENERIC text unchanged). Tests: WT-UT-23 (identity mismatch with equal strings via fake FsLike), WT-UT-24 (win32 trailing dot/space/8.3 precheck table), WT-IT-28 (win32 `copiedWorktreeFoldCollision` using U+212A look-alike directory; hardlink-copy of `.git` file: same inode, different path still fails string check).
+
+#### E11.5 Gate B / C5 (SEC-WT-5): where a trusted worktree may live
+
+After `stepParent` returns trusted, `stepPlacement` rejects (`submodule_or_unknown_layout`, no new message group) when any holds, comparing realpath-folded paths: (1) `base_dir` is inside, equal to, or an ancestor of the common dir; (2) `base_dir` is an ancestor-or-self of `repoRoot` or of any allowlist/open-folder root; (3) `base_dir` is a filesystem/drive root or equals `os.homedir()` (realpath, injected via `TrustDeps.homedir()`); (4) `warn` (non-blocking) when `base_dir` is not under `dirname(repoRoot)`. Tests: WT-IT-29 (worktree registered at `<repo>/.git/x`, at `<repo>/..`, at `/` or drive root, at `$HOME`; all rejected; sibling directory accepted).
+
+#### E11.6 Gate B / C6 (SEC-WT-6): cache re-binding
+
+On every hit `TrustCache.get` also compares `realpath(baseDir)` with the stored `realBase` (3rd metadata call), and the signature becomes `dev:ino:size:mtimeNs:ctimeNs` (ctime where available; mtime only otherwise). A mismatch evicts and forces re-verification. AC-WT13 expectation becomes: 2 `lstat` + 1 `realpath`, 0 content reads. WT-IT-19 is updated accordingly; new WT-IT-30 (swap `base_dir` for a junction/symlink to another directory within the TTL -> re-verify -> rejected).
+
+#### E11.7 Gate B / C7 (SEC-WT-7): feature flag semantics
+
+`effective = envEnabled && settingEnabled`; either source can disable, neither can override a disable (the "env wins" rule in OI-WT3 is withdrawn). Env parsing (`parseAutotrustFlag`): unset or empty -> on; trimmed, case-insensitive `1,true,on,yes` -> on; `0,false,off,no` -> off; ANY other value -> OFF plus one `warn` naming the variable (fail-closed, value sanitized and truncated). Exceptions while reading the setting -> disabled. The extension setting is declared with `"scope": "machine"` in `contributes.configuration` so `.vscode/settings.json` of the repository cannot set it. Backend has the env only. Tests: WT-UT-25 (`"disable"`, `"False"`, `" 0 "`, `"of"`, `""`, setting false + env 1 => off, setting true + env 0 => off), WT-UT-26 (reads `extension/package.json` and asserts `scope === "machine"`).
+
+#### E11.8 Gate B / C8, C9 and Gate C hardening
+
+- **C9 messages/logs:** `buildRejectionDetail` output contains `<b>` only: tests WT-UT-12 and WT-IT-20 additionally assert that no `WorktreeReason` token (e.g. `backlink_mismatch`) and no other absolute path appears in the client text (WT-UT-27). `repoRoot` is logged at `debug` only (WT-UT-28, spy logger levels over all scenarios). SEC-WT-10: optional collapse of GENERIC into LEGACY for remote HTTP transport left to SM (not required).
+- **SEC-WT-9:** separate buckets (positive 128, negative 64; negatives never evict positives); miss `warn` rate-limited to one line per reason per 10 s plus a counter in the next line (WT-UT-30).
+- **SEC-WT-11:** `MCP_OPEN_WORKSPACE_FOLDERS` entries that are filesystem roots or `homedir()` are ignored; an entry used as a parent must be an existing directory containing a `.git` directory.
+- **SEC-WT-12:** `base-dir-resolution.ts` imports `foldKey` from the generated library; WT-UT-29 asserts both `isAllowlisted` adapters answer identically for a fixed table (symlinked spelling, case, trailing slash, legacy mode); `check:worktree-trust` also runs in `npm run build`/CI; win32 scenarios (WT-IT-18, 28) run at least once per release on a Windows CI job.
+- **Gate C docs:** UG notes for SEC-WT-14/15 (stale registration, `C:/` forward-slash/WSL/MSYS/8.3 false negatives), kill switch semantics, separate-git-dir "bare" behavior (D-WT3).
+
+#### E11.9 Security review resolution (SEC-WT-n -> TDD)
+
+| Finding | Sev | Condition | Resolved in | New/updated tests |
+|---------|-----|-----------|-------------|-------------------|
+| SEC-WT-1 FIFO/blocking open, hostile pointer | High | C1 | E11.1 (+ E4.2 step order, E4.3 superseded) | WT-UT-19, 20, WT-IT-25, WT-UT-16 ext. |
+| SEC-WT-2 UNC realpath, OI-WT8 | High | C2 | E11.2, E10 (OI-WT8 in scope), E2.5 additions | WT-UT-21, 31 |
+| SEC-WT-3 `symlinkEscape` fail-open | High | C3 | E11.3, E2.3 widened | WT-IT-26, 27, WT-UT-22 |
+| SEC-WT-4 fold != identity | Med | C4 | E11.4 | WT-UT-23, 24, WT-IT-28 |
+| SEC-WT-5 placement/overlap | Med | C5 | E11.5 | WT-IT-29 |
+| SEC-WT-6 cache re-bind, signature | Med | C6 | E11.6 (AC-WT13 updated) | WT-IT-19 (updated), WT-IT-30 |
+| SEC-WT-7 flag semantics | Med | C7 | E11.7 (OI-WT3 amended) | WT-UT-25, 26 |
+| SEC-WT-8 extension realpath per call | Low | Gate C | E11.2 (cached root set) | WT-UT-31 |
+| SEC-WT-9 cache/log flooding | Low | Gate C | E11.8 | WT-UT-30 |
+| SEC-WT-10 message oracle | Low | C9 | E11.8, E6 (accepted) | WT-UT-27 |
+| SEC-WT-11 open-folders env | Low | Gate C | E11.8 | WT-UT-13 (extended) |
+| SEC-WT-12 parity drift | Low | Gate C | E11.8 | WT-UT-29, WT-IT-21/22 |
+| SEC-WT-13 worktree as open folder | Info | Gate C | E10 (OI-WT11) | - |
+| SEC-WT-14/15 stale registration, formats | Info | Gate C | E11.8 (UG notes) | - |
+| C8 test mapping for all High/Medium | - | C8 | E11.10 | see table |
+| C9 messages/logs | - | C9 | E11.8 | WT-UT-27, 28 |
+
+#### E11.10 Added test plan rows and RTM
+
+| ID | Level | Scenario | Covers |
+|----|-------|----------|--------|
+| WT-UT-19 | UT | `readSmall` lstat-first on every evidence file; FIFO/device/dir/symlink never opened | SEC-WT-1 |
+| WT-UT-20 | UT | trusted-first: pointer outside trusted prefixes causes zero fs calls on it | SEC-WT-1 |
+| WT-UT-21 | UT | UNC/device zero `realpath` on backend and extension; literal allowlisted UNC accepted | SEC-WT-2 |
+| WT-UT-22 | UT | worktree-trusted result keeps `rootSource==='workspace'`; extension symlink guard invoked | SEC-WT-3 |
+| WT-UT-23 | UT | dev/ino mismatch with equal strings -> `backlink_mismatch` | SEC-WT-4 |
+| WT-UT-24 | UT | win32 trailing dot/space/8.3 precheck table | SEC-WT-4 |
+| WT-UT-25 | UT | flag parse table + disable-wins | SEC-WT-7 |
+| WT-UT-26 | UT | package.json setting `scope: "machine"` | SEC-WT-7 |
+| WT-UT-27 | UT | client text: only `<b>`, no reason token | SEC-WT-10, C9 |
+| WT-UT-28 | UT | `repoRoot` only at `debug` | C9 |
+| WT-UT-29 | UT | allowlist adapters parity table | SEC-WT-12 |
+| WT-UT-30 | UT | cache buckets: negative flood does not evict positives; warn rate limit | SEC-WT-9 |
+| WT-UT-31 | UT | extension allowlist root set cached; realpath once per entry | SEC-WT-8 |
+| WT-IT-25 | IT | POSIX real FIFO as `commondir`/`gitdir`, hard timeout | SEC-WT-1 |
+| WT-IT-26 | IT | dangling symlink outside, read and write, both surfaces | SEC-WT-3 |
+| WT-IT-27 | IT | symlink chain/cycle/depth 41, symlinked ancestor, EACCES fail-closed | SEC-WT-3 |
+| WT-IT-28 | IT | win32 Kelvin fold collision; hardlinked `.git` copy | SEC-WT-4 |
+| WT-IT-29 | IT | placement: inside `.git`, `<repo>/..`, root, home | SEC-WT-5 |
+| WT-IT-30 | IT | `base_dir` swapped for junction within TTL -> rejected | SEC-WT-6 |
+
+RTM additions: BR-WT3/NFR-WT5 (security) -> WT-UT-19..24, WT-IT-25, 28, 29, 30; BR-WT8 (containment) -> WT-IT-26, 27, WT-UT-22; FR-WT15 -> WT-UT-25, 26; BR-WT10 -> WT-UT-27, 28; NFR-WT3 / AC-WT13 -> WT-IT-19 (updated), WT-UT-30; FR-WT14 -> WT-UT-29. QA assigns final STC numbers; this TDD does not edit STC.md. The sequence diagram (A5-1) was redrawn to show the C2 guard, the C1 trusted-first step, the C4 identity check, the C5 placement guard and the C6 re-bind. The component diagram (A5-2) is unchanged: no new component or dependency was added (`workspace-allowlist.ts` and the `symlinkEscape` helpers are existing boxes whose behavior changed).
