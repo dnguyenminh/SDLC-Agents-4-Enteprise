@@ -42,8 +42,13 @@ export interface DesignGateRunPayload {
 export function sanitizeErrorText(err: unknown, workspaceRoot: string | undefined): string {
   const msg = err instanceof Error ? err.message : String(err);
   if (!workspaceRoot) return `Design gate run failed: ${msg}`;
-  // Strip absolute workspace path if leaked into message
-  return `Design gate run failed: ${msg.replace(new RegExp(workspaceRoot.replace(/[\\/]/g, '\\\\'), 'g'), '<workspace>')}`;
+  // SEC-F03: escape regex specials, match both separators, case-insensitive on win32
+  const pattern = workspaceRoot
+    .split(/[\\/]+/)
+    .map((seg) => seg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('[\\\\/]+');
+  const flags = process.platform === 'win32' ? 'gi' : 'g';
+  return `Design gate run failed: ${msg.replace(new RegExp(pattern, flags), '<workspace>')}`;
 }
 
 /** Map QualityReport + optional fetchStatus → tool payload per D1 schema. */

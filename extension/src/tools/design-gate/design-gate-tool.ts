@@ -9,20 +9,12 @@
  * entry point as the three Command Palette commands.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
 import { runDetection } from '../../slash';
-import { EnvConfig } from '../../slash/types';
-import {
-  resolveWorkspacePath,
-  sanitizeLogText,
-} from '../../services/PathResolver';
-import { resolveWasmPath } from '../../slash/detector-env';
 import { registerLocalTool } from '../../backend-local-tools/registry';
+import { prepareDesignGateRunEnv } from './design-gate-env';
 
 import {
   parseRunArgs,
-  DEFAULT_FINDINGS_LIMIT,
 } from './design-gate-args';
 import {
   resolveSourceRoot,
@@ -79,43 +71,31 @@ export const DESIGN_GATE_LIST_RULES_DEFINITION = {
 export async function handleDesignGateRun(args: Record<string, unknown>): Promise<unknown> {
   let workspaceRoot: string | undefined;
   try {
-    // 1. Workspace root from live VS Code workspace (per-call, SA4E-356)
-    workspaceRoot = process.env[EnvConfig.WORKSPACE_ROOT];
-    if (!workspaceRoot) {
-      return toolError('WORKSPACE_ROOT not set in wrapper server environment');
-    }
-
-    // 2. Set WORKSPACE_ROOT for pipeline (fs.adapter validates against this)
-    process.env[EnvConfig.WORKSPACE_ROOT] = workspaceRoot;
-
-    // 3. Detector env: resolve WASM path (shared helper, 3-tier)
-    resolveWasmPath(workspaceRoot);
-
-    // 4. Parse & validate args
+    // 1. Per-call env: live workspace root + WASM from the extension path
+    //    (BUG-SA4E-393: no bare `vscode` global — see design-gate-env.ts).
+    const env = prepareDesignGateRunEnv();
+    if (!env.ok) return toolError(env.message);
+    workspaceRoot = env.root;
+    // 2. Parse & validate args, then resolve source_root (C3: PathResolver)
     const { mode, sourcePath, threshold, findingsLimit } = parseRunArgs(args);
-
-    // 5. Resolve source_root (C3: PathResolver)
-    const resolution = resolveSourceRoot(sourcePath);
+    const resolution = resolveSourceRoot(sourcePath, workspaceRoot);
     if (!resolution.ok) return toolError(resolution.message);
-    const sourceRoot = resolution.sourceRoot;
-
-    // 6. Run detection pipeline (loadDetector idempotent inside runDetection)
-    const result = await runDetection({
-      detectionMode: mode,
-      sourceRoot,
-      threshold,
-      cacheReuse: true,
-    });
-
-    // 7. Map report → payload (fetchStatus only for mode=rendered)
-    const fetchStatus = mode === 'rendered' && 'fetchStatus' in (result.combinedResult ?? {})
-      ? (result.combinedResult as any).fetchStatus
-      : undefined;
-    return toolText(mapReportToPayload(result.report, mode, findingsLimit, fetchStatus));
+    // 3. Run detection pipeline (loadDetector idempotent inside runDetection)
+    const result = await runDetection({ detectionMode: mode, sourceRoot: resolution.sourceRoot, threshold, cacheReuse: true });
+    // 4. Map report → payload (fetchStatus only for mode=rendered)
+    return toolText(mapReportToPayload(result.report, mode, findingsLimit, extractFetchStatus(mode, result)));
   } catch (e: any) {
     console.error(`[design-gate] run failed: ${e?.message ?? e}`, e?.stack);
     return toolError(sanitizeErrorText(e, workspaceRoot));
   }
+}
+
+/** fetchStatus is surfaced only for mode=rendered (aggregate modes drop it per TDD). */
+type FetchStatus = 'success' | 'skipped' | 'failed';
+function extractFetchStatus(mode: string, result: { combinedResult?: unknown }): FetchStatus | undefined {
+  const combined = result.combinedResult;
+  if (mode !== 'rendered' || !combined || typeof combined !== 'object') return undefined;
+  return 'fetchStatus' in combined ? (combined as { fetchStatus?: FetchStatus }).fetchStatus : undefined;
 }
 
 /** Handler for design_gate_list_rules — no file access, no pipeline run. */

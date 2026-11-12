@@ -76,11 +76,6 @@ function getVscode(): any {
 }
 
 export function defaultWorkspaceRootProvider(): string | undefined {
-  // First check if WORKSPACE_ROOT env var is set (set by tool-router for local tools)
-  const envRoot = process.env["WORKSPACE_ROOT"];
-  if (envRoot && envRoot.length > 0) {
-    return envRoot;
-  }
   try {
     const vscode = getVscode();
     return vscode?.workspace?.workspaceFolders?.[0]?.uri?.fsPath; // per-call, no cache

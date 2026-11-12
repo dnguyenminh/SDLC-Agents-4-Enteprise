@@ -192,14 +192,14 @@
       "UI agents (dev-agent, ui-agent — any agent editing .tsx/.svelte/.html/.css) MUST self-run gate before completion; FAIL must fix or justify; SM blocks Phase 5/6 without gate evidence"
     ],
     "decisions": "Extend scope SA4E-393 (no new ticket); enforcement MUST + blocker",
-    "signOffStatus": "implementation complete — vscode module loading limitation in wrapper server context documented"
+    "signOffStatus": "bug fixed in code (unit/mutation verified); e2e on reloaded VSIX PENDING - not complete"
   },
   "implementation": {
-    "status": "complete",
+    "status": "fixed_pending_e2e",
     "tools": ["design_gate_run", "design_gate_list_rules"],
     "testResults": "10/10 unit tests pass, compile clean, lint clean",
     "modules": "extension/src/tools/design-gate/ (5 files) + detector-env.ts + registration",
-    "knownLimitation": "design_gate_run fails with 'vscode is not defined' in wrapper server context due to module-load-time vscode require in PathResolver/base-dir-resolution. WORKSPACE_ROOT env var workaround implemented but module-load-time require executes before env var check. Requires architectural change (run detection in extension host process) to fully resolve."
+    "knownLimitation": "RESOLVED in working tree (RUN-LOG #49): real root cause = bare `declare const vscode` in design-gate-tool.ts (a617ba9d) -> ReferenceError in esbuild CJS bundle. Earlier diagnosis (module-load-time require in PathResolver) and WORKSPACE_ROOT env workaround were wrong and removed. Live MCP instance (port 9183) still old build until user reloads Kiro with VSIX 1.55.18."
   },
   "propagation": {
     "status": "complete",
@@ -207,5 +207,12 @@
     "ruleFile": ".opencode/rules/sdlc/ui-design-gate.md",
     "agentsUpdated": ["dev-agent", "ui-agent", "qa-agent", "sm-agent"]
   },
-  "blocker": null
+  "ruleEnforcement": {
+    "ui-design-gate": "NOT_IN_EFFECT",
+    "reason": "design_gate_run not yet verified runnable via execute_dynamic_tool on rebuilt VSIX; MUST + SM Phase 5/6 blocker re-enabled only after e2e evidence (runId/score/pass)",
+    "since": "2026-11-12"
+  },
+  "blocker": "e2e verification pending: user must install VSIX 1.55.18 and reload Kiro window"
 }
+
+

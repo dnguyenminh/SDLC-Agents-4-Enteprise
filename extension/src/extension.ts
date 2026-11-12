@@ -80,12 +80,12 @@ export async function activate(context: vscode.ExtensionContext) {
   // Patch globalThis.fetch so ALL fetch() callers in this process route through proxy
   applyGlobalFetchPatch();
 
+  // SA4E-393: design-gate local tools resolve the WASM detector from the
+  // extension path per call (no bare `vscode` global in the wrapper path).
+  initDesignGateEnv(context.extensionPath);
+
   const workspaceRoot = getWorkspaceRoot();
   if (workspaceRoot) {
-    // Set env vars for design-gate tools (used by LOCAL_TOOL_REGISTRY in wrapper server)
-    process.env[EnvConfig.WORKSPACE_ROOT] = workspaceRoot;
-    resolveWasmPath(context.extensionPath);
-    initDesignGateEnv(context.extensionPath);
     await initializeWorkspace(context, workspaceRoot);
   }
 

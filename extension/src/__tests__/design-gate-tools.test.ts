@@ -1,37 +1,17 @@
 /**
  * SA4E-393 — Unit tests for design-gate MCP tools (design_gate_run, design_gate_list_rules).
  * Mocks runDetection and PathResolver per existing conventions.
- * Sets global.vscode BEFORE imports because design-gate-tool.ts uses `declare const vscode: any;`.
+ * BUG-SA4E-393: NO global `vscode` stub — the handler must not depend on one
+ * (a stub here previously masked ReferenceError "vscode is not defined").
+ * The live workspace boundary is PathResolver.defaultWorkspaceRootProvider (mocked).
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// Set up global.vscode BEFORE any imports that use it
-const mockWorkspaceFolders = [{ uri: { fsPath: "C:\\ws\\test" } }];
-const mockExtension = {
-  extensionPath: "C:\\ws\\test\\.vscode\\extensions\\dnguyenminh.sdlc-agents-4-enterprise",
-};
+const MOCK_WS_ROOT = "C:\\ws\\test";
+const MOCK_EXTENSION_PATH = "C:\\ext\\dnguyenminh.sdlc-agents-4-enterprise";
 
-global.vscode = {
-  workspace: {
-    workspaceFolders: mockWorkspaceFolders,
-    getConfiguration: () => ({ get: (_k: string, def?: unknown) => def }),
-  },
-  window: {
-    createOutputChannel: () => ({ appendLine: vi.fn(), show: vi.fn() }),
-  },
-  extensions: {
-    getExtension: vi.fn().mockReturnValue(mockExtension),
-  },
-  EventEmitter: class {
-    private listeners: Array<(e: any) => void> = [];
-    event = (listener: (e: any) => void) => { this.listeners.push(listener); return { dispose: () => {} }; };
-    fire(data: any): void { this.listeners.forEach(l => l(data)); }
-    dispose(): void { this.listeners = []; }
-  },
-} as any;
-
-// Now mock the module dependencies
+// Mock the module dependencies
 vi.mock("../slash", () => ({
   runDetection: vi.fn(),
   EnvConfig: {
@@ -45,6 +25,7 @@ vi.mock("../slash", () => ({
 vi.mock("../services/PathResolver", () => ({
   resolveWorkspacePath: vi.fn(),
   sanitizeLogText: vi.fn((s: string) => s),
+  defaultWorkspaceRootProvider: vi.fn(() => MOCK_WS_ROOT),
 }));
 
 vi.mock("../slash/detector-env", () => ({
@@ -87,23 +68,29 @@ vi.mock("../backend-local-tools/registry", () => ({
 import { handleDesignGateRun, handleDesignGateListRules, registerDesignGateLocalTools } from "../tools/design-gate/design-gate-tool";
 import { runDetection } from "../slash";
 import { resolveWorkspacePath } from "../services/PathResolver";
-import * as vscode from "vscode";
+import { resolveWasmPath } from "../slash/detector-env";
+import { initDesignGateEnv } from "../tools/design-gate/design-gate-env";
 
 describe("design_gate_run handler", () => {
-  let outputChannel: vscode.OutputChannel;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    outputChannel = vscode.window.createOutputChannel("test") as any;
-    process.env.WORKSPACE_ROOT = "C:\\ws\\test";
-    // Reset mockWorkspaceFolders to default
-    global.vscode.workspace.workspaceFolders = mockWorkspaceFolders;
+    delete (globalThis as any).vscode;
+    initDesignGateEnv(MOCK_EXTENSION_PATH);
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
     vi.restoreAllMocks();
     delete process.env.WORKSPACE_ROOT;
+  });
+
+  it("0. per-call env: WORKSPACE_ROOT from live root, WASM from EXTENSION path (not workspace)", async () => {
+    (runDetection as any).mockResolvedValue({
+      report: { runId: "r0", score: 1, pass: true, threshold: 0.8, totalIssues: 0, severityBreakdown: { low: 0, medium: 0, high: 0 }, findings: [], fileCount: 0, durationMs: 1 },
+    });
+    await handleDesignGateRun({ mode: "static" });
+    expect(process.env.WORKSPACE_ROOT).toBe(MOCK_WS_ROOT);
+    expect(resolveWasmPath).toHaveBeenCalledWith(MOCK_EXTENSION_PATH);
+    expect(runDetection).toHaveBeenCalledWith(expect.objectContaining({ sourceRoot: MOCK_WS_ROOT }));
   });
 
   it("1. mode=both returns report with full schema (runId, score, pass, severityBreakdown, findings)", async () => {
@@ -298,7 +285,7 @@ describe("design_gate_run handler", () => {
     const filePath = path.join(__dirname, "..", "tools", "design-gate", "design-gate-tool.ts");
     const content = fs.readFileSync(filePath, "utf-8");
     const lines = content.split("\n").length;
-    expect(lines).toBeLessThanOrEqual(250);
+    expect(lines).toBeLessThanOrEqual(200);
   });
 });
 
