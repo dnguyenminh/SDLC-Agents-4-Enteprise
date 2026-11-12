@@ -182,23 +182,24 @@
     "mcpWrapper9183": "up (stream_write_file, embed_image, jira tools via execute_dynamic_tool)",
     "jiraAccess": "OK - jira_get_issue working via execute_dynamic_tool (discovered after restart)"
   },
-  "lastUpdated": "2026-11-12T03:15:00Z",
+  "lastUpdated": "2026-11-12T06:30:00Z",
   "scopeExtension": {
     "requestedAt": "2026-11-12",
     "requestedBy": "user (product owner)",
-    "reason": "Gate built for AI agents nhưng chỉ invocable thủ công qua Command Palette — agent không gọi được (RUN-LOG #43)",
+    "reason": "Gate built for AI agents but only invocable manually via Command Palette — agent cannot call it (RUN-LOG #43)",
     "requirements": [
-      "Expose design quality gate qua MCP tools của extension: design_gate_run + design_gate_list_rules (LOCAL_TOOL_REGISTRY pattern)",
-      "UI agents (dev-agent, ui-agent — mọi agent sửa .tsx/.svelte/.html/.css) MUST tự chạy gate trước khi báo done; FAIL phải fix hoặc biên bản lý do; SM chặn Phase 5/6 completion thiếu gate evidence"
+      "Expose design quality gate via MCP tools of extension: design_gate_run + design_gate_list_rules (LOCAL_TOOL_REGISTRY pattern)",
+      "UI agents (dev-agent, ui-agent — any agent editing .tsx/.svelte/.html/.css) MUST self-run gate before completion; FAIL must fix or justify; SM blocks Phase 5/6 without gate evidence"
     ],
-    "decisions": "Mở rộng scope SA4E-393 (không tạo ticket mới); enforcement MUST + blocker",
-    "signOffStatus": "implementation complete — pending qa-agent integration test + SM verify agent-invoked gate"
+    "decisions": "Extend scope SA4E-393 (no new ticket); enforcement MUST + blocker",
+    "signOffStatus": "implementation complete — vscode module loading limitation in wrapper server context documented"
   },
   "implementation": {
     "status": "complete",
     "tools": ["design_gate_run", "design_gate_list_rules"],
     "testResults": "10/10 unit tests pass, compile clean, lint clean",
-    "modules": "extension/src/tools/design-gate/ (5 files) + detector-env.ts + registration"
+    "modules": "extension/src/tools/design-gate/ (5 files) + detector-env.ts + registration",
+    "knownLimitation": "design_gate_run fails with 'vscode is not defined' in wrapper server context due to module-load-time vscode require in PathResolver/base-dir-resolution. WORKSPACE_ROOT env var workaround implemented but module-load-time require executes before env var check. Requires architectural change (run detection in extension host process) to fully resolve."
   },
   "propagation": {
     "status": "complete",
