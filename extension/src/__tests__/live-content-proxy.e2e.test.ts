@@ -1,6 +1,7 @@
 /**
- * LIVE E2E (not part of CI): wrapper + real backend content proxy.
- * Run with: $env:LIVE_BACKEND='1'; npx vitest run src/__tests__/live-content-proxy.test.ts
+ * LIVE E2E: wrapper + real backend content proxy (cross-process, needs a
+ * running backend). Excluded from the unit suite; runs via `npm run test:e2e`.
+ * Backend port: env LIVE_BACKEND_PORT (default 48721, the standalone backend).
  *
  * Verifies the generic contract for every exporter the child server exposes:
  *   file_path → content_base64 → backend (markdown) → artifact → output_base64 → output_path
@@ -15,11 +16,15 @@ import * as path from 'path';
 import { WrapperServer } from '../services/WrapperServer';
 import { createTestServer, postMcp, TMP_DIR, ensureTmpDir, cleanTmpDir } from './wrapper-server.helpers';
 
+/** Default port of the standalone backend this suite talks to. */
+const DEFAULT_BACKEND_PORT = 48721;
+const BACKEND_PORT = Number(process.env.LIVE_BACKEND_PORT ?? DEFAULT_BACKEND_PORT);
+
 function rpc(body: unknown): Promise<any> {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
     const req = http.request(
-      { hostname: '127.0.0.1', port: 48721, path: '/mcp', method: 'POST',
+      { hostname: '127.0.0.1', port: BACKEND_PORT, path: '/mcp', method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(data),
@@ -62,11 +67,24 @@ const EXPORTERS: Array<{ tool: string; ext: string; magic: string }> = [
   { tool: 'export_json', ext: 'json', magic: '{' },
 ];
 
-describe.skipIf(!process.env.LIVE_BACKEND)('LIVE content proxy (wrapper → backend)', () => {
+/** Fail loudly (not silently skip) when the live backend is unreachable. */
+async function assertBackendReachable(): Promise<void> {
+  try {
+    await liveGetTools();
+  } catch (e: any) {
+    throw new Error(
+      `LIVE backend not reachable at 127.0.0.1:${BACKEND_PORT} (${e?.code ?? e?.message ?? e}). ` +
+      'Start the backend or set LIVE_BACKEND_PORT before running `npm run test:e2e`.',
+    );
+  }
+}
+
+describe('LIVE content proxy (wrapper → backend)', () => {
   let server: WrapperServer;
   let port: number;
 
   beforeAll(async () => {
+    await assertBackendReachable();
     ensureTmpDir();
     ({ server } = createTestServer({ restCallTool: liveCallTool, restGetTools: liveGetTools } as any));
     await server.start(0);

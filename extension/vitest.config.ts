@@ -14,6 +14,8 @@ export default defineConfig({
     exclude: [
       "src/__tests__/cross-process.e2e.test.ts",
       "src/__tests__/drawio-convert.e2e.test.ts",
+      // Needs a running backend (cross-process) — runs via `npm run test:e2e`.
+      "src/__tests__/live-content-proxy.e2e.test.ts",
     ],
     globals: false,
     environment: "node",
