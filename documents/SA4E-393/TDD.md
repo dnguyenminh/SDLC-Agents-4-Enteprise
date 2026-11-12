@@ -690,3 +690,287 @@ D3 71, skipped-heading 33, A3 27, B1 14, cream-palette 11, side-tab 5,
 buzzword 6, bounce 3, D4 4 — 0 absolute paths (C5). The FAIL is the gate
 working: real, actionable design debt with file:line.
 
+---
+
+## Addendum 4 (SA4E-393, 2026-11-12) — Agent-Invocable Design Gate MCP Tools [FR-AG1, FR-AG2]
+
+> User requirement (verbatim): "(1) Phải cung cấp thêm qua MCP tool của extension. (2) Phải cập nhật
+> các UI agent... phải luôn tự kiểm tra/test code mới." Decision (user-approved): expand SA4E-393 —
+> the design gate becomes (a) agent-invocable via MCP tools (FR-AG1) and (b) a MUST self-check step
+> (FR-AG2): agents editing design artifacts run `design_gate_run` before completion; every FAIL must
+> be fixed or explicitly justified; SM blocks Phase 5/6 without gate evidence (AGENTS.md Key Rule 8).
+> Functional scope: FSD Addendum 4. This addendum specifies HOW. No new diagrams — the tools are
+> additional entry points into the existing §2.2 detection flow (runDetection), nothing else changes.
+
+### D1. Tool spec — `design_gate_run`
+
+Executes the REAL gate pipeline — the same `runDetection` entry point the three Command Palette
+commands use (extension/src/extension.ts, import at line 13, calls at lines 144–193) — in-process in
+the extension host via `LOCAL_TOOL_REGISTRY` (extension/src/backend-local-tools/registry.ts). No new
+MCP server; agents reach it through the existing MCP wrapper (`find_tools` → `execute_dynamic_tool`).
+
+**Definition (injected into tools/list — visible, `hidden` unset, drawio precedent):**
+
+```json
+{
+  "name": "design_gate_run",
+  "description": "Run the design quality gate: 30 design-debt rules over design artifacts (.html .css .vue .svelte .tsx .jsx) in the workspace or a sub-path. Returns score, PASS/FAIL vs threshold, severity breakdown and findings with file:line. Agents editing design artifacts MUST call this before completing the task; fix or justify every FAIL.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": ["static", "rendered", "both"],
+        "description": "Detection mode. Default: both (static files + localhost dev-server page when reachable)."
+      },
+      "source_path": {
+        "type": "string",
+        "description": "Optional workspace-relative path to scan (default: workspace root). Paths resolving outside the workspace are rejected (C3)."
+      },
+      "threshold": {
+        "type": "number",
+        "description": "Quality threshold 0-1. Default: DEFAULT_THRESHOLD (0.8; env QUALITY_GATE_THRESHOLD)."
+      },
+      "findings_limit": {
+        "type": "number",
+        "description": "Max findings echoed in the tool output (default 200). severityBreakdown/totalIssues always cover ALL findings; full report persisted to .code-intel/design-gate/{runId}.json (BR-12)."
+      }
+    },
+    "required": []
+  }
+}
+```
+
+**Handler flow** (`handleDesignGateRun` — thin orchestrator ≤20 lines, delegates to helpers):
+
+1. Workspace root from `defaultWorkspaceRootProvider()` (services/PathResolver — live
+   `vscode.workspace` read per call, SA4E-356 pattern). None open →
+   `toolError("No workspace folder open. Open a project folder first.")` (C6).
+2. `process.env[EnvConfig.WORKSPACE_ROOT] = root` — pipeline fs.adapter validates C3 against this
+   (same as the commands' resolveWorkspace() today).
+3. Detector env: `resolveWasmPath(extensionPath)` (shared helper, D3) sets
+   `process.env[EnvConfig.IMPPECABLE_SKILL_PATH]`. Mandatory — integration.service `getWasmPath()`
+   otherwise falls back to `./wasm/detector.wasm` relative to the IDE install cwd (load failure).
+4. `source_path` given → `PathResolver.resolveWorkspacePath(source_path)` (C3 single validation
+   point). `!ok` → forward `resolution.message` verbatim as toolError (messages are CODE:-prefixed
+   and sanitized). Empty/absent → sourceRoot = workspace root.
+5. Validate `mode` (enum) and `threshold` ∈ [0,1]; invalid → toolError with allowed values.
+6. `await runDetection({ detectionMode: mode, sourceRoot, threshold, cacheReuse: true })`.
+   loadDetector is handled INSIDE runDetection (idempotent — slash/index.ts:92); the tool never
+   calls integration internals directly. Note: runDetection's config key is `detectionMode`
+   (verified — slash/types.ts DetectionConfig); the tool's `mode` argument maps onto it.
+7. Map `report` (+ `fetchStatus` when mode=rendered) → tool-result JSON, schema below.
+8. Whole run in try/catch: DetectionErrorException → sanitized message; unknown error →
+   `"Design gate run failed: <ErrorName>"` (C6 — no stack, no internals, workspace-root prefix
+   stripped from any path fragment in the text).
+
+**Success response** (isError: false, `content[0].text` = JSON). Example uses the real evidence
+run from Addendum 3 C2 (447 design files, ~8s):
+
+```json
+{
+  "ok": true,
+  "runId": "run_1762924800000_ab12cd34",
+  "detectionMode": "both",
+  "score": 0.79,
+  "pass": false,
+  "threshold": 0.8,
+  "totalIssues": 1839,
+  "severityBreakdown": { "low": 1660, "medium": 179, "high": 0 },
+  "findings": [
+    {
+      "findingId": "f1", "runId": "run_1762924800000_ab12cd34", "mode": "static",
+      "file": "extension/webview/ui.css",
+      "severity": "medium",
+      "message": "position:absolute overuse (>5 per file)",
+      "line": 42
+    }
+  ],
+  "findingsReturned": 200,
+  "findingsTruncated": true,
+  "fileCount": 447,
+  "durationMs": 8123,
+  "message": "optional — QualityReport.message (e.g. vacuous-pass notice)"
+}
+```
+
+- `fetchStatus` present ONLY when `mode=rendered` (from `RenderedDetectionResult.fetchStatus`,
+  values "success" / "skipped" / "failed"). Verified: mode=both builds a fresh aggregate that drops
+  fetchStatus (integration.service.ts runFullDetection), so it is not surfaced there; each finding
+  already carries `mode` ("static"/"rendered") for attribution.
+- `findings_limit` rationale: one full workspace run produced 1,839 findings (~300KB JSON). MCP
+  wrapper body budget is 1MB–100MB (services/WrapperServer/constants.ts) so transport is safe, but
+  agent context is not — cap the echo, keep `totalIssues`/`severityBreakdown` exact over ALL
+  findings, keep the full report on disk.
+
+**Error contract (C6):** `isError: true` + sanitized `content[0].text`. Never stack traces, never
+internal paths. Cases:
+
+| Case | Tool result |
+|------|-------------|
+| No workspace folder | "No workspace folder open. Open a project folder first." |
+| source_path outside workspace | PathResolver message verbatim (PATH_EMPTY / PATH_INVALID / PATH_REJECTED_OUTSIDE_WORKSPACE / PATH_REJECTED_OUTSIDE_ALLOWLIST) |
+| Bad mode / threshold ∉ [0,1] | Validation message listing allowed values |
+| Detector load failure | "Detector load failed: <sanitized message>" |
+| Any pipeline throw | "Design gate run failed: <ErrorName>" + console.warn log, no stack |
+
+**Performance:** static full-workspace run ≈ 8s / ~447 design files (Addendum 3 C2 evidence).
+In-process call — zero backend round-trip; §8.3 concurrency caps unchanged.
+
+### D2. Tool spec — `design_gate_list_rules`
+
+Purpose (FR-AG2): lets an agent learn the rules BEFORE writing design code — cheaper than
+FAIL→fix loops. No input, no file access, no pipeline run.
+
+```json
+{
+  "name": "design_gate_list_rules",
+  "description": "List the 30 design-quality rules the gate enforces (id, severity, rule text, source, applicable extensions) plus the threshold and the scoring formula. Call before creating/editing design artifacts so code passes on the first run.",
+  "inputSchema": { "type": "object", "properties": {}, "required": [] }
+}
+```
+
+**Output** — derived from `DESIGN_RULES` (extension/src/slash/design-rules.ts:96 — exactly 30
+entries, verified 2026-11-12):
+
+```json
+{
+  "ok": true,
+  "ruleCount": 30,
+  "threshold": 0.8,
+  "thresholdSource": "DEFAULT_THRESHOLD = parseFloat(env QUALITY_GATE_THRESHOLD || \"0.8\")",
+  "scoringFormula": "score = 1 - (unique files with >=1 HIGH or MEDIUM finding) / (files in scan scope); clamped [0,1]; empty scope -> score 1.0 + vacuous-pass message 'No design artifacts found in scan scope (0 files)'. LOW findings are triage info and never fail a file. pass = score >= threshold (BR-11).",
+  "scanScope": ".html .htm .css .scss .sass .less .vue .svelte .tsx .jsx; SKIP_DIRS excluded (node_modules, .git, out, dist, build, coverage, .code-intel, .kiro, .opencode, .vscode, resources, webview-assets)",
+  "rules": [
+    { "ruleId": "A1", "severity": "high", "message": "<img> missing alt attribute (accessibility)", "source": "base", "appliesTo": ["html", "htm", "tsx", "jsx", "svelte", "vue"] },
+    { "ruleId": "overused-font", "severity": "low", "message": "Overused AI font (Inter/Roboto/…)", "source": "impeccable", "appliesTo": ["css", "scss", "sass", "less", "html", "htm", "tsx", "jsx", "svelte", "vue"] }
+  ]
+}
+```
+
+- `message` = `DesignRule.label` — the exact finding template the agent will see in reports.
+- `source` classification: static `BASE_RULE_IDS` set in design-gate-tool.ts
+  (A1–A3, B1–B3, C1–C3, D1–D4 = 13 base) → "base"; remaining 17 (overused-font … marquee) →
+  "impeccable" (Addendum 2 B1, Addendum 3 C1). design-rules.ts untouched.
+- `appliesTo` = `DesignRule.extensions` — extension-aware gating (e.g. stylesheet-only rules do
+  not run on TSX), so agents know which files each rule hits.
+
+### D3. Module layout + registration
+
+```
+extension/src/tools/design-gate/
+└── design-gate-tool.ts            // DESIGN_GATE_RUN_DEFINITION + DESIGN_GATE_LIST_RULES_DEFINITION
+                                  // + handleDesignGateRun + handleDesignGateListRules
+                                  // + toolText/toolError (tools/drawio/drawio-tool.ts pattern)
+extension/src/slash/detector-env.ts   // NEW: resolveWasmPath(extensionPath) — 3-tier logic EXTRACTED
+                                  // from extension.ts resolveWasmPath (resources/wasm → out/wasm →
+                                  // ../source/source-slash/wasm); sets IMPPECABLE_SKILL_PATH
+```
+
+- Structure mirrors `tools/drawio/drawio-tool.ts`: exported definitions + handlers; handlers
+  delegate to small helpers (`parseRunArgs`, `resolveSourceRoot`, `mapReportToPayload`,
+  `sanitizeErrorText`). Limits: file ≤200 lines (BR-18), function ≤20 lines.
+- `slash/detector-env.ts` is a pure EXTRACTION (no new dependency): extension.ts's inline
+  `resolveWasmPath` refactors to delegate so commands and tool share ONE implementation.
+  The tool obtains `extensionPath` lazily via
+  `vscode.extensions.getExtension("dnguyenminh.sdlc-agents-4-enterprise")?.extensionPath`
+  (lazy-require pattern proven in PathResolver.ts:66–71). Fallback if getExtension proves
+  unreliable in the target host: thread `context.extensionPath` from workspace-init (which holds
+  `context` — workspace-init.ts:52) into the registration call; dev-agent documents which
+  variant shipped.
+- **Registration hook (verified call site — NOT extension.ts):** all local tool groups register in
+  the `RemoteBackendClient` constructor (extension/src/remote-backend-client.ts lines 68–89:
+  registerPegaLocalTools / registerAtlassianLocalTools / registerDevtoolsTools /
+  registerIdeControlTools), which runs during activation via `initializeWorkspace` →
+  `new McpServerManager(...)` (extension/registration/workspace-init.ts:52 — McpServerManager is
+  the RemoteBackendClient alias, KSA-293). Add ONE call there:
+
+```typescript
+// remote-backend-client.ts constructor — AFTER the if (secrets) block:
+try {
+  registerDesignGateLocalTools();   // no credentials needed → outside the secrets gate
+} catch (err) {
+  console.warn(`[RemoteBackendClient] Design gate tools registration failed: ${(err as Error).message}`);
+}
+```
+
+```typescript
+// design-gate-tool.ts — registration init (mirrors mcp/atlassian/index.ts registerAtlassianLocalTools)
+export function registerDesignGateLocalTools(): void {
+  registerLocalTool("design_gate_run", handleDesignGateRun, DESIGN_GATE_RUN_DEFINITION);
+  registerLocalTool("design_gate_list_rules", handleDesignGateListRules, DESIGN_GATE_LIST_RULES_DEFINITION);
+}
+```
+
+OCP respected: registry.ts untouched (`registerLocalTool` is the extension point); no new MCP
+server; `hidden` unset → tools appear in tools/list (getVisibleLocalToolDefinitions) AND stay
+callable via execute_dynamic_tool.
+
+### D4. Security mapping — all four conditions preserved intact
+
+| Condition | Where enforced in the tool flow |
+|-----------|--------------------------------|
+| C3 workspace-scoped paths | (1) `source_path` → `resolveWorkspacePath` (services/PathResolver — SA4E-356 single validation point: rejects outside-workspace + traversal); (2) pipeline double-check: fs.adapter `validateFilePath` inside listSourceFiles/readSourceFile against `WORKSPACE_ROOT` env; (3) design_gate_list_rules touches no files. |
+| C4 SSRF localhost-only | Unchanged: rendered mode fetches via localhost-fetcher (`host === 127.0.0.1 || localhost` only, 10s timeout, 1 retry, response size cap). The tool accepts NO URL parameter — dev-server URL comes from `LOCALHOST_DEV_SERVER_URL` env / runDetection defaults only. |
+| C5 no absolute paths in output | Unchanged: `generateQualityReport` sanitizes every `finding.file` to workspace-relative (verified: 0 absolute paths in the Addendum 3 C2 real run). Tool error path additionally strips the workspace-root prefix from any message fragment. |
+| C6 error sanitize | Tool-level try/catch → `isError:true` + sanitized text (no stack, no internals). Pipeline's own C6 layer (integration.service getUserFriendlyError) stays untouched beneath it. |
+
+### D5. Test plan (for qa-agent)
+
+**Unit** — `extension/src/__tests__/design-gate-tools.test.ts` (vitest; mock `./slash` runDetection
+and PathResolver per existing conventions — e.g. remote-backend-health.test.ts mocks
+mcp/atlassian/index):
+
+1. mode=both → handler returns report; JSON has runId, detectionMode, score, pass, threshold,
+   totalIssues, severityBreakdown{low,medium,high}, findings[] (field shapes per D1).
+2. source_path resolving outside workspace → isError:true, message carries the PathResolver code
+   (C3); runDetection NOT called.
+3. threshold: passed value lands in report.threshold; omitted → DEFAULT_THRESHOLD (0.8);
+   1.5 / −0.1 → validation error.
+4. invalid mode ("statics") → validation error listing allowed enum values.
+5. findings_limit: findings trimmed to limit, findingsTruncated=true, findingsReturned=limit;
+   severityBreakdown/totalIssues remain ALL-finding counts.
+6. list_rules → ruleCount=30, ≥30 entries, source split 13 base + 17 impeccable, every entry has
+   ruleId/severity/message/appliesTo.
+7. C6: runDetection throws → isError:true, text "Design gate run failed: …", no stack, no
+   workspace-root absolute path in text.
+8. mode=rendered → fetchStatus surfaced from combinedResult; mode=static/both → no fetchStatus.
+9. Handler/definition file ≤200 lines, functions ≤20 lines (size guard — repo convention).
+
+**Integration (standalone, real session — no mocks):**
+
+1. `find_tools("design gate")` discovers both tools; tools/list includes them (visible).
+2. `execute_dynamic_tool("design_gate_run", {})` on this workspace → output parses as JSON with
+   all schema fields; expect honest FAIL (score < 0.8 — 1,839 known findings in this repo).
+3. Dirty-input honesty: `source_path` at a fixture dir containing one violating file
+   (`<img>` without alt, `width: 500px`, `!important`) → FAIL with that exact file:line.
+4. Clean-input honesty: fixture dir with a conforming file (alt attributes, responsive widths,
+   spacing on the 4/8 scale) → PASS (score ≥ threshold), or vacuous pass with message when the
+   scope has no design artifacts.
+5. Rendered without dev server: mode=rendered → fetchStatus "failed"/"skipped", static fallback
+   semantics preserved (AF-1 / TC-03).
+6. `execute_dynamic_tool("design_gate_list_rules")` → 30 rules + formula string present.
+
+**Agent-loop demo (FR-AG2 evidence):** find_tools → design_gate_list_rules (read rules) → write a
+small design file violating A1+A2 → design_gate_run → FAIL read → fix the file → design_gate_run →
+PASS. Transcripts stored as test evidence for this ticket.
+
+### D6. Acceptance criteria
+
+| # | Criterion |
+|---|-----------|
+| i | Both tools invocable via `execute_dynamic_tool` in a real session; visible in tools/list. |
+| ii | Report JSON matches the D1 schema exactly (field names, types, enums). |
+| iii | Honest both ways: clean input → PASS; dirty input → FAIL with actionable file:line. |
+| iv | 0 absolute paths in findings[] and in error text (C5/C6). |
+| v | Lint + extension test suite pass; ≤200 lines/file, ≤20 lines/function. |
+| vi | Rebuilt VSIX contains the tools (bundle includes design-gate-tool + registration call). |
+| vii | FR-AG2 enforcement wired: AGENTS.md Key Rule 8 — agents editing design artifacts MUST run design_gate_run before completion; every FAIL fixed or justified; SM blocks Phase 5/6 without gate evidence. |
+
+### Traceability
+
+| Requirement (FSD Addendum 4) | Where designed |
+|------------------------------|----------------|
+| FR-AG1 — agents invoke the gate via MCP tools | D1, D2, D3 (LOCAL_TOOL_REGISTRY registration, no new MCP server) |
+| FR-AG2 — mandatory self-check + blocker | D1 tool contract, D5 agent-loop demo, D6.vii (AGENTS.md Key Rule 8) |
+
