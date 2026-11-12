@@ -103,3 +103,7 @@ documents/*/*-embedded.md
 
 # code-intel runtime cache (machine-local, regenerated)
 .code-intel/models-cache/
+
+# design-gate runtime store/cache (SA4E-393; machine-local audit records)
+.code-intel/design-gate/
+extension/.code-intel/

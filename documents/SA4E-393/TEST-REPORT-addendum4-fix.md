@@ -46,3 +46,53 @@ Note: STC.md has no Addendum 4 section; criteria taken from TDD D5/D6.
 4. Decide on pre-existing `mapReportToPayload` (>20 lines) and the 300-line test file: refactor or accept with justification.
 
 No source files were modified (mutations reverted); nothing committed.
+
+---
+
+## Verify sau fix open issues
+
+Ngày: QA re-run độc lập (không dùng số trong FIX-EVIDENCE). Working tree chưa commit, thư mục `extension/`.
+
+| # | Kiểm tra | Kết quả |
+|---|----------|---------|
+| 1 | `npx tsc --noEmit` | PASS (exit 0, 0 lỗi) |
+| 2 | `npx eslint --no-ignore` trên 42 file đổi/thêm (src/slash, src/tools/design-gate, src/__tests__/design-gate*, extension.ts; không có file đổi trong src/utils) | PASS (exit 0, 0 lỗi/warning) |
+| 3 | `npx vitest run` full | PASS: 446 file passed, 1 skipped (447); 3480 tests passed, 6 skipped, 0 failed |
+| 4 | design-gate-size-guard | PASS (3/3) |
+| 5 | `git status` | Không có file rác mới (tmp, run_*.json, .bak, .log); so với baseline trước khi chạy không khác biệt |
+| 6 | Mutation M1: `validateFilePath` về `startsWith` (path-guard.ts) | PASS (mutation bị bắt): `design-gate-fs-adapter-containment.test.ts` > "SEC-F07 containment > blocks sibling directory sharing the root prefix" đỏ (1 failed / 72 passed) |
+| 7 | Mutation M2: bỏ `isValidRunId` check trong `loadReport` (report.store.ts) | **FAIL (mutant sống sót)**: toàn bộ 73 tests design-gate vẫn xanh, không test F05 nào đỏ |
+| 8 | Hoàn tác mutation | Hash path-guard.ts và report.store.ts khớp bản gốc (SHA256 5BB7D934…B433 / 58FA1955…2091) |
+
+### Finding
+
+- **QA-M2 (Medium, test gap):** `design-gate-report-store.test.ts` chỉ kiểm `loadReport(root, "../x")` trả `undefined`. Kết quả này vẫn đúng khi bỏ regex check, vì `resolveInside` và `existsSync` đã chặn. Không test nào chứng minh rằng `loadReport` từ chối runId sai định dạng nhưng nằm trong store (ví dụ file `Run_1_A.json` hoặc `run_1_a.json.bak` tồn tại trong store, hoặc runId dài hơn 64 ký tự). Đề xuất cho DEV: thêm test tạo file hợp lệ về đường dẫn nhưng sai `RUN_ID_RE` (ví dụ `RUN_1_X.json`, hoặc runId 65 ký tự) và assert `loadReport` trả `undefined`.
+
+### Verdict: **FAIL**
+
+Các kiểm tra tsc, eslint, vitest full, size-guard, git sạch và M1 đều đạt. FAIL vì yêu cầu "M2 phải đỏ" không thỏa: mutant M2 sống sót, nên SEC-F05 trong `loadReport` chưa được test bảo vệ. Không sửa code sản phẩm; mọi mutation đã hoàn tác. Cần DEV bổ sung test rồi QA chạy lại M2.
+
+---
+
+### Lần 1 vs Lần 2
+
+- **Lần 1: FAIL.** Mutant M2 sống sót (bỏ `isValidRunId` trong `loadReport` mà 73 tests design-gate vẫn xanh). Các kiểm tra còn lại đạt. Nội dung lần 1 giữ nguyên ở trên.
+- **Lần 2:** dev-agent thêm `describe("loadReport enforces isValidRunId even when the file really exists (QA M2)")` vào `design-gate-report-store.test.ts` (5 case file có thật trong store nhưng sai định dạng: `RUN_1_X`, `run_1_A`, `run_1_a-b`, `run_1_`, runId hợp regex nhưng dài hơn 64 ký tự, cộng 1 control test). QA chạy lại độc lập.
+
+| # | Kiểm tra (lần 2) | Kết quả |
+|---|------------------|---------|
+| 1 | Mutation M2: thay `if (!isValidRunId(runId)) return undefined;` trong `loadReport` (report.store.ts) bằng comment | **PASS (mutant bị bắt)**: `design-gate-report-store.test.ts` 14 tests, 5 failed, đều thuộc nhóm "loadReport enforces isValidRunId ... (QA M2)" (5 case on-disk, retry x2) |
+| 2 | Hoàn tác M2, SHA256 `report.store.ts` | Trước = sau = `58FA19550CD467745951B330155DABF56783A41AF7FB9FAA76A46CE1800C2091` (khớp bản gốc lần 1) |
+| 3 | `npx tsc --noEmit` | PASS (exit 0) |
+| 4 | `npx eslint --no-ignore` trên 44 file `.ts` đổi/thêm trong `extension/` | PASS (exit 0) |
+| 5 | `npx vitest run` full | PASS: 446 file passed, 1 skipped (447); **3486 tests passed**, 6 skipped, 0 failed (lần 1: 3480 passed, chênh +6 = test F05 mới) |
+| 6 | design-gate-size-guard | PASS (3/3) |
+| 7 | File rác (tmp, .bak, .log, run_*.json) trong `git status` | Không có |
+
+M1 không chạy lại vì lần 1 đã PASS và `path-guard.ts` không được chạm; full vitest lần 2 vẫn xanh.
+
+Không sửa code sản phẩm: mutation M2 chỉ áp tạm và hoàn tác bằng bản sao, hash khớp.
+
+### Verdict cuối: **PASS**
+
+Lỗ hổng test QA-M2 đã đóng: SEC-F05 trong `loadReport` hiện được test bảo vệ, mutant bị bắt. Toàn bộ tsc, eslint, vitest full, size-guard đạt. Chưa commit.

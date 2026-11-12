@@ -1,228 +1,115 @@
 /**
  * Report Generator
- * 
- * Aggregates findings from static and rendered detection,
- * calculates quality score (0-1), and determines pass/fail
- * based on the configured threshold.
- * 
+ *
+ * Aggregates findings from static and rendered detection, calculates the
+ * quality score (0-1, see report.scoring.ts) and decides pass/fail against
+ * the configured threshold.
+ *
  * SECURITY-REVIEW.md Conditions C5-C6:
- * - C5: Report output sanitizes filePath to relative path within workspace only
- * - C6: Wrap all detector calls in try/catch; on error, report score: 0, mode: "error"
- * - Never include raw error message in public report
+ * - C5: finding paths are workspace-relative only (explicit root, SEC-F08)
+ * - C6: any failure yields a minimal inconclusive report, never a raw error
  */
 
-import * as path from "path";
-import { DetectionError, Finding, QualityReport, DetectionConfig, EnvConfig, DetectionRun } from "./types";
+import { DetectionError, Finding, QualityReport, EnvConfig, DetectionRun } from "./types";
 import { generateId } from "./utils";
+import { logRedacted } from "./path-redactor";
+import { getWorkspaceRoot } from "./path-guard";
+import { buildBreakdown, computeScore, sanitizeFindings } from "./report.scoring";
 
-// Import env config for threshold
-const DEFAULT_THRESHOLD = parseFloat(
-  process.env[EnvConfig.QUALITY_GATE_THRESHOLD] || "0.8"
-);
+type Mode = "static" | "rendered" | "both";
+
+const DEFAULT_THRESHOLD = parseFloat(process.env[EnvConfig.QUALITY_GATE_THRESHOLD] || "0.8");
+
+/** Fresh runId (run_<ms>_<id>) — the only shape report.store accepts. */
+function newRunId(): string {
+  return `run_${Date.now()}_${generateId(8)}`;
+}
+
+/** BR-11: score >= threshold passes. */
+function isPassing(score: number, threshold: number): boolean {
+  return score >= threshold;
+}
+
+/** Assemble the report object once score and threshold are known. */
+function assembleReport(
+  findings: Finding[], mode: Mode, threshold: number, runId: string | undefined,
+  totalFiles: number, workspaceRoot: string | undefined,
+): QualityReport {
+  const { score, message } = computeScore(findings, totalFiles);
+  const report: QualityReport = {
+    runId: runId || newRunId(),
+    detectionMode: mode,
+    threshold,
+    score: Number(score.toFixed(4)), // 4 decimal places
+    pass: isPassing(score, threshold),
+    timestamp: new Date().toISOString(),
+    findings: sanitizeFindings(findings, workspaceRoot ?? getWorkspaceRoot()),
+    totalIssues: findings.length,
+    severityBreakdown: buildBreakdown(findings),
+    fileCount: totalFiles,
+  };
+  if (message) report.message = message;
+  return report;
+}
+
+/** C6: minimal inconclusive report; the raw error stays out of the report. */
+function errorReport(runId: string | undefined): QualityReport {
+  return {
+    // S-1: always a RUN_ID_RE-valid id so the inconclusive run still gets an audit record.
+    runId: runId || newRunId(),
+    detectionMode: "static",
+    threshold: DEFAULT_THRESHOLD,
+    score: 0,
+    pass: true, // fail-open by default
+    timestamp: new Date().toISOString(),
+    findings: [],
+    totalIssues: 0,
+    severityBreakdown: { low: 0, medium: 0, high: 0 },
+  };
+}
 
 /**
- * Aggregate findings from static and rendered detection runs
- * and produce a quality gate report.
+ * Aggregate findings of static/rendered runs into a quality gate report
+ * (BR-10/11/12; normalized scoring in report.scoring.ts).
  *
- * Per BR-10, BR-11, BR-12 (FSD §3.4):
- * - Report includes total issues, severity breakdown, score
- * - Pass/fail determined by threshold (BR-11)
- * - Report persisted for audit (BR-12)
- *
- * SA4E-393 Addendum (user-approved 2026-11-09) — NORMALIZED SCORING:
- * the previous absolute per-finding deduction (−0.15/medium etc.) made any
- * real repository clamp to score 0 regardless of size. New formula:
- *   score = 1 − (unique files with findings / total files in scan scope)
- * Scale-independent: a 10-file project and a 10,000-file project with the
- * same clean-file ratio get the same score. severityBreakdown is kept in the
- * report for triage but no longer drives the score.
- *
- * SA4E-438 amendment (user-approved 2026-11-10): with real design-quality
- * rules, only HIGH/MEDIUM findings fail a file (a11y, layout, component
- * correctness). LOW findings (tokens, !important, magic spacing, markers)
- * are triage info and do not lower the score.
- *
- * Per SECURITY-REVIEW.md C5:
- * - File paths in findings are sanitized to relative paths within workspace only
- *
- * Per SECURITY-REVIEW.md C6:
- * - On error, report score: 0, mode: "error" semantics, sanitized message
- *
- * @param findings - Array of all findings (static + rendered)
- * @param mode - Detection mode: "static" | "rendered" | "both"
- * @param threshold - Quality score threshold (0-1), defaults to ENV config
- * @param runId - Unique identifier for this detection run
- * @param totalFiles - Number of files in the scan scope (denominator of the cleanliness ratio)
- * @returns QualityReport with score and pass/fail
+ * @param findings - all findings (static + rendered)
+ * @param mode - detection mode
+ * @param threshold - quality threshold (0-1); defaults to QUALITY_GATE_THRESHOLD
+ * @param runId - run identifier; generated when omitted
+ * @param totalFiles - files in the scan scope (denominator of the score)
+ * @param workspaceRoot - explicit root used to relativise finding paths (C5)
  */
 export function generateQualityReport(
   findings: Finding[],
-  mode: "static" | "rendered" | "both",
+  mode: Mode,
   threshold?: number,
   runId?: string,
-  totalFiles: number = 0
+  totalFiles: number = 0,
+  workspaceRoot?: string,
 ): QualityReport {
   try {
-    // Use provided threshold or default from ENV
-    const qualityThreshold = threshold ?? DEFAULT_THRESHOLD;
-
-    // Calculate severity breakdown (triage info — not part of the score)
-    const severityBreakdown = {
-      low: findings.filter((f) => f.severity === "low").length,
-      medium: findings.filter((f) => f.severity === "medium").length,
-      high: findings.filter((f) => f.severity === "high").length,
-    };
-
-    // Normalized cleanliness score (SA4E-393 Addendum + SA4E-438 amendment):
-    // ratio of scan-scope files FREE OF SIGNIFICANT findings. HIGH/MEDIUM
-    // findings fail a file; LOW findings are triage info that do not fail it.
-    const significantFindings = findings.filter(
-      (f) => f.severity === "high" || f.severity === "medium"
-    );
-    const flaggedFiles = new Set(significantFindings.map((f) => f.file)).size;
-    let score: number;
-    let message: string | undefined;
-    if (totalFiles > 0) {
-      score = 1 - flaggedFiles / totalFiles;
-    } else {
-      // Empty scan scope — vacuous pass, surfaced in the report message
-      score = 1.0;
-      message = "No design artifacts found in scan scope (0 files)";
-    }
-
-    // Clamp score to [0, 1]
-    score = Math.max(0, Math.min(1, score));
-
-    // Determine pass/fail (BR-11: score >= threshold → pass)
-    const pass = score >= qualityThreshold;
-
-    // Generate runId if not provided
-    const id = runId || `run_${Date.now()}_${generateId(8)}`;
-
-    // Sanitize findings: ensure file paths are relative to workspace (C5)
-    const sanitizedFindings = findings.map((finding) => ({
-      ...finding,
-      // Ensure file is relative path only - strip any absolute path components
-      file: sanitizeFilePath(finding.file),
-    }));
-
-    const report: QualityReport = {
-      runId: id,
-      detectionMode: mode,
-      threshold: qualityThreshold,
-      score: Number(score.toFixed(4)), // 4 decimal places
-      pass,
-      timestamp: new Date().toISOString(),
-      findings: sanitizedFindings,
-      totalIssues: findings.length,
-      severityBreakdown,
-      fileCount: totalFiles,
-    };
-    if (message) {
-      report.message = message;
-    }
-
-    return report;
+    return assembleReport(findings, mode, threshold ?? DEFAULT_THRESHOLD, runId, totalFiles, workspaceRoot);
   } catch (error: any) {
-    // C6: Error wrapping - never include raw error message in public report
-    // Return a minimal inconclusive report on failure
-    console.error(`Report generation error: ${error.message}`);
-
-    return {
-      runId: runId || "run_error",
-      detectionMode: "static",
-      threshold: DEFAULT_THRESHOLD,
-      score: 0,
-      pass: true, // fail-open by default
-      timestamp: new Date().toISOString(),
-      findings: [],
-      totalIssues: 0,
-      severityBreakdown: { low: 0, medium: 0, high: 0 },
-    };
+    logRedacted("error", `Report generation error: ${error.message}`, workspaceRoot);
+    return errorReport(runId);
   }
 }
 
 /**
- * Sanitize a file path to ensure it's relative to workspace only.
- * Per SECURITY-REVIEW.md C5: report output sanitizes filePath to relative path
- * within workspace only; strip code content beyond findingId, line, column, message.
- * 
- * @param filePath - The file path to sanitize
- * @returns Relative path within workspace, or "unknown" if cannot determine
+ * Determine pass/fail for the quality gate (BR-11; C6 fail-open configurable).
+ * @param failOpen - when true, always passes (TDD §10.1)
  */
-function sanitizeFilePath(filePath: string): string {
-  try {
-    const workspaceRoot = process.env[EnvConfig.WORKSPACE_ROOT] || process.cwd();
-
-    // If path is already relative and doesn't escape workspace, return as-is
-    if (!path.isAbsolute(filePath)) {
-      // Additional check: ensure it doesn't contain traversal
-      const normalized = path.normalize(filePath);
-      if (!normalized.startsWith("..")) {
-        return normalized;
-      }
-    }
-
-    // Try to make path relative to workspace root
-    const resolved = path.resolve(workspaceRoot, filePath);
-    const relative = path.relative(workspaceRoot, resolved);
-
-    // If relative path starts with '..', the file is outside workspace
-    if (relative.startsWith("..")) {
-      return "unknown";
-    }
-
-    return relative || "unknown";
-  } catch (error: any) {
-    return "unknown";
-  }
-}
-
-/**
- * Determine pass/fail for the quality gate.
- * Per BR-11: pass/fail determined by threshold.
- * Per C6: fail-open configurable.
- * 
- * @param score - Quality score 0-1
- * @param threshold - Quality threshold 0-1 (default from ENV)
- * @param failOpen - Whether to fail-open (default: false, but configurable per TDD §10.1)
- * @returns boolean - true if pass, false if fail
- */
-export function determinePassFail(
-  score: number,
-  threshold?: number,
-  failOpen: boolean = false
-): boolean {
-  // C6: fail-open configurable
-  if (failOpen) {
-    return true;
-  }
-
-  // Use provided threshold or default from ENV
-  const qualityThreshold = threshold ?? DEFAULT_THRESHOLD;
-
-  // Handle NaN score (C6: score calculation fails → fail-open if configured)
+export function determinePassFail(score: number, threshold?: number, failOpen: boolean = false): boolean {
+  if (failOpen) return true;
   if (isNaN(score)) {
     console.error("Score calculation failed - returning fail-open");
     return failOpen;
   }
-
-  // BR-11: score >= threshold → pass
-  return score >= qualityThreshold;
+  return isPassing(score, threshold ?? DEFAULT_THRESHOLD);
 }
 
-/**
- * Create a DetectionRun entity from a QualityReport.
- * Per FSD §4.2: entities map to in-memory objects / JSON file store.
- * 
- * @param report - The quality gate report
- * @param userId - The initiating user ID
- * @returns DetectionRun entity
- */
-export function createDetectionRun(
-  report: QualityReport,
-  userId: string
-): DetectionRun {
+/** Create a DetectionRun entity from a QualityReport (FSD §4.2). */
+export function createDetectionRun(report: QualityReport, userId: string): DetectionRun {
   return {
     runId: report.runId,
     detectionMode: report.detectionMode,

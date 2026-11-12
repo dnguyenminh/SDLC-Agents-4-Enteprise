@@ -10,6 +10,7 @@
  */
 
 import { runDetection } from '../../slash';
+import { redactPaths } from '../../slash/path-redactor';
 import { registerLocalTool } from '../../backend-local-tools/registry';
 import { prepareDesignGateRunEnv } from './design-gate-env';
 
@@ -81,13 +82,19 @@ export async function handleDesignGateRun(args: Record<string, unknown>): Promis
     const resolution = resolveSourceRoot(sourcePath, workspaceRoot);
     if (!resolution.ok) return toolError(resolution.message);
     // 3. Run detection pipeline (loadDetector idempotent inside runDetection)
-    const result = await runDetection({ detectionMode: mode, sourceRoot: resolution.sourceRoot, threshold, cacheReuse: true });
+    const result = await runDetection({ detectionMode: mode, sourceRoot: resolution.sourceRoot, workspaceRoot, threshold, cacheReuse: true });
     // 4. Map report → payload (fetchStatus only for mode=rendered)
     return toolText(mapReportToPayload(result.report, mode, findingsLimit, extractFetchStatus(mode, result)));
   } catch (e: any) {
-    console.error(`[design-gate] run failed: ${e?.message ?? e}`, e?.stack);
+    logRunFailure(e, workspaceRoot);
     return toolError(sanitizeErrorText(e, workspaceRoot));
   }
+}
+
+/** Host log of a failed run — message and stack are path-redacted (SEC-F03). */
+function logRunFailure(e: any, workspaceRoot: string | undefined): void {
+  const text = redactPaths(`[design-gate] run failed: ${e?.message ?? e}`, workspaceRoot);
+  console.error(text, e?.stack ? redactPaths(String(e.stack), workspaceRoot) : '');
 }
 
 /** fetchStatus is surfaced only for mode=rendered (aggregate modes drop it per TDD). */

@@ -11,7 +11,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { getWorkspaceRoot, checkForUpgrade } from "./activation-helpers";
 import { runDetection } from "./slash";
-import { QualityReport as DesignQualityReport, EnvConfig, DEFAULT_THRESHOLD } from "./slash/types";
+import { QualityReport as DesignQualityReport, DEFAULT_THRESHOLD } from "./slash/types";
 import { resolveWasmPath } from "./slash/detector-env";
 import { initDesignGateEnv } from "./tools/design-gate/design-gate-env";
 import type { RenderedDetectionResult } from "./slash/integration.service";
@@ -103,14 +103,16 @@ export async function activate(context: vscode.ExtensionContext) {
     if (!root) {
       throw new Error("No workspace folder open. Open a project folder first.");
     }
-    // Pipeline resolves paths against WORKSPACE_ROOT (EnvConfig) — must point
-    // at the live workspace folder, NOT the IDE install cwd.
-    process.env[EnvConfig.WORKSPACE_ROOT] = root;
+    // SEC-F08: the live workspace folder is passed explicitly to runDetection
+    // (workspaceRoot) - never through process-global env.
     return root;
   };
 
-  // resolveWasmPath imported from ./slash/detector-env (shared with design-gate tools)
-  // Call as: resolveWasmPath(context.extensionPath)
+  // resolveWasmPath (./slash/detector-env) is shared with the design-gate tools.
+  // SEC-F08: root travels explicitly as sourceRoot + workspaceRoot.
+  const gateConfig = (mode: "static" | "rendered" | "both", root: string) => ({
+    detectionMode: mode, sourceRoot: root, workspaceRoot: root, threshold: DEFAULT_THRESHOLD, cacheReuse: true,
+  });
 
   const showReport = (mode: string, report: DesignQualityReport, extra?: string): void => {
     const status = report.pass ? "PASS" : "FAIL";
@@ -130,12 +132,7 @@ export async function activate(context: vscode.ExtensionContext) {
       try {
         const root = resolveWorkspace();
         resolveWasmPath(context.extensionPath);
-        const { report } = await runDetection({
-          detectionMode: "static",
-          sourceRoot: root,
-          threshold: DEFAULT_THRESHOLD,
-          cacheReuse: true,
-        });
+        const { report } = await runDetection(gateConfig("static", root));
         showReport("Static", report);
       } catch (error: any) {
         vscode.window.showErrorMessage(`Design Quality Gate (Static) failed: ${error?.message ?? error}`);
@@ -145,22 +142,12 @@ export async function activate(context: vscode.ExtensionContext) {
       try {
         const root = resolveWorkspace();
         resolveWasmPath(context.extensionPath);
-        const { combinedResult, report } = await runDetection({
-          detectionMode: "rendered",
-          sourceRoot: root,
-          threshold: DEFAULT_THRESHOLD,
-          cacheReuse: true,
-        });
+        const { combinedResult, report } = await runDetection(gateConfig("rendered", root));
         const rendered = combinedResult as RenderedDetectionResult;
         if (rendered.fetchStatus !== "success") {
           // AF-1 (TC-03): dev server unreachable → graceful fallback to static-only
           gateOutput.appendLine(`[${new Date().toISOString()}] Rendered fetch ${rendered.fetchStatus} — falling back to static-only detection`);
-          const { report: staticReport } = await runDetection({
-            detectionMode: "static",
-            sourceRoot: root,
-            threshold: DEFAULT_THRESHOLD,
-            cacheReuse: true,
-          });
+          const { report: staticReport } = await runDetection(gateConfig("static", root));
           showReport("Rendered->Static fallback", staticReport, `fetchStatus: ${rendered.fetchStatus}`);
           return;
         }
@@ -173,12 +160,7 @@ export async function activate(context: vscode.ExtensionContext) {
       try {
         const root = resolveWorkspace();
         resolveWasmPath(context.extensionPath);
-        const { report } = await runDetection({
-          detectionMode: "both",
-          sourceRoot: root,
-          threshold: DEFAULT_THRESHOLD,
-          cacheReuse: true,
-        });
+        const { report } = await runDetection(gateConfig("both", root));
         showReport("Both", report);
       } catch (error: any) {
         vscode.window.showErrorMessage(`Design Quality Gate (Both) failed: ${error?.message ?? error}`);

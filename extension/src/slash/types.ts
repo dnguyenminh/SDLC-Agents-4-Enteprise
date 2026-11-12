@@ -36,7 +36,8 @@ export interface DetectionConfig {
   detectionMode?: "static" | "rendered" | "both";
   threshold?: number; // 0-1 quality score threshold
   cacheReuse?: boolean;
-  sourceRoot?: string; // workspace root for path validation
+  sourceRoot?: string; // directory to scan (inside the workspace)
+  workspaceRoot?: string; // SEC-F08: explicit workspace root (containment, cache, reports)
   localhostUrl?: string; // dev server URL for rendered detection
   urls?: string[]; // additional pages for rendered detection
 }

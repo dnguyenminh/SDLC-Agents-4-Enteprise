@@ -72,3 +72,50 @@ The URL can be set only through the `LOCALHOST_DEV_SERVER_URL` env var, never th
 
 ## Limitations
 Windows-only probes. Tests were run against units, not through MCP. POSIX symlinks were reasoned about, not run. Temporary files have been removed (probe test and its output file); no source changes were made.
+
+---
+
+## Re-review sau fix F04–F08 (working tree chưa commit)
+
+| Field | Value |
+|-------|-------|
+| Method | Đọc code thật (git diff + file untracked), chạy `npx vitest run src/__tests__/design-gate` (12 files / 64 tests pass), `npx vitest run` toàn extension (444 files pass, 3465 tests pass, 6 skipped), `npx tsc --noEmit` sạch. Không sửa code. |
+| Platform | Windows. POSIX chỉ đọc code, chưa chạy. |
+| Chưa kiểm | Chạy thật trong extension host, gọi MCP end-to-end, kiểm tra quyền file 0600 trên POSIX (Windows bỏ qua mode). |
+
+### Verdict: **PASS** (không còn Critical/High/Medium; 4 điểm Low/Info còn lại để theo dõi ở SA4E-438)
+
+### Kết luận từng finding
+
+| ID | Kết luận | Bằng chứng code | Test |
+|----|----------|-----------------|------|
+| SEC-F01 | **FIXED** | `design-gate-resolve.ts:12-16,38` (`genericReject` chỉ giữ CODE + câu cố định, không dùng `.message`/root). Nhánh `PATH_NOT_FOUND` (`:43`) chỉ trả path tương đối. `design-gate-tool.ts:68` giờ chỉ forward chuỗi generic. | `design-gate-explicit-root.test.ts`, `design-gate-run.test.ts` |
+| SEC-F02 | **FIXED** (cho đường tool) | `design-gate-resolve.ts:19-22,46-48` kiểm `realpath(target)` nằm trong `realpath(root)`, link hỏng thì fail-closed (`:50-52`). Khi duyệt thư mục, `file-lister.ts:57-62` dùng `Dirent.isDirectory()/isFile()` nên symlink/junction bị bỏ qua. `report.store.ts:68-73` `ensureDirInside` chặn `.code-intel` là symlink thoát root. | `design-gate-fs-adapter-containment.test.ts`, `design-gate-explicit-root.test.ts` |
+| SEC-F03 | **FIXED** | `path-redactor.ts:10-34`: escape metacharacter, khớp cả `\` và `/`, cờ `i` trên win32, thay mọi đường dẫn tuyệt đối còn lại bằng `<path>`. Dùng ở `design-gate-payload.ts:46-48`, `design-gate-tool.ts:97-100` (log), `error-text.ts`, và mọi `logRedacted` trong `slash/`. | `design-gate-log-redaction.test.ts` |
+| SEC-F04 | **FIXED** | `report.store.ts:93-110` ghi `{runId}.json` đúng hợp đồng BR-12; `:80-90` ghi atomic (`wx` + `mode 0o600` vào tmp cùng thư mục, rồi `rename`, dọn tmp khi lỗi). `detection.cache.ts:57-68` dùng cùng `writeJsonAtomic`, lưu `sourcePath` tương đối và `runId` thật (không còn là đường dẫn tuyệt đối). Lỗi ghi được báo lên `report.message` (`integration.service.ts:106-115`), không nuốt. | `design-gate-report-store.test.ts`, `design-gate-persist-run.test.ts` |
+| SEC-F05 | **FIXED** | `report.store.ts:20,35-37` `RUN_ID_RE = /^run_\d+_[a-z0-9]+$/` + giới hạn 64 ký tự (`$` trong JS không có cờ `m` nên không khớp trước newline cuối). Mọi đường dẫn dựng từ runId đi qua `resolveInside` (`:40-46`, chặn NUL, `..`, bằng chính thư mục) ở `saveReport :97`, `loadReport :117`. `getReport` (`integration.service.ts:121-123`) gọi `loadReport`; id sai và id không tồn tại cùng trả `undefined` (không có oracle). `listRunIds :131-138` lọc theo regex. | `design-gate-report-store.test.ts` |
+| SEC-F06 | **FIXED** | `localhost-request.ts:60-70`: vượt 10MB thì `req.destroy()` + `reject` (không `throw` trong callback). `:25-30` tách media type trước `;` nên `text/html; charset=utf-8` được chấp nhận. Timeout cũng reject (`:92-96`). Không theo redirect (`http.get`). | `design-gate-localhost-fetcher.test.ts` |
+| SEC-F07 | **FIXED** | `path-guard.ts:14-16` dùng `isPathWithinRoot` của PathResolver (một cài đặt duy nhất), `fs.adapter.ts` và `file-lister.ts` đều đi qua đó. | `design-gate-fs-adapter-containment.test.ts` |
+| SEC-F08 | **FIXED** | `design-gate-env.ts:41-47` không còn ghi `process.env.WORKSPACE_ROOT`; root đi qua `DetectionConfig.workspaceRoot` (`index.ts:67`, `integration.service.ts:rootOf`, cache/report/lister nhận root tường minh). `getWorkspaceRoot()` (env/cwd) chỉ còn là fallback cho caller không truyền root. | `design-gate-explicit-root.test.ts` |
+
+### Kiểm thêm
+
+| Hạng mục | Kết quả |
+|----------|---------|
+| Regex runId + containment | Đạt: regex neo hai đầu, giới hạn độ dài, `resolveInside` ở mọi chỗ ghi/đọc/liệt kê. Tool không nhận runId từ input. |
+| Symlink/realpath cacheDir | Đạt: `ensureDirInside` gọi `realpathSync` cả root và dir sau `mkdir`, dùng cho report và cache. Xem điểm S-2 về TOCTOU. |
+| SSRF fetcher | **Còn nguyên**: `isLocalhostUrl` (`localhost-fetcher.ts:48-62`) chỉ chấp nhận hostname `localhost` / `127.0.0.1`, kiểm lại trong `fetchLocalhostPage` (`:98`), không redirect, cap 10MB, timeout 10s, retry 1 lần. Refactor tách `localhost-request.ts` không đổi logic chặn. |
+| Rò đường dẫn tuyệt đối | Đạt: output tool, `report.message`, log host đều qua `redactPaths`/`logRedacted`. Findings dùng `sanitizeFilePath` (tương đối). File ghi ra đĩa chứa `sourcePath` tương đối. |
+| Ghi file atomic, mode 0600 | Đạt trên code (`flag: "wx"`, `mode: 0o600`, rename). Windows không thực thi mode; POSIX chưa chạy thật. |
+| Hồi quy do refactor `integration.service` | Không thấy: `tsc` sạch, 3465 test của extension pass, API công khai (`loadDetector`, `runStatic/Rendered/FullDetection`, `getReport`, `listReports`, `reset`, `getImpeccableService`) giữ nguyên chữ ký; `runFullDetection` đảm bảo mọi runId trả ra đều có record (`:80-83`). |
+
+### Điểm còn lại (không chặn release)
+
+| ID | Mức | Mô tả | Gợi ý |
+|----|-----|-------|-------|
+| S-1 | Low | `errorReport()` (`report.generator.ts:46`) dùng runId `run_error`, không khớp `RUN_ID_RE`, nên `persistRun` từ chối và `report.message` báo "report not persisted". Run lỗi không có audit record (không rò dữ liệu, chỉ mất dấu vết). | Sinh runId hợp lệ cho report lỗi. |
+| S-2 | Low | `ensureDirInside` kiểm sau `mkdir` và `realpath` của `source_path` kiểm một lần; có cửa sổ TOCTOU nếu kẻ tấn công đổi link giữa lúc kiểm và lúc dùng. Cần quyền ghi vào workspace. Ngoài ra `listSourceFiles`/`readSourceFile` gọi trực tiếp (không qua tool) không tự `realpath` `sourceRoot`; hiện chỉ tool gọi và đã qua `resolveSourceRoot`. | Đưa `realpath` vào PathResolver hoặc `assertListable`. |
+| S-3 | Info | `redactPaths` là heuristic: đường dẫn POSIX chứa khoảng trắng hoặc ký tự lạ ngoài workspace root chỉ được che một phần. Windows có khoảng trắng ngoài root cũng vậy. | Chấp nhận; bổ sung test nếu có ca thực tế. |
+| S-4 | Info | Mode 0600 chưa được xác minh runtime; tmp file không `fsync` trước rename (độ bền khi mất điện, không phải bảo mật). Thư mục `.code-intel/design-gate` tạo bằng mode mặc định. | Tuỳ chọn `mkdirSync(..., {mode: 0o700})`. |
+
+Hạn chế: không chạy kiểm thử thâm nhập động và không có junction thật trong lần chạy này (dựa vào test trong repo và đọc code).

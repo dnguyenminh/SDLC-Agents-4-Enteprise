@@ -8,7 +8,6 @@
  * reference throws ReferenceError("vscode is not defined").
  */
 
-import { EnvConfig } from '../../slash/types';
 import { resolveWasmPath } from '../../slash/detector-env';
 import { defaultWorkspaceRootProvider } from '../../services/PathResolver';
 
@@ -41,8 +40,7 @@ export function prepareDesignGateRunEnv(): DesignGateRunEnv {
   if (!extensionPath) {
     return { ok: false, message: 'Design gate not initialized: extension path unavailable (extension not activated).' };
   }
-  // Pipeline contract (EnvConfig): fs.adapter/report.generator resolve against these.
-  process.env[EnvConfig.WORKSPACE_ROOT] = root;
+  // SEC-F08: the root travels explicitly (DetectionConfig.workspaceRoot) — no process-global env.
   resolveWasmPath(extensionPath);
   return { ok: true, root };
 }

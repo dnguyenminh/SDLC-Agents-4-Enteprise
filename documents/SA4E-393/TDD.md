@@ -34,6 +34,7 @@
 |---------|------|--------|---------|
 | 1.0 | 2026-10-31 | SA Agent | Initiate document — auto-generated from BRD and FSD |
 | 1.1 | 2026-11-12 | SA Agent | Addendum 4: post-implementation as-built notes for D1, D3, D5, D6 (root causes from commits dd1c5e5d, 88892218) + Open Issues. No diagram changes. |
+| 1.2 | 2026-11-13 | SA Agent | Addendum 4: Open Issues rewritten from FIX-EVIDENCE (batches 1-3), DESIGN-addendum4-openissues-fix, ANALYSIS-settings-worktree, SECURITY-ASSESSMENT-addendum4-fix (re-review PASS), TEST-REPORT-addendum4-fix. SEC-F04..F08, log redaction, size 200/20 → CLOSED; D1 as-built (explicit workspaceRoot, `{runId}.json` + `cache/{sha}.json`). Remaining items stated with residual risk; e2e D6 on this build PENDING. No diagram changes. |
 
 ---
 
@@ -765,6 +766,34 @@ MCP server; agents reach it through the existing MCP wrapper (`find_tools` → `
    `"Design gate run failed: <ErrorName>"` (C6 — no stack, no internals, workspace-root prefix
    stripped from any path fragment in the text).
 
+**As-built (v1.2) — supersedes step 2 and the persistence wording above** (SEC-F04/F05/F08):
+
+- *Step 2 (env write) is REMOVED.* Nothing writes `process.env.WORKSPACE_ROOT` any more. The root is
+  passed explicitly: tool → `runDetection({ workspaceRoot })` → `DetectionConfig.workspaceRoot` →
+  integration service, cache, report store and file lister. `getWorkspaceRoot()` (env/cwd) in
+  `path-guard.ts` is only the last-resort fallback for callers that pass no root; the env is READ
+  there, never written. Two workspaces running in parallel (`Promise.all`) no longer mix results.
+- *Persistence contract kept: `{runId}.json` (BR-12).* SEC-F04 was resolved by changing the code, not
+  the contract. `report.store.ts` writes `.code-intel/design-gate/{runId}.json` for every run
+  (modes static/rendered/both; a cache hit gets a NEW runId plus `sourceRunId`). The result cache is
+  separate: `.code-intel/design-gate/cache/{sha}.json` (`sha` = sha256 of `sourcePath:mode`), storing a
+  workspace-relative `sourcePath`, the real `runId` and `fileCount`. An old `{sha}.json` entry directly
+  under `design-gate/` is not read (counts as a miss).
+- Writes are atomic (`wx` + mode `0o600` temp file in the same directory, then `rename`; temp removed
+  on failure). A write failure is surfaced in `report.message` ("report not persisted"), not swallowed.
+- `runId` allow-list `^run_\d+_[a-z0-9]+$`, max 64 chars, checked in `saveReport`/`loadReport`/
+  `listRunIds`; every path built from it goes through `resolveInside`. Invalid and missing ids both
+  return `undefined` (no oracle). `getReport`/`listReports` take an optional `workspaceRoot`.
+  The error report now uses a valid runId (`run_<ms>_<id>`, was `run_error`) so failed runs also leave a record.
+- Size (BR-18): `integration.service.ts` 751 → 154 lines (logic moved to `detector.runtime.ts`,
+  `static.detection.ts`, `rendered.detection.ts`, `full.detection.ts`, `error-text.ts`,
+  `detection.types.ts`; public API unchanged); `design-rules.ts` split into 4 rule-group files plus
+  types and an assembler (30 rules, IDs and order unchanged); `mapReportToPayload` ≤20 lines; the
+  oversized test split. Guarded by `design-gate-size-guard.test.ts` (convention: a `describe`
+  callback is a group container, only `it` bodies count toward the 20-line limit).
+- Logs: all `console.error` in `slash/` and the tool go through `redactPaths`/`logRedacted`
+  (`path-redactor.ts`); `report.message` is redacted too.
+
 **Success response** (isError: false, `content[0].text` = JSON). Example uses the real evidence
 run from Addendum 3 C2 (447 design files, ~8s):
 
@@ -1042,15 +1071,48 @@ MCP port 9183:
   (`max-lines` 300/200 in `design-gate-tools.test.ts`, criterion v partially: warning accepted, see
   Open Issues).
 
-### Open Issues (Addendum 4, v1.1)
+### Open Issues (Addendum 4, v1.2)
 
-| # | Sev | Issue | Action |
-|---|-----|-------|--------|
-| a | Medium | `settings.json` is written/read at worktree vs root level: the worktree instance listens on 9181, the root instance on 9183 (`settings.json-worktree`). Agents resolving `mcpUrl` may hit the wrong instance. | Document; confirm instance/port before gate evidence (ug-evidence §2). Follow-up SA4E-438. |
-| b | Low | `fs.adapter.ts` and `wasm.loader.ts` still put absolute paths in error text. Sanitized at tool layer (`sanitizeErrorText`) but `console.error` logs the raw text. | Sanitize at source / log relative. |
-| c | Low | SEC-F04..F08 remain open (cache file naming/absolute `runId` field, `getReport` runId validation, localhost-fetcher `throw` in event callback + Content-Type regex, `validateFilePath` startsWith, process-global `WORKSPACE_ROOT`). | Triage in SA4E-438. |
-| d | Low | `mapReportToPayload` is 42 lines (> 20-line limit, BR-18). `design-gate-tools.test.ts` triggers `max-lines` warning (300/200). | Split into helpers / split test file. |
-| e | Process | Fix 88892218 wrote tests after the fix, deviating from `dev-bug-diagnosis.md` ("no red-capable command, no fix"). | Recorded as deviation; follow the loop for future bug fixes. |
+Sources: FIX-EVIDENCE-addendum4-openissues.md (batches 1-3), DESIGN-addendum4-openissues-fix.md,
+ANALYSIS-settings-worktree.md, SECURITY-ASSESSMENT-addendum4-fix.md (re-review: PASS, no
+Critical/High/Medium), TEST-REPORT-addendum4-fix.md. State: working tree, NOT committed.
+
+#### A. CLOSED in this round
+
+| # | Item | Resolution (as-built) | Evidence |
+|---|------|-----------------------|----------|
+| 1 | SEC-F04 (Low) cache naming / absolute `runId` | Fixed in code; contract `{runId}.json` (BR-12) kept. Cache split to `cache/{sha}.json` with relative `sourcePath` and real `runId`; atomic write; write failure surfaced. As-built in D1. | persist-run (a)-(g), report-store; red on old code (ENOENT, cache `runId` = absolute path) |
+| 2 | SEC-F05 (Low, latent) `getReport` runId | Allow-list regex + 64 chars + `resolveInside`; invalid = missing = `undefined`. | report-store; red: `../secret` read `.code-intel/secret.json` |
+| 3 | SEC-F06 (Low) fetcher | Oversize → `req.destroy()` + reject `FETCH_FAILED` (no `throw` in callback); media type parsed before `;`. SSRF guard unchanged. | localhost-fetcher; red: charset rejected, oversize hung >60s |
+| 4 | SEC-F07 (Info) `startsWith` | One implementation, `isPathWithinRoot` (`path-guard.ts`); `..dots/a.css` allowed, sibling `root-evil` blocked. | fs-adapter-containment, batch3 D2 |
+| 5 | SEC-F08 (Info) global env | Nothing writes `process.env.WORKSPACE_ROOT`; `workspaceRoot` explicit through the pipeline. The env is still READ as last-resort fallback in `getWorkspaceRoot()`. | explicit-root (a)(b); red: fileCount 0 |
+| 6 | Absolute paths in logs (old b) | `redactPaths`/`logRedacted` in service, `wasm.loader`, cache failure, tool failure and `report.message`. | log-redaction #1, #2 red; #3 regression guard only (see B2) |
+| 7 | Size 200/20 (old d) | `integration.service` split (751→154), `design-rules` split into 4 groups, `mapReportToPayload` ≤20, tests split; `size-guard` covers the folders. | size-guard red (3 files >200, 16 functions >20); tsc, eslint 0/0, full vitest 446 files / 3480 tests pass |
+| 8 | Batch 3: D1, D2, D3, S-1, S-2 | D1 cache stores relative paths; D2 `isPathWithinRoot`; D3 `.gitignore` covers `.code-intel/design-gate` and `extension/.code-intel/`; S-1 error report has a valid runId; S-2 `sourceRoot` junction is rejected (realpath, fail-closed). | batch3 test, persist-run (c2) |
+
+Test gap found by QA and closed: `TEST-REPORT-addendum4-fix.md` ended with verdict FAIL because mutant M2
+(remove `isValidRunId` in `loadReport`) survived. Batch 3 added 6 tests (`RUN_1_X`, `run_1_A`,
+`run_1_a-b`, `run_1_`, 86-char id); with the check removed, 5 failed (red), restored by hash. This
+re-run is recorded in FIX-EVIDENCE; the QA report itself has not been re-issued after it.
+
+#### B. Still OPEN / recorded (not pushed to backlog, except item 1)
+
+| # | Sev | Issue | State / residual risk | Action |
+|---|-----|-------|-----------------------|--------|
+| 1 | Medium | `settings.json` worktree vs root (instance 9181 vs 9183; agent may resolve the wrong `mcpUrl`). | **Open. Doc-only in this ticket.** ANALYSIS: the fix touches `runtime-settings.ts`, `remote-backend-client.ts` and shared bootstrap steering used by every ticket/agent, with only a characterization baseline test (`runtime-settings.test.ts`, 6 tests, includes a recorded known gap: clear removes the file regardless of pid owner). No SA4E-393 AC depends on it. Code/steering not changed. | **Only this item references SA4E-438.** Mandatory evidence checklist before writing gate evidence: (1) `settings.workspace` equals cwd (normalized); (2) `pid` alive; (3) after `initialize`, the instance's workspace root matches; (4) record port + workspace root in the evidence; (5) mismatch → report to user, do not use the instance. |
+| 2 | Process | Test-after-fix in commits 88892218 / dd1c5e5d and earlier fixes (deviates from `dev-bug-diagnosis.md`). | Not corrected retroactively; recorded. This round followed test-first. Honest exceptions: log failure test #3 (no code red, test premise was wrong), oversize/sibling guards (regression, not red), runtime-settings baseline (green from the start), D1 real flow (could not reproduce the leak). | None. |
+| 3 | Low/Info | Security residuals: S-3 `redactPaths` is heuristic (POSIX paths with spaces/odd chars outside the root only partly masked); S-4 mode `0600` unverified on POSIX, tmp file not `fsync`ed, dir created with default mode; TOCTOU between `realpath`/`ensureDirInside` and use (needs write access to the workspace); direct `listSourceFiles`/`readSourceFile` callers do not `realpath` `sourceRoot` themselves (only the tool path does). | Risk accepted, low; Windows verified only, POSIX by code reading. | Optional later: `mkdir {mode: 0o700}`, `fsync`, realpath inside PathResolver. |
+| 4 | Low | Retention of `run_*.json`: each run writes one file; no TTL, cap or cleanup is designed. Disk grows without bound. | Not designed. | Needs a design decision (age/count cap) before heavy use. |
+| 5 | Process | `.code-intel/design-gate/20daf50f…json` is already tracked by git; `.gitignore` does not untrack it. | Open, **needs user decision** on `git rm --cached` (not done). | User decides. |
+| 6 | Verification | e2e D6 on THIS fix build not re-run. The v1.1 e2e table above is from the previous build. | **PENDING** until the user installs the VSIX with `--force` and reloads the window. | Re-run D5 Integration 1-6 and the agent-loop demo; also confirm the VSIX was built after the last change. |
+
+#### C. Acceptance status on this build
+
+| Criterion | Status |
+|-----------|--------|
+| ii, iv, v (unit/integration level) | Evidenced: tsc 0 errors, eslint 0/0, full vitest pass, size-guard pass |
+| i, iii, vi (real session / VSIX) | PENDING (item B6). Security re-review is code-and-test based; no dynamic pentest, POSIX not run |
+| Security re-review | PASS (F01-F08 FIXED; S-1 fixed in batch 3; S-2 partly closed; S-3, S-4 remain, see B3) |
 
 ### Traceability
 

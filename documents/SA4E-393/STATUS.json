@@ -73,15 +73,15 @@
       "file": "PENTEST-REPORT.md",
       "status": "not_started"
     },
-  "uat": {
-    "status": "done",
-    "startedAt": "2026-11-08T10:55:00Z",
-    "completedAt": "2026-11-12T00:21:27Z",
-    "executor": "human (user) in Kiro — v3 smoke build 36660bb9 + v4 final audit build 1d9afe4d (VSIX 1.55.18, 30 rules: 13 base + 17 Impeccable-derived)",
-    "evidence": "evidence-uat-final-v4.json (final audit) + evidence-uat-qualitycheckresult-v3-final.json (smoke)",
-    "result": "Integration PASS 6/6 (wiring, SSRF C4, relative paths C5, UI, fallback verified). v4 gate verdict: FAIL - Score 0.79 - Findings 1846 (run_1794442887259_ohhv4kmi, low 1663/medium 183/high 0, ~8s) = workspace design-debt inventory thật, ghi FAIL trung thực theo RUN-LOG #28 — đúng hành vi gate, không phải bug integration",
-    "signOff": "PAUSED — scope extension 2026-11-12 (RUN-LOG #43): expose gate qua MCP tools (design_gate_run, design_gate_list_rules) + agent self-check rules (MUST + blocker). Sign-off lại sau khi extension round 2 verified"
-  },
+    "uat": {
+      "status": "done",
+      "startedAt": "2026-11-08T10:55:00Z",
+      "completedAt": "2026-11-12T00:21:27Z",
+      "executor": "human (user) in Kiro — v3 smoke build 36660bb9 + v4 final audit build 1d9afe4d (VSIX 1.55.18, 30 rules: 13 base + 17 Impeccable-derived)",
+      "evidence": "evidence-uat-final-v4.json (final audit) + evidence-uat-qualitycheckresult-v3-final.json (smoke)",
+      "result": "Integration PASS 6/6 (wiring, SSRF C4, relative paths C5, UI, fallback verified). v4 gate verdict: FAIL - Score 0.79 - Findings 1846 (run_1794442887259_ohhv4kmi, low 1663/medium 183/high 0, ~8s) = workspace design-debt inventory thật, ghi FAIL trung thực theo RUN-LOG #28 — đúng hành vi gate, không phải bug integration",
+      "signOff": "PAUSED — scope extension 2026-11-12 (RUN-LOG #43): expose gate qua MCP tools (design_gate_run, design_gate_list_rules) + agent self-check rules (MUST + blocker). Sign-off lại sau khi extension round 2 verified"
+    },
     "security_deploy_review": {
       "status": "not_started"
     },
@@ -182,7 +182,7 @@
     "mcpWrapper9183": "up (stream_write_file, embed_image, jira tools via execute_dynamic_tool)",
     "jiraAccess": "OK - jira_get_issue working via execute_dynamic_tool (discovered after restart)"
   },
-  "lastUpdated": "2026-11-12T15:30:00Z",
+  "lastUpdated": "2026-11-13T00:30:00Z",
   "scopeExtension": {
     "requestedAt": "2026-11-12",
     "requestedBy": "user (product owner)",
@@ -197,16 +197,32 @@
   "implementation": {
     "status": "done",
     "e2eEvidence": "RUN-LOG #58: static run_1794496832524_lu5m1z95 score 0 fileCount 3; both run_1794496981974_lab651sw / run_1794496982501_mfd6u0lh score 0 fileCount 3; negative cases reject; vitest design-gate 26 pass",
-    "tools": ["design_gate_run", "design_gate_list_rules"],
+    "tools": [
+      "design_gate_run",
+      "design_gate_list_rules"
+    ],
     "testResults": "10/10 unit tests pass, compile clean, lint clean",
     "modules": "extension/src/tools/design-gate/ (5 files) + detector-env.ts + registration",
     "knownLimitation": "RESOLVED in working tree (RUN-LOG #49): real root cause = bare `declare const vscode` in design-gate-tool.ts (a617ba9d) -> ReferenceError in esbuild CJS bundle. Earlier diagnosis (module-load-time require in PathResolver) and WORKSPACE_ROOT env workaround were wrong and removed. Live MCP instance (port 9183) still old build until user reloads Kiro with VSIX 1.55.18."
   },
   "propagation": {
     "status": "complete",
-    "platforms": [".kiro", ".code-intel", "conversions/claude-code", "conversions/github-copilot", "conversions/codex-openai", "conversions/opencode", "conversions/antigravity"],
+    "platforms": [
+      ".kiro",
+      ".code-intel",
+      "conversions/claude-code",
+      "conversions/github-copilot",
+      "conversions/codex-openai",
+      "conversions/opencode",
+      "conversions/antigravity"
+    ],
     "ruleFile": ".opencode/rules/sdlc/ui-design-gate.md",
-    "agentsUpdated": ["dev-agent", "ui-agent", "qa-agent", "sm-agent"]
+    "agentsUpdated": [
+      "dev-agent",
+      "ui-agent",
+      "qa-agent",
+      "sm-agent"
+    ]
   },
   "ruleEnforcement": {
     "ui-design-gate": "IN_EFFECT",
@@ -215,7 +231,40 @@
     "since": "2026-11-12"
   },
   "blocker": null,
-  "openDecisions": ["version bump chưa quyết định", "push chưa quyết định"]
+  "openDecisions": [
+    "version bump chưa quyết định",
+    "push chưa quyết định"
+  ],
+  "openIssuesFix": {
+    "status": "code-fixed-pending-e2e",
+    "closed": [
+      "SEC-F04",
+      "SEC-F05",
+      "SEC-F06",
+      "SEC-F07",
+      "SEC-F08",
+      "log-abs-path",
+      "size-200-20",
+      "S-1",
+      "D1",
+      "D2",
+      "D3"
+    ],
+    "openDocOnly": [
+      "settings.json-worktree (ANALYSIS: doc-only, code -> SA4E-438 vì ảnh hưởng mọi ticket)"
+    ],
+    "notRetroactive": "test-after-fix ở 88892218/dd1c5e5d; đợt này test-trước (ngoại lệ ghi trong FIX-EVIDENCE)",
+    "reviews": {
+      "ta": "CHANGES REQUESTED -> D1-D3 đã sửa (chưa re-review)",
+      "security": "PASS (F01..F08 FIXED)",
+      "qa": "PASS lần 2 (tsc/eslint/vitest 446 file 3486 test; M1,M2 đỏ)"
+    },
+    "e2eD6Rerun": "PENDING - cần cài VSIX --force + reload Kiro (instance c:\\projects\\kiro\\SDLC-Agents-4-Enterprise, MCP 9183)",
+    "vsix": "dist-sa4e-393-openissues-fix.vsix (v1.55.18, không bump)",
+    "pendingUserDecision": [
+      "git rm --cached .code-intel/design-gate/20daf50f...json",
+      "push",
+      "version bump"
+    ]
+  }
 }
-
-

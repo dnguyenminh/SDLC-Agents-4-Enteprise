@@ -15,18 +15,14 @@ import { cacheResult } from "../slash/detection.cache";
 import { ImpeccableIntegrationService } from "../slash/integration.service";
 
 let ws: string;
-let prevRoot: string | undefined;
 
 beforeAll(() => {
   ws = fs.mkdtempSync(path.join(os.tmpdir(), "dg-a4-"));
-  prevRoot = process.env.WORKSPACE_ROOT;
-  process.env.WORKSPACE_ROOT = ws;
+  delete process.env.WORKSPACE_ROOT; // SEC-F08: the root is passed explicitly, env must not matter
   fs.mkdirSync(path.join(ws, "fixture"));
 });
 
 afterAll(() => {
-  if (prevRoot === undefined) delete process.env.WORKSPACE_ROOT;
-  else process.env.WORKSPACE_ROOT = prevRoot;
   fs.rmSync(ws, { recursive: true, force: true });
 });
 
@@ -50,12 +46,12 @@ describe("F-2 cache hit must not corrupt score", () => {
   it("both-after-static (cache hit) score equals static score", async () => {
     const dir = path.join(ws, "fixture");
     const findings = [high("bad.html"), ...lows(21)]; // 22 findings, 3 files
-    cacheResult(dir, "static", { findings, fileCount: 3, durationMs: 1, cacheHit: false, partial: false });
+    cacheResult(ws, dir, "static", { findings, fileCount: 3, durationMs: 1, cacheHit: false, partial: false }, "run_1_a");
     const svc = new ImpeccableIntegrationService();
-    const stat = await svc.runStaticDetection(dir);
+    const stat = await svc.runStaticDetection(dir, { workspaceRoot: ws });
     expect(stat.result.fileCount).toBe(3);
     expect(stat.report.score).toBeCloseTo(0.6667, 3);
-    const both = await svc.runFullDetection(dir, "http://evil.example", [], { detectionMode: "both" });
+    const both = await svc.runFullDetection(dir, "http://evil.example", [], { detectionMode: "both", workspaceRoot: ws });
     expect(both.report.score).toBeCloseTo(stat.report.score, 4);
     expect(both.report.pass).toBe(false);
   });
@@ -63,8 +59,8 @@ describe("F-2 cache hit must not corrupt score", () => {
   it("legacy cache entry without fileCount is a miss, not findings.length", async () => {
     const dir = path.join(ws, "legacy");
     fs.mkdirSync(dir);
-    cacheResult(dir, "static", { findings: lows(5), durationMs: 1, cacheHit: false, partial: false } as any);
-    const r = await new ImpeccableIntegrationService().runStaticDetection(dir);
+    cacheResult(ws, dir, "static", { findings: lows(5), durationMs: 1, cacheHit: false, partial: false } as any, "run_1_b");
+    const r = await new ImpeccableIntegrationService().runStaticDetection(dir, { workspaceRoot: ws });
     expect(r.result.cacheHit).toBe(false);
     expect(r.result.fileCount).not.toBe(5);
   });
@@ -81,7 +77,7 @@ describe("F-3 nonexistent path leaks no absolute path", () => {
   });
 
   it("service error message is workspace-relative", async () => {
-    const r = await new ImpeccableIntegrationService().runStaticDetection(path.join(ws, "nope"), { cacheReuse: false });
+    const r = await new ImpeccableIntegrationService().runStaticDetection(path.join(ws, "nope"), { cacheReuse: false, workspaceRoot: ws });
     expect(r.report.message).not.toContain(ws);
     expect(r.report.message).toContain("nope");
   });

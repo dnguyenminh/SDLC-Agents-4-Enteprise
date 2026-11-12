@@ -2,6 +2,7 @@
  * SA4E-393 — Report → tool payload mapping for design_gate_run.
  * Extracted from design-gate-tool.ts to meet ≤200 lines/file standard.
  */
+import { redactPaths } from '../../slash/path-redactor';
 
 export interface SeverityBreakdown {
   low: number;
@@ -38,65 +39,73 @@ export interface DesignGateRunPayload {
   fetchStatus?: 'success' | 'skipped' | 'failed';
 }
 
-/** Sanitize error text (C6: strip workspace-root prefix, no stack). */
+/** Sanitize error text (C6: strip workspace root + any absolute path, no stack). */
 export function sanitizeErrorText(err: unknown, workspaceRoot: string | undefined): string {
   const msg = err instanceof Error ? err.message : String(err);
-  if (!workspaceRoot) return `Design gate run failed: ${msg}`;
-  // SEC-F03: escape regex specials, match both separators, case-insensitive on win32
-  const pattern = workspaceRoot
-    .split(/[\\/]+/)
-    .map((seg) => seg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    .join('[\\\\/]+');
-  const flags = process.platform === 'win32' ? 'gi' : 'g';
-  return `Design gate run failed: ${msg.replace(new RegExp(pattern, flags), '<workspace>')}`;
+  return `Design gate run failed: ${redactPaths(msg, workspaceRoot)}`;
 }
+type FetchStatus = 'success' | 'skipped' | 'failed';
 
-/** Map QualityReport + optional fetchStatus → tool payload per D1 schema. */
-export function mapReportToPayload(
-  report: any,
-  mode: string,
-  findingsLimit: number,
-  fetchStatus?: 'success' | 'skipped' | 'failed',
-): string {
-  const findings = report.findings ?? [];
-  const totalIssues = findings.length;
-  const severityBreakdown: SeverityBreakdown = { low: 0, medium: 0, high: 0 };
+/** Count findings per severity (unknown/missing severity counts as low). */
+function countBySeverity(findings: any[]): SeverityBreakdown {
+  const breakdown: SeverityBreakdown = { low: 0, medium: 0, high: 0 };
   for (const f of findings) {
     const sev = (f.severity ?? 'low').toLowerCase();
-    if (severityBreakdown.hasOwnProperty(sev)) severityBreakdown[sev as keyof SeverityBreakdown]++;
+    if (Object.prototype.hasOwnProperty.call(breakdown, sev)) breakdown[sev as keyof SeverityBreakdown]++;
   }
+  return breakdown;
+}
 
-  const payload: DesignGateRunPayload = {
-    ok: true,
+/** One finding → tool payload entry (D1 schema). */
+function toFindingPayload(f: any, idx: number, report: any, mode: string): FindingPayload {
+  return {
+    findingId: f.findingId ?? `f${idx + 1}`,
+    runId: report.runId,
+    mode: f.mode ?? mode,
+    file: f.file,
+    line: f.line,
+    rule: f.rule,
+    severity: f.severity,
+    message: f.message,
+  };
+}
+
+/** Leading report-level scalars (key order is part of the payload contract). */
+function reportHead(report: any, mode: string) {
+  return {
+    ok: true as const,
     runId: report.runId,
     detectionMode: mode,
     score: report.score,
     pass: report.pass,
     threshold: report.threshold,
-    totalIssues,
-    severityBreakdown,
-    findings: findings.slice(0, findingsLimit).map((f: any, idx: number) => ({
-      findingId: f.findingId ?? `f${idx + 1}`,
-      runId: report.runId,
-      mode: f.mode ?? mode,
-      file: f.file,
-      line: f.line,
-      rule: f.rule,
-      severity: f.severity,
-      message: f.message,
-    })),
-    findingsReturned: Math.min(findings.length, findingsLimit),
-    findingsTruncated: findings.length > findingsLimit,
-    fileCount: report.fileCount ?? 0,
-    durationMs: report.durationMs ?? 0,
-    message: report.message,
   };
-  if (fetchStatus !== undefined) {
-    payload.fetchStatus = fetchStatus;
-  }
-  return JSON.stringify(payload, null, 2);
 }
 
+/** Trailing report-level scalars. */
+function reportTail(report: any) {
+  return { fileCount: report.fileCount ?? 0, durationMs: report.durationMs ?? 0, message: report.message };
+}
+
+/** Assemble the full payload object. */
+function buildPayload(report: any, mode: string, limit: number, fetchStatus?: FetchStatus): DesignGateRunPayload {
+  const findings: any[] = report.findings ?? [];
+  const payload: DesignGateRunPayload = {
+    ...reportHead(report, mode),
+    totalIssues: findings.length,
+    severityBreakdown: countBySeverity(findings),
+    findings: findings.slice(0, limit).map((f, idx) => toFindingPayload(f, idx, report, mode)),
+    findingsReturned: Math.min(findings.length, limit),
+    findingsTruncated: findings.length > limit,
+    ...reportTail(report),
+  };
+  if (fetchStatus !== undefined) payload.fetchStatus = fetchStatus;
+  return payload;
+}
+/** Map QualityReport + optional fetchStatus → tool payload per D1 schema. */
+export function mapReportToPayload(report: any, mode: string, findingsLimit: number, fetchStatus?: FetchStatus): string {
+  return JSON.stringify(buildPayload(report, mode, findingsLimit, fetchStatus), null, 2);
+}
 /** Tool success response shape. */
 export function toolText(text: string): unknown {
   return { content: [{ type: 'text', text }], isError: false };
