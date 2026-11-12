@@ -24,6 +24,7 @@
 |---------|------|--------|---------|
 | 1.0 | 2026-10-31 | BA Agent | Initiate document — auto-generated from BRD and Jira tickets |
 | 1.1 | 2026-11-12 | BA Agent | Addendum 4 — Agent-Invocable Design Gate + Agent Self-Check (scope extension, USER-approved per RUN-LOG #43) |
+| 1.2 | 2026-11-13 | BA Agent | Addendum 5 — Auto-trust git worktree for base_dir (scope extension, USER-approved; docs only, batch 1/2) |
 
 ---
 
@@ -916,3 +917,197 @@ Tool `design_gate_list_rules` — input: `{}`; output: catalog of 30 rules (id, 
 
 ---
 
+
+## Addendum 5 (SA4E-393 Scope Extension) — Auto-trust Git Worktree for `base_dir`
+
+**Status:** Draft — pending SM review · **Enforcement:** USER-APPROVED scope extension · **Phase:** Batch 1/2 — documentation only, NO code · **TDD counterpart:** TDD Addendum 5 (sa-agent) owns technical design, module layout, cache structure and test matrix.
+
+> **Traceability:** Extends SA4E-394 (multi-worktree `base_dir` resolution, BR-05 allowlist). Adds one additional, verifiable way for a `base_dir` to become an accepted root, without relaxing containment (BR-07). Related: `ANALYSIS-settings-worktree.md` (SA4E-438 settings.json-in-worktree).
+
+### A5.1 Background
+
+**Current state (verified in code):**
+
+| Component | Behavior today |
+|-----------|----------------|
+| Backend `MultiWorktreePathResolver.resolveWithBaseDir` (`backend/src/shared/multi-worktree-path-resolver.ts`) — **source of truth (SA4E-394)** | `path.resolve(base_dir)` → `WorkspaceAllowlist.contains()` (exact membership; win32 case-fold; `realpathSync` fallback when exists) → else `PATH_REJECTED_OUTSIDE_ALLOWLIST` ("…not registered in the allowlist. Configure MCP_WORKSPACE_ROOTS…") → then `FS_ERROR` if not a directory → containment after resolution (BR-07). |
+| Backend `WorkspaceAllowlist` (`backend/src/shared/workspace-allowlist.ts`) | Immutable Set loaded ONCE at startup from `MCP_WORKSPACE_ROOTS` / `MCP_WORKSPACE_ROOTS_FILE` (BR-13, BR-17: change requires restart). Empty list ⇒ legacy single-root mode (BR-16). |
+| Extension mirror (`extension/src/services/base-dir-resolution.ts`: `getExtensionWorkspaceRoots`, `isRootAllowlisted`, `resolveWithBaseDir`) | Mirrors the backend contract on pure strings (C-5 bundle boundary; parity verified behaviorally by TC-702, `extension/src/__tests__/backend-local-tools.base-dir.test.ts`). Allowlist = VS Code setting `sdlcAgents.workspace.workspaceRoots`, fallback env `MCP_WORKSPACE_ROOTS`. `isRootAllowlisted` performs `path.resolve` + win32 case-fold only (no `realpath`) — a pre-existing difference from the backend, see OI-WT3. |
+
+**Problem (observed):** a tool call with `base_dir = C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-393-2` is rejected with `PATH_REJECTED_OUTSIDE_ALLOWLIST`. That directory is a **git worktree** of the repo `C:\projects\kiro\SDLC-Agents-4-Enterprise`, which is the workspace folder currently open in the instance. Orca-style tooling creates many short-lived worktrees outside the repo directory, so requiring every one to be pre-registered in `MCP_WORKSPACE_ROOTS` (and a restart per BR-17) is impractical.
+
+**Goal:** accept a `base_dir` that is **provably** a linked worktree of a trusted repository, using only on-disk evidence in `.git` metadata. The client-supplied string is never trusted.
+
+### A5.2 Functional Requirements
+
+| FR ID | Requirement |
+|-------|-------------|
+| FR-WT1 | **Trigger.** When `base_dir` is NOT a member of the allowlist (after BR-09 normalization), the resolver MUST attempt worktree auto-trust verification (A5.3) before returning `PATH_REJECTED_OUTSIDE_ALLOWLIST`. If `base_dir` IS allowlisted, behavior is unchanged and no `.git` file is read. |
+| FR-WT2 | **Verification steps (all MUST pass, evaluated in this order, fail-closed):** (1) `<base_dir>/.git` is a regular FILE (not directory, not symlink to a directory) whose content is a single `gitdir: <path>` line; (2) `<path>` resolves (realpath) to `<repo>/.git/worktrees/<name>` — a **linked-worktree admin dir** (the path must contain the segment sequence `.git/worktrees/<name>` and NOT `.git/modules/…`); (3) back-link: the file `<admindir>/gitdir` exists and its content, realpath'd, equals realpath of `<base_dir>/.git`; (4) parent repo = main worktree derived from `<admindir>/commondir` (relative → resolved against admindir; fallback: `<admindir>/../..` = `<repo>/.git`), whose parent folder is the main worktree root; (5) main worktree root ∈ allowlist OR equals a workspace folder currently open in the instance. |
+| FR-WT3 | **Do not trust client strings.** No input from the caller other than `base_dir` itself is used as evidence. Trust derives only from file contents read from disk and from the server-side allowlist / open workspace folder(s). |
+| FR-WT4 | **Realpath everywhere.** Every path compared (base_dir, `.git` file target, admin dir, `gitdir` back-link, repo root, allowlist entries, workspace folders) MUST be `realpath`-normalized before comparison, defeating symlink/junction tricks. On win32 comparisons are case-folded (same semantics as `foldKey` / backend P7). |
+| FR-WT5 | **No process spawn.** Verification reads files directly (`fs`); it MUST NOT spawn `git` or any child process. |
+| FR-WT6 | **Pass outcome.** On pass, `base_dir` is accepted as the effective root (`rootSource` = worktree-derived; exact enum name is TDD's call) and the existing pipeline continues unchanged: existence check (`FS_ERROR`), resolution (BR-02/BR-04), containment AFTER resolution (BR-07). Auto-trust grants NO access beyond `base_dir` itself. |
+| FR-WT7 | **Fail outcome.** On any failed step the result is `PATH_REJECTED_OUTSIDE_ALLOWLIST` with a hint (A5.5). The reason category is logged server-side; the response MUST NOT disclose absolute paths beyond what is already echoed today (the sanitized `base_dir` the caller sent). |
+| FR-WT8 | **Submodule rejection.** A `.git` file whose `gitdir` points into `<repo>/.git/modules/…` (submodule) or any location not matching the linked-worktree admin layout MUST be rejected. |
+| FR-WT9 | **Bare repo.** A bare repository has no main worktree folder. If the parent (derived in FR-WT2 step 4) is a bare repo (no `<repo>/.git` directory; the common dir itself is the repo), the worktree is trusted only if the **common dir's** realpath ∈ allowlist (explicit registration of the bare repo path). It is never matched against "open workspace folder" implicitly. |
+| FR-WT10 | **Nested worktree.** A worktree located inside another trusted directory (e.g. inside the main worktree or inside another worktree) is verified independently by FR-WT2 using its own `.git` file; location does not grant or deny trust. A directory *inside* a worktree whose own `.git` is absent is NOT trusted by inheritance (only the worktree root itself can be `base_dir`; sub-directory `base_dir` is rejected unless allowlisted). |
+| FR-WT11 | **Prunable / deleted worktree.** If any referenced file/dir is missing (admin dir removed by `git worktree prune`, `gitdir` back-link missing, or `base_dir` itself gone) → fail-closed. A worktree whose admin dir exists but whose working dir is missing yields `FS_ERROR` (existing behavior, directory absent) rather than trust. |
+| FR-WT12 | **Bounded file reads.** Reads of `.git`, `gitdir`, `commondir` are limited to **4 KB** per file and a **250 ms** total verification budget; exceeding either → fail-closed (reason `limit_exceeded`). Reads are non-following for the final component when feasible (reject if `.git` is a symlink). |
+| FR-WT13 | **Short-lived cache + invalidation.** Positive and negative verification results MAY be cached per normalized `base_dir`. Positive TTL ≤ 30 s, negative TTL ≤ 5 s. Cache key includes the mtimes of `<base_dir>/.git` and `<admindir>/gitdir`; a changed mtime, a missing file, or an allowlist/workspace-folder change invalidates the entry. Cache is in-memory, bounded (max 256 entries), never persisted. |
+| FR-WT14 | **Parity.** Backend resolver is the source of truth. The extension mirror MUST yield identical codes/messages for the shared scenario matrix (extends TC-702). Where the extension cannot import backend code (C-5), logic is duplicated and verified behaviorally. |
+| FR-WT15 | **Config/observability.** A server-side switch to disable auto-trust (default **enabled**, USER-approved) and a warn-level log line per accepted-by-worktree and rejected-by-worktree decision (sanitized, T6 anti log-forging). Exact setting/env names are TDD's call. |
+
+### A5.3 Verification Flow (text)
+
+```
+base_dir (raw) → BR-09 normalize
+ ├─ allowlist.contains(base_dir)? ── yes → existing pipeline (no .git read)
+ └─ no → auto-trust enabled? ── no → PATH_REJECTED_OUTSIDE_ALLOWLIST
+          └─ cache hit (valid)? → use cached verdict
+          └─ miss:
+             1. lstat <base_dir>/.git → regular file, size ≤ 4KB      else FAIL not_a_worktree
+             2. parse "gitdir: X"; realpath(X)=ADMIN                  else FAIL malformed / missing
+             3. ADMIN matches …/.git/worktrees/<name>                 else FAIL submodule_or_unknown_layout
+             4. read ADMIN/gitdir; realpath == realpath(<base_dir>/.git) else FAIL backlink_mismatch
+             5. COMMON = ADMIN/commondir (or ../..), realpath; MAIN = parent(COMMON) (bare ⇒ see FR-WT9)
+             6. MAIN ∈ allowlist OR MAIN == open workspace folder      else FAIL parent_not_trusted
+             → PASS → accept base_dir as root → existence → resolve → containment (BR-07)
+```
+
+(Diagram, if required, is owned by SA in the TDD using draw.io.)
+
+### A5.4 Business Rules
+
+| Rule ID | Rule | Source |
+|---------|------|--------|
+| BR-WT1 | Auto-trust is evaluated ONLY when `base_dir` is not already allowlisted; allowlist membership always wins and is unchanged (BR-05). | USER design; SA4E-394 |
+| BR-WT2 | Trust is derived exclusively from on-disk `.git` evidence (`.git` file, `worktrees/<name>/gitdir` back-link, `commondir`) — never from client-supplied strings. | USER design |
+| BR-WT3 | The back-link `<admindir>/gitdir` MUST point to exactly `<base_dir>/.git`; otherwise the `.git` file is considered forged. | USER design |
+| BR-WT4 | The parent (main) repository MUST be in the allowlist or be an open workspace folder of the instance; a worktree of an untrusted repo is rejected. | USER design |
+| BR-WT5 | All compared paths are `realpath`-normalized; win32 comparisons are case-folded. | USER design; P5/P7 |
+| BR-WT6 | Submodules (`gitdir` → `.git/modules/…`) and any non-linked-worktree layout are rejected. | USER design |
+| BR-WT7 | Verification reads files directly; no `git` process is spawned. | USER design |
+| BR-WT8 | Auto-trust never relaxes BR-07: containment after resolution still applies to every `file_path`; only `base_dir` itself becomes a root. | SA4E-394 BR-07 |
+| BR-WT9 | Fail-closed: any I/O error, missing file, oversize file (> 4 KB), timeout (> 250 ms) or ambiguity ⇒ rejected. Verification never throws on business paths (error-as-value, §1.4 of SA4E-394). | SA4E-394 |
+| BR-WT10 | Error responses MUST NOT reveal absolute paths beyond the sanitized `base_dir` already echoed today (no admin-dir, repo-root or allowlist content in the message). | SA4E-394 T6 |
+| BR-WT11 | Cache TTLs: positive ≤ 30 s, negative ≤ 5 s; invalidated on mtime change of the evidence files or allowlist/workspace change. | FR-WT13 |
+| BR-WT12 | Bare-repo parents are trusted only via explicit allowlist registration of the common dir. | USER design (bare case) |
+| BR-WT13 | Backend resolver is the source of truth; the extension mirror must be behaviorally identical (TC-702 extended). | SA4E-394 C-5 |
+
+### A5.5 Error Handling
+
+| Condition | Code | Message (client-visible) | Hint |
+|-----------|------|--------------------------|------|
+| Not allowlisted, auto-trust disabled | `PATH_REJECTED_OUTSIDE_ALLOWLIST` | `Workspace root '<sanitized base_dir>' is not registered in the allowlist.` | `Configure MCP_WORKSPACE_ROOTS to include this path.` (unchanged) |
+| Not a worktree / `.git` missing / is a directory | `PATH_REJECTED_OUTSIDE_ALLOWLIST` | same as above + ` It is not a verified git worktree of a trusted repository.` | `Register the path in MCP_WORKSPACE_ROOTS, or use a git worktree of the open workspace repository.` |
+| Malformed `.git` file, back-link mismatch, submodule layout, oversize/timeout | `PATH_REJECTED_OUTSIDE_ALLOWLIST` | same generic message (no per-step detail to client) | same hint |
+| Parent repo not trusted | `PATH_REJECTED_OUTSIDE_ALLOWLIST` | same generic message | `The parent repository must be in MCP_WORKSPACE_ROOTS or be the open workspace folder.` |
+| Worktree passes but `base_dir` directory absent (prunable/deleted) | `FS_ERROR` | `Workspace root '<sanitized>' does not exist on filesystem` (unchanged) | — |
+| `file_path` escapes the worktree root | `PATH_REJECTED_OUTSIDE_ALLOWLIST` | unchanged BR-07 message | — |
+
+Detailed reason codes (`not_a_worktree`, `malformed`, `backlink_mismatch`, `submodule_or_unknown_layout`, `parent_not_trusted`, `limit_exceeded`, `bare_not_registered`) appear only in server logs (FR-WT7, FR-WT15), not in client messages.
+
+### A5.6 Use Cases
+
+**UC-WT1 — Agent uses a linked worktree of the open workspace repo as `base_dir`**
+
+| Flow | Steps |
+|------|-------|
+| Main | 1. Agent calls a file tool with `base_dir=<worktree>`. 2. Resolver: not allowlisted → auto-trust. 3. `.git` file valid, back-link matches, parent repo == open workspace folder. 4. Existence + resolve + containment succeed. 5. Tool executes inside the worktree. |
+| Alt-1 | Parent repo is in `MCP_WORKSPACE_ROOTS` but not the open folder → trusted via allowlist (step 3 passes on allowlist). |
+| Alt-2 | Repeated call within TTL → cached verdict, no file reads. |
+| Alt-3 | `base_dir` already allowlisted → no `.git` read (BR-WT1). |
+| Exc-1 | Any verification step fails → `PATH_REJECTED_OUTSIDE_ALLOWLIST` + hint. |
+
+**UC-WT2 — Forged `.git` file**
+
+| Flow | Steps |
+|------|-------|
+| Main | 1. Attacker creates directory `X` with `.git` file `gitdir: <trusted-repo>/.git/worktrees/foo`. 2. Resolver reads admin dir; `gitdir` back-link points to the real worktree, not `X/.git`. 3. BR-WT3 fails → rejected. |
+| Alt-1 | `worktrees/foo/gitdir` absent (stale/pruned) → rejected. |
+| Exc-1 | Admin dir path traverses a symlink/junction to elsewhere → realpath differs from layout → rejected. |
+
+**UC-WT3 — Submodule as `base_dir`**
+
+| Flow | Steps |
+|------|-------|
+| Main | `.git` file → `gitdir: ../.git/modules/sub`. Layout is not `.git/worktrees/<name>` → rejected (BR-WT6). |
+| Alt-1 | Submodule path itself is allowlisted → accepted via allowlist (BR-WT1), not via auto-trust. |
+
+**UC-WT4 — Worktree deleted / prunable**
+
+| Flow | Steps |
+|------|-------|
+| Main | Working dir removed while admin dir remains: not allowlisted → verification reads `<base_dir>/.git` → missing → rejected (or `FS_ERROR` when the directory is absent after a pass from cache; cache is invalidated on missing-file). |
+| Alt-1 | `git worktree prune` removed admin dir → back-link read fails → rejected. |
+| Exc-1 | Cached positive verdict, directory deleted within TTL → existence check returns `FS_ERROR` (BR-06 order preserved). |
+
+**UC-WT5 — Bare repository parent**
+
+| Flow | Steps |
+|------|-------|
+| Main | Worktree of a bare repo; `commondir` = `<bare>`; no main worktree folder. Accepted only if `<bare>` ∈ allowlist (BR-WT12). |
+| Exc-1 | Bare path not registered → rejected (`bare_not_registered` in log). |
+
+**UC-WT6 — Nested worktree**
+
+| Flow | Steps |
+|------|-------|
+| Main | Worktree W2 lives inside main worktree or inside worktree W1. W2's own `.git` is verified independently; passes if parent repo trusted. |
+| Alt-1 | `base_dir` is a plain sub-directory of a trusted worktree (no own `.git`) → rejected unless allowlisted (FR-WT10). |
+
+**UC-WT7 — Extension-surface tool (embed_image etc.)**
+
+| Flow | Steps |
+|------|-------|
+| Main | Same decision as UC-WT1 via the extension mirror; open workspace folder = `vscode.workspace.workspaceFolders`. Identical codes/messages as backend (FR-WT14). |
+
+### A5.7 Non-Functional Requirements
+
+| NFR ID | Requirement |
+|--------|-------------|
+| NFR-WT1 | Cold verification (cache miss) ≤ **50 ms** typical, hard budget **250 ms** (fail-closed beyond). Cache hit ≤ **1 ms**. |
+| NFR-WT2 | Each evidence file read ≤ **4 KB**; max 3 file reads + ≤ 6 `lstat/realpath` calls per verification. |
+| NFR-WT3 | Cache bounded to 256 entries; no unbounded memory growth; no persistence. |
+| NFR-WT4 | Synchronous-safe: no child processes, no network. Must not block the extension host beyond the budget (prefer async fs in the extension surface; TDD decides). |
+| NFR-WT5 | Security: fail-closed; log-forging protection (sanitize); no path disclosure (BR-WT10); TOCTOU window limited by short TTL and re-check of existence on every call. |
+| NFR-WT6 | Cross-platform: win32 (case-fold, junctions, `\\?\` prefixes, drive letters), POSIX (symlinks). |
+
+### A5.8 Scope Boundary
+
+- **In scope:** auto-trust of linked git worktrees for `base_dir` in the backend resolver (source of truth) and the extension mirror; tests extending TC-702 parity; docs of the new error hints.
+- **Out of scope:** changing allowlist loading (BR-13/BR-17), the legacy (no `base_dir`) mode, containment rules, or granting trust to arbitrary directories.
+- **Relation to SA4E-438 (settings.json in worktree, `ANALYSIS-settings-worktree.md`):** the two features address different problems (path allowlist vs. discovery/ownership of `.code-intel/settings.json`) and have no hard dependency. **Requirement only:** if SA4E-438 later needs "is this directory a trusted worktree of the open workspace?" (e.g. validating `settings.workspace` against cwd), it SHOULD reuse the same worktree-verification capability instead of re-implementing `.git` parsing, to keep one source of truth. Whether to share a module, and the shared API shape, is SA's decision. SA4E-393 does not modify `runtime-settings.ts` or `remote-backend-client.ts`.
+- Batch 1/2 delivers documentation only; implementation follows in Batch 2 after TDD Addendum 5.
+
+### A5.9 Acceptance Criteria
+
+| AC ID | Criterion |
+|-------|-----------|
+| AC-WT1 | `base_dir` = linked worktree of the open workspace repo (not in allowlist) is accepted; relative `file_path` resolves inside it. |
+| AC-WT2 | Forged `.git` file (back-link mismatch) → `PATH_REJECTED_OUTSIDE_ALLOWLIST`. |
+| AC-WT3 | Submodule `.git` file → rejected. |
+| AC-WT4 | Worktree of an untrusted repo → rejected. |
+| AC-WT5 | Symlink/junction-redirected admin dir or repo path → rejected; win32 case variants of a valid path → accepted. |
+| AC-WT6 | Prunable/deleted worktree → rejected or `FS_ERROR`, never accepted. |
+| AC-WT7 | Oversize (> 4 KB) `.git` file or > 250 ms budget → rejected. |
+| AC-WT8 | Bare-repo worktree accepted only if bare path allowlisted. |
+| AC-WT9 | Nested worktree verified independently; plain sub-directory of a worktree rejected. |
+| AC-WT10 | Accepted worktree still enforces containment (BR-07): `..\` and absolute paths outside → rejected. |
+| AC-WT11 | Backend and extension return identical codes/messages over the shared scenario matrix (TC-702 extended). |
+| AC-WT12 | Rejection message exposes no absolute path other than the sanitized `base_dir`; no `git` process is spawned. |
+| AC-WT13 | Cache: second call within TTL performs no file reads; touching `.git`/`gitdir` invalidates it. |
+
+### A5.10 Addendum Open Issues
+
+| Issue ID | Description | Owner | Target Date | Severity |
+|----------|-------------|-------|-------------|----------|
+| OI-WT1 | Define "workspace folder currently open" for the backend (it has only `legacyRoot`/allowlist; the instance's open folder(s) must be supplied by the extension, e.g. via env/config or request context) and for multi-root workspaces. | SA | before Batch 2 | High |
+| OI-WT2 | Extension mirror `isRootAllowlisted` lacks `realpath` whereas backend `contains()` has it; FR-WT4 requires realpath on both — decide fixing the mirror as part of this scope (parity). | SA/TA | before Batch 2 | Medium |
+| OI-WT3 | Exact `rootSource` enum value, config switch/env names (FR-WT15), and cache module placement (shared vs per-surface). | SA | TDD Addendum 5 | Low |
+| OI-WT4 | Whether SA4E-438 shares the worktree-verification module (A5.8, requirement only). | SA/SM | SA4E-438 kickoff | Medium |
+| OI-WT5 | Behavior when `commondir` file is absent on older git layouts (fallback `admindir/../..` specified; confirm acceptable). | SA | TDD Addendum 5 | Low |
+| OI-WT6 | Treatment of `extensions.worktreeConfig` / relocated worktrees (`git worktree move`/`repair` rewrite the back-link): accepted as-is if back-link consistent; confirm. | SA | TDD Addendum 5 | Low |
+
+---
