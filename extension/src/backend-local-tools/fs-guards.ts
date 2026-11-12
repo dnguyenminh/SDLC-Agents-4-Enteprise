@@ -60,16 +60,34 @@ export function checkSymlinkGuardForPath(
     );
   }
   // F2 — file-level symlink escape: if the resolved target itself exists and is
-  // a symlink, reject it (parent realpath alone doesn't catch a workspace file
-  // that IS a symlink pointing outside). Non-existent paths stay ALLOWED so
-  // new-file writes keep working (lstat throws ENOENT → fall through).
+  // a symlink, resolve its REAL target and check containment against the root.
+  // A symlink whose real target stays inside the root is allowed
+  // (node_modules/.bin-style internal links keep working); only escaping targets
+  // are rejected. A broken symlink (realpath fails) fails closed → rejected.
+  // Non-existent paths stay ALLOWED so new-file writes keep working
+  // (lstat throws ENOENT → fall through).
   try {
-    if (fs.lstatSync(resolvedPath).isSymbolicLink()) {
-      return (
-        `PATH_REJECTED_OUTSIDE_WORKSPACE: Path rejected: ${sanitizeLogText(rawDisplay)} resolves to ` +
-        `${sanitizeLogText(resolvedPath)} — outside workspace root ` +
-        `${sanitizeLogText(rootPath)} via symlink/junction.` + probedRootsHint(candidatesProbed)
-      );
+    const stat = fs.lstatSync(resolvedPath);
+    if (stat.isSymbolicLink()) {
+      let realTarget: string;
+      try {
+        realTarget = fs.realpathSync(resolvedPath);
+      } catch {
+        // Broken symlink (target missing) → fail closed.
+        return (
+          `PATH_REJECTED_OUTSIDE_WORKSPACE: Path rejected: ${sanitizeLogText(rawDisplay)} resolves to ` +
+          `${sanitizeLogText(resolvedPath)} — outside workspace root ` +
+          `${sanitizeLogText(rootPath)} via symlink/junction.` + probedRootsHint(candidatesProbed)
+        );
+      }
+      if (!isPathWithinRoot(rootPath, realTarget)) {
+        return (
+          `PATH_REJECTED_OUTSIDE_WORKSPACE: Path rejected: ${sanitizeLogText(rawDisplay)} resolves to ` +
+          `${sanitizeLogText(resolvedPath)} — outside workspace root ` +
+          `${sanitizeLogText(rootPath)} via symlink/junction.` + probedRootsHint(candidatesProbed)
+        );
+      }
+      // internal symlink → allowed; fall through to return null.
     }
   } catch (err: any) {
     // ENOENT = path doesn't exist yet (new file) → allow. Any other fs error
