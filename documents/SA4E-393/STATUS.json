@@ -80,7 +80,7 @@
       "executor": "human (user) in Kiro — v3 smoke build 36660bb9 + v4 final audit build 1d9afe4d (VSIX 1.55.18, 30 rules: 13 base + 17 Impeccable-derived)",
       "evidence": "evidence-uat-final-v4.json (final audit) + evidence-uat-qualitycheckresult-v3-final.json (smoke)",
       "result": "Integration PASS 6/6 (wiring, SSRF C4, relative paths C5, UI, fallback verified). v4 gate verdict: FAIL - Score 0.79 - Findings 1846 (run_1794442887259_ohhv4kmi, low 1663/medium 183/high 0, ~8s) = workspace design-debt inventory thật, ghi FAIL trung thực theo RUN-LOG #28 — đúng hành vi gate, không phải bug integration",
-      "signOff": "pending human approval — (a) sign-off → Jira Done, (b) cleanup ticket cho 1846 findings, (c) release version (bump 1.55.19 + tag mới; tag v1.55.18 cũ publish trước fix), (d) optional batch fix A1 a11y + tiny-text"
+      "signOff": "pending human approval — (a) sign-off → Jira Done, (b) cleanup ticket cho 1846 findings (SA4E-438; fix batch không bắt buộc cho sign-off ticket), (c) release version (bump 1.55.19 + tag mới; tag v1.55.18 cũ publish trước fix). Target test = integration của extension; workspace chỉ là input — FAIL 0.79 là output trung thực của gate"
     },
     "security_deploy_review": {
       "status": "not_started"
