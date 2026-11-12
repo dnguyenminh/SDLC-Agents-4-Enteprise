@@ -74,8 +74,13 @@
       "status": "not_started"
     },
     "uat": {
-      "status": "in_progress",
-      "startedAt": "2026-11-08T10:55:00Z"
+      "status": "done",
+      "startedAt": "2026-11-08T10:55:00Z",
+      "completedAt": "2026-11-09T22:03:40Z",
+      "executor": "human (user) in Kiro, final vsix 1.55.18 @ commit 36660bb9",
+      "evidence": "evidence-uat-qualitycheckresult-v3-final.json",
+      "result": "PASS 6/6 — Both: PASS Score 1.00 (raw 0.9955), 2 genuine TODO findings, 2/2 relative paths (C5), SSRF C4 verified, fallback verified. History: mock rejected -> real pipeline -> spec change (TDD Addendum A1/A2 user-approved) -> word-boundary heuristic fix",
+      "signOff": "pending human approval for Jira Done + release"
     },
     "security_deploy_review": {
       "status": "not_started"

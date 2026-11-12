@@ -564,3 +564,129 @@ Required diagrams created:
 - `diagrams/component.drawio` + `.png` — §2.2
 - `diagrams/class-diagram.drawio` + `.png` — §5 / §4.1
 
+---
+
+## Addendum (SA4E-393, 2026-11-09) — Scan Scope & Normalized Scoring [USER-APPROVED]
+
+> Approved by the human gate (ticket owner) during UAT disposition, after real-run
+> evidence showed the original spec produced a vacuous FAIL on any real repository.
+> Recorded in RUN-LOG #34. This addendum supersedes the conflicting formulas above.
+
+### A1. Scan scope (static mode) — supersedes "scan all workspace text files"
+
+The design quality gate scans **design artifacts only** — the web/UI surface:
+
+- Extensions: `.html`, `.htm`, `.css`, `.scss`, `.sass`, `.less`, `.vue`, `.svelte`, `.tsx`, `.jsx`
+- `SKIP_DIRS` still applies (node_modules, .git, out, dist, build, coverage, .code-intel, .kiro, .opencode, .vscode, resources, webview-assets)
+
+Rationale: the detector's heuristics are design-oriented. Scanning markdown docs,
+agent session logs, vendor bundles and patches produced hundreds of noise findings
+(497 in the UAT evidence) and a meaningless verdict.
+
+### A2. Normalized scoring — supersedes absolute per-finding deduction
+
+Old (superseded): `score = 1 − (Σ severity weights)` — any repository with more than
+6 medium findings clamped to 0 regardless of size.
+
+New formula (scale-independent):
+
+```
+score = 1 − (unique files with findings / total files in scan scope)
+```
+
+- `totalFiles` = design files scanned (static) + 1 rendered page (when fetched)
+- Clamp to [0, 1]; empty scope → score 1.0 with message
+  "No design artifacts found in scan scope (0 files)" (vacuous pass, surfaced in report)
+- `severityBreakdown` is kept in the report for triage but no longer drives the score
+- Threshold semantics unchanged (BR-11: score ≥ 0.8 → pass; configurable via
+  `QUALITY_GATE_THRESHOLD`)
+
+### A3. Deferred (follow-up ticket)
+
+Real Impeccable WASM detector binary (Option 2) — blocked on the external
+`impeccable-skill` package; heuristics in `simulateWasmAnalysis` remain until then.
+
+---
+
+## Addendum 2 (SA4E-438, 2026-11-10) — Real Design-Quality Rules [USER-APPROVED]
+
+Supersedes the placeholder heuristic (A3 kept for the real WASM binary only).
+Follow-up ticket: SA4E-438.
+
+### B1. Rule engine — `design-rules.ts`
+
+13 rule ids applied to design artifacts (extension-aware: CSS rules don't run on TSX):
+
+| Id | Rule | Severity |
+|----|------|----------|
+| A1 | `<img>` missing `alt` | HIGH |
+| A2 | Empty `<button>`/`<a>` | HIGH |
+| A3 | `onClick` on div/span without role/tabIndex | MEDIUM |
+| B1 | Fixed pixel width ≥300px | MEDIUM |
+| B2 | `position:absolute` >5 per file | MEDIUM |
+| B3 | Stylesheet >200 lines without `@media` | MEDIUM |
+| C1 | ≥3 distinct hardcoded colors | LOW |
+| C2 | `!important` | LOW |
+| C3 | Magic spacing (off 4/8 scale) | LOW |
+| D1 | Inline `style={{…}}` | LOW |
+| D2 | `.map()` JSX without key | MEDIUM |
+| D3 | Component file >300 lines | LOW |
+| D4 | Pending-work markers TODO/FIX | LOW |
+
+### B2. Scoring amendment — significant findings only
+
+```
+score = 1 − (files with ≥1 HIGH or MEDIUM finding / total files in scope)
+```
+
+LOW findings (tokens, spacing, markers) are triage info and do not fail a file.
+Threshold semantics unchanged (BR-11).
+
+### B3. Rendered mode
+
+Phase 2: fetch page → same rule engine over fetched HTML (Lighthouse-class DOM
+analysis deferred).
+
+---
+
+## Addendum 3 (SA4E-438, 2026-11-11) — Impeccable-derived slop rules [USER-APPROVED: learn the ideas, implement natively]
+
+User decision: port the IDEAS from github.com/pbakaus/impeccable (Apache-2.0,
+107k stars — "the design vocabulary for your coding agent") into OUR extension
+natively — **no external CLI/binary dependency at runtime**. Attribution:
+rule ideas adapted from the Impeccable detector (62 deterministic rules).
+
+### C1. New rules added to `design-rules.ts` (batch 1 — 17 rules)
+
+| Id | Rule | Severity | Detection |
+|----|------|----------|-----------|
+| overused-font | Inter/Roboto/Fraunces/Geist/Plus Jakarta/Space Grotesk/Montserrat/Poppins | LOW | font-family + fonts.googleapis links |
+| gradient-text | `bg-clip-text` / `background-clip: text` | LOW | regex |
+| ai-color-palette | purple/violet Tailwind classes + violet hexes | LOW | regex |
+| cream-palette | cream hexes + `bg-stone/amber-50/100` | LOW | regex |
+| side-tab | one-side `border-{side}: Npx solid` + `border-[lrtb]-4..8` | LOW | regex |
+| dark-glow | `box-shadow: 0 0 Npx` + colored text-shadow | LOW | regex |
+| radial-halo | `radial-gradient(…transparent)` | LOW | regex |
+| hard-offset-shadow | unblurred `Npx Npx 0` | LOW | regex (style files) |
+| broken-image | empty/placeholder `src` | MEDIUM | regex |
+| skipped-heading | h1→h3 level skip | MEDIUM | heading-sequence walk |
+| tight-leading | line-height <1.3 / `leading-none|tighter|tight` | LOW | regex |
+| tiny-text | font-size <12px / `text-[Npx]` <12 | MEDIUM | regex |
+| justified-text | `text-align: justify` / `text-justify` | LOW | regex |
+| extreme-negative-tracking | negative letter-spacing / `tracking-tighter` | LOW | regex |
+| marketing-buzzword | streamline/empower/supercharge/world-class/… | LOW | regex (UI copy) |
+| bounce-easing | `animate-bounce` / overshoot cubic-bezier | LOW | regex |
+| marquee | marquee animation | LOW | regex |
+
+Full 62-rule reference captured at `documents/SA4E-393/impeccable-rules-reference.txt`.
+Rendered-only rules (low-contrast, text-occlusion, cramped-padding geometry,
+content-hidden-at-rest, script-error…) = phase 2 — need a rendered page.
+
+### C2. Verified real run (this workspace)
+
+`FAIL - Score 0.79 - Findings 1839` in ~8s across ~447 design files: D1 776,
+C1 320, tight-leading 209, overused-font 149, ai-color-palette 106, tiny-text 105,
+D3 71, skipped-heading 33, A3 27, B1 14, cream-palette 11, side-tab 5,
+buzzword 6, bounce 3, D4 4 — 0 absolute paths (C5). The FAIL is the gate
+working: real, actionable design debt with file:line.
+
