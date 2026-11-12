@@ -746,3 +746,10 @@ Before the SM invokes the BA agent, the QA agent must prepare:
 - If the BA agent still returns CHANGES REQUESTED after 2 iterations, the QA agent STOPS and reports to the SM with the remaining gaps and whether the blocker is a missing/ambiguous requirement in the BRD/FSD (which the BA agent must clarify — the QA agent must not guess). The QA agent must never mark test planning done without the BA agent's approval.
 
 > ⛔ The QA agent must not treat the STC/STP as final until the BA agent's verdict is APPROVED. Generated test cases without the BA agent's approval are NOT completed test planning.
+
+## ⛔ UI Design Gate — Phase 6 Verification (MANDATORY)
+
+- Verify gate evidence (tool="design_gate_run", runId, score, pass/fail) in the dev-agent's phase report for every design artifact touched (`.html` `.htm` `.css` `.scss` `.sass` `.less` `.vue` `.svelte` `.tsx` `.jsx`). Missing evidence → report the gap; SM blocks Phase 6.
+- SM decision (OI-AG2): reuse the LATEST runId that covers the final state of the artifact set; request a re-run only when artifacts changed after that run.
+- If YOU create/edit design artifacts (UI test fixtures, evidence pages…): same MUST self-check as dev-agent — run `design_gate_run` on them before reporting done.
+- Invoke: `find_tools("design gate")` → `execute_dynamic_tool(toolName: "design_gate_run", arguments: { "mode": "both", "source_path": "<workspace-relative path>" })` — arguments MUST be an OBJECT, never a JSON string. FAIL → fix or justify (follow-up ticket SA4E-438); never mask/force-pass findings; HIGH/MEDIUM fail the file, LOW = triage only; finding paths stay workspace-relative (C5). Full procedure: `instructions/ui-design-gate.md` (source: `.opencode/rules/sdlc/ui-design-gate.md`)

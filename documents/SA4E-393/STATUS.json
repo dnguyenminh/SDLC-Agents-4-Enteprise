@@ -73,15 +73,15 @@
       "file": "PENTEST-REPORT.md",
       "status": "not_started"
     },
-    "uat": {
-      "status": "done",
-      "startedAt": "2026-11-08T10:55:00Z",
-      "completedAt": "2026-11-12T00:21:27Z",
-      "executor": "human (user) in Kiro — v3 smoke build 36660bb9 + v4 final audit build 1d9afe4d (VSIX 1.55.18, 30 rules: 13 base + 17 Impeccable-derived)",
-      "evidence": "evidence-uat-final-v4.json (final audit) + evidence-uat-qualitycheckresult-v3-final.json (smoke)",
-      "result": "Integration PASS 6/6 (wiring, SSRF C4, relative paths C5, UI, fallback verified). v4 gate verdict: FAIL - Score 0.79 - Findings 1846 (run_1794442887259_ohhv4kmi, low 1663/medium 183/high 0, ~8s) = workspace design-debt inventory thật, ghi FAIL trung thực theo RUN-LOG #28 — đúng hành vi gate, không phải bug integration",
-      "signOff": "pending human approval — (a) sign-off → Jira Done, (b) cleanup ticket cho 1846 findings (SA4E-438; fix batch không bắt buộc cho sign-off ticket), (c) release version (bump 1.55.19 + tag mới; tag v1.55.18 cũ publish trước fix). Target test = integration của extension; workspace chỉ là input — FAIL 0.79 là output trung thực của gate"
-    },
+  "uat": {
+    "status": "done",
+    "startedAt": "2026-11-08T10:55:00Z",
+    "completedAt": "2026-11-12T00:21:27Z",
+    "executor": "human (user) in Kiro — v3 smoke build 36660bb9 + v4 final audit build 1d9afe4d (VSIX 1.55.18, 30 rules: 13 base + 17 Impeccable-derived)",
+    "evidence": "evidence-uat-final-v4.json (final audit) + evidence-uat-qualitycheckresult-v3-final.json (smoke)",
+    "result": "Integration PASS 6/6 (wiring, SSRF C4, relative paths C5, UI, fallback verified). v4 gate verdict: FAIL - Score 0.79 - Findings 1846 (run_1794442887259_ohhv4kmi, low 1663/medium 183/high 0, ~8s) = workspace design-debt inventory thật, ghi FAIL trung thực theo RUN-LOG #28 — đúng hành vi gate, không phải bug integration",
+    "signOff": "PAUSED — scope extension 2026-11-12 (RUN-LOG #43): expose gate qua MCP tools (design_gate_run, design_gate_list_rules) + agent self-check rules (MUST + blocker). Sign-off lại sau khi extension round 2 verified"
+  },
     "security_deploy_review": {
       "status": "not_started"
     },
@@ -182,6 +182,17 @@
     "mcpWrapper9183": "up (stream_write_file, embed_image, jira tools via execute_dynamic_tool)",
     "jiraAccess": "OK - jira_get_issue working via execute_dynamic_tool (discovered after restart)"
   },
-  "lastUpdated": "2026-11-12T00:40:00Z",
+  "lastUpdated": "2026-11-12T02:10:00Z",
+  "scopeExtension": {
+    "requestedAt": "2026-11-12",
+    "requestedBy": "user (product owner)",
+    "reason": "Gate built for AI agents nhưng chỉ invocable thủ công qua Command Palette — agent không gọi được (RUN-LOG #43)",
+    "requirements": [
+      "Expose design quality gate qua MCP tools của extension: design_gate_run + design_gate_list_rules (LOCAL_TOOL_REGISTRY pattern)",
+      "UI agents (dev-agent, ui-agent — mọi agent sửa .tsx/.svelte/.html/.css) MUST tự chạy gate trước khi báo done; FAIL phải fix hoặc biên bản lý do; SM chặn Phase 5/6 completion thiếu gate evidence"
+    ],
+    "decisions": "Mở rộng scope SA4E-393 (không tạo ticket mới); enforcement MUST + blocker",
+    "signOffStatus": "paused pending scope-extension implementation + verification"
+  },
   "blocker": null
 }

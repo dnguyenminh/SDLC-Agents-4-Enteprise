@@ -12,6 +12,7 @@ import * as path from "path";
 import { getWorkspaceRoot, checkForUpgrade } from "./activation-helpers";
 import { runDetection } from "./slash";
 import { QualityReport as DesignQualityReport, EnvConfig, DEFAULT_THRESHOLD } from "./slash/types";
+import { resolveWasmPath } from "./slash/detector-env";
 import type { RenderedDetectionResult } from "./slash/integration.service";
 import { SettingsPanel } from "./panels/settings/SettingsPanel";
 import { ProxyAgentFactory } from "./proxy/ProxyAgentFactory";
@@ -103,25 +104,8 @@ export async function activate(context: vscode.ExtensionContext) {
     return root;
   };
 
-  const resolveWasmPath = (): string => {
-    // 1) Packaged VSIX: copy-resources ships detector binary at resources/wasm/
-    //    (esbuild bundles out/ to a single file — out/wasm does not survive packaging)
-    const packaged = path.join(context.extensionPath, "resources", "wasm", "detector.wasm");
-    if (fs.existsSync(packaged)) {
-      process.env[EnvConfig.IMPPECABLE_SKILL_PATH] = packaged;
-      return packaged;
-    }
-    // 2) Dev tsc build: out/wasm/detector.wasm
-    const built = path.join(context.extensionPath, "out", "wasm", "detector.wasm");
-    if (fs.existsSync(built)) {
-      process.env[EnvConfig.IMPPECABLE_SKILL_PATH] = built;
-      return built;
-    }
-    // 3) F5 / repo checkout: workspace source layout
-    const devCandidate = path.join(context.extensionPath, "..", "source", "source-slash", "wasm", "detector.wasm");
-    process.env[EnvConfig.IMPPECABLE_SKILL_PATH] = devCandidate;
-    return devCandidate;
-  };
+  // resolveWasmPath imported from ./slash/detector-env (shared with design-gate tools)
+  // Call as: resolveWasmPath(context.extensionPath)
 
   const showReport = (mode: string, report: DesignQualityReport, extra?: string): void => {
     const status = report.pass ? "PASS" : "FAIL";
@@ -140,7 +124,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("sdlcAgents.runDesignGateStatic", async () => {
       try {
         const root = resolveWorkspace();
-        resolveWasmPath();
+        resolveWasmPath(context.extensionPath);
         const { report } = await runDetection({
           detectionMode: "static",
           sourceRoot: root,
@@ -155,7 +139,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("sdlcAgents.runDesignGateRendered", async () => {
       try {
         const root = resolveWorkspace();
-        resolveWasmPath();
+        resolveWasmPath(context.extensionPath);
         const { combinedResult, report } = await runDetection({
           detectionMode: "rendered",
           sourceRoot: root,
@@ -183,7 +167,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("sdlcAgents.runDesignGateBoth", async () => {
       try {
         const root = resolveWorkspace();
-        resolveWasmPath();
+        resolveWasmPath(context.extensionPath);
         const { report } = await runDetection({
           detectionMode: "both",
           sourceRoot: root,
