@@ -6,12 +6,17 @@
  *
  * Same normative order as the backend resolver: normalize (BR-09) → allowlist
  * (BR-05) → resolve (BR-02/04) → containment AFTER resolution (BR-07).
- * Pure string ops + fs.existsSync for the allowlist path — NEVER throws.
+ * Pure string ops + fs for the allowlist/trust path — NEVER throws.
+ *
+ * SA4E-406: F1 unions the LIVE workspace folders into the allowlist; A7 moves
+ * the admission decision to the parents rule (see ./root-trust).
  */
 import * as path from "path";
-import * as fs from "fs";
-import { sanitizeLogText, type PathResolutionErr, type PathResolutionResult } from "./PathResolver";
-import { isPathWithinRoot } from "./PathResolver";
+import { allWorkspaceFolderRoots } from "./workspace-roots";
+import { foldPathKey, isPathWithinRoot } from "./path-containment";
+import { isRootAdmitted, trustedParentsHint } from "./root-trust";
+import type { PathResolutionErr, PathResolutionResult } from "./PathResolver";
+import { sanitizeLogText } from "./path-format";
 
 /** Allowlist keys are case-folded on win32 (backend P7 semantics). */
 function foldKey(p: string): string {
@@ -43,20 +48,48 @@ export function pickBaseDir(
 }
 
 /**
- * Allowlist mirror (TDD §6.3): VS Code setting `sdlcAgents.workspace.workspaceRoots`
- * (string[]), falling back to the MCP_WORKSPACE_ROOTS env var. Backend remains
- * the source of truth — deployments configure both from the same values (DPG §6.1).
+ * Allowlist mirror (TDD §6.3) — SA4E-406 F1: the UNION of
+ *   (a) VS Code setting `sdlcAgents.workspace.workspaceRoots` (string[]),
+ *   (b) env `MCP_WORKSPACE_ROOTS`,
+ *   (c) the LIVE `vscode.workspace.workspaceFolders` fsPaths (read per call,
+ *       same lazy-require pattern as PathResolver; skip undefined/empty),
+ * plus (A7) the admitted session root for this call when the caller has one.
+ *
+ * SECURITY RATIONALE (F1): a relative path under an open workspace folder is
+ * ALREADY accepted by containment alone (PathResolver step 4 / base_dir step
+ * 4), so admitting the open folders to the base_dir allowlist equalizes trust
+ * — it grants nothing a relative path could not already do. Orca worktrees
+ * are opened as workspace folders but rarely present in settings/env; without
+ * the union every base_dir call against them failed with
+ * PATH_REJECTED_OUTSIDE_ALLOWLIST. Pure-ish and never-throwing; `folderRoots`
+ * is an injectable seam (tests) defaulting to the live reader.
  */
-export function getExtensionWorkspaceRoots(): ReadonlySet<string> {
-  const fromSetting = readSettingRoots();
-  const raw = fromSetting.length > 0 ? fromSetting : readEnvRoots();
+export function getExtensionWorkspaceRoots(
+  opts?: { folderRoots?: () => string[]; sessionRoot?: string },
+): ReadonlySet<string> {
   const roots = new Set<string>();
-  for (const entry of raw) {
-    const resolved = path.resolve(entry.trim());
-    if (resolved === "" || entry.trim() === "") continue;
-    roots.add(foldKey(resolved));
+  const folders = opts?.folderRoots ?? allWorkspaceFolderRoots;
+  for (const entry of [...readSettingRoots(), ...readEnvRoots(), ...folders()]) {
+    if (typeof entry !== "string" || entry.trim() === "") continue;
+    roots.add(foldKey(path.resolve(entry.trim())));
+  }
+  if (typeof opts?.sessionRoot === "string" && opts.sessionRoot.trim() !== "") {
+    roots.add(foldKey(path.resolve(opts.sessionRoot.trim())));
   }
   return roots;
+}
+
+/**
+ * Static allowlist entries (setting ∪ env, RAW case, resolved) for callers
+ * that need an ordered candidate list rather than the folded Set (A8 feed).
+ */
+export function staticWorkspaceRootList(): string[] {
+  const out: string[] = [];
+  for (const entry of [...readSettingRoots(), ...readEnvRoots()]) {
+    if (typeof entry !== "string" || entry.trim() === "") continue;
+    out.push(path.resolve(entry.trim()));
+  }
+  return out;
 }
 
 function readSettingRoots(): string[] {
@@ -92,13 +125,15 @@ function err(code: PathResolutionErr["code"], message: string, rawPath: string):
 
 /**
  * base_dir branch — mirrors backend MultiWorktreePathResolver.resolveWithBaseDir.
- * Existence of the root is caller-side (backend stat); the extension performs
- * the allowlist check, resolution and containment on pure strings.
+ * SA4E-406 A7: admission is the parents rule (allowlist / session root /
+ * trusted parents / open folders) — see ./root-trust. The legacy rejection
+ * message stays byte-identical when no parents are configured (extend,
+ * don't break); with parents configured a sanitized hint names them.
  */
 export function resolveWithBaseDir(
   rawPath: unknown,
   baseDir: string,
-  opts?: { allowlist?: ReadonlySet<string> },
+  opts?: { allowlist?: ReadonlySet<string>; sessionRoot?: string },
 ): PathResolutionResult {
   if (typeof rawPath !== "string" || rawPath.trim() === "") {
     return err("PATH_EMPTY", "PATH_EMPTY: 'file_path' must be a non-empty string.", "");
@@ -107,11 +142,12 @@ export function resolveWithBaseDir(
     return err("PATH_INVALID", "PATH_INVALID: 'file_path' contains invalid characters (NUL byte).", sanitizeLogText(rawPath));
   }
   const normalizedRoot = path.resolve(baseDir.trim()); // BR-09 before allowlist (T8)
-  if (!isRootAllowlisted(normalizedRoot, opts?.allowlist)) {
+  if (!isRootAdmitted(normalizedRoot, opts?.allowlist, opts?.sessionRoot)) {
     return err(
       "PATH_REJECTED_OUTSIDE_ALLOWLIST",
       "PATH_REJECTED_OUTSIDE_ALLOWLIST: Workspace root '" + sanitizeLogText(normalizedRoot) +
-        "' is not registered in the allowlist. Configure MCP_WORKSPACE_ROOTS to include this path.",
+        "' is not registered in the allowlist. Configure MCP_WORKSPACE_ROOTS to include this path." +
+        trustedParentsHint(),
       sanitizeLogText(normalizedRoot),
     );
   }

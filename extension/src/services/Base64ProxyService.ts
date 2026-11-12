@@ -15,13 +15,15 @@
  * callers/tests) or a live WorkspaceRootProvider (production wiring in
  * RemoteBackendClient — UC-01 AF-2, no stale root).
  *
+ * SA4E-406: proxyInput honours the bound MCP session root (A6) and probes
+ * multi-root candidates (F2/A8) via ./Base64ProxyService/input-proxy; the
+ * output proxy forwards the session root as well (A6 — writes land in the
+ * session root).
+ *
  * Schema rewriting and dynamic-tool helpers live in ./Base64ProxyService/*.
  */
-import * as fs from "fs";
-import { checkSymlinkGuard } from "../backend-local-tools";
 import {
   resolveWorkspacePath,
-  sanitizeLogText,
   PathResolverError,
   type PathResolutionOk,
   type WorkspaceRootProvider,
@@ -35,11 +37,11 @@ import {
 } from "./Base64ProxyService/schema-rewrite";
 import { unwrapDynamicTool, wrapDynamicTool } from "./Base64ProxyService/dynamic-tool";
 import { proxyToolOutput } from "./Base64ProxyService/output-proxy";
+import { proxyInputFile, PROXY_PRE_READ_MAX_BYTES, type InputProxyContext } from "./Base64ProxyService/input-proxy";
+import type { ToolCallContext } from "../backend-local-tools/registry";
 
 export type { ToolSchema } from "./Base64ProxyService/types";
-
-/** Maximum proxy pre-read file size (N-9, SEC-07 — SA policy). */
-export const PROXY_PRE_READ_MAX_BYTES = 25 * 1024 * 1024;
+export { PROXY_PRE_READ_MAX_BYTES };
 
 export class Base64ProxyService {
   private base64InputTools = new Set<string>();
@@ -51,8 +53,13 @@ export class Base64ProxyService {
    *   provider (production: reads vscode.workspace per call). Without a root,
    *   relative paths fail with PATH_NO_WORKSPACE and absolute paths pass
    *   through (PathResolver BR-06b / DISC-1).
+   * @param foldersProvider SA4E-406 A8 — source of open workspace folders
+   *   (injectable seam; defaults to the live vscode reader).
    */
-  constructor(private readonly workspaceRoot?: string | WorkspaceRootProvider) {}
+  constructor(
+    private readonly workspaceRoot?: string | WorkspaceRootProvider,
+    private readonly foldersProvider?: () => string[],
+  ) {}
 
   /** Scan tool list from backend and auto-detect proxy requirements (replaces the known set). */
   detectFromToolList(tools: ToolSchema[]): void {
@@ -97,56 +104,26 @@ export class Base64ProxyService {
   }
 
   /** Proxy input: read file_path → inject content_base64 into args. */
-  proxyInput(toolName: string, args: Record<string, unknown>): Record<string, unknown> {
+  proxyInput(toolName: string, args: Record<string, unknown>, ctx?: ToolCallContext): Record<string, unknown> {
     if (!this.base64InputTools.has(toolName)) return args;
-    const filePath = args.file_path as string | undefined;
-    if (!filePath || args.content_base64) return args;
-    const newArgs = { ...args };
-    // resolvePath throws PathResolverError on resolution failure —
-    // WrapperServer.routeToolCall converts it to a tool error result (§5.6).
-    // SA4E-394: per-call base_dir/workspace_root forwarded into resolution.
-    const resolution = this.resolvePathOrThrow(filePath, args.base_dir, args.workspace_root);
-    const resolvedPath = resolution.resolvedPath;
-    // STC IT-05 step 3: the backend receives the RESOLVED ABSOLUTE path (same
-    // contract as the chat path — backend dedup/scoping keys on absolute path).
-    newArgs.file_path = resolvedPath;
-    // I-7 symlink/junction guard before the pre-read.
-    const guardError = checkSymlinkGuard(resolution, sanitizeLogText(String(filePath)));
-    if (guardError) throw new PathResolverError(guardError);
-    // N-9 (SEC-07, AD-21): pre-read cap BEFORE loading bytes (base64 +33% OOM).
-    let size = 0;
-    try {
-      size = fs.statSync(resolvedPath).size;
-    } catch {
-      // Missing/unstatable file — the read below produces the Format 1 error.
-    }
-    if (size > PROXY_PRE_READ_MAX_BYTES) {
-      throw new PathResolverError(
-        `FS_ERROR: file too large for proxy pre-read (limit 25 MB): ${sanitizeLogText(resolvedPath)} — attach a smaller file or read a slice.`,
-      );
-    }
-    try {
-      const buf = fs.readFileSync(resolvedPath);
-      newArgs.content_base64 = buf.toString("base64");
-    } catch (err: any) {
-      // §5.6: read failures share the single PathResolverError catch point so
-      // they surface as MCP tool error results (never JSON-RPC -32603). One
-      // shape, no branching: FS_ERROR prefix + resolved path (E-1).
-      throw new PathResolverError(
-        `FS_ERROR: Failed to read file ${sanitizeLogText(resolvedPath)}: ${sanitizeLogText(err?.message ?? String(err))}`,
-      );
-    }
-    return newArgs;
+    const inputCtx: InputProxyContext = {
+      resolveRoot: () => this.resolveRoot(),
+      foldersProvider: this.foldersProvider,
+      sessionRoot: ctx?.sessionRoot,
+    };
+    return proxyInputFile(toolName, args, inputCtx);
   }
 
   /** Proxy output: extract output_base64 → write to file → rewrite response. */
-  proxyOutput(toolName: string, args: Record<string, unknown>, result: any): any {
+  proxyOutput(toolName: string, args: Record<string, unknown>, result: any, ctx?: ToolCallContext): any {
     return proxyToolOutput(
       {
         // SA4E-394: the output proxy honors the per-call base_dir so the
         // write-back lands inside the effective root (TC-111, DISC-4).
-        resolvePath: (p, baseDir) => this.resolvePath(p, baseDir ?? extractBaseDirArg(args)),
+        // SA4E-406 A6: the session root governs the write-back as well.
+        resolvePath: (p, baseDir) => this.resolvePath(p, baseDir ?? extractBaseDirArg(args), ctx?.sessionRoot),
         resolveRoot: () => this.resolveRoot(),
+        sessionRoot: ctx?.sessionRoot,
       },
       toolName, args, result,
     );
@@ -173,16 +150,23 @@ export class Base64ProxyService {
    * Failures throw PathResolverError carrying the helper message verbatim
    * (C-5) — caught by WrapperServer.routeToolCall (§5.6).
    * SA4E-394: optional per-call base_dir/workspace_root (BR-10 precedence).
+   * SA4E-406 A6: optional bound session root (containment gate first).
    */
-  private resolvePath(filePath: string, baseDir?: unknown): string {
-    return this.resolvePathOrThrow(filePath, baseDir).resolvedPath;
+  private resolvePath(filePath: string, baseDir?: unknown, sessionRoot?: string): string {
+    return this.resolvePathOrThrow(filePath, baseDir, undefined, sessionRoot).resolvedPath;
   }
 
-  private resolvePathOrThrow(filePath: string, baseDir?: unknown, workspaceRoot?: unknown): PathResolutionOk {
+  private resolvePathOrThrow(
+    filePath: string,
+    baseDir?: unknown,
+    workspaceRoot?: unknown,
+    sessionRoot?: string,
+  ): PathResolutionOk {
     const r = resolveWorkspacePath(filePath, {
       rootProvider: () => this.resolveRoot(),
       baseDir,
       workspaceRoot,
+      sessionRoot,
     });
     if (!r.ok) throw new PathResolverError(r.message);
     return r;

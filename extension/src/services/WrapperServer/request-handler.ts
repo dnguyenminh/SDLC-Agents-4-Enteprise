@@ -2,6 +2,12 @@
  * RequestHandler — handles one HTTP request for WrapperServer: the SA4E-358
  * origin gate, CORS headers, /health, and the MCP protocol on /mcp
  * (initialize handshake, ping, tools/list, tools/call, SSE).
+ *
+ * SA4E-406 A6: `initialize` may declare a workspace root
+ * (params.clientInfo.workspaceRoot | params.workspaceRoot); it is validated
+ * with the A7 parents rule and bound for the session lifetime
+ * (./session-roots). tools/call resolves the bound root per request and
+ * threads it into the tool layer (rootSource "session" — A8 order).
  */
 import * as http from "http";
 import { evaluateOriginGate } from "../OriginGate";
@@ -12,6 +18,7 @@ import type { BodyReader } from "./body-reader";
 import type { JsonRpcWriter } from "./json-rpc-writer";
 import type { ToolRouter } from "./tool-router";
 import { openSseChannel } from "./sse-channel";
+import { bindSessionRoot, sessionRootResultAnnotation, type McpSessionKey, type McpSessionRoots } from "./session-roots";
 import type { WrapperServerDeps } from "./types";
 
 /**
@@ -34,6 +41,7 @@ export class RequestHandler {
     private readonly bodyReader: BodyReader,
     private readonly writer: JsonRpcWriter,
     private readonly toolRouter: ToolRouter,
+    private readonly sessionRoots: McpSessionRoots,
   ) {}
 
   async handle(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
@@ -103,7 +111,7 @@ export class RequestHandler {
     if (rpc === undefined) return;
     if (rpc.id === undefined) rpc.id = ++this.requestId;
     try {
-      await this.dispatchRpc(res, rpc);
+      await this.dispatchRpc(res, rpc, sessionKeyOf(req));
     } catch (err: any) {
       this.handleRpcError(res, rpc, err);
     }
@@ -140,9 +148,9 @@ export class RequestHandler {
     this.writer.sendError(res, rpc.id, err.code || -32603, err.message);
   }
 
-  private async dispatchRpc(res: http.ServerResponse, rpc: any): Promise<void> {
+  private async dispatchRpc(res: http.ServerResponse, rpc: any, sessionKey: McpSessionKey): Promise<void> {
     // MCP lifecycle handshake — required by the protocol.
-    if (rpc.method === "initialize") { this.handleInitialize(res, rpc); return; }
+    if (rpc.method === "initialize") { this.handleInitialize(res, rpc, sessionKey); return; }
     // Notifications have no id and must not receive a response.
     if (rpc.method === "notifications/initialized" || rpc.method === "initialized") { res.writeHead(202); res.end(); return; }
     if (rpc.method === "ping") { this.writer.sendResult(res, rpc.id, {}); return; }
@@ -152,23 +160,39 @@ export class RequestHandler {
       return;
     }
     if (rpc.method === "tools/call" && rpc.params) {
-      const result = await this.toolRouter.routeToolCall(rpc.params);
+      // A6 — resolve the bound root per request (header id → connection) and
+      // thread it into the tool layer. Unbound ⇒ ctx.sessionRoot undefined ⇒
+      // behaviour unchanged.
+      const result = await this.toolRouter.routeToolCall(rpc.params, {
+        sessionRoot: this.sessionRoots.lookup(sessionKey),
+      });
       this.writer.sendResult(res, rpc.id, result);
       return;
     }
     this.writer.sendError(res, rpc.id, -32601, `Method not supported: ${rpc.method}`);
   }
 
-  private handleInitialize(res: http.ServerResponse, rpc: any): void {
+  private handleInitialize(res: http.ServerResponse, rpc: any, sessionKey: McpSessionKey): void {
     const clientVersion = rpc.params?.protocolVersion as string | undefined;
     const negotiated = PROTOCOL_VERSIONS.find((v) => v === clientVersion)
       || PROTOCOL_VERSIONS[0];
+    // SA4E-406 A6/A7 — validate + bind the caller-declared root (if any).
+    const outcome = bindSessionRoot(this.sessionRoots, sessionKey, rpc.params, this.deps.outputChannel);
+    if (outcome.sessionId) res.setHeader("Mcp-Session-Id", outcome.sessionId);
     this.writer.sendResult(res, rpc.id, {
       protocolVersion: negotiated,
       capabilities: {
         tools: { listChanged: false },
       },
       serverInfo: { name: "sdlc-agents-4-enterprise", version: "1.11.0" },
+      ...sessionRootResultAnnotation(outcome),
     });
   }
+}
+
+/** Transport-provided session identity: echoed header, else the connection. */
+function sessionKeyOf(req: http.IncomingMessage): McpSessionKey {
+  const raw = req.headers["mcp-session-id"];
+  const sessionId = Array.isArray(raw) ? raw[0] : raw;
+  return { sessionId: sessionId || undefined, socket: req.socket };
 }

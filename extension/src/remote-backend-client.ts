@@ -7,7 +7,7 @@
 import * as vscode from "vscode";
 import { ServerStatus } from "./types";
 import { AuthManager } from "./auth/AuthManager";
-import { getVisibleLocalToolDefinitions } from "./backend-local-tools";
+import { getVisibleLocalToolDefinitions, mergeLocalToolDefinitions } from "./backend-local-tools";
 import { Base64ProxyService } from "./services/Base64ProxyService";
 import { WrapperServer, resolveMcpMaxBodyBytes } from "./services/WrapperServer";
 import { writeRuntimeSettings, clearRuntimeSettings } from "./utils/runtime-settings";
@@ -170,12 +170,7 @@ export class RemoteBackendClient implements vscode.Disposable {
         `${this.backendUrl}/api/tools`,
         { headers: this.buildAuthHeaders(), timeoutMs: 5000 }
       );
-      const tools = json.tools || [];
-      const existing = new Set(tools.map((t: any) => t.name));
-      for (const def of getVisibleLocalToolDefinitions()) {
-        if (!existing.has(def.name)) tools.push(def);
-      }
-      return tools;
+      return mergeLocalToolDefinitions(json.tools || [], getVisibleLocalToolDefinitions());
     } catch (err) {
       console.debug(`[RemoteBackendClient] restGetTools failed, using local tools: ${(err as Error).message}`);
       return getVisibleLocalToolDefinitions();

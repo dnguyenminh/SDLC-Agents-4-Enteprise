@@ -19,6 +19,8 @@ export interface OutputProxyContext {
   /** SA4E-394: optional per-call base_dir forwarded into resolution. */
   resolvePath: (filePath: string, baseDir?: unknown) => string;
   resolveRoot: () => string | undefined;
+  /** SA4E-406 A6: bound MCP session root for this request (may be unset). */
+  sessionRoot?: string;
 }
 
 /** Proxy output: extract base64 payloads → write files → rewrite response. */
@@ -68,6 +70,7 @@ export function proxyToolOutput(
         rootProvider: () => ctx.resolveRoot(),
         baseDir: args.base_dir,
         workspaceRoot: args.workspace_root,
+        sessionRoot: ctx.sessionRoot, // SA4E-406 A6 — session root governs writes too
       });
       if (!outResolution.ok) throw new PathResolverError(outResolution.message);
       const guardError = checkSymlinkGuard(outResolution, sanitizeLogText(outputPath));

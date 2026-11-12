@@ -345,6 +345,14 @@
           "default": [],
           "description": "SA4E-394 allowlist mirror: workspace roots permitted as per-call base_dir for file_path tools. MUST mirror the backend MCP_WORKSPACE_ROOTS (backend remains source of truth). Falls back to the MCP_WORKSPACE_ROOTS env var when empty."
         },
+        "sdlcAgents.workspace.workspaceRootParents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "SA4E-406 trusted parents: a declared MCP session root or per-call base_dir is admitted when it equals or sits under one of these directories (env fallback MCP_WORKSPACE_ROOT_PARENTS). ONE parent entry covers every future worktree under it — prefer this over per-worktree roots in workspaceRoots."
+        },
         "sdlcAgents.llm.profiles": {
           "type": "array",
           "default": [],

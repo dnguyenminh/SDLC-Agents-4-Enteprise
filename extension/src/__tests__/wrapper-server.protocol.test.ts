@@ -132,12 +132,15 @@ describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
       params: { name: 'export_diagram_backend', arguments: { file_path: 'missing-under-root.drawio' } },
     });
 
-    // SA4E-356: pre-read failure is a TOOL error result (not -32603) carrying
-    // the workspace-resolved absolute path.
+    // SA4E-356: pre-read failure is a TOOL error result (not -32603). SA4E-406
+    // F3: the wrapper probes every candidate root for the relative path — the
+    // actionable PATH_NO_CANDIDATE lists them (the workspace-resolved root
+    // TMP_DIR is among the probed roots).
     expect(res.body.error).toBeUndefined();
     expect(res.body.result.isError).toBe(true);
-    expect(res.body.result.content[0].text).toContain('FS_ERROR: Failed to read file');
-    expect(res.body.result.content[0].text).toContain(path.join(TMP_DIR, 'missing-under-root.drawio'));
+    expect(res.body.result.content[0].text).toContain("PATH_NO_CANDIDATE: 'missing-under-root.drawio' not found under any of");
+    expect(res.body.result.content[0].text).toContain(TMP_DIR);
+    expect(res.body.result.content[0].text).toContain("Use base_dir or an absolute path.");
   });
 
   it('TC-30: Backend unreachable returns JSON-RPC error', async () => {

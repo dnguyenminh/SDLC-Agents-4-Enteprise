@@ -11,7 +11,17 @@ import { handleDrawioAutoLayout, DRAWIO_AUTO_LAYOUT_DEFINITION } from "../tools/
 import { handleDrawioExportPng, DRAWIO_EXPORT_PNG_DEFINITION } from "../tools/drawio/drawio-export-png";
 
 /** Type for a local tool handler function. */
-export type LocalToolHandler = (args: Record<string, unknown>) => unknown;
+export type LocalToolHandler = (args: Record<string, unknown>, ctx?: ToolCallContext) => unknown;
+
+/**
+ * SA4E-406 A6 — per-request context threaded from the MCP session layer into
+ * local tool handlers. `sessionRoot` is the root bound at MCP initialize
+ * (already trust-admitted); handlers forward it into resolveWorkspacePath so
+ * EVERY file_path tool resolves against the session root, not just one tool.
+ */
+export interface ToolCallContext {
+  sessionRoot?: string;
+}
 
 /** Definition shape for a local tool (injected into tools/list). */
 export interface LocalToolDefinition {
@@ -56,9 +66,13 @@ export function isLocalTool(name: string): boolean {
   return LOCAL_TOOL_REGISTRY.has(name);
 }
 
-export async function executeLocalTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+export async function executeLocalTool(
+  name: string,
+  args: Record<string, unknown>,
+  ctx?: ToolCallContext,
+): Promise<unknown> {
   const entry = LOCAL_TOOL_REGISTRY.get(name);
-  if (entry) return entry.handler(args);
+  if (entry) return entry.handler(args, ctx);
   return { isError: true, content: [{ type: "text", text: `Local tool '${name}' not implemented.` }] };
 }
 
@@ -74,4 +88,16 @@ export function getLocalToolDefinitions(): LocalToolDefinition[] {
  */
 export function getVisibleLocalToolDefinitions(): LocalToolDefinition[] {
   return getLocalToolDefinitions().filter((d) => !d.hidden);
+}
+
+/**
+ * Merge backend-listed tools with local definitions. Tools executed locally win:
+ * a same-name backend entry is replaced so clients never see a stale duplicate.
+ */
+export function mergeLocalToolDefinitions<T extends { name?: string }>(backendTools: T[], localDefs: LocalToolDefinition[]): Array<T | LocalToolDefinition> {
+  const local = new Map(localDefs.map((d) => [d.name, d]));
+  const merged: Array<T | LocalToolDefinition> = backendTools.map((t) => (t?.name && local.has(t.name) ? local.get(t.name)! : t));
+  const seen = new Set(backendTools.map((t) => t?.name));
+  for (const d of localDefs) if (!seen.has(d.name)) merged.push(d);
+  return merged;
 }

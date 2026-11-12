@@ -18,6 +18,7 @@ import {
 } from "../services/PathResolver";
 import { extractBaseDirArg } from "../services/base-dir-resolution";
 import { checkSymlinkGuard, ensureDir } from "./fs-guards";
+import type { ToolCallContext } from "./registry";
 
 /** MIME types by image extension for data-URI embedding. */
 const IMAGE_MIME: Record<string, string> = {
@@ -28,18 +29,19 @@ const IMAGE_MIME: Record<string, string> = {
 /** Matches markdown image references: ![alt](path "optional title"). */
 const MD_IMAGE_RE = /!\[([^\]]*)\]\(\s*([^)\s]+)(\s+"[^"]*")?\s*\)/g;
 
-export function handleEmbedImage(args: Record<string, unknown>): any {
+export function handleEmbedImage(args: Record<string, unknown>, ctx?: ToolCallContext): any {
   // Alias `path` kept per AD-22 (same helper — no bypass).
   const rawInput = (args.file_path ?? args.path) as unknown;
   const rawDisplay = sanitizeLogText(String((args.file_path ?? args.path) ?? ""));
   // SA4E-394: per-call base_dir/workspace_root becomes the effective root.
+  // SA4E-406 A6: the bound MCP session root gates resolution first.
   const baseDir = extractBaseDirArg(args);
-  const resolution = resolveWorkspacePath(rawInput, { baseDir });
+  const resolution = resolveWorkspacePath(rawInput, { baseDir, sessionRoot: ctx?.sessionRoot });
   if (!resolution.ok) {
     console.warn(`[backend-local-tools] embed_image resolve failed: ${resolution.message}`);
     return { isError: true, content: [{ type: "text", text: resolution.message }] };
   }
-  const output = resolveOutputTarget(args, resolution, baseDir);
+  const output = resolveOutputTarget(args, resolution, baseDir, ctx);
   if ("error" in output) { return output.error; }
   // I-7 guards BEFORE any fs touch (input read + output write).
   const inputGuardError = checkSymlinkGuard(resolution, rawDisplay);
@@ -55,11 +57,13 @@ function resolveOutputTarget(
   args: Record<string, unknown>,
   resolution: PathResolutionOk,
   baseDir?: string,
+  ctx?: ToolCallContext,
 ): { outputPath: string; outputResolution: PathResolutionOk } | { error: any } {
   const rawOutput = args.output_path as unknown;
   if (typeof rawOutput === "string" && rawOutput.trim() !== "") {
     // SA4E-394: output_path honors the same per-call base_dir (TDD §3.3).
-    const outRes = resolveWorkspacePath(rawOutput, { baseDir });
+    // SA4E-406 A6: the session root gates the explicit output target too.
+    const outRes = resolveWorkspacePath(rawOutput, { baseDir, sessionRoot: ctx?.sessionRoot });
     if (!outRes.ok) {
       console.warn(`[backend-local-tools] embed_image output resolve failed: ${outRes.message}`);
       return { error: { isError: true, content: [{ type: "text", text: outRes.message }] } };

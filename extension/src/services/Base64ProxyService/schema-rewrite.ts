@@ -8,7 +8,28 @@
  */
 
 import { FILE_PATH_SCHEMA_DESCRIPTION } from "../PathResolver";
+import { baseDirSchemaProperties } from "../tool-descriptions";
 import type { ToolSchema } from "./types";
+
+/**
+ * Strip raw-base64 wording and state the file-based contract the LLM must use.
+ *
+ * The `output_base64` TOKEN is deliberately kept: it names the SA4E-380
+ * content-proxy contract (the backend hands bytes back as `output_base64`),
+ * so the caller can tell a byte-payload result from a path-only result.
+ */
+export function rewriteDescription(desc: string | undefined, isInput: boolean, isOutput: boolean): string | undefined {
+  if (desc === undefined) return desc;
+  let out = desc
+    // The raw-interface tail may carry the only `output_base64` mention: keep it.
+    .replace(/\s*Raw interface\s*\([^)]*\)\s*:\s*content_base64 in,\s*output_base64 out\.?/gi,
+      " Returns the result as base64 (output_base64), written to output_path.")
+    .replace(/\s*Raw interface[\s\S]*$/, "")
+    .replace(/\s*Returns output_base64([^.]*)\./, " Returns the result as base64 (output_base64)$1, written to output_path.");
+  if (isInput) out += " Input: pass file_path (a local workspace file); the extension reads it - never send base64.";
+  if (isOutput) out += " Output: the extension writes the result to output_path (default derived from file_path) and returns the written file_path and size_bytes.";
+  return out.trim();
+}
 
 /** The schema field a tool carries: `inputSchema` (tools/list) or `schema` (catalog). */
 export function toolSchemaField(tool: ToolSchema): "inputSchema" | "schema" | null {
@@ -58,6 +79,8 @@ export function rewriteSingleSchema(tool: ToolSchema, isInput: boolean, isOutput
     // (closes the mem_ingest_file no-description + drawio_export_png
     // "reference only" holes — FSD §3.2.2).
     props.file_path = { type: "string", description: FILE_PATH_SCHEMA_DESCRIPTION };
+    // The proxy resolves paths with base_dir/workspace_root, so advertise them.
+    for (const [k, v] of Object.entries(baseDirSchemaProperties("file_path"))) props[k] ??= v;
     if (!required.includes("file_path")) required.push("file_path");
     const idx = required.indexOf("content_base64");
     if (idx >= 0) required.splice(idx, 1);
@@ -74,5 +97,6 @@ export function rewriteSingleSchema(tool: ToolSchema, isInput: boolean, isOutput
   }
   schema.properties = props;
   schema.required = required;
-  return { ...tool, [field]: schema };
+  const description = rewriteDescription(tool.description, isInput, isOutput);
+  return { ...tool, ...(description === undefined ? {} : { description }), [field]: schema };
 }
