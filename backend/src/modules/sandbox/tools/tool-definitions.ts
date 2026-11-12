@@ -69,7 +69,7 @@ export const SANDBOX_TOOL_DEFINITIONS: ToolDefinition[] = [
   },
   {
     name: 'sandbox_run',
-    description: 'Run a code file with the appropriate runtime (node/python/tsx/java/sh). Delegates to sandbox_exec. Implements UC-05.',
+    description: 'Run a code file inside the sandbox with the chosen runtime (node/python/tsx/java/sh); delegates to sandbox_exec. Requires a sessionId (sess_ + 12 hex) from sandbox session creation; timeout in seconds (1-600, default 300). Implements UC-05.',
     inputSchema: {
       type: 'object',
       properties: {

@@ -19,12 +19,12 @@ const logger = pino({ name: 'drawio-export-png' });
 
 export const DRAWIO_EXPORT_PNG_DEFINITION = {
   name: 'drawio_export_png',
-  description: 'Export .drawio XML content (base64) to PNG. Returns output_base64 (PNG bytes).',
+  description: 'Render .drawio XML content (base64) to a PNG using the draw.io CLI (fallback: chrome-devtools-mcp / puppeteer-mcp). Returns output_base64 (PNG bytes). Through the SDLC extension proxy callers pass file_path/output_path instead of base64. Does not modify the source diagram.',
   inputSchema: {
     type: 'object',
     properties: {
       content_base64: { type: 'string', description: 'Base64-encoded .drawio XML content' },
-      file_path: { type: 'string', description: 'Original file path (reference only)' },
+      file_path: { type: 'string', description: 'Path of the source .drawio file (reference only here; the extension proxy reads it and supplies content_base64).' },
       ...baseDirSchemaProperties('file_path'),
     },
     required: ['content_base64'],
