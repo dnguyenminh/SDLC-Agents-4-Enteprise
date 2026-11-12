@@ -290,14 +290,14 @@ artifact written on child host (local path descriptor)
 
 | Requirement (FSD/BSD) | Automated evidence |
 |----------------------|--------------------|
-| UC-01 six-format export | `extension/src/__tests__/live-content-proxy.test.ts` — 6/6 live (xlsx 4,849 B with `xl/workbook.xml` + `xl/worksheets/sheet1.xml`; docx 14,599 B; pptx 29,296 B; pdf 1,967 B `%PDF`; html 199 B; json 31 B) |
+| UC-01 six-format export | `extension/src/__tests__/live-content-proxy.e2e.test.ts` — 6/6 live (xlsx 4,849 B with `xl/workbook.xml` + `xl/worksheets/sheet1.xml`; docx 14,599 B; pptx 29,296 B; pdf 1,967 B `%PDF`; html 199 B; json 31 B) |
 | UC-01 embedded-image DOCX | Live: `documents/SA4E-375/UG-embedded.md` 184,761 B → 265,062 B DOCX, OOXML valid, images intact |
 | UC-02 fail-loud / path stripping | `content-proxy/__tests__/content-proxy.test.ts` + `content-proxy.remote.test.ts` + `McpClientManager.content-proxy.test.ts` (backend 21/21) |
 | UC-03 remote retrieval (resource / URL / data / path-only failure) | `content-proxy.remote.test.ts` |
 | UC-04 multi-file completeness + X/Y | `output-proxy.ts` count verification; `wrapper-server.dynamic-export.test.ts` |
 | UC-05 schema markers, no new tools | Catalog check: `export_docx` absent from `tools/list`; `find_tools` returns `required: []`, `x-content-param: markdown`, `x-output-base64: true` |
 | UC-06 direct-call compatibility | `McpClientManager.content-proxy.test.ts` (direct passthrough case) |
-| UC-07 invalid payload handling | `invocation-adapter` cases in backend suite; `live-content-proxy.test.ts` line 115 asserts no `Missing content|Invalid content_base64` on success paths |
+| UC-07 invalid payload handling | `invocation-adapter` cases in backend suite; `live-content-proxy.e2e.test.ts` line 115 asserts no `Missing content|Invalid content_base64` on success paths |
 | Extension regression | Full extension suite 3,255 pass / 6 skipped |
 
 ---
