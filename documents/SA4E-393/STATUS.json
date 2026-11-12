@@ -209,6 +209,7 @@
   },
   "ruleEnforcement": {
     "ui-design-gate": "NOT_IN_EFFECT",
+    "e2eD6Status": "3 FAIL (fileCount=0, both cache false-pass, abs path leak) fixed in 88892218; awaiting reinstall + re-run",
     "reason": "design_gate_run not yet verified runnable via execute_dynamic_tool on rebuilt VSIX; MUST + SM Phase 5/6 blocker re-enabled only after e2e evidence (runId/score/pass)",
     "since": "2026-11-12"
   },
