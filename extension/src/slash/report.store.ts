@@ -16,6 +16,7 @@ import * as crypto from "crypto";
 import type { QualityReport } from "./types";
 import { isPathWithinRoot } from "../services/PathResolver";
 import { logRedacted } from "./path-redactor";
+import { requireWorkspaceRoot } from "./path-guard";
 
 /** Single accepted runId shape: run_<ms>_<[a-z0-9]+>. */
 export const RUN_ID_RE = /^run_\d+_[a-z0-9]+$/;
@@ -38,7 +39,8 @@ export function isValidRunId(id: unknown): id is string {
 
 /** Absolute design-gate store directory for a workspace root. */
 export function designGateDir(root: string): string {
-  return path.join(root, STORE_DIR);
+  // Single choke point for every store/cache path: never join onto a missing root.
+  return path.join(requireWorkspaceRoot(root), STORE_DIR);
 }
 
 /** Resolve `name` inside `dir`; undefined if it would escape (containment). */
@@ -133,6 +135,7 @@ export function listRunIds(root: string): string[] {
  * message the caller must surface (no silent loss of the audit record).
  */
 export function persistRun(root: string, report: QualityReport, meta: ReportMeta): string | undefined {
+  requireWorkspaceRoot(root); // caller bug, not an I/O failure: must not be downgraded to a message
   try {
     saveReport(root, report, meta);
     return undefined;

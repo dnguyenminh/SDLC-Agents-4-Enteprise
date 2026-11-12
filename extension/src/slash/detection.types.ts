@@ -30,12 +30,13 @@ export interface RenderedDetectionResult extends CombinedResult {
 export interface StaticOptions {
   threshold?: number;
   cacheReuse?: boolean;
-  /** SEC-F08: explicit workspace root; env/cwd fallback only when omitted. */
-  workspaceRoot?: string;
+  /** SEC-F08: explicit workspace root — required, no env/cwd fallback. */
+  workspaceRoot: string;
 }
 
 /** Options accepted by rendered detection. */
 export interface RenderedOptions {
   threshold?: number;
-  workspaceRoot?: string;
+  /** Required workspace root (no env/cwd fallback). */
+  workspaceRoot: string;
 }

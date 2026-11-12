@@ -12,6 +12,7 @@ import { CommandContext } from "./context";
 import { ImpeccableIntegrationService, CombinedResult } from "./integration.service";
 import { DetectionConfig, EnvConfig, QualityReport, DEFAULT_THRESHOLD } from "./types";
 import { slashMenu } from "./controller";
+import { requireWorkspaceRoot } from "./path-guard";
 
 // Singleton service instance
 let impeccableService: ImpeccableIntegrationService | null = null;
@@ -58,7 +59,7 @@ export function registerDesignGateCommand(): void {
 }
 
 /** Defaults applied to a caller-supplied config (workspaceRoot passes through, SEC-F08). */
-function buildDetectionConfig(config: DetectionConfig): DetectionConfig {
+function buildDetectionConfig(config: DetectionConfig & { workspaceRoot: string }): DetectionConfig & { workspaceRoot: string } {
   return {
     detectionMode: config.detectionMode ?? "both",
     threshold: config.threshold ?? DEFAULT_THRESHOLD,
@@ -74,11 +75,13 @@ function buildDetectionConfig(config: DetectionConfig): DetectionConfig {
  * @param config - mode, threshold, sourceRoot, workspaceRoot, localhostUrl
  * @returns Detection result with combined findings and quality report
  */
-export async function runDetection(config: DetectionConfig = {}): Promise<{
+export async function runDetection(config: DetectionConfig & { workspaceRoot: string }): Promise<{
   service: ImpeccableIntegrationService;
   combinedResult: CombinedResult;
   report: QualityReport;
 }> {
+  // Fail before any load/IO: the root is mandatory (no cwd/env fallback).
+  const workspaceRoot = requireWorkspaceRoot(config.workspaceRoot);
   const service = getService();
   const detectionConfig = buildDetectionConfig(config);
   // Load detector (skill + WASM) first — C2 lifecycle; idempotent when already loaded.
@@ -87,7 +90,7 @@ export async function runDetection(config: DetectionConfig = {}): Promise<{
     throw new Error(`Detector load failed: ${loadResult.message}`);
   }
   const url = config.localhostUrl ?? (process.env[EnvConfig.LOCALHOST_DEV_SERVER_URL] || "http://localhost:5173");
-  const result = await service.runFullDetection(config.sourceRoot ?? process.cwd(), url, config.urls ?? [], detectionConfig);
+  const result = await service.runFullDetection(config.sourceRoot ?? workspaceRoot, url, config.urls ?? [], detectionConfig);
   return { service, combinedResult: result.result, report: result.report };
 }
 

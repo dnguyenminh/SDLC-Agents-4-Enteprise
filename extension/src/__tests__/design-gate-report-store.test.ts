@@ -16,7 +16,7 @@ let root: string;
 beforeEach(() => { root = fs.mkdtempSync(path.join(os.tmpdir(), "dg-store-")); });
 afterEach(() => { fs.rmSync(root, { recursive: true, force: true }); });
 
-const mkReport = () => generateQualityReport([], "static", 0.8, undefined, 1);
+const mkReport = () => generateQualityReport([], "static", 0.8, undefined, 1, os.tmpdir());
 const meta = { sourcePath: "src", cacheHit: false };
 
 describe("runId validation (SEC-F05)", () => {

@@ -13,7 +13,7 @@
 import { DetectionError, Finding, QualityReport, EnvConfig, DetectionRun } from "./types";
 import { generateId } from "./utils";
 import { logRedacted } from "./path-redactor";
-import { getWorkspaceRoot } from "./path-guard";
+import { requireWorkspaceRoot } from "./path-guard";
 import { buildBreakdown, computeScore, sanitizeFindings } from "./report.scoring";
 
 type Mode = "static" | "rendered" | "both";
@@ -33,7 +33,7 @@ function isPassing(score: number, threshold: number): boolean {
 /** Assemble the report object once score and threshold are known. */
 function assembleReport(
   findings: Finding[], mode: Mode, threshold: number, runId: string | undefined,
-  totalFiles: number, workspaceRoot: string | undefined,
+  totalFiles: number, workspaceRoot: string,
 ): QualityReport {
   const { score, message } = computeScore(findings, totalFiles);
   const report: QualityReport = {
@@ -43,7 +43,7 @@ function assembleReport(
     score: Number(score.toFixed(4)), // 4 decimal places
     pass: isPassing(score, threshold),
     timestamp: new Date().toISOString(),
-    findings: sanitizeFindings(findings, workspaceRoot ?? getWorkspaceRoot()),
+    findings: sanitizeFindings(findings, workspaceRoot),
     totalIssues: findings.length,
     severityBreakdown: buildBreakdown(findings),
     fileCount: totalFiles,
@@ -82,11 +82,13 @@ function errorReport(runId: string | undefined): QualityReport {
 export function generateQualityReport(
   findings: Finding[],
   mode: Mode,
-  threshold?: number,
-  runId?: string,
-  totalFiles: number = 0,
-  workspaceRoot?: string,
+  threshold: number | undefined,
+  runId: string | undefined,
+  totalFiles: number,
+  workspaceRoot: string,
 ): QualityReport {
+  // Outside the try: a missing root is a caller bug, not an inconclusive run (C6).
+  requireWorkspaceRoot(workspaceRoot);
   try {
     return assembleReport(findings, mode, threshold ?? DEFAULT_THRESHOLD, runId, totalFiles, workspaceRoot);
   } catch (error: any) {

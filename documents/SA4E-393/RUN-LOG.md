@@ -69,3 +69,8 @@
 | 69 | 2026-11-13 | sa-agent | tdd-v1.2 | TDD Open Issues cập nhật: A closed, B mở (settings-worktree→SA4E-438, e2e PENDING...) | ✅ | - | - |
 | 70 | 2026-11-13 | SM | build/verify | VSIX rebuilt dist-sa4e-393-openissues-fix.vsix (không bump). Ghi nhận: test-after-fix quá khứ không sửa hồi tố; e2e D6 chạy lại PENDING chờ user cài --force + reload; ta-agent chưa re-review sau đợt 3 | ✅ | - | - |
 | 71 | 2026-11-13 | ta-agent | re-review | APPROVED: D1,D2,D3 fixed; design-gate 79/79 (chỉ chạy subset). Chú ý: message findings chưa kiểm abs path (không chặn) | ✅ | - | - |
+| 72 | 2026-11-13 | dev-agent | bug-fix (dev-bug-diagnosis) | Root cause extension/.code-intel: fallback cwd/env WORKSPACE_ROOT. RED: design-gate-no-cwd-fallback.test.ts 6 failed → GREEN 6/6. workspaceRoot bắt buộc + requireWorkspaceRoot() (WORKSPACE_ROOT_REQUIRED); xoá getWorkspaceRoot; gỡ gitignore extension/.code-intel/. tsc 0, eslint 0 error (51 warn), vitest 3492 pass/6 skip, extension/.code-intel không tồn tại | ✅ | - | - |
+| 73 | 2026-11-13 | dev-agent | package | VSIX dist-sa4e-393-nocwd-fix.vsix (không cài, không bump) | ✅ | - | - |
+| 74 | 2026-11-13 | ta-agent | review | APPROVED. Ghi chú không chặn: enum EnvConfig.WORKSPACE_ROOT dead; ListOptions.workspaceRoot còn optional + comment cũ file-lister.ts:27; test mới dùng {} không type-check (tsconfig exclude __tests__); TA chỉ chạy subset design-gate (85 test), full suite do dev-agent chạy | ✅ | - | - |
+| 75 | 2026-11-13 | sa-agent | tdd update | TDD Open Issues A9 (root cause fallback cwd) + sửa as-built note D1/D6/A5 | ✅ | - | - |
+| 76 | 2026-11-13 | SM | verify/commit | Verified git status; commit chỉ source/test/.gitignore/TDD/STATUS/RUN-LOG (loại .kiro/*, .sdlc-checksums.json, .vsix). Chưa push | ✅ | - | - |

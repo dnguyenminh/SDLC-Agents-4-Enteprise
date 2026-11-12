@@ -106,4 +106,3 @@ documents/*/*-embedded.md
 
 # design-gate runtime store/cache (SA4E-393; machine-local audit records)
 .code-intel/design-gate/
-extension/.code-intel/

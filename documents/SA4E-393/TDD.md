@@ -748,8 +748,8 @@ MCP server; agents reach it through the existing MCP wrapper (`find_tools` → `
 1. Workspace root from `defaultWorkspaceRootProvider()` (services/PathResolver — live
    `vscode.workspace` read per call, SA4E-356 pattern). None open →
    `toolError("No workspace folder open. Open a project folder first.")` (C6).
-2. `process.env[EnvConfig.WORKSPACE_ROOT] = root` — pipeline fs.adapter validates C3 against this
-   (same as the commands' resolveWorkspace() today).
+2. *(As-built: superseded)* `workspaceRoot` passed explicitly, no env/cwd fallback — pipeline fs.adapter
+   validates C3 against the explicit root.
 3. Detector env: `resolveWasmPath(extensionPath)` (shared helper, D3) sets
    `process.env[EnvConfig.IMPPECABLE_SKILL_PATH]`. Mandatory — integration.service `getWasmPath()`
    otherwise falls back to `./wasm/detector.wasm` relative to the IDE install cwd (load failure).
@@ -770,9 +770,9 @@ MCP server; agents reach it through the existing MCP wrapper (`find_tools` → `
 
 - *Step 2 (env write) is REMOVED.* Nothing writes `process.env.WORKSPACE_ROOT` any more. The root is
   passed explicitly: tool → `runDetection({ workspaceRoot })` → `DetectionConfig.workspaceRoot` →
-  integration service, cache, report store and file lister. `getWorkspaceRoot()` (env/cwd) in
-  `path-guard.ts` is only the last-resort fallback for callers that pass no root; the env is READ
-  there, never written. Two workspaces running in parallel (`Promise.all`) no longer mix results.
+  integration service, cache, report store and file lister. `workspaceRoot` is explicit, with no
+  env/cwd fallback: `getWorkspaceRoot()` and the env read were removed; `requireWorkspaceRoot()`
+  throws `DetectionError.WORKSPACE_ROOT_REQUIRED` (see Open Issues A9). Two workspaces running in parallel (`Promise.all`) no longer mix results.
 - *Persistence contract kept: `{runId}.json` (BR-12).* SEC-F04 was resolved by changing the code, not
   the contract. `report.store.ts` writes `.code-intel/design-gate/{runId}.json` for every run
   (modes static/rendered/both; a cache hit gets a NEW runId plus `sourceRunId`). The result cache is
@@ -859,8 +859,8 @@ In-process call — zero backend round-trip; §8.3 concurrency caps unchanged.
 - *Fix:* (1) no tool code references a bare `vscode`; PathResolver keeps its lazy `require` (SA4E-356).
   (2) New `design-gate-env.ts`: `initDesignGateEnv(context.extensionPath)` is called once in
   `activate()` (before the workspace check); `prepareDesignGateRunEnv()` runs per call → live root via
-  `defaultWorkspaceRootProvider()`, then sets `EnvConfig.WORKSPACE_ROOT` and calls
-  `resolveWasmPath(extensionPath)`. This is the "thread `context.extensionPath`" variant of D3, not
+  `defaultWorkspaceRootProvider()`, passes it explicitly (workspaceRoot truyền tường minh, không có
+  env/cwd fallback; no `EnvConfig.WORKSPACE_ROOT` write) and calls `resolveWasmPath(extensionPath)`. This is the "thread `context.extensionPath`" variant of D3, not
   `vscode.extensions.getExtension(...)`. (3) Workaround removed: `workspaceRoot`/`wasmPath` deps dropped
   from RemoteBackendClient/WrapperServer types, the env branch dropped from `defaultWorkspaceRootProvider`,
   and the `isLocalTool` branch in tool-router reduced to `executeLocalTool(name, args)`.
@@ -1085,10 +1085,16 @@ Critical/High/Medium), TEST-REPORT-addendum4-fix.md. State: working tree, NOT co
 | 2 | SEC-F05 (Low, latent) `getReport` runId | Allow-list regex + 64 chars + `resolveInside`; invalid = missing = `undefined`. | report-store; red: `../secret` read `.code-intel/secret.json` |
 | 3 | SEC-F06 (Low) fetcher | Oversize → `req.destroy()` + reject `FETCH_FAILED` (no `throw` in callback); media type parsed before `;`. SSRF guard unchanged. | localhost-fetcher; red: charset rejected, oversize hung >60s |
 | 4 | SEC-F07 (Info) `startsWith` | One implementation, `isPathWithinRoot` (`path-guard.ts`); `..dots/a.css` allowed, sibling `root-evil` blocked. | fs-adapter-containment, batch3 D2 |
-| 5 | SEC-F08 (Info) global env | Nothing writes `process.env.WORKSPACE_ROOT`; `workspaceRoot` explicit through the pipeline. The env is still READ as last-resort fallback in `getWorkspaceRoot()`. | explicit-root (a)(b); red: fileCount 0 |
+| 5 | SEC-F08 (Info) global env | Nothing writes `process.env.WORKSPACE_ROOT`; `workspaceRoot` explicit through the pipeline. The env read fallback was later removed too (see A9). | explicit-root (a)(b); red: fileCount 0 |
 | 6 | Absolute paths in logs (old b) | `redactPaths`/`logRedacted` in service, `wasm.loader`, cache failure, tool failure and `report.message`. | log-redaction #1, #2 red; #3 regression guard only (see B2) |
 | 7 | Size 200/20 (old d) | `integration.service` split (751→154), `design-rules` split into 4 groups, `mapReportToPayload` ≤20, tests split; `size-guard` covers the folders. | size-guard red (3 files >200, 16 functions >20); tsc, eslint 0/0, full vitest 446 files / 3480 tests pass |
 | 8 | Batch 3: D1, D2, D3, S-1, S-2 | D1 cache stores relative paths; D2 `isPathWithinRoot`; D3 `.gitignore` covers `.code-intel/design-gate` and `extension/.code-intel/`; S-1 error report has a valid runId; S-2 `sourceRoot` junction is rejected (realpath, fail-closed). | batch3 test, persist-run (c2) |
+| 9 | Stray `extension/.code-intel/` directory (root cause) | Root cause: silent fallback `getWorkspaceRoot()` = env `WORKSPACE_ROOT` \|\| `process.cwd()` (vitest cwd = `extension/`), so tests without a root wrote into `extension/.code-intel/`. Fix: `workspaceRoot` is mandatory; `requireWorkspaceRoot()` throws `DetectionError.WORKSPACE_ROOT_REQUIRED`; `getWorkspaceRoot()` and the env read removed. Commit 66f8a3cf (gitignore `extension/.code-intel/`) was dropped because it only hid the symptom. | Root-cause fix; no fallback remains |
+
+Follow-ups (small, non-blocking) from A9:
+- `EnvConfig.WORKSPACE_ROOT` enum member is now dead; remove it.
+- `ListOptions.workspaceRoot` is still optional in the type, and `file-lister.ts:27` has a stale comment; make it required and update the comment.
+- New tests pass `{}` and are not type-checked (tsconfig excludes `__tests__`); fix the typing or include them in a type-check.
 
 Test gap found by QA and closed: `TEST-REPORT-addendum4-fix.md` ended with verdict FAIL because mutant M2
 (remove `isValidRunId` in `loadReport`) survived. Batch 3 added 6 tests (`RUN_1_X`, `run_1_A`,

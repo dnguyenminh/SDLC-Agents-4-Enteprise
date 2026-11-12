@@ -125,6 +125,8 @@ export enum DetectionError {
   FETCH_FAILED = "FETCH_FAILED",
   DEV_SERVER_UNREACHABLE = "DEV_SERVER_UNREACHABLE",
   ERROR_LEAK = "ERROR_LEAK",
+  /** The caller did not supply a workspace root (no cwd/env fallback exists). */
+  WORKSPACE_ROOT_REQUIRED = "WORKSPACE_ROOT_REQUIRED",
 }
 
 /** Custom error class for detection errors */

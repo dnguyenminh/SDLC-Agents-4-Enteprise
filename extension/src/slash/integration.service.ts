@@ -5,14 +5,13 @@
  *
  * The heavy lifting lives in detector.runtime.ts, static.detection.ts,
  * rendered.detection.ts and full.detection.ts. SEC-F08: the workspace root is
- * an explicit parameter (`workspaceRoot`); getWorkspaceRoot() (env/cwd) is
- * only the last-resort fallback for callers that pass none.
+ * a required parameter (`workspaceRoot`); there is no env/cwd fallback.
  * Security conditions C1-C6 (SECURITY-REVIEW.md) are enforced in those modules.
  */
 import * as path from "path";
 
 import { DetectionError, DetectionResult, QualityReport, DetectionConfig, LoadInstance } from "./types";
-import { getWorkspaceRoot } from "./fs.adapter";
+import { requireWorkspaceRoot } from "./fs.adapter";
 import { listCachedRuns } from "./detection.cache";
 import { loadReport, persistRun, toRelSource, ReportMeta } from "./report.store";
 import { resetCircuitBreaker } from "./localhost-fetcher";
@@ -27,10 +26,8 @@ export type { CombinedResult, RenderedDetectionResult } from "./detection.types"
 /** Singleton instance */
 let serviceInstance: ImpeccableIntegrationService | null = null;
 
-/** Explicit root first; env/cwd fallback is the last-resort read (SEC-F08). */
-function rootOf(explicit?: string): string {
-  return explicit ?? getWorkspaceRoot();
-}
+/** The root is mandatory (SEC-F08): no env/cwd fallback, missing root throws. */
+const rootOf = requireWorkspaceRoot;
 
 /**
  * Main integration service facade.
@@ -53,7 +50,7 @@ export class ImpeccableIntegrationService {
    * @param config - threshold, cacheReuse, workspaceRoot
    */
   async runStaticDetection(
-    sourcePath: string, config: StaticOptions = {}
+    sourcePath: string, config: StaticOptions
   ): Promise<{ result: DetectionResult; report: QualityReport }> {
     const root = rootOf(config.workspaceRoot);
     const { sourceRunId, ...out } = await runStaticCore(this.runtime, root, sourcePath, config);
@@ -67,7 +64,7 @@ export class ImpeccableIntegrationService {
    * @param urls - Additional pages (reserved)
    */
   async runRenderedDetection(
-    localhostUrl: string, urls: string[] = [], config: RenderedOptions = {}
+    localhostUrl: string, urls: string[], config: RenderedOptions
   ): Promise<{ result: RenderedDetectionResult; report: QualityReport }> {
     const root = rootOf(config.workspaceRoot);
     const out = await runRenderedCore(this.runtime, root, localhostUrl, config);
@@ -80,7 +77,7 @@ export class ImpeccableIntegrationService {
    * @param config - detection mode, threshold, workspaceRoot
    */
   async runFullDetection(
-    sourcePath: string, localhostUrl: string, urls: string[] = [], config: DetectionConfig = {}
+    sourcePath: string, localhostUrl: string, urls: string[], config: DetectionConfig & { workspaceRoot: string }
   ): Promise<{ result: CombinedResult; report: QualityReport }> {
     const root = rootOf(config.workspaceRoot);
     const ops = {
@@ -113,9 +110,9 @@ export class ImpeccableIntegrationService {
 
   /**
    * Get a persisted quality report (SEC-F05: validation lives in loadReport).
-   * @param workspaceRoot - explicit root; env/cwd fallback when omitted
+   * @param workspaceRoot - explicit root (required)
    */
-  getReport(runId: string, workspaceRoot?: string): QualityReport | undefined {
+  getReport(runId: string, workspaceRoot: string): QualityReport | undefined {
     return loadReport(rootOf(workspaceRoot), runId);
   }
 
@@ -131,7 +128,7 @@ export class ImpeccableIntegrationService {
   }
 
   /** List persisted runs, newest first. */
-  listReports(workspaceRoot?: string): Array<{ runId: string; timestamp: number; score: number; pass: boolean }> {
+  listReports(workspaceRoot: string): Array<{ runId: string; timestamp: number; score: number; pass: boolean }> {
     return listCachedRuns(rootOf(workspaceRoot)).map((run) => ({
       runId: run.runId,
       timestamp: run.timestamp,

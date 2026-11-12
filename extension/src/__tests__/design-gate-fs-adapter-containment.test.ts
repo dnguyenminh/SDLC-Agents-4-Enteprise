@@ -10,7 +10,6 @@ import { isPathSafe, readSourceFile } from "../slash/fs.adapter";
 
 let base: string;
 let ws: string;
-let prev: string | undefined;
 beforeEach(() => {
   base = fs.mkdtempSync(path.join(os.tmpdir(), "dg-fs-"));
   ws = path.join(base, "root");
@@ -18,28 +17,25 @@ beforeEach(() => {
   fs.mkdirSync(path.join(ws, "..dots"), { recursive: true });
   fs.writeFileSync(path.join(ws, "..dots", "a.css"), "a{}");
   fs.writeFileSync(path.join(base, "root-evil", "x.css"), "x{}");
-  prev = process.env.WORKSPACE_ROOT;
-  process.env.WORKSPACE_ROOT = ws;
 });
 afterEach(() => {
-  if (prev === undefined) delete process.env.WORKSPACE_ROOT; else process.env.WORKSPACE_ROOT = prev;
   fs.rmSync(base, { recursive: true, force: true });
 });
 
 describe("SEC-F07 containment", () => {
   it("blocks sibling directory sharing the root prefix", () => {
-    expect(isPathSafe(path.join(base, "root-evil", "x.css"))).toBe(false);
-    expect(isPathSafe("../root-evil/x.css")).toBe(false);
+    expect(isPathSafe(path.join(base, "root-evil", "x.css"), ws)).toBe(false);
+    expect(isPathSafe("../root-evil/x.css", ws)).toBe(false);
     expect(() => readSourceFile("../root-evil/x.css", ws)).toThrow();
   });
 
   it("allows an in-workspace entry whose name merely starts with '..'", () => {
-    expect(isPathSafe("..dots/a.css")).toBe(true);
+    expect(isPathSafe("..dots/a.css", ws)).toBe(true);
     expect(readSourceFile("..dots/a.css", ws)).toBe("a{}");
   });
 
   it("blocks parent traversal and accepts normal files", () => {
-    expect(isPathSafe("../x")).toBe(false);
-    expect(isPathSafe("..dots")).toBe(true);
+    expect(isPathSafe("../x", ws)).toBe(false);
+    expect(isPathSafe("..dots", ws)).toBe(true);
   });
 });

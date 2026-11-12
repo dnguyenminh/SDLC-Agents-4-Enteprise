@@ -182,7 +182,7 @@
     "mcpWrapper9183": "up (stream_write_file, embed_image, jira tools via execute_dynamic_tool)",
     "jiraAccess": "OK - jira_get_issue working via execute_dynamic_tool (discovered after restart)"
   },
-  "lastUpdated": "2026-11-13T00:30:00Z",
+  "lastUpdated": "2026-11-12T17:29:29.2490096Z",
   "scopeExtension": {
     "requestedAt": "2026-11-12",
     "requestedBy": "user (product owner)",
@@ -266,5 +266,12 @@
       "push",
       "version bump"
     ]
+  },
+  "lastBugFix": {
+    "ticket": "SA4E-393",
+    "issue": "extension/.code-intel junk from cwd fallback",
+    "fix": "workspaceRoot required, no cwd/env fallback",
+    "taReview": "approved",
+    "vsix": "dist-sa4e-393-nocwd-fix.vsix"
   }
 }

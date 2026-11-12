@@ -36,7 +36,7 @@ const lows = (n: number) => Array.from({ length: n }, (_, i) => ({
 
 describe("F-1 fileCount in payload", () => {
   it("reports the real scanned file count, not 0", () => {
-    const report = generateQualityReport([high("bad.html")], "static", 0.8, undefined, 3);
+    const report = generateQualityReport([high("bad.html")], "static", 0.8, undefined, 3, ws);
     const payload = JSON.parse(mapReportToPayload(report, "static", 200));
     expect(payload.fileCount).toBe(3);
   });

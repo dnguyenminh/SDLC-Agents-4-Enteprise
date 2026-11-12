@@ -6,7 +6,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { isPathWithinRoot } from "../services/PathResolver";
 import { DetectionError, createDetectionError } from "./types";
-import { getWorkspaceRoot, validateFilePath } from "./path-guard";
+import { requireWorkspaceRoot, validateFilePath } from "./path-guard";
 import { redactPaths } from "./path-redactor";
 
 const MAX_FILES = 10000; // per TDD/DPG
@@ -92,7 +92,7 @@ function assertRealPathInside(sourceRoot: string, root: string): void {
  * @throws DetectionError.INVALID_PATH if sourceRoot escapes the workspace / cannot be read
  */
 export async function listSourceFiles(sourceRoot: string, options: ListOptions = {}): Promise<string[]> {
-  const root = options.workspaceRoot ?? getWorkspaceRoot();
+  const root = requireWorkspaceRoot(options.workspaceRoot);
   assertListable(sourceRoot, root);
   const state: WalkState = { root, max: options.maxFiles ?? MAX_FILES, files: [] };
   let entries: fs.Dirent[];

@@ -10,7 +10,6 @@ import { ImpeccableIntegrationService } from "../slash/integration.service";
 import { cacheResult, clearAllCache } from "../slash/detection.cache";
 
 let ws: string;
-let prev: string | undefined;
 const dgDir = () => path.join(ws, ".code-intel", "design-gate");
 const readRec = (id: string) => JSON.parse(fs.readFileSync(path.join(dgDir(), `${id}.json`), "utf-8"));
 const walk = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true })
@@ -18,12 +17,9 @@ const walk = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true })
 
 beforeEach(() => {
   ws = fs.mkdtempSync(path.join(os.tmpdir(), "dg-persist-"));
-  prev = process.env.WORKSPACE_ROOT;
-  process.env.WORKSPACE_ROOT = ws;
   fs.mkdirSync(path.join(ws, "site"));
 });
 afterEach(() => {
-  if (prev === undefined) delete process.env.WORKSPACE_ROOT; else process.env.WORKSPACE_ROOT = prev;
   fs.rmSync(ws, { recursive: true, force: true });
 });
 
@@ -31,9 +27,9 @@ describe("(a) runId in the returned report has a record on disk — all modes", 
   for (const mode of ["static", "rendered", "both"] as const) {
     it(`mode=${mode}`, async () => {
       const svc = new ImpeccableIntegrationService();
-      const r = await svc.runFullDetection(path.join(ws, "site"), "http://evil.example", [], { detectionMode: mode });
+      const r = await svc.runFullDetection(path.join(ws, "site"), "http://evil.example", [], { detectionMode: mode, workspaceRoot: ws });
       expect(readRec(r.report.runId).report.runId).toBe(r.report.runId);
-      expect(svc.getReport(r.report.runId)?.runId).toBe(r.report.runId);
+      expect(svc.getReport(r.report.runId, ws)?.runId).toBe(r.report.runId);
     });
   }
 });
@@ -42,8 +38,8 @@ describe("(b) cache-hit gets a fresh runId + record with sourceRunId", () => {
   it("second static call", async () => {
     const svc = new ImpeccableIntegrationService();
     const dir = path.join(ws, "site");
-    const first = await svc.runStaticDetection(dir);
-    const second = await svc.runStaticDetection(dir);
+    const first = await svc.runStaticDetection(dir, { workspaceRoot: ws });
+    const second = await svc.runStaticDetection(dir, { workspaceRoot: ws });
     expect(second.result.cacheHit).toBe(true);
     expect(second.report.runId).not.toBe(first.report.runId);
     const rec = readRec(second.report.runId);
@@ -55,7 +51,7 @@ describe("(b) cache-hit gets a fresh runId + record with sourceRunId", () => {
 describe("(c) no absolute workspace path is written", () => {
   it("all files under .code-intel/design-gate are relative-only", async () => {
     const svc = new ImpeccableIntegrationService();
-    await svc.runStaticDetection(path.join(ws, "site"));
+    await svc.runStaticDetection(path.join(ws, "site"), { workspaceRoot: ws });
     const files = walk(dgDir());
     expect(files.length).toBeGreaterThan(1); // record + cache entry
     const esc = JSON.stringify(ws).slice(1, -1);
@@ -83,7 +79,7 @@ describe("(c2) D1 — real findings: nothing absolute on disk, cache hit stays c
   it("report record + cache entry contain no absolute/root string; findings are relative", async () => {
     writeFixture();
     const svc = await loaded();
-    const first = await svc.runStaticDetection(path.join(ws, "site"));
+    const first = await svc.runStaticDetection(path.join(ws, "site"), { workspaceRoot: ws });
     expect(first.result.findings.length).toBeGreaterThan(0); // fixture really has a finding
     const files = walk(dgDir());
     expect(files.some((f) => f.includes(`${path.sep}cache${path.sep}`))).toBe(true);
@@ -100,9 +96,9 @@ describe("(c2) D1 — real findings: nothing absolute on disk, cache hit stays c
   it("cache hit returns same findings/fileCount with relative paths", async () => {
     writeFixture();
     const svc = await loaded();
-    const first = await svc.runStaticDetection(path.join(ws, "site"));
+    const first = await svc.runStaticDetection(path.join(ws, "site"), { workspaceRoot: ws });
     expect(first.result.findings.length).toBeGreaterThan(0);
-    const second = await svc.runStaticDetection(path.join(ws, "site"));
+    const second = await svc.runStaticDetection(path.join(ws, "site"), { workspaceRoot: ws });
     expect(second.result.cacheHit).toBe(true);
     expect(second.result.fileCount).toBe(first.result.fileCount);
     expect(second.result.findings.length).toBe(first.result.findings.length);
@@ -118,7 +114,7 @@ describe("(e) getReport rejects traversal without reading outside", () => {
     fs.writeFileSync(path.join(ws, "x.json"), body);
     const svc = new ImpeccableIntegrationService();
     for (const id of ["../secret", "../../x", "run_1_a/../../x", "run_1_A", "", "run_1_a\0"]) {
-      expect(svc.getReport(id)).toBeUndefined();
+      expect(svc.getReport(id, ws)).toBeUndefined();
     }
   });
 });
@@ -141,7 +137,7 @@ describe("(g) legacy / fileCount-less entries are a miss", () => {
     fs.writeFileSync(path.join(dgDir(), "a".repeat(64) + ".json"), JSON.stringify({ result: { findings: [] } }));
     cacheResult(ws, path.join(ws, "site"), "static",
       { findings: [], durationMs: 1, cacheHit: false, partial: false } as never, "run_1_a");
-    const r = await new ImpeccableIntegrationService().runStaticDetection(path.join(ws, "site"));
+    const r = await new ImpeccableIntegrationService().runStaticDetection(path.join(ws, "site"), { workspaceRoot: ws });
     expect(r.result.cacheHit).toBe(false);
   });
 });
@@ -149,7 +145,7 @@ describe("(g) legacy / fileCount-less entries are a miss", () => {
 describe("write failure is surfaced, not swallowed", () => {
   it("adds 'report not persisted' to the report message", async () => {
     fs.writeFileSync(path.join(ws, ".code-intel"), "blocked");
-    const r = await new ImpeccableIntegrationService().runStaticDetection(path.join(ws, "site"));
+    const r = await new ImpeccableIntegrationService().runStaticDetection(path.join(ws, "site"), { workspaceRoot: ws });
     expect(r.report.message ?? "").toMatch(/not persisted/i);
   });
 });

@@ -8,7 +8,7 @@ import * as path from "path";
 import { DetectionError, createDetectionError } from "./types";
 import { validateFilePath } from "./path-guard";
 
-export { getWorkspaceRoot, isPathSafe } from "./path-guard";
+export { isPathSafe, requireWorkspaceRoot } from "./path-guard";
 export { listSourceFiles } from "./file-lister";
 export type { ListOptions } from "./file-lister";
 

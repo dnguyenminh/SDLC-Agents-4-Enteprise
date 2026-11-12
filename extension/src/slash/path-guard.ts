@@ -1,11 +1,11 @@
 /**
  * Path guard (SECURITY-REVIEW C3) — workspace containment for the design gate.
- * The workspace root is passed explicitly by callers (SEC-F08);
- * getWorkspaceRoot() is only the env/cwd fallback for callers that do not.
+ * The workspace root is passed explicitly by callers (SEC-F08) and is
+ * required: there is no env/process.cwd() fallback.
  */
 import * as path from "path";
 import { isPathWithinRoot } from "../services/PathResolver";
-import { EnvConfig } from "./types";
+import { DetectionError, createDetectionError } from "./types";
 
 /**
  * Whether `filePath` resolves inside `workspaceRoot`.
@@ -16,19 +16,24 @@ export function validateFilePath(filePath: string, workspaceRoot: string): boole
 }
 
 /**
- * Fallback workspace root: env (EnvConfig.WORKSPACE_ROOT) else process.cwd().
- * Pipeline code receives the root explicitly and never needs this.
+ * Fail loudly when a caller did not supply the workspace root.
+ * WHY: silently defaulting to process.cwd() created stray `.code-intel/`
+ * folders wherever the host process happened to run (SA4E-393).
+ * @throws DetectionErrorException(WORKSPACE_ROOT_REQUIRED) for empty/non-string roots
  */
-export function getWorkspaceRoot(): string {
-  const envRoot = process.env[EnvConfig.WORKSPACE_ROOT];
-  return envRoot && envRoot.length > 0 ? envRoot : process.cwd();
+export function requireWorkspaceRoot(root: unknown): string {
+  if (typeof root !== "string" || root.length === 0) {
+    throw createDetectionError(DetectionError.WORKSPACE_ROOT_REQUIRED, "workspace root required");
+  }
+  return root;
 }
 
 /**
  * Quick containment check before file operations.
- * @param workspaceRoot - explicit root; defaults to the env/cwd fallback
+ * @param workspaceRoot - explicit root (required; throws when missing)
  */
-export function isPathSafe(filePath: string, workspaceRoot: string = getWorkspaceRoot()): boolean {
+export function isPathSafe(filePath: string, workspaceRoot: string): boolean {
+  requireWorkspaceRoot(workspaceRoot);
   try {
     return validateFilePath(filePath, workspaceRoot);
   } catch {
