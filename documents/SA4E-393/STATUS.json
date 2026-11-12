@@ -182,7 +182,7 @@
     "mcpWrapper9183": "up (stream_write_file, embed_image, jira tools via execute_dynamic_tool)",
     "jiraAccess": "OK - jira_get_issue working via execute_dynamic_tool (discovered after restart)"
   },
-  "lastUpdated": "2026-11-12T02:10:00Z",
+  "lastUpdated": "2026-11-12T03:15:00Z",
   "scopeExtension": {
     "requestedAt": "2026-11-12",
     "requestedBy": "user (product owner)",
@@ -192,7 +192,19 @@
       "UI agents (dev-agent, ui-agent — mọi agent sửa .tsx/.svelte/.html/.css) MUST tự chạy gate trước khi báo done; FAIL phải fix hoặc biên bản lý do; SM chặn Phase 5/6 completion thiếu gate evidence"
     ],
     "decisions": "Mở rộng scope SA4E-393 (không tạo ticket mới); enforcement MUST + blocker",
-    "signOffStatus": "paused pending scope-extension implementation + verification"
+    "signOffStatus": "implementation complete — pending qa-agent integration test + SM verify agent-invoked gate"
+  },
+  "implementation": {
+    "status": "complete",
+    "tools": ["design_gate_run", "design_gate_list_rules"],
+    "testResults": "10/10 unit tests pass, compile clean, lint clean",
+    "modules": "extension/src/tools/design-gate/ (5 files) + detector-env.ts + registration"
+  },
+  "propagation": {
+    "status": "complete",
+    "platforms": [".kiro", ".code-intel", "conversions/claude-code", "conversions/github-copilot", "conversions/codex-openai", "conversions/opencode", "conversions/antigravity"],
+    "ruleFile": ".opencode/rules/sdlc/ui-design-gate.md",
+    "agentsUpdated": ["dev-agent", "ui-agent", "qa-agent", "sm-agent"]
   },
   "blocker": null
 }
