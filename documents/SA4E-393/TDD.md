@@ -35,6 +35,7 @@
 | 1.0 | 2026-10-31 | SA Agent | Initiate document — auto-generated from BRD and FSD |
 | 1.1 | 2026-11-12 | SA Agent | Addendum 4: post-implementation as-built notes for D1, D3, D5, D6 (root causes from commits dd1c5e5d, 88892218) + Open Issues. No diagram changes. |
 | 1.2 | 2026-11-13 | SA Agent | Addendum 4: Open Issues rewritten from FIX-EVIDENCE (batches 1-3), DESIGN-addendum4-openissues-fix, ANALYSIS-settings-worktree, SECURITY-ASSESSMENT-addendum4-fix (re-review PASS), TEST-REPORT-addendum4-fix. SEC-F04..F08, log redaction, size 200/20 → CLOSED; D1 as-built (explicit workspaceRoot, `{runId}.json` + `cache/{sha}.json`). Remaining items stated with residual risk; e2e D6 on this build PENDING. No diagram changes. |
+| 1.3 | 2026-11-13 | SA Agent | Addendum 5 (batch 1/2, design only): auto-trust git worktree for `base_dir` — module design, decisions OI-WT1..6, pseudocode, security analysis, test plan + RTM. New diagrams `sequence-worktree-trust`, `component-worktree-trust`. Earlier sections unchanged. |
 
 ---
 
@@ -1127,3 +1128,480 @@ re-run is recorded in FIX-EVIDENCE; the QA report itself has not been re-issued 
 | FR-AG1 — agents invoke the gate via MCP tools | D1, D2, D3 (LOCAL_TOOL_REGISTRY registration, no new MCP server) |
 | FR-AG2 — mandatory self-check + blocker | D1 tool contract, D5 agent-loop demo, D6.vii (AGENTS.md Key Rule 8) |
 
+
+---
+
+## Addendum 5 (SA4E-393 Scope Extension, 2026-11-13) — Auto-trust Git Worktree for `base_dir` [FR-WT1..15]
+
+**Status:** Design only (batch 1/2). No production or test code is written in this batch. **Counterpart:** FSD Addendum 5 (BR-WT1..13, UC-WT1..7, NFR-WT1..6, OI-WT1..6, AC-WT1..13). **Approved design (USER):** if `base_dir` is not in the allowlist, accept it only when (1) `<base_dir>/.git` is a FILE `gitdir: <repo>/.git/worktrees/<name>`, (2) the back-link `<admin>/gitdir` points at exactly `<base_dir>/.git`, (3) the parent repo is in the allowlist OR is a workspace folder open in this instance, (4) every compared path is `realpath`-ed and case-folded on win32, (5) on pass `base_dir` becomes a root and containment (BR-07) is unchanged; on fail the call returns `PATH_REJECTED_OUTSIDE_ALLOWLIST` + hint with no extra absolute path. Files are read directly; `git` is never spawned.
+
+### E1. Summary of decisions
+
+| # | Decision | Section |
+|---|----------|---------|
+| 1 | New dependency-free library `worktree-trust/` (8 source files + index). Backend copy is the **source of truth**; the extension copy is **generated** by `scripts/sync-worktree-trust.mjs` (not hand-mirrored). | E2 |
+| 2 | Parity (BR-WT13 / TC-702) is enforced twice: a drift guard test (generated files == committed files) and one shared scenario matrix executed on both surfaces against REAL `git worktree add` fixtures. | E2.4, E8 |
+| 3 | `rootSource` is NOT changed (`'base_dir'` backend, `'workspace'` extension). A new additive field `trustSource: 'allowlist' \| 'worktree'` carries the origin. | E3 (OI-WT3) |
+| 4 | Backend "open workspace folders" = `legacyRoot` (already server-pinned) ∪ env `MCP_OPEN_WORKSPACE_FOLDERS`. Never from the request. Extension = all `vscode.workspace.workspaceFolders`. | E3 (OI-WT1) |
+| 5 | Added check not spelled out in the FSD: `commondir` must resolve to the same dir as `<admin>/../..` (blocks a forged admin dir in an untrusted repo that points `commondir` at a trusted repo). | E4, E5 |
+| 6 | Auto-trust ON by default; kill switch `MCP_WORKTREE_AUTOTRUST=0` (env, both surfaces) and `sdlcAgents.workspace.worktreeAutoTrust` (extension). Allowlist hits never reach this code. | E3, E9 |
+| 7 | Plain non-worktree directories keep the **byte-identical** legacy rejection message (existing exact-match tests stay green). Suffix/hint only when a `.git` worktree pointer exists but verification failed. | E6 |
+
+### E2. Module design
+
+#### E2.1 Layout and size budget (code-standards: ≤200 lines/file, ≤20 lines/function, SOLID, TSDoc; strict validators instead of zod, see note below)
+
+The library imports only `fs` and `path`, has no `pino`/`vscode`/`zod`/ESM-only syntax, and takes its collaborators through interfaces (DIP). That is what makes a generated copy possible under bundle boundary C-5.
+
+| File (under `worktree-trust/`) | Responsibility (SRP) | Est. lines |
+|---|---|---|
+| `worktree-types.ts` | `WorktreeReason` enum, `WorktreeVerdict`, `TrustDeps`, `FsLike`, `TrustLogger`, `TrustPort`, `PointerResult` | ≤90 |
+| `worktree-path-fold.ts` | `foldKey`, `samePath`, `stripExtendedPrefix`, `isUncOrDevice`, `isReservedWinName`, `hasAdsColon`, `isUnderGitModules`, `realpathOrNull` | ≤110 |
+| `worktree-git-files.ts` | `readBounded` (lstat/open/fstat identity check, 4 KB cap), `parseGitdirPointer`, `statSig` | ≤120 |
+| `worktree-verifier.ts` | `verifyWorktree` + 5 step functions (`stepGitFile`, `stepAdmin`, `stepCommon`, `stepBacklink`, `stepParent`) | ≤180 |
+| `worktree-cache.ts` | `TrustCache` (TTL 30 s / 5 s, 256 entries FIFO, stat-signature validation) | ≤110 |
+| `worktree-config.ts` | `loadTrustConfig(env)`: switch + open folders list (pure; env injected) | ≤60 |
+| `worktree-messages.ts` | `reasonGroup`, `buildRejectionDetail` (single source of client text for both surfaces) | ≤60 |
+| `worktree-trust-service.ts` | `WorktreeTrustService` facade: switch → cache → verifier → log; implements `TrustPort` | ≤130 |
+| `index.ts` | re-exports | ≤20 |
+
+If `worktree-verifier.ts` passes 180 lines at implementation time, move `stepCommon`/`stepBacklink` to `worktree-admin-steps.ts` (no API change).
+
+#### E2.2 Key types (contract the DEV implements)
+
+```typescript
+export type WorktreeReason =
+  | 'not_a_worktree' | 'malformed' | 'limit_exceeded' | 'unc_unsupported' | 'io_error'
+  | 'admin_missing' | 'submodule_or_unknown_layout' | 'commondir_mismatch'
+  | 'backlink_missing' | 'backlink_mismatch' | 'parent_not_trusted' | 'bare_not_registered'
+  | 'disabled';
+
+export type WorktreeVerdict =
+  | { trusted: true; kind: 'main' | 'bare'; repoRoot: string }   // repoRoot: server-side only, never in client text
+  | { trusted: false; reason: WorktreeReason };
+
+/** Injectable fs surface (tests fake it to count calls and simulate slow IO). */
+export interface FsLike {
+  lstat(p: string): StatSigLike; stat(p: string): StatSigLike;   // bigint stats
+  realpath(p: string): string;
+  readSmall(p: string, maxBytes: number): ReadResult;           // open+fstat+read+close
+}
+export interface TrustDeps {
+  fs: FsLike; platform: NodeJS.Platform; now(): number;          // ms, monotonic
+  isAllowlisted(realPath: string): boolean;                      // backend: WorkspaceAllowlist.contains; ext: isRootAllowlisted
+  openFolders(): readonly string[];                              // raw folder paths, realpath'd inside verifier
+  budgetMs: number; maxBytes: number;                            // 250 / 4096
+}
+/** What the two resolvers depend on (ISP: one method). */
+export interface TrustPort { check(baseDirResolved: string): WorktreeVerdict }
+/** Strict pointer validation (hand-written, see note). Pure; never throws. */
+export type PointerResult = { ok: true; value: string } | { ok: false; reason: 'malformed' };
+export const MAX_POINTER_CHARS = 1024;
+```
+
+**zod exception (code-standards "zod for parsed input").** `zod` is a direct dependency of `backend` only; `extension/package.json` lists it just as an override. The library is generated into the extension, so a zod import would add a new bundled dependency to the extension for a 6-line check. Decision: `parseGitdirPointer` / `parseBacklink` are hand-written strict validators (`PointerResult`), covered by PBT `WT-PBT-03` + UT. The input is a ≤4 KB local file, not a protocol payload. If SM prefers zod, add `"zod": "4.6.6"` to `extension/package.json` and swap the validator body; the API does not change.
+
+#### E2.3 Integration points (existing code, exact change)
+
+| Surface | File | Change |
+|---|---|---|
+| Backend | `multi-worktree-path-resolver.ts` | constructor gets optional 4th param `trust?: TrustPort` (default: `WorktreeTrustService` built from `process.env`, `legacyRoot`, `allowlist`, `logger` → 3-arg constructions in existing tests keep working). `resolveWithBaseDir`: after `allowlist.contains(baseDir) === false` call `trust.check(baseDir)`; on `trusted:false` return the existing `PATH_REJECTED_OUTSIDE_ALLOWLIST` error with `buildRejectionDetail(...)`; on `trusted:true` continue to `isDirectory` → `containAndResolve` unchanged; result gets `trustSource`. Allowlist hit path is byte-for-byte untouched. |
+| Backend | `path-resolution-types.ts` | `PathResolutionOk.trustSource?: 'allowlist' \| 'worktree'` (optional, additive). `rootSource` union NOT extended. |
+| Extension | `services/base-dir-resolution.ts` | `resolveWithBaseDir` gets the same decision via `TrustPort` (default singleton `getDefaultTrust()`); `isRootAllowlisted` + `getExtensionWorkspaceRoots` gain the realpath parity fix (OI-WT2). Result `rootSource` stays `"workspace"`; `trustSource` added. |
+| Extension | `services/PathResolver.ts` | `PathResolutionOk.trustSource?`; `opts.worktreeTrust?: TrustPort` test seam forwarded to `resolveWithBaseDir`. |
+| Extension | `services/worktree-open-folders.ts` (new, hand-written, ~40 lines) | `vscode.workspace.workspaceFolders` (all) → `string[]`; lazy `require("vscode")` like `readSettingRoots`; reads setting `sdlcAgents.workspace.worktreeAutoTrust`. |
+| Extension | `mcp-config-builder.ts` | `resolveConfig` adds `MCP_OPEN_WORKSPACE_FOLDERS` (all open folders joined by `path.delimiter`) to `config.env` so a multi-root instance tells its backend about folders other than folder[0] (folder[0] is already `CODE_INTEL_WORKSPACE`). |
+| Extension | `extension/package.json` | `contributes.configuration`: `sdlcAgents.workspace.worktreeAutoTrust` (boolean, default `true`). |
+
+#### E2.4 Parity mechanism (answers C-5 / TC-702)
+
+Chosen: **single source + generated mirror + two parity tests**, not a hand-written duplicate.
+
+1. Source of truth: `backend/src/shared/worktree-trust/*.ts` (ESM, `./x.js` specifiers).
+2. `scripts/sync-worktree-trust.mjs` copies those files (and the two test helpers `__tests__/worktree-fixture.ts`, `worktree-scenarios.ts`) to `extension/src/services/worktree-trust/` and `extension/src/__tests__/worktree-trust/`, rewriting `from './x.js'` → `from './x'`, normalising EOL to `\n`, and prepending `/* GENERATED from <path> by scripts/sync-worktree-trust.mjs - DO NOT EDIT */`. `--check` exits 1 on any difference.
+3. Test `worktree-trust.sync.test.ts` (extension) runs the generator in memory and compares with the committed files (drift guard, fails CI if someone edits a generated file or forgets to regenerate). Root script `npm run check:worktree-trust` calls `--check`.
+4. The shared scenario matrix (`worktree-scenarios.ts`: id, builder using real `git`, expected `code` + message) runs against the backend `MultiWorktreePathResolver` and the extension `resolveWorkspacePath` and asserts identical `code` and identical `message` strings (extends TC-702). The existing TC-702 tests are left unmodified and must stay green (proof of backward compatibility).
+5. Hand-written glue on each side is tiny and covered by the matrix: backend resolver wiring, extension `worktree-open-folders.ts` + `base-dir-resolution.ts`.
+
+Rejected alternative: hand-copied mirror (what SA4E-394 did for the resolver). It has no mechanical guard against drift, and the verifier is ~400 lines of security logic where a silent divergence is a vulnerability.
+
+#### E2.5 Exact file list for DEV (batch 2)
+
+**Create — backend**
+- `backend/src/shared/worktree-trust/{index,worktree-types,worktree-path-fold,worktree-git-files,worktree-verifier,worktree-cache,worktree-config,worktree-messages,worktree-trust-service}.ts`
+- `backend/src/shared/worktree-trust/__tests__/worktree-fixture.ts` (real-git fixture helper; also synced to extension)
+- `backend/src/shared/worktree-trust/__tests__/worktree-scenarios.ts` (shared matrix; also synced to extension)
+- `backend/src/shared/worktree-trust/__tests__/{worktree-git-files,worktree-path-fold,worktree-cache,worktree-messages-config,worktree-verifier,worktree-verifier.forgery,worktree-trust-service,worktree-trust.pbt,worktree-parity.backend}.test.ts`
+- `backend/src/shared/__tests__/multi-worktree-path-resolver.worktree.test.ts` (resolver integration, compat, no-spawn)
+- `backend/src/shared/__tests__/per-tool-base-dir.worktree.test.ts` (one file tool end-to-end, E2E-API)
+
+**Modify — backend:** `backend/src/shared/multi-worktree-path-resolver.ts`, `backend/src/shared/path-resolution-types.ts`. (`path-resolver-provider.ts` and `workspace-allowlist.ts` are NOT modified; `legacy-path-gate.ts` untouched.)
+
+**Create — extension / repo**
+- `extension/src/services/worktree-trust/*` (9 GENERATED files, do not edit)
+- `extension/src/__tests__/worktree-trust/{worktree-fixture,worktree-scenarios}.ts` (GENERATED)
+- `extension/src/services/worktree-open-folders.ts`
+- `extension/src/__tests__/{worktree-trust.parity,worktree-trust.sync,base-dir-resolution.worktree,backend-local-tools.worktree}.test.ts`
+- `scripts/sync-worktree-trust.mjs`
+
+**Modify — extension / repo:** `extension/src/services/base-dir-resolution.ts`, `extension/src/services/PathResolver.ts`, `extension/src/mcp-config-builder.ts`, `extension/package.json` (setting), root `package.json` (`sync:worktree-trust`, `check:worktree-trust` scripts).
+**Must remain unmodified and green:** `extension/src/__tests__/backend-local-tools.base-dir.test.ts` (TC-702/TC-309, includes an exact-message `toBe`), `backend/src/shared/__tests__/{multi-worktree-path-resolver,per-tool-base-dir.*}.test.ts`.
+
+**Docs (owners other than DEV):** UG/DPG note for the two switches and `MCP_OPEN_WORKSPACE_FOLDERS` (DevOps/BA).
+
+![Component - worktree trust](diagrams/component-worktree-trust.png)
+*[Edit in draw.io](diagrams/component-worktree-trust.drawio)*
+
+### E3. Open-issue decisions and tuned numbers
+
+| ID | Decision | Rationale |
+|----|----------|-----------|
+| **OI-WT1** open workspace folder | Backend: `openFolders() = [legacyRoot, ...parse(env MCP_OPEN_WORKSPACE_FOLDERS)]`, read once at construction, `path.delimiter`-separated, max 16 entries. `legacyRoot` is `getWorkspacePath()` (`--workspace` / `CODE_INTEL_WORKSPACE`, set by the extension from folder[0] via `mcp-config-builder.ts`). Extension: every `vscode.workspace.workspaceFolders[i].uri.fsPath`, read per call. **Not** from request args, headers or `initialize` params. | The backend already pins `legacyRoot` and the legacy path already grants it access to absolute paths inside it, so trusting its worktrees adds no new principal. Per-request context is client-controlled (FR-WT3). Multi-root needs the extra env because the backend only knows folder[0]. Trust level of the env equals `MCP_WORKSPACE_ROOTS` (set by the launcher; note `.kiro/settings/mcp.json` is writable by anyone with workspace write access, same as the existing allowlist env there). Entries are `realpath`-ed during verification; non-existent entries ignored. |
+| **OI-WT2** extension realpath | Fix the mirror as part of this scope. `getExtensionWorkspaceRoots` stores BOTH `foldKey(resolve(e))` and `foldKey(realpath(e))` (when it exists); `isRootAllowlisted` checks the resolved key then `foldKey(realpath(candidate))` in try/catch. | FR-WT4 requires realpath on both surfaces and the verifier compares realpaths against the allowlist; without it a worktree of an allowlisted symlinked repo passes on backend and fails on the extension. Side effect (documented): a symlinked spelling of an allowlisted root is now accepted on the extension, as it already is on the backend. Test `WT-IT-23`. |
+| **OI-WT3** names | `rootSource` unchanged (`'base_dir'` / `'workspace'`). New optional `trustSource: 'allowlist' \| 'worktree'`. Switch: env `MCP_WORKTREE_AUTOTRUST` (default on; `0`,`false`,`off`,`no` disable, case-insensitive; env wins) + extension setting `sdlcAgents.workspace.worktreeAutoTrust` (default `true`). Cache: per-surface instance inside `WorktreeTrustService` (backend: one per resolver; extension: module singleton), code shared via the generated library. | Extension consumers compare `rootSource === "workspace"` (`fs-guards.ts`, `path-format.ts`, `ToolProxy.ts`); a new enum value would silently drop the symlink guard and change messages. An additive field is safe. |
+| **OI-WT4** SA4E-438 | See E7: shared library (not shared cache/config). | |
+| **OI-WT5** missing `commondir` | Accept the fallback `<admin>/../..`. It is still subject to the layout check (`<common>/worktrees/<name> == admin`) and the `HEAD` file check, so it is no weaker than a present `commondir`. Test `WT-IT-16`. | Git has written `commondir` for linked worktrees since 2015; the fallback only matters for hand-made or very old layouts. |
+| **OI-WT6** moved/repaired worktrees | Accept when the back-link is consistent with the CURRENT `<base_dir>/.git`. `git worktree move`/`repair` rewrite both sides, so they pass. A manual move without `repair` leaves a stale back-link → `backlink_mismatch` → rejected (fail-closed, user runs `git worktree repair`). `extensions.worktreeConfig` is not read (no config parsing), so it has no effect. Relative-path worktrees (`worktree.useRelativePaths`, git ≥ 2.48) are supported: both pointers may be relative; relative `.git` pointer resolves against the dir of the `.git` file, relative back-link against the admin dir. Tests `WT-IT-12`, `WT-IT-17`. | |
+| **OI-WT7 (new)** main worktree as `base_dir` | Out of scope here: `<base_dir>/.git` is a directory → `not_a_worktree`. The open folder itself is not auto-trusted by this feature. Proposed follow-up for SM/BA: trust `base_dir == any open folder`. | FSD FR-WT2 defines only linked worktrees. |
+
+#### E3.1 Numbers
+
+| Parameter | FSD proposal | Decision | Reason |
+|-----------|--------------|----------|--------|
+| Max bytes per evidence file | 4 KB | **4096 (keep)**; pointer text additionally ≤ **1024 chars** | Real `.git`/`gitdir`/`commondir` files are < 300 B. 1024 ≈ 4× typical Windows MAX_PATH use. |
+| Total budget | 250 ms | **250 ms (keep)**, checked before every step | Sync fs cannot be pre-empted inside one syscall (hung network share). Mitigation: UNC/device paths are rejected before any fs call (`unc_unsupported`), negative result cached 5 s, steps are few. Residual: mapped network drive that hangs inside one `lstat`. |
+| Positive TTL | ≤ 30 s | **30 s** | Bounds the TOCTOU/staleness window; evidence signature is re-checked on every hit anyway. |
+| Negative TTL | ≤ 5 s | **5 s** | A user who just ran `git worktree add` retries quickly; still absorbs request floods. |
+| Cache entries | 256 | **256, FIFO eviction** | Orca-style tooling creates dozens of worktrees, not thousands; FIFO is enough (no LRU bookkeeping). |
+| Reads per verification | ≤ 3 | **3 content reads** (`.git`, `<admin>/commondir`, `<admin>/gitdir`) | |
+| lstat/realpath calls | ≤ 6 | **≤ 12 metadata calls typical** (adjusted) | Honest count: realpath(base), lstat(.git), realpath(admin), stat(admin), realpath(common), stat(HEAD), realpath(back-link target), allowlist realpath, ≤ 3 open-folder realpaths. Each ~10 µs warm; NFR-WT1 (≤ 50 ms cold) still holds. |
+| Cache-hit cost | ≤ 1 ms, "no file reads" | **2 `lstat` + 0 content reads** | Detecting mtime changes (FR-WT13) requires stat. AC-WT13 is read as "no content reads/parsing on hit"; test asserts `readSmall` count 0 and `lstat` count 2. |
+| Open-folder list | — | max **16** | Defensive cap. |
+
+#### E3.2 FSD points resolved or deviated (for BA/SM acknowledgement)
+
+| # | FSD text | TDD decision |
+|---|----------|--------------|
+| D-WT1 | A5.5: every worktree-style failure appends "It is not a verified git worktree…" + hint "Register the path in MCP_WORKSPACE_ROOTS, or use a git worktree of the open workspace repository." | Legacy sentence is kept verbatim as prefix (it already says "Configure MCP_WORKSPACE_ROOTS to include this path."). Generic hint becomes "Alternatively, use a git worktree of the open workspace repository." to avoid repeating the instruction. For `not_a_worktree` (no `.git` file / `.git` is a dir) the message stays **byte-identical to today** because an existing extension test asserts it with `toBe`. Parent-untrusted hint is verbatim from the FSD. Wording-only change. |
+| D-WT2 | UC-WT4 Exc-1: cached positive verdict + deleted directory → `FS_ERROR` | BR-WT11 wins: a missing `.git` evidence file invalidates the cache entry, so the call is re-verified and rejected (`PATH_REJECTED_OUTSIDE_ALLOWLIST`). `FS_ERROR` remains only for the race "verified, then directory vanished before `isDirectory`". AC-WT6 ("rejected or FS_ERROR") holds. |
+| D-WT3 | FR-WT2(2): admin dir must contain `.git/worktrees/<name>` | Bare repos have `<bare>/worktrees/<name>` without a `.git` segment (FR-WT9). Rule used: `dirname(admin)` is named `worktrees` and the common dir is not under a `.git/modules/` segment pair. |
+| D-WT4 | NFR-WT2 ≤ 6 lstat/realpath | ≤ 12 (see E3.1). |
+
+### E4. Pseudocode
+
+Every function below must stay ≤ 20 lines in the real implementation; helper names are the split points. All functions return values; none throws on business paths (BR-WT9). The outermost `try/catch` of `verifyWorktree` maps unexpected errors to `io_error` and logs them.
+
+#### E4.1 `verifyWorktree` (worktree-verifier.ts)
+
+```typescript
+export function verifyWorktree(baseDir: string, d: TrustDeps): WorktreeVerdict {
+  try {
+    const pre = precheck(baseDir, d.platform);            // NUL, UNC/device, ADS ':', reserved names, not absolute
+    if (pre !== null) return deny(pre);
+    const deadline = d.now() + d.budgetMs;
+    let st: VerifyState = { baseDir, d };
+    for (const step of [stepGitFile, stepAdmin, stepCommon, stepBacklink, stepParent]) {
+      if (d.now() > deadline) return deny('limit_exceeded');   // fail-closed, budget FR-WT12
+      const r = step(st);
+      if (!r.ok) return deny(r.reason);
+      st = { ...st, ...r.patch };
+    }
+    return { trusted: true, kind: st.kind!, repoRoot: st.trustRoot! };
+  } catch (e) { return deny('io_error'); }                  // logged by the service, never thrown
+}
+```
+
+#### E4.2 Steps
+
+```typescript
+// 1. .git must be a regular FILE, <= 4 KB, never a symlink/dir (FR-WT2.1, FR-WT12)
+function stepGitFile(s) {
+  const realBase = d.fs.realpath(s.baseDir);                 // ENOENT -> not_a_worktree (also covers deleted worktree)
+  const gitPath = join(realBase, '.git');
+  const l = d.fs.lstat(gitPath);                             // ENOENT -> not_a_worktree
+  if (!l.isFile()) return fail('not_a_worktree');            // dir (main/clone), symlink, other
+  const txt = readBounded(gitPath, l, d);                    // open, fstat, require ino/dev == lstat, size <= maxBytes, read
+  if (!txt.ok) return fail(txt.reason);                      // limit_exceeded | io_error | not_a_worktree (swapped)
+  const m = /^gitdir: ([^\r\n]+)\r?\n?$/.exec(txt.value);    // single anchored regex on <= 4 KB, no backtracking risk
+  const p = m ? validatePointer(m[1], d.platform) : null;
+  return p ? ok({ realBase, gitPath, gitSig: sigOf(l), pointer: p }) : fail('malformed');
+}
+
+// validatePointer: 1..1024 chars; no code point < 0x20 (covers NUL, CR, LF, TAB); on win32 reject UNC/device
+// (\\host, \\?\, \\.\, //host) and drive-relative forms; ".." and relative form are ALLOWED here (decided after realpath).
+
+// 2. admin dir: realpath, directory, parent is "worktrees" (FR-WT2.2, FR-WT8)
+function stepAdmin(s) {
+  const raw = isAbsolute(s.pointer) ? s.pointer : resolve(s.realBase, s.pointer);   // relative pointer: against dir of .git
+  const admin = realpathOrNull(raw);                          // ENOENT -> admin_missing (prunable, FR-WT11)
+  if (admin === null) return fail('admin_missing');
+  if (!isDir(admin)) return fail('malformed');
+  if (fold(basename(dirname(admin))) !== 'worktrees') return fail('submodule_or_unknown_layout'); // .git/modules/x lands here
+  return ok({ admin, common0: dirname(dirname(admin)) });
+}
+
+// 3. common dir: commondir (relative to admin) or fallback ../.. ; MUST equal admin/../.. (blocks cross-repo commondir forgery)
+function stepCommon(s) {
+  const cd = readBounded(join(s.admin, 'commondir'), ...);   // ENOENT -> fallback (OI-WT5), other errors -> io_error
+  const raw = cd.ok ? resolveRel(s.admin, validatePointerLine(cd.value)) : s.common0;
+  const common = realpathOrNull(raw);
+  if (common === null) return fail('admin_missing');
+  if (!samePath(common, s.common0, d.platform)) return fail('commondir_mismatch');
+  if (isUnderGitModules(common) || !isFile(join(common, 'HEAD'))) return fail('submodule_or_unknown_layout');
+  const main = fold(basename(common)) === '.git';
+  return ok({ common, kind: main ? 'main' : 'bare', trustRoot: main ? dirname(common) : common });
+}
+
+// 4. back-link: admin/gitdir must resolve to exactly <realBase>/.git (BR-WT3)
+function stepBacklink(s) {
+  const bl = readBounded(join(s.admin, 'gitdir'), ...);      // ENOENT -> backlink_missing
+  const line = bl.ok ? validatePointerLine(bl.value) : null; // one line, no prefix, same rules as pointer
+  if (line === null) return fail(bl.ok ? 'malformed' : 'backlink_missing');
+  const target = realpathOrNull(resolveRel(s.admin, line));  // stale/pruned target -> backlink_missing
+  if (target === null) return fail('backlink_missing');
+  if (!samePath(target, s.gitPath, d.platform)) return fail('backlink_mismatch');
+  return ok({ linkSig: sigOf(d.fs.lstat(join(s.admin, 'gitdir'))), linkPath: join(s.admin, 'gitdir') });
+}
+
+// 5. parent trust (BR-WT4, BR-WT12)
+function stepParent(s) {
+  if (s.kind === 'bare') return d.isAllowlisted(s.trustRoot) ? ok({}) : fail('bare_not_registered');
+  if (d.isAllowlisted(s.trustRoot)) return ok({});
+  const open = d.openFolders().slice(0, 16).map(realpathOrNull).filter(notNull);
+  return open.some((f) => samePath(f, s.trustRoot, d.platform)) ? ok({}) : fail('parent_not_trusted');
+}
+```
+
+`samePath(a,b)` = `foldKey(stripExtendedPrefix(a)) === foldKey(stripExtendedPrefix(b))` after both are realpath results. `foldKey` lower-cases only on win32. Use `fs.realpathSync` (JS implementation, same as `WorkspaceAllowlist`), NOT `.native`, so both sides normalise identically; 8.3 short names are not expanded (false negative only, fail-closed).
+
+#### E4.3 `readBounded` (worktree-git-files.ts)
+
+```typescript
+function readBounded(p, lstatSig, d): ReadResult {
+  // d.fs.readSmall = openSync(p,'r') -> fstat -> compare dev/ino with lstatSig (detects swap between lstat and open)
+  //                 -> require isFile && size <= maxBytes -> readSync(size) -> closeSync (always, in finally)
+  // returns {ok:true,value} | {ok:false, reason: 'limit_exceeded' | 'not_a_worktree' | 'io_error' | 'missing'}
+  // utf8 decode with replacement char; a replacement char later fails the control/format validation.
+}
+```
+
+#### E4.4 Service, cache, invalidation (worktree-trust-service.ts, worktree-cache.ts)
+
+```typescript
+check(baseDir: string): WorktreeVerdict {
+  if (!this.cfg.enabled()) return { trusted: false, reason: 'disabled' };
+  const key = foldKey(baseDir);                                 // baseDir already path.resolve()d by the caller
+  const hit = this.cache.get(key, this.ctxSig());               // validates TTL + signature (below)
+  if (hit) { this.log.debug(...); return hit; }
+  const v = verifyWorktree(baseDir, this.deps());               // may use up to 250 ms
+  this.cache.put(key, v, this.ctxSig(), v.trusted ? this.evidence(v) : null);
+  this.logDecision(v, baseDir);                                  // warn, sanitized, only on a real verification (miss)
+  return v;
+}
+
+// TrustCache.get(key, ctx):
+//   e = map.get(key); if !e -> miss
+//   if now >= e.expiresAt -> delete, miss                         (30 s positive / 5 s negative)
+//   if e.ctx !== ctx -> delete, miss                              (open-folder list or switch changed)
+//   if sig(lstat(e.gitPath)) !== e.gitSig -> delete, miss         (.git rewritten/removed/replaced; missing -> 'absent')
+//   if e.trusted && sig(lstat(e.linkPath)) !== e.linkSig -> delete, miss   (back-link rewritten/removed)
+//   if !e.trusted && sig(lstat(join(baseDir,'.git'))) !== e.gitSig -> delete, miss  (negative entry: .git appeared/changed)
+//   return e.verdict
+// sig(stat) = `${dev}:${ino}:${size}:${mtimeNs}` from bigint stats, 'absent' on ENOENT.
+// put(): if map.size >= 256 delete first key (FIFO). Entries are never persisted.
+// ctxSig = enabled + '|' + openFolders folded & joined (allowlist is immutable per process: BR-13/17).
+```
+
+Cost on a hit: 2 `lstat`, 0 content reads, 0 spawns.
+
+#### E4.5 Resolver change (backend; extension equivalent)
+
+```typescript
+private resolveWithBaseDir(raw: string, filePath: unknown): PathResolutionResult {
+  const baseDir = path.resolve(raw.trim());
+  let trustSource: 'allowlist' | 'worktree' = 'allowlist';
+  if (!this.allowlist.contains(baseDir)) {                       // BR-WT1: allowlist always wins, no .git read on hit
+    const v = this.trust.check(baseDir);
+    if (!v.trusted) return this.allowlistErr(baseDir, v.reason); // existing error code, detail from buildRejectionDetail
+    trustSource = 'worktree';
+  }
+  if (!isDirectory(baseDir)) return err('FS_ERROR', ...);        // unchanged
+  return this.containAndResolve(baseDir, filePath, trustSource); // unchanged logic, ok-result gains trustSource
+}
+```
+
+![Sequence - worktree trust](diagrams/sequence-worktree-trust.png)
+*[Edit in draw.io](diagrams/sequence-worktree-trust.drawio)*
+
+### E5. Security analysis
+
+**Trust anchor.** The only unforgeable evidence is the back-link `<admin>/gitdir` plus the layout `<common>/worktrees/<name>` that lives INSIDE the trusted repo's `.git`. An attacker who controls only `base_dir` can write the `.git` pointer, but not those. Writing into a trusted repo's `.git/worktrees/` already allows hook-based code execution, so it is outside the threat model.
+
+| # | Attack / edge | Result | Blocked by |
+|---|---------------|--------|------------|
+| 1 | Plain dir `X/.git` file → `gitdir: <trusted>/.git/worktrees/foo` (copied pointer) | rejected `backlink_mismatch` | back-link names the real worktree, not `X/.git` (BR-WT3) |
+| 2 | `cp -r` of a valid worktree to a new path | rejected `backlink_mismatch` | same |
+| 3 | Untrusted repo T has an admin dir whose `commondir` points at a trusted `.git` | rejected `commondir_mismatch` | `commondir` must equal `<admin>/../..` (E4.2 step 3). **Not in the FSD; required.** |
+| 4 | Worktree of an untrusted repo | rejected `parent_not_trusted` | BR-WT4 |
+| 5 | Submodule (`gitdir: ../.git/modules/sub`) and worktree of a submodule | rejected `submodule_or_unknown_layout` | parent dir not named `worktrees` / `.git/modules` segment pair |
+| 6 | Pointer contains `..` | no special handling needed | only the post-realpath layout, back-link and parent checks decide; a lexical `..` cannot raise trust. Relative pointers are legitimate (git ≥ 2.48) |
+| 7 | Pointer contains NUL / CR / LF / control char, length > 1024 | rejected `malformed` | validator; Node fs would also throw on NUL |
+| 8 | Pointer or `base_dir` is UNC / `\\?\` / `\\.\` / `//host` (win32) | rejected `unc_unsupported`, **zero fs calls** | `precheck` / `validatePointer`. Prevents NTLM-leaking SMB connections and hung network IO. Note: `WorkspaceAllowlist.contains` already performs `realpathSync` on an unlisted UNC path before this code runs; pre-existing, recommended SEC follow-up (see OI-WT8) |
+| 9 | win32 alternate data stream (`C:\x:stream`), reserved device names (`CON`, `NUL`, `COM1`) in `base_dir` | rejected `malformed` | `precheck` |
+| 10 | `.git` is a symlink/junction to a file or dir | rejected `not_a_worktree` | `lstat` + `isFile()` (no follow on the last component) |
+| 11 | `.git` swapped between `lstat` and read | rejected | `fstat` dev/ino must equal `lstat` |
+| 12 | Admin dir reached through a junction/symlink | decided on the realpath; the back-link must still equal `<realBase>/.git`, so a junction cannot fabricate trust | realpath + back-link |
+| 13 | `base_dir` itself is a symlink/junction to a real, trusted worktree | verification passes on the real path, but the effective root stays the string the caller sent and the existing `symlinkEscape` (T3) check then sees the real path outside that root → every `file_path` rejected. Net effect: fail-closed; callers must pass the real path | unchanged T3 guard |
+| 14 | `base_dir` is a sub-directory of a worktree (no own `.git`) | rejected `not_a_worktree` (FR-WT10) | `lstat` ENOENT |
+| 15 | Giant `.git` (> 4 KB), slow filesystem | rejected `limit_exceeded` | size cap, 250 ms budget between steps |
+| 16 | Cache poisoning / flooding | bounded 256 FIFO; negative TTL 5 s; each hit re-checks stat signatures | E4.4 |
+| 17 | win32 case variants, `\\?\C:\...` spellings | accepted when equal after realpath + fold | `samePath` |
+| 18 | 8.3 short names | false negative only | fail-closed, documented |
+| 19 | Separate-git-dir main repo (`.git` is a file in the main worktree) | its common dir is not named `.git` → treated as "bare" → needs explicit allowlist | conservative |
+
+**TOCTOU.** (a) lstat→open: closed by fstat identity. (b) verify→use: the grant is only "`base_dir` is a root"; every `file_path` is still resolved and checked with containment + `symlinkEscape` per call, so swapping the directory for a link after verification is caught at use time (residual: the existing check→use gap of T3, unchanged). (c) The cache window (≤ 30 s) is closed by signature re-check on every hit: rewriting or removing `.git` or the back-link invalidates the entry. Not covered: changes to `commondir` or admin-dir internals inside the trusted repo (needs write access there; bounded by 30 s). (d) Deleted worktree: missing `.git` invalidates; the `isDirectory` re-check runs on every call.
+
+**No process spawn.** The library imports no `child_process`; test `WT-IT-20` spies on `child_process` APIs. **No new secrets.** **ReDoS:** one anchored regex on ≤ 4 KB, no nested quantifiers.
+
+### E6. Error handling, hints and logging
+
+Client-visible text is built ONLY by `buildRejectionDetail(sanitizedBaseDir, reason)` in `worktree-messages.ts` (single source → identical on both surfaces). The callers wrap it with the existing code prefix (`PATH_REJECTED_OUTSIDE_ALLOWLIST: ` in the extension, `${code}: ` in the backend).
+
+| Reason group | Reasons | Detail text |
+|--------------|---------|-------------|
+| LEGACY (unchanged, byte-identical to today) | `disabled`, `not_a_worktree`, `unc_unsupported` | `Workspace root '<b>' is not registered in the allowlist. Configure MCP_WORKSPACE_ROOTS to include this path.` |
+| GENERIC | `malformed`, `limit_exceeded`, `io_error`, `admin_missing`, `submodule_or_unknown_layout`, `commondir_mismatch`, `backlink_missing`, `backlink_mismatch` | LEGACY text + ` It is not a verified git worktree of a trusted repository. Alternatively, use a git worktree of the open workspace repository.` |
+| PARENT | `parent_not_trusted`, `bare_not_registered` | LEGACY text + ` It is not a verified git worktree of a trusted repository. The parent repository must be in MCP_WORKSPACE_ROOTS or be the open workspace folder.` |
+
+- `<b>` is the sanitized `path.resolve(base_dir)` the caller sent (same as today). The detail never contains the admin dir, repo root, allowlist content or the reason code (BR-WT10, AC-WT12). Test asserts that no path other than `<b>` appears.
+- Known, accepted oracle: PARENT vs GENERIC tells a caller that a valid worktree of an untrusted repo exists. No path is revealed; required by FSD A5.5.
+- `FS_ERROR`, containment errors and `file_path` errors are unchanged.
+- **Logging** (backend pino child `{module:'worktree-trust'}`, extension `console.warn` with `[worktree-trust]` prefix through the same `TrustLogger` interface): on every real verification (cache miss) one line at `warn`: `{decision:'accepted'|'rejected', reason?, kind?, trustSource:'worktree', base_dir: sanitize(...), cached:false, elapsed_ms}`. Cache hits log at `debug`. The existing resolver `warn('base_dir rejected — not in allowlist')` stays. Startup: one `info` line with `enabled` and the NUMBER of open folders (no paths). `repoRoot` is logged only at `debug`. All strings pass `sanitizePathText`/`sanitizeLogText` (T6).
+- Never throws; `io_error` is logged with the sanitized error code only (`err.code`), not the message.
+
+### E7. Relationship to SA4E-438 (`settings.json` in worktree)
+
+| Question | Answer |
+|----------|--------|
+| Shared mechanism with the SA4E-438 settings fix? | **Library: yes (reuse hook). Cache, config and allowlist semantics: no.** SA4E-438 solves discovery/ownership of `.code-intel/settings.json` (`runtime-settings.ts`, pid, `settings.workspace` vs cwd); this feature decides path-root trust. They have no runtime dependency, and this ticket does not touch `runtime-settings.ts` or `remote-backend-client.ts`. |
+| Reuse hook | `verifyWorktree(dir, deps)` is a pure function over `TrustDeps`. SA4E-438 can ask "is `cwd` a linked worktree whose parent is the open workspace?" with `isAllowlisted: () => false`, `openFolders: () => [workspaceFolder]`, and read `repoRoot` from the verdict to compare with `settings.workspace`. It lives in `worktree-trust/`, is exported from `index.ts`, and the extension copy is already generated, so SA4E-438 imports `extension/src/services/worktree-trust`. |
+| Why not share more | SA4E-438 would need a different trust set (open workspace only, no allowlist) and no caching of a 1-per-session lookup; forcing the `WorktreeTrustService` facade on it would couple two unrelated switches. |
+| Commitments | Keep `verifyWorktree`, `WorktreeVerdict`, `TrustDeps` API stable; the verdict carries `repoRoot`. OI-WT4 → closed as "library shared, facade not". |
+
+### E8. Test plan
+
+Test levels follow the project convention (Vitest; `fast-check` is already a devDependency of backend and extension). IDs use a `WT-` namespace that continues the STC scheme (PBT/UT/IT/E2E-API); QA assigns final numbers in STC; this TDD does not edit STC.md. All integration fixtures are **real**: `worktree-fixture.ts` runs `git init`, commits, and `git worktree add` in `fs.mkdtempSync(os.tmpdir())` whose path is `fs.realpathSync`-ed first (CI tmp may be an 8.3 or symlinked path); it calls `git` with `-c protocol.file.allow=always` and a fixed identity; if `git` is missing the suite fails loudly with a clear message (no silent skip). Production code still never spawns `git`.
+
+**Fixtures (builders in `worktree-scenarios.ts`):** `okWorktree`, `parentAllowlistedOnly`, `untrustedRepoWorktree`, `forgedPointer`, `copiedWorktree`, `missingBacklink`, `staleBacklink` (moved without repair), `movedRepaired`, `submodule`, `submoduleWorktree`, `prunedDirDeleted`, `prunedAdminRemoved`, `bareParent`, `nestedInMain`, `nestedInWorktree`, `plainSubdir`, `oversizeGitFile`, `pointerDotDot`, `pointerRelative` (`git worktree add` with `worktree.useRelativePaths` when git ≥ 2.48, else hand-written relative pointers), `pointerNul`, `pointerUnc` (win32 string only; asserts no fs access), `commondirCrossRepo`, `commondirAbsent`, `gitIsSymlink`, `adminViaJunction`, `baseDirIsJunction`.
+
+| ID | Level | Scenario | Expected | Covers |
+|----|-------|----------|----------|--------|
+| WT-PBT-01 | PBT | random strings/bytes as `.git` content (fast-check) | never throws; never `trusted:true` | BR-WT9, FR-WT3 |
+| WT-PBT-02 | PBT | case permutations of a valid path | `samePath` true on win32, false on POSIX when case differs; symmetric/idempotent | FR-WT4, BR-WT5 |
+| WT-PBT-03 | PBT | random pointers incl. `..`, NUL, UNC, long, unicode | validator returns `malformed` or a string without control chars; never throws | FR-WT12, E5.6-9 |
+| WT-PBT-04 | PBT | random put/get sequences with fake clock | size ≤ 256; no expired entry returned; negative ≤ 5 s, positive ≤ 30 s | FR-WT13, NFR-WT3 |
+| WT-UT-01..08 | UT | `parseGitdirPointer`: absolute, relative, CRLF, multi-line, missing prefix, NUL, > 1024, UNC (win32) | per case ok/`malformed` | FR-WT2.1 |
+| WT-UT-09 | UT | `readBounded`: 4096 ok, 4097 `limit_exceeded`, directory, symlink, swap between lstat and open (fake FsLike) | typed results | FR-WT12 |
+| WT-UT-10 | UT | layout: `worktrees/NAME` ok; `modules/x`, `modules/x/worktrees/y` rejected; bare layout ok | | FR-WT8, D-WT3 |
+| WT-UT-11 | UT | `stripExtendedPrefix`, `samePath` | | NFR-WT6 |
+| WT-UT-12 | UT | `buildRejectionDetail` for every reason: exact strings, LEGACY group byte-identical to current message, no extra path | exact | FR-WT7, BR-WT10 |
+| WT-UT-13 | UT | `loadTrustConfig`: switch values, open-folder list, cap 16, empty tokens | | FR-WT15, OI-WT1/3 |
+| WT-UT-14 | UT | `TrustCache` TTL/eviction/signature (`.git` changed, back-link changed/removed, ctx changed) with fake clock + fake fs | | FR-WT13, BR-WT11 |
+| WT-UT-15 | UT | budget: fake clock jumps > 250 ms between steps | `limit_exceeded` | FR-WT12 |
+| WT-UT-16 | UT | UNC/device/ADS/reserved name → zero fs calls (spy FsLike) | `unc_unsupported`/`malformed` | E5.8-9 |
+| WT-UT-17 | UT | service: disabled → `disabled`, no fs call; log lines sanitized, one per miss, none per hit | | FR-WT15 |
+| WT-UT-18 | UT | perf smoke: cold < 50 ms median of 50, hit < 1 ms (soft threshold ×5 on CI, reported) | | NFR-WT1 |
+| WT-IT-01 | IT | worktree of `legacyRoot` repo | trusted `main` (AC-WT1) | FR-WT2, UC-WT1 |
+| WT-IT-02 | IT | parent in allowlist, not open | trusted (UC-WT1 Alt-1) | BR-WT4 |
+| WT-IT-03 | IT | worktree of untrusted repo | `parent_not_trusted` (AC-WT4) | BR-WT4 |
+| WT-IT-04 | IT | forged pointer / copied worktree | `backlink_mismatch` (AC-WT2) | BR-WT3, UC-WT2 |
+| WT-IT-05 | IT | back-link file deleted / target missing | `backlink_missing` | UC-WT2 Alt-1 |
+| WT-IT-06 | IT | submodule and worktree of a submodule | `submodule_or_unknown_layout` (AC-WT3) | BR-WT6, UC-WT3 |
+| WT-IT-07 | IT | submodule path itself allowlisted | accepted via allowlist, spy: `.git` never read | BR-WT1 |
+| WT-IT-08 | IT | working dir deleted (`rm -rf`) and `git worktree prune` | rejected; resolver returns `PATH_REJECTED…` (AC-WT6) | FR-WT11, UC-WT4 |
+| WT-IT-09 | IT | worktree of bare repo: unregistered / registered | `bare_not_registered` / trusted (AC-WT8) | FR-WT9, BR-WT12 |
+| WT-IT-10 | IT | nested in main, nested in another worktree, plain sub-dir | trusted, trusted, `not_a_worktree` (AC-WT9) | FR-WT10 |
+| WT-IT-11 | IT | `.git` file 5 KB | `limit_exceeded` (AC-WT7) | FR-WT12 |
+| WT-IT-12 | IT | pointer with `..`; relative pointer + relative back-link (git ≥ 2.48) | `..` into another worktree's admin → `backlink_mismatch`; legit relative → trusted | E5.6, OI-WT6 |
+| WT-IT-13 | IT | pointer NUL / UNC | `malformed` / `unc_unsupported`, no UNC access | E5.7-8 |
+| WT-IT-14 | IT | `.git` symlink; admin reached via junction (win32: `fs.symlinkSync(...,'junction')`, POSIX symlink); `base_dir` is a junction | rejected; rejected; resolver rejects at containment (AC-WT5) | FR-WT4, E5.10-13 |
+| WT-IT-15 | IT | `commondir` points to another trusted repo | `commondir_mismatch` | E5.3 |
+| WT-IT-16 | IT | `commondir` absent | trusted if layout consistent | OI-WT5 |
+| WT-IT-17 | IT | `git worktree move` + `repair` → trusted; move without repair → `backlink_mismatch` | | OI-WT6 |
+| WT-IT-18 | IT | win32 only: `base_dir` and open-folder with swapped case | trusted (AC-WT5); skipped on POSIX with explicit reason | BR-WT5 |
+| WT-IT-19 | IT | cache with counting FsLike: 2nd call `readSmall`=0, `lstat`=2 (AC-WT13); touch `.git` → re-verify; delete back-link within TTL → re-verify → rejected; negative entry 5 s; `.git` appears during negative TTL → re-verify | | FR-WT13, BR-WT11 |
+| WT-IT-20 | IT | resolver: BR-07 inside accepted worktree (`..\x`, absolute outside → rejected, AC-WT10); allowlisted base unchanged and `.git` unread; flag off → legacy; `child_process` spies never called; rejection message contains only `<b>` (AC-WT12) | | FR-WT1/6/7/15, BR-WT1/8/10 |
+| WT-IT-21 | IT | **parity**: the whole scenario matrix on backend resolver and extension `resolveWorkspacePath` → same `code` and same `message` (AC-WT11) | | FR-WT14, BR-WT13, TC-702 |
+| WT-IT-22 | IT | **drift guard**: generator output == committed extension files; generated header present | | FR-WT14 |
+| WT-IT-23 | IT | OI-WT2: symlinked spelling of an allowlisted root accepted by both surfaces | | FR-WT4 |
+| WT-IT-24 | IT | `MCP_OPEN_WORKSPACE_FOLDERS` multi-root: worktree of folder[1] trusted; folder not listed rejected; value in request args ignored | | OI-WT1, FR-WT3 |
+| WT-E2E-01 | E2E-API | backend file tool (pattern of `per-tool-base-dir.file-tools`) with `base_dir` = real worktree | success, file under the worktree | AC-WT1, UC-WT1 |
+| WT-E2E-02 | E2E-API | extension `embed_image` (TC-309 adapter) with `base_dir` = real worktree; same forged worktree → verbatim `PATH_REJECTED_OUTSIDE_ALLOWLIST` | | UC-WT7, AC-WT11 |
+
+Regression gates: all existing tests listed under "Must remain unmodified and green" (E2.5); `tsc`, eslint (0 errors; `max-lines` 200 applies to the new files), `size-guard`, `npm run check:worktree-trust`.
+
+#### E8.1 RTM (FSD → module → test)
+
+| Requirement | Module(s) | Tests |
+|-------------|-----------|-------|
+| FR-WT1, BR-WT1 | resolver wiring | WT-IT-07, WT-IT-20 |
+| FR-WT2, UC-WT1 | verifier steps 1-5 | WT-IT-01, 02, WT-UT-01..08 |
+| FR-WT3, BR-WT2 | service/verifier (only disk evidence) | WT-PBT-01, WT-IT-24 |
+| FR-WT4, BR-WT5 | path-fold, extension realpath fix | WT-PBT-02, WT-UT-11, WT-IT-14, 18, 23 |
+| FR-WT5, BR-WT7 | no `child_process` import | WT-IT-20 |
+| FR-WT6, BR-WT8 | resolver `containAndResolve` | WT-IT-20, WT-E2E-01 |
+| FR-WT7, BR-WT10 | messages, service log | WT-UT-12, WT-IT-20 |
+| FR-WT8, BR-WT6 | verifier step 2/3 layout | WT-UT-10, WT-IT-06 |
+| FR-WT9, BR-WT12 | verifier step 3/5 | WT-IT-09 |
+| FR-WT10 | step 1 | WT-IT-10 |
+| FR-WT11 | steps 1/2/4 + cache | WT-IT-05, 08, 19 |
+| FR-WT12, BR-WT9 | git-files, verifier budget | WT-UT-09, 15, WT-IT-11, WT-PBT-03 |
+| FR-WT13, BR-WT11 | cache | WT-PBT-04, WT-UT-14, WT-IT-19 |
+| FR-WT14, BR-WT13 | generator, scenarios | WT-IT-21, 22, WT-E2E-02 |
+| FR-WT15 | config, service | WT-UT-13, 17, WT-IT-20 |
+| BR-WT3 | step 4 | WT-IT-04, 05, 12 |
+| BR-WT4 | step 5 | WT-IT-02, 03 |
+| NFR-WT1/2/3 | verifier, cache | WT-UT-18, WT-PBT-04, WT-IT-19 |
+| NFR-WT4 | sync fs, no spawn | WT-IT-20 |
+| NFR-WT5 | E5 table | WT-IT-04, 13, 14, 15 |
+| NFR-WT6 | path-fold | WT-UT-11, WT-IT-14, 18 |
+| AC-WT1 / 2 / 3 / 4 | | WT-IT-01 / 04 / 06 / 03 |
+| AC-WT5 / 6 / 7 / 8 | | WT-IT-14 + 18 / 08 / 11 / 09 |
+| AC-WT9 / 10 / 11 / 12 / 13 | | WT-IT-10 / 20 / 21 / 20 / 19 |
+
+### E9. Migration and backward compatibility
+
+- **Allowlist hit:** identical code path as before; the trust service is not called, no `.git` read (WT-IT-07, WT-IT-20).
+- **Non-worktree, non-allowlisted dir:** identical rejection and byte-identical message (LEGACY group). Existing tests, including the exact-match `toBe` in `backend-local-tools.base-dir.test.ts`, stay green unchanged.
+- **Behavior change (intended, USER-approved):** a `base_dir` that is a verified worktree of an open/allowlisted repo is now accepted. This also applies in legacy single-root mode (BR-16), where it was rejected before. Other failures gain a suffix only when a worktree `.git` pointer exists.
+- **API:** `PathResolutionOk.trustSource` is optional and additive; `rootSource` enums unchanged; the resolver constructor's 4th parameter is optional.
+- **Extension allowlist mirror:** realpath fix widens acceptance to symlinked spellings of allowlisted roots (parity with backend).
+- **Rollback / kill switch:** `MCP_WORKTREE_AUTOTRUST=0` (env, both surfaces) or `sdlcAgents.workspace.worktreeAutoTrust=false`; no data, schema or on-disk state to migrate. Rollback of the whole feature = revert the commit; the generated mirror reverts with it (`check:worktree-trust` stays green).
+- **Config rollout:** multi-root users need the new `MCP_OPEN_WORKSPACE_FOLDERS` (written by `mcp-config-builder.ts` on next MCP config write); single-root works with no config.
+
+### E10. Open issues (Addendum 5)
+
+| ID | Issue | Owner | Severity |
+|----|-------|-------|----------|
+| OI-WT7 | Main worktree / open folder as `base_dir` is not auto-trusted (FSD scope). Propose: trust `base_dir == open folder`. | SM/BA | Low |
+| OI-WT8 | `WorkspaceAllowlist.contains` calls `realpathSync` on an unlisted UNC `base_dir` (pre-existing; possible SMB/NTLM touch and hang). Recommend a UNC pre-guard in the resolver for non-allowlisted UNC paths. Not changed here. | Security/SA | Medium (pre-existing) |
+| OI-WT9 | Sync fs cannot be pre-empted by the 250 ms budget on a hung mapped network drive (non-UNC). Accepted residual. | SA | Low |
+| OI-WT10 | `mcp.json` env (`MCP_OPEN_WORKSPACE_FOLDERS`) is writable by anyone with workspace write access, like the existing `MCP_WORKSPACE_ROOTS`. Same trust class; documented. | Security | Low |
+| D-WT1..4 | FSD wording/number deviations in E3.2 need BA acknowledgement. | BA | Low |
+| Closed | OI-WT1, 2, 3, 4, 5, 6 (decisions in E3, E7). | | |
+
+### Diagram Index (Addendum 5)
+
+| # | Diagram | Image | Source (editable) |
+|---|---------|-------|-------------------|
+| A5-1 | Sequence - worktree trust verification | [sequence-worktree-trust.png](diagrams/sequence-worktree-trust.png) | [sequence-worktree-trust.drawio](diagrams/sequence-worktree-trust.drawio) |
+| A5-2 | Component - worktree trust library, surfaces, parity tooling | [component-worktree-trust.png](diagrams/component-worktree-trust.png) | [component-worktree-trust.drawio](diagrams/component-worktree-trust.drawio) |
+
+### Traceability (Addendum 5)
+
+| Requirement (FSD Addendum 5) | Where designed |
+|------------------------------|----------------|
+| FR-WT1..FR-WT13 | E2-E5 (verifier, cache, resolver wiring) |
+| FR-WT14 / BR-WT13 | E2.4, WT-IT-21/22 |
+| FR-WT15 | E3 (OI-WT3), E6 |
+| OI-WT1..6 | E3; OI-WT4 also E7 |
