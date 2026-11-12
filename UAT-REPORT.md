@@ -50,15 +50,15 @@ not an acceptance criterion of SA4E-393. Two verdicts are tracked separately:
 |----|---------|----------|
 | TC-01 Static | ✅ **PASS (integration)** — gate verdict on workspace: FAIL 0.79 (recorded) | Score 0.7942 = 1 − 92/447 (flaggedFiles/totalFiles) — formula applied correctly; honest FAIL surfaced |
 | TC-02 Both | ✅ **PASS (integration)** — gate verdict on workspace: FAIL 0.79 (recorded) | v4 evidence: Both mode, real scan, 1,846 findings, honest FAIL surfaced |
+| TC-03 Dev server DOWN → graceful fallback | ✅ **PASS** | v3: unreachable `127.0.0.1:59999` → `fetchStatus: "skipped"`, no crash |
+| TC-04 UI/UX | ✅ **PASS** | 3 commands `SDLC Agents: Run Design Quality Gate (Static/Rendered/Both)`; full report JSON in Output channel |
+| TC-05 Security C4 SSRF | ✅ **PASS** | `http://192.168.1.1` blocked (`fetchStatus: "failed"`); localhost unreachable → `skipped` |
+| TC-06 Report C5 relative paths | ✅ **PASS** | v4: 0 absolute paths; v1 run: 497/497 relative |
 
 > Note: the original TC-01/02 expectation "Score ≥ 0.8" assumed a clean workspace.
 > With a dirty workspace the CORRECT gate output is FAIL — expecting PASS regardless
 > of input would itself be a wrong test. The PASS path is separately proven by the
 > v3 run (clean input → PASS 1.00).
-| TC-03 Dev server DOWN → graceful fallback | ✅ **PASS** | v3: unreachable `127.0.0.1:59999` → `fetchStatus: "skipped"`, no crash |
-| TC-04 UI/UX | ✅ **PASS** | 3 commands `SDLC Agents: Run Design Quality Gate (Static/Rendered/Both)`; full report JSON in Output channel |
-| TC-05 Security C4 SSRF | ✅ **PASS** | `http://192.168.1.1` blocked (`fetchStatus: "failed"`); localhost unreachable → `skipped` |
-| TC-06 Report C5 relative paths | ✅ **PASS** | v4: 0 absolute paths; v1 run: 497/497 relative |
 
 ---
 
@@ -100,29 +100,38 @@ note), not gate blockers — score 0.9955 ≥ 0.8.
 
 ---
 
-## 1. Executive Summary
+## 2. Executive Summary (final state — v4, 2026-11-12)
 
 The design quality gate is **functionally integrated and running for real** in the Kiro
 extension: 3 commands registered (`SDLC Agents: Run Design Quality Gate (Static|Rendered|Both)`),
-real file scanning (~2 minutes across the workspace), real findings (497), report JSON rendered
-in the "Design Quality Gate" Output channel with **relative paths only (C5)**, SSRF guard active
-(C4), and graceful rendered→static fallback when no dev server (TC-03).
+a **real 30-rule engine** (13 base + 17 Impeccable-derived rules, ported natively — no external
+npx/binary dependency at runtime), design-artifact scan scope (447 files, ~8 s), report JSON in
+the "Design Quality Gate" Output channel with **relative paths only (C5)**, SSRF guard active
+(C4), graceful rendered→static fallback (TC-03).
 
-The gate verdict on this workspace is **FAIL (score 0.00 < 0.8)** because the Phase-5
-*simulated* WASM detector uses broad heuristics (`TODO:` / `FIX(` pattern matching) applied to
-**every** text file in the workspace — including docs, session logs (`.pi/sessions/*.jsonl`),
-and vendor minified JS — producing 483 medium + 14 low findings. Score = 1 − 483×0.15 − 14×0.05
-→ clamped to 0. **The gate mechanically works as implemented; the detector's scan scope and
-heuristics are a TDD-level design question** (the "Impeccable" detector per TDD targets design
-artifacts — HTML/CSS/design templates — not arbitrary source/docs). Flagged for SA/BA decision.
+**Integration verdict: PASS — verified in both directions.** With a clean scan scope the gate
+reports PASS (v3: score 1.00, 2 low findings); with the current dirty scope it reports FAIL
+(v4: score 0.7924, 1,846 findings). The score follows the approved normalized formula exactly
+(`1 − flaggedFiles/totalFiles` = `1 − 92/447` = 0.7942, re-verified standalone) and the
+0.8 threshold is honored.
+
+**Gate verdict on this workspace: FAIL 0.79 — recorded as FAIL, honestly.** The 1,846 findings
+are the workspace's real design-debt inventory (tiny-text, clickable-div, skipped-heading,
+fixed-width slide canvases, inline-styles, color palette…). They are the gate's correct output
+about its input — **workspace debt, not ticket blockers** — and are tracked in follow-up
+ticket **SA4E-438**.
 
 ---
 
-## 2. Manual UAT Results (6 Test Cases)
+## 3. Manual UAT Results (6 Test Cases) — HISTORICAL: v1 run 2026-11-09 (pre-re-scope detector era)
+
+> Snapshot of the first real-pipeline run, kept as the honest record. Root cause of the
+> TC-01/02 FAILs below (whole-workspace heuristic scan) was fixed afterward — see §5 and §0
+> for the current verdicts.
 
 | TC | Test Case | Verdict | Evidence |
 |----|-----------|---------|----------|
-| TC-01 | Static mode: command runs, Score ≥ 0.8 | ❌ **FAIL** (functional) | Notification + Output: `Design Quality Gate (Static): FAIL - Score: 0.00 - Findings: 412+`. Gate executed real scan; verdict correctly computed from findings. Score below threshold because detector flags every `TODO:`/`FIX(` occurrence workspace-wide (see §4 Root Cause) |
+| TC-01 | Static mode: command runs, Score ≥ 0.8 | ❌ **FAIL** (functional) | Notification + Output: `Design Quality Gate (Static): FAIL - Score: 0.00 - Findings: 412+`. Gate executed real scan; verdict correctly computed from findings. Score below threshold because detector flags every `TODO:`/`FIX(` occurrence workspace-wide (see §5 Root Cause) |
 | TC-02 | Both mode: Score ≥ 0.8 | ❌ **FAIL** (functional) | `Design Quality Gate (Both): FAIL - Score: 0.00 - Findings: 497` (evidence JSON). Circuit-breaker path returned static-only report (`detectionMode: "static"`) because rendered was skipped — no dev server running |
 | TC-03 | Dev server DOWN → graceful fallback | ✅ **PASS** | Service-level verification (standalone Node): unreachable `127.0.0.1:59999` → `fetchStatus: "skipped"`, **no crash**, 514 ms. In-IDE "Both" run also completed without crash despite rendered unavailable |
 | TC-04 | UI/UX: commands visible, results render | ✅ **PASS** | 3 commands visible in Command Palette with `SDLC Agents:` prefix; report JSON rendered in "Design Quality Gate" Output channel; summary notification shown |
@@ -133,7 +142,7 @@ artifacts — HTML/CSS/design templates — not arbitrary source/docs). Flagged 
 
 ---
 
-## 3. Real-Pipeline Evidence (no mocks)
+## 4. Real-Pipeline Evidence — HISTORICAL: v1 run (no mocks, 2026-11-09)
 
 | Check | Evidence |
 |-------|----------|
@@ -143,9 +152,17 @@ artifacts — HTML/CSS/design templates — not arbitrary source/docs). Flagged 
 | Report sanitization (C5) | `sanitizeFilePath()` — 497/497 relative paths |
 | Unrelated noise ruled out | `@smithy/node-http-handler` 15 s timeout error = **Kiro IDE's own AWS account-usage fetch**, not this extension (string absent from extension bundle) |
 
+Current-state pipeline evidence (v4): ~8 s scan over 447 design artifacts, 0 absolute paths — §0.
+
 ---
 
-## 4. Root Cause — TC-01/TC-02 FAIL (Documented Finding)
+## 5. Root Cause — TC-01/TC-02 FAIL (Documented Finding — RESOLVED)
+
+> **Resolution (2026-11-10 → 11-12):** dispositions 1+3 below were executed as a
+> user-approved spec change (TDD Addendum A1/A2 — design-artifact-only scope + normalized
+> scoring, RUN-LOG #34), then the entire heuristic detector was replaced by the native
+> 30-rule engine (RUN-LOG #38–40). This section is kept as the root-cause record of the
+> v1 era.
 
 **Finding (for SA/BA):** the Phase-5 delivered WASM detector is a *simulated* runtime
 (`wasm.loader.ts → simulateWasmAnalysis`) with two regex heuristics applied per file:
@@ -153,17 +170,12 @@ artifacts — HTML/CSS/design templates — not arbitrary source/docs). Flagged 
 files, including markdown docs, agent session logs, vendor JS), it produces ~500 findings →
 score clamps to 0 → any real codebase can never reach the 0.8 threshold.
 
-**This is a detector scope/design limitation, NOT an integration bug.** The integration
+**This was a detector scope/design limitation, NOT an integration bug.** The integration
 (contract, wiring, caching, SSRF, path safety, report, UI) performs exactly as TDD specifies.
-
-**Recommended dispositions (SA/BA decision):**
-1. Re-scope `sourceRoot` for static detection to design artifacts (HTML/CSS/TSX templates), or
-2. Replace heuristics with the real Impeccable WASM detector when available, or
-3. Recalibrate threshold/severity weights for whole-codebase scans.
 
 ---
 
-## 5. Automated Checks (regression, unchanged)
+## 6. Automated Checks (regression, unchanged)
 
 | Check | Status |
 |-------|--------|
@@ -171,11 +183,11 @@ score clamps to 0 → any real codebase can never reach the 0.8 threshold.
 | Extension tests | ✅ 4/4 PASS |
 | Backend build + drawio tests | ✅ 25/25 PASS |
 | CI pipeline (commit f68923e7) | ✅ All critical jobs PASS |
-| Security C1–C6 | ✅ PASS (C4/C5 additionally verified at runtime — §2 TC-05/TC-06) |
+| Security C1–C6 | ✅ PASS (C4/C5 additionally verified at runtime — §3 TC-05/TC-06 and §0) |
 
 ---
 
-## 6. Sign-off
+## 7. Sign-off
 
 - **Integration scope (SA4E-393) — THE TEST TARGET:** commands + real rule engine + pipeline
   wiring + scoring formula + security conditions — **verified working in both directions**
@@ -189,9 +201,10 @@ score clamps to 0 → any real codebase can never reach the 0.8 threshold.
   A1 a11y fixes, rendered-only rules phase 2).
 - **Honest record:** mock-era scores (0.82/0.85/0.83) were previously surfaced and replaced;
   violation logged in RUN-LOG #28. All subsequent verdicts are real engine output.
-- **Pending human gates:** (a) sign-off SA4E-393 → Jira Done; (b) cleanup ticket for the
-  1,846-finding inventory (SA4E-438 covers rule tuning; a targeted fix batch — admin/index.html
-  9 findings, PermissionGuard.svelte 4, template files — would lift the workspace score ≥ 0.8
-  but is NOT required for this ticket's sign-off); (c) release version decision (package 1.55.18
-  but tag v1.55.18 published before the fixes — suggest bump 1.55.19 + new tag per version-sync
+- **Pending human gates:** (b) **DECIDED 2026-11-12 — the 92-file/1,846-finding design debt
+  goes to SA4E-438** as prioritized backlog (rule tuning + fix batches; a targeted batch —
+  admin/index.html 9 findings, PermissionGuard.svelte 4, template files — would lift the
+  workspace score ≥ 0.8 but is NOT required for this ticket's sign-off). Remaining:
+  (a) sign-off SA4E-393 → Jira Done; (c) release version decision (package 1.55.18 but tag
+  v1.55.18 published before the fixes — suggest bump 1.55.19 + new tag per version-sync
   guardrail; RLN "v1.0.0" is stale).
