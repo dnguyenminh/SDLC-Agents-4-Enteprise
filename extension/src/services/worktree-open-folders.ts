@@ -20,7 +20,6 @@ const MAX_BYTES = 4096;
 /** vscode is only resolvable inside the extension host; tests fall back gracefully. */
 function getVscode(): any {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     return require("vscode");
   } catch (e: any) {
     console.debug(`[worktree-open-folders] vscode require failed: ${e?.message ?? e}`);

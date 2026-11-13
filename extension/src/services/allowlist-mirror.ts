@@ -73,7 +73,6 @@ export function getExtensionAllowlistRoots(): readonly string[] {
 
 function readSettingRoots(): string[] {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const vscode = require("vscode");
     const cfg = vscode?.workspace?.getConfiguration?.("sdlcAgents.workspace");
     const value = cfg?.get?.("workspaceRoots");
