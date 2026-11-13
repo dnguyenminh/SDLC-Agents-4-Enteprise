@@ -1,4 +1,0 @@
-# Node.js tarball pre-downloaded for Docker builds (not committed — 30MB binary)
-# Download before building: https://nodejs.org/dist/v22.23.4/SHASUMS256.txt
-node-*-linux-x64.tar.xz
-node-*-linux-x64.tar.gz
