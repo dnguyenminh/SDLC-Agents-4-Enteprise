@@ -96,11 +96,6 @@ describe('config', () => {
     expect(loadTrustConfig({}, () => { throw new Error('x'); }).enabled()).toBe(false);
     expect(loadTrustConfig({}).enabled()).toBe(true);
   });
-  it('WT-UT-13 open folders: delimiter split, empties dropped, cap 16', () => {
-    const many = Array.from({ length: 20 }, (_, i) => `/f${i}`).join(path.delimiter);
-    expect(loadTrustConfig({ MCP_OPEN_WORKSPACE_FOLDERS: many }).openFolders).toHaveLength(16);
-    expect(loadTrustConfig({ MCP_OPEN_WORKSPACE_FOLDERS: ` /a${path.delimiter}${path.delimiter}/b ` }).openFolders).toEqual(['/a', '/b']);
-  });
 });
 
 describe('TrustCache', () => {

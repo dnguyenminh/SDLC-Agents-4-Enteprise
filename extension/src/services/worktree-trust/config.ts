@@ -23,8 +23,6 @@ export function parseAutotrustFlag(value: string | undefined): FlagResult {
 export interface TrustConfig {
   /** Effective switch (env AND setting); a throwing setting reader disables. */
   enabled(): boolean;
-  /** Raw `MCP_OPEN_WORKSPACE_FOLDERS` entries (≤16), set by the launcher — never by a request. */
-  readonly openFolders: readonly string[];
   /** True when the env flag held an unrecognised value (service logs one warning). */
   readonly invalidFlag: boolean;
 }
@@ -32,10 +30,8 @@ export interface TrustConfig {
 /** Build the config once at construction; `settingEnabled` is the optional host setting (extension). */
 export function loadTrustConfig(env: NodeJS.ProcessEnv, settingEnabled?: () => boolean): TrustConfig {
   const flag = parseAutotrustFlag(env['MCP_WORKTREE_AUTOTRUST']);
-  const raw = (env['MCP_OPEN_WORKSPACE_FOLDERS'] ?? '').split(path.delimiter).map((s) => s.trim()).filter((s) => s !== '');
   return {
     enabled: () => flag.enabled && readSetting(settingEnabled),
-    openFolders: raw.slice(0, MAX_OPEN_FOLDERS),
     invalidFlag: flag.invalid,
   };
 }
