@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.18.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.20.vsix
 ```
 
 ### 3. Use
@@ -76,8 +76,23 @@ MIT
 - 🌉 **Extension migration** — `drawio_auto_layout` + `drawio_export_png` available via MCP bridge (`execute_dynamic_tool`)
 - 🔐 **Multi-worktree path resolution** (SA4E-394) — `base_dir`/`workspace_root` support, path traversal prevention (CWE-22)
 - ⚙️ **Configurable limits** — `SA4E_ELK_MAX_NODES=500`, `SA4E_ELK_TIMEOUT_MS=10000`, `SA4E_ELK_SPACING_MAX=500`
-- ✅ **Tests**: 148 drawio tests PASS (80 unit + 4 golden + 3 integration + 2 E2E + 34 UAT automation), CI 7/7 jobs green
-- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.18`
+- ✅ **Tests**: 171 drawio tests PASS (80 unit + 4 golden + 3 integration + 2 E2E + 34 UAT automation + QA-11 re-enabled), CI 7/7 jobs green
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.20`
+
+### v1.55.20 (2026-11-13)
+
+**SA4E-406 Round 4 Complete + CI Trigger**
+
+- **F1 (HIGH)**: batch XML writer `rewriteCells` (drawio-xml-rewrite.ts) — 1-pass scan reduces primitive 158,092 ms → 26 ms (~6,016x), sanitizeDrawioXml 122,992 ms → 836 ms (~147x), full preflight 887 ms. Output byte-identical.
+- **F2 (MEDIUM)**: file-level symlink guard (`checkSymlinkGuardForPath`) resolves symlink real target via `realpathSync`; internal links allowed, escapes rejected with `PATH_REJECTED_OUTSIDE_WORKSPACE:`.
+- **F3 (MEDIUM)**: backend `drawio-renderers.ts` now uses `execFileSync` with argument array instead of shell command string.
+- **F4/F5 (MEDIUM-LOW)**: drawio handlers accept `ctx` and forward `ctx?.sessionRoot` into `resolveWorkspacePath`; export handler signature corrected.
+- **F9 (LOW)**: `root-trust.ts:119` wraps `normalizedRoot` with `sanitizeLogText()`.
+- **PD-QA1 (Major)**: `scope='ports'` preserves node positions; `enforceFinalGate` now forwards `opts.portsOnly`; QA-11 re-enabled and passing.
+- **F2 rework**: internal symlinks (e.g. node_modules/.bin-style) pass guard; escaping symlinks rejected. New test `fs-guards.symlink-file.test` verifies both cases.
+
+- 📦 **VSIX**: 1.55.20 build via `publish.yml`; regenerate 23 diagram via fixed `drawio_auto_layout` tool.
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.20`
 
 ### v1.55.16 (2026-11-04)
 
