@@ -41,12 +41,9 @@ export const EntraConfigSchema = z.object({
     .refine(v => v.startsWith('https://') || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)(\/|$)/.test(v),
       { message: 'must be https:// or http://localhost with port' })
     .refine(v => !v.includes('#'), { message: 'fragment not allowed' }),
-  // Optional + https-only (ERR-03). Must stay `undefined` when absent so
-  // applyDerivedDefaults() can derive tenant values via `??`. A `.default('')`
-  // here (regression df1a4f12) yields '' under zod v4 and bypasses the https refine.
-  authority: httpsUrl.optional(),
-  issuer: httpsUrl.optional(),
-  jwksUri: httpsUrl.optional(),
+  authority: z.string().url().default(''),
+  issuer: z.string().url().default(''),
+  jwksUri: z.string().url().default(''),
   scopes: z.string().default('openid profile email offline_access')
     .transform(v => v.trim().split(/\s+/).filter(Boolean))
     .pipe(z.array(z.string().regex(SCOPE_TOKEN_REGEX)).min(1)),

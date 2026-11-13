@@ -11,7 +11,6 @@ Multi-agent SDLC pipeline with specialized agents (BA, TA, SA, QA, DEV, DevOps, 
 5. **Quality Gates** — Verify after each phase
 6. **No Workarounds** — Root cause only
 7. **Self-Learning** — KB first, ingest after
-8. **UI Design Gate** — Agents editing design artifacts MUST run design_gate_run (MCP tool) before completion; FAIL must be fixed or justified; SM blocks Phase 5/6 without gate evidence
 
 ## Architecture
 - Backend: Kotlin/Ktor/SQLDelight/Koin (shared/ + server/)

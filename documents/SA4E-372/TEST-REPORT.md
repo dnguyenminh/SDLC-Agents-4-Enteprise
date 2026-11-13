@@ -83,7 +83,7 @@ Raw result:
 | Total tests (full suite) | 3,261 (3,255 passed + 6 skipped) |
 | Passed | 3,255 |
 | Failed | **0** |
-| Skipped | 6 — pre-existing, environment-conditional (`live-content-proxy.test.ts` required `LIVE_BACKEND` env at the time; since moved to the e2e suite as `live-content-proxy.e2e.test.ts`; 1 `it.skip` in `cross-process.e2e.test.ts`) — unrelated to SA4E-372 |
+| Skipped | 6 — pre-existing, environment-conditional (`live-content-proxy.test.ts` requires `LIVE_BACKEND` env; 1 `it.skip` in `cross-process.e2e.test.ts`) — unrelated to SA4E-372 |
 | Duration | 324.85s (~5m 25s) |
 
 ### 2.2 SA4E-372 Test Breakdown
@@ -111,9 +111,9 @@ Raw result:
 
 ### 2.4 Working-Tree Notes for the Fresh Run (disclosed for honesty)
 
-- The fresh run executed on HEAD `6785f61` (**extension v1.55.1**, 2026-10-22) **plus** uncommitted changes from an unrelated workstream present in the working tree: modified `extension/src/services/Base64ProxyService/*` (4 files), `extension/src/services/WrapperServer/tool-router.ts`, and 3 new untracked test files (`base64-proxy.dynamic-catalog.test.ts`, `live-content-proxy.test.ts` (now `live-content-proxy.e2e.test.ts`, e2e suite), `wrapper-server.dynamic-export.test.ts`). All passed; none touch chat/checkpoint code.
+- The fresh run executed on HEAD `6785f61` (**extension v1.55.1**, 2026-10-22) **plus** uncommitted changes from an unrelated workstream present in the working tree: modified `extension/src/services/Base64ProxyService/*` (4 files), `extension/src/services/WrapperServer/tool-router.ts`, and 3 new untracked test files (`base64-proxy.dynamic-catalog.test.ts`, `live-content-proxy.test.ts`, `wrapper-server.dynamic-export.test.ts`). All passed; none touch chat/checkpoint code.
 - **SA4E-372-relevant paths were verified CLEAN** before the run (`git diff` empty): `extension/webview-assets/chat/*` and all 4 SA4E-372 test files match commit `2363101`/`07b88e8` exactly.
-- 6 skipped tests are pre-existing environment-conditional skips (`LIVE_BACKEND` not set at the time; the suite now runs via `npm run test:e2e`), unrelated to this ticket.
+- 6 skipped tests are pre-existing environment-conditional skips (`LIVE_BACKEND` not set), unrelated to this ticket.
 - No SA4E-372 failures existed to exclude in the fresh run (**0 failures in the entire suite**).
 
 ---

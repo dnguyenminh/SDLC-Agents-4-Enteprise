@@ -15,13 +15,14 @@
  * stable public façade (same import path and symbols as before the split).
  */
 export { STREAM_WRITE_MAX_BYTES } from "./backend-local-tools/constants";
-export type { LocalToolDefinition } from "./backend-local-tools/registry";
+export type { LocalToolDefinition, ToolCallContext } from "./backend-local-tools/registry";
 export {
   registerLocalTool,
   isLocalTool,
   executeLocalTool,
   getLocalToolDefinitions,
   getVisibleLocalToolDefinitions,
+  mergeLocalToolDefinitions,
 } from "./backend-local-tools/registry";
-export { checkSymlinkGuard, checkSymlinkGuardBeforeEnsureDir } from "./backend-local-tools/fs-guards";
+export { checkSymlinkGuard } from "./backend-local-tools/fs-guards";
 export { embedMarkdownImages } from "./backend-local-tools/embed-image";

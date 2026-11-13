@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-406 |
 | Title | drawio_auto_layout: detector precision + verify loop + ELK compound + extension migration |
 | Author | SA Agent — Solution Architect |
-| Version | 1.0 |
-| Date | 2026-11-09 |
+| Version | 1.1 |
+| Date | 2026-11-12 |
 | Status | Draft |
 | Related BRD | documents/SA4E-406/BRD.md |
 | Related FSD | documents/SA4E-406/FSD.md |
@@ -24,6 +24,7 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-11-09 | SA Agent | Initial TDD creation from BRD/FSD and codebase analysis |
+| 1.1 | 2026-11-12 | SA Agent | Re-pointed deleted backend test fixtures references to ticket corpus diagrams (deployment.drawio, sequence-verify-loop.drawio); legacy backend fixtures dir now empty |
 
 ---
 
@@ -1312,7 +1313,7 @@ Not applicable — no database for drawio tools.
 
 - **E2E Setup**: `backend/tests/e2e/setup/` — shared server start, DB seed, auth token generation
 - **Helpers**: `backend/tests/e2e/helpers/` — `callTool()`, `assertLayoutFixed()`, `createTestDiagram()`
-- **Fixtures**: `backend/tests/e2e/fixtures/` — sample .drawio files for each scenario
+- **Fixtures**: `documents/SA4E-406/diagrams/deployment.drawio` and `documents/SA4E-406/diagrams/sequence-verify-loop.drawio` — surviving corpus drawio files (replacing deleted backend test fixtures)
 
 ### 11.4 E2E-API Test Design for drawio_auto_layout
 

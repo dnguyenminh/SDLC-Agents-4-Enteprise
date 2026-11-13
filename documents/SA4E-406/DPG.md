@@ -9,8 +9,8 @@
 | Jira Ticket | SA4E-406 |
 | Title | drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration |
 | Author | DevOps Agent |
-| Version | 1.0 |
-| Date | 2026-11-08 |
+| Version | 1.55.20 |
+| Date | 2026-11-12 |
 | Status | Draft |
 | Related TDD | documents/SA4E-406/TDD.md (if exists) |
 
@@ -21,6 +21,8 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-11-08 | DevOps Agent | Initiate document — based on merge commit 3061986b |
+| 1.1 | 2026-11-12 | DevOps Agent | Re-pointed stale backend test-fixture references to surviving diagram corpus (deployment.drawio, sequence-verify-loop.drawio) |
+| 1.55.20 | 2026-11-13 | DevOps Agent | SA4E-335/SA4E-406: CI Trivy gate red → green — soupsieve 2.10 → 4.0.1 in both MCP venvs (CVE-2026-126190 fixed by upgrade, not exemption); restored `trivyignores: .trivyignore` wiring; MARKITDOWN_MCP_VERSION back to 0.0.1a8; version sync → 1.55.20 |
 
 ---
 
@@ -59,6 +61,22 @@ SA4E-406 delivers critical improvements to the `drawio_auto_layout` MCP tool:
 5. **Multi-worktree Path Resolution** (SA4E-394) — `base_dir` + `workspace_root` support
 
 6. **Security** — Path traversal prevention (CWE-22), configurable limits
+
+> **Security hardening (SA4E-335):** soupsieve 2.10 (CVE-2026-126190, HIGH) was present in both MCP venvs of the backend
+> production image and failed the CI Trivy gate (run 43436002707). Fixed by upgrading soupsieve to 4.0.1 in both
+> `/opt/markitdown-venv` and `/opt/markdown-exporter-venv`. On the interim Debian 12 bookworm image (Python 3.11.2)
+> this required `pip install --ignore-requires-python` (since soupsieve >=3.0.2 declares Requires-Python >=3.11.5),
+> superseded by the Debian 13 trixie migration below where Python 3.13.5 satisfies the floor natively.
+> `importlib.metadata` assertion + descendant-selector smoke test verify the upgrade — not by Trivy
+> exemption. The Trivy workflow input `trivyignores: .trivyignore` was restored. Existing SA4E-385 accepted-risk entries
+> (body-parser, undici, zod, GHSA aliases) are retained in `.trivyignore`; CVE-2026-126190 is NOT added there.
+
+> **Base-image migration (SA4E-335):** The backend Docker image was migrated from `node:22-slim` (Debian 12 bookworm,
+> Python 3.11.2) to `debian:trixie-slim` (Debian 13) + the official Node 22.23.4 binary tarball (SHA-256 pinned,
+> `NODE_TARBALL_SHA256`). Python in the runtime is now 3.13.5 (trixie), which natively satisfies soupsieve's
+> `Requires-Python >=3.11.5` floor — the `--ignore-requires-python` override was removed. Trivy gate re-validated green
+> (0 CRITICAL, 0 HIGH with `aquasec/trivy:0.70.0`). See `documents/SA4E-335/BUILD-AND-REGISTRY.md` for the full pin
+> and digest-update process.
 
 ### 1.2 Deployment Scope
 
@@ -148,7 +166,7 @@ SA4E-406 delivers critical improvements to the `drawio_auto_layout` MCP tool:
 
 ### 4.3 Verification Queries
 
-> Verification: Run drawio tools on test fixtures, verify output XML validity.
+> Verification: Run drawio tools on `documents/SA4E-406/diagrams/deployment.drawio` and `documents/SA4E-406/diagrams/sequence-verify-loop.drawio`, verify output XML validity.
 
 ### 4.4 Rollback Scripts
 
@@ -207,42 +225,34 @@ SA4E-406 delivers critical improvements to the `drawio_auto_layout` MCP tool:
 
 ### 5.3 Docker Deployment (if applicable)
 
-```dockerfile
-# Dockerfile for Backend MCP Server with drawio tools
-FROM node:22-alpine AS builder
+The backend Docker image is built from `backend/Dockerfile` (single source of truth),
+which uses `debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2`
+(Debian 13 trixie, glibc) + the official Node v22.23.4 linux-x64 tarball fetched in-build
+and verified against SHA-256 `1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce`.
+The image extracts Node to `/usr/local` and builds both MCP venvs (markitdown-mcp,
+markdown-exporter-mcp-local) at Python 3.13.5. See `backend/Dockerfile` for the full
+multi-stage definition (8 stages: node-runtime, base, deps, build, mcp-python,
+production, development, test).
 
-WORKDIR /app
-COPY backend/package.json backend/package-lock.json* ./
-RUN npm ci --omit=dev
+```bash
+# Build the production image (run from backend/):
+docker build --target production -t sa4e-backend:local .
 
-COPY backend/src ./src
-COPY backend/tsconfig.json ./
-RUN npm run build
-
-FROM node:22-alpine
-
-WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY backend/package.json ./
-
-# Install draw.io CLI for export_png (optional)
-# RUN apk add --no-cache openjdk11 && npm install -g @drawio/cli
-
-ENV CODE_INTEL_PORT=9183 \
-    SA4E_ELK_MAX_NODES=500 \
-    SA4E_ELK_TIMEOUT_MS=10000 \
-    SA4E_ELK_SPACING_MAX=500
-
-EXPOSE 9183
-
-CMD ["node", "dist/index.ts"]
+# Run the production image (/health on port 48721):
+docker run --rm -p 48721:48721 sa4e-backend:local
+curl -fsS http://127.0.0.1:48721/health
 ```
 
 **Docker configuration notes:**
-- Image size: ~150MB (alpine + node 22)
-- ENV variables configurable at container start
-- Port mapping: `-p 9183:9183`
+- Base: Debian 13 trixie (glibc) — NOT alpine. Alpine was dropped because it lacks
+  glibc (incompatible with native modules such as bcrypt/sqlite3 and manylinux-only
+  wheels like onnxruntime/magika) and previously removed the Python runtime needed by
+  the MCP stdio child servers (ENOENT).
+- Node: v22.23.4 from official tarball (SHA-256 pinned), extracted to `/usr/local`.
+- Python: 3.13.5 (trixie) — installed only in `production` for the MCP venvs.
+- ENV variables configurable at container start: `PORT`, `INDEX_CONCURRENCY_LIMIT`,
+  `TRANSFORMERS_CACHE`, `PYTHONUNBUFFERED`.
+- Port mapping: `-p 48721:48721`
 - Volume mount for diagrams: `-v ${DIAGRAMS_DIR}:/workspace/documents`
 
 ### 5.4 Configuration Changes

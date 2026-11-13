@@ -6,36 +6,20 @@
  */
 import { LocalToolDefinition } from "./registry";
 import { FILE_PATH_SCHEMA_DESCRIPTION } from "../services/PathResolver";
+import { baseDirSchemaProperties } from "../services/tool-descriptions";
 
-const BASE_DIR_SCHEMA = (pathArg: string) => ({
-  base_dir: {
-    type: "string",
-    description:
-      `Optional workspace root to resolve relative ${pathArg} against. Must be ` +
-      "registered in the server allowlist (MCP_WORKSPACE_ROOTS). Relative values " +
-      "are normalized to absolute. Example: /home/user/project-worktree-B",
-  },
-  workspace_root: {
-    type: "string",
-    description:
-      `Deprecated alias of base_dir (same semantics — optional workspace root to ` +
-      `resolve relative ${pathArg} against; must be in the MCP_WORKSPACE_ROOTS ` +
-      "allowlist). Ignored when base_dir is present. " +
-      "Example: /home/user/project-worktree-B",
-  },
-});
 
 export function streamWriteFileDefinition(): LocalToolDefinition {
   return {
     name: "stream_write_file",
-    description: "Write or append content to a local workspace file (creates parent dirs). Path can be relative to workspace root.",
+    description: "Write (overwrite) or append text content to a file in the local workspace, creating missing parent directories. Use for large documents instead of passing them through other tools. Relative file_path resolves against the workspace root (or base_dir); paths outside the root/allowlist are rejected.",
     inputSchema: {
       type: "object",
       properties: {
         file_path: { type: "string", description: FILE_PATH_SCHEMA_DESCRIPTION },
-        content: { type: "string", description: "Content to write" },
-        mode: { type: "string", enum: ["write", "append"], default: "write" },
-        ...BASE_DIR_SCHEMA("file_path"),
+        content: { type: "string", description: "Full text content to write or append (UTF-8)." },
+        mode: { type: "string", enum: ["write", "append"], default: "write", description: "\"write\" replaces the file; \"append\" adds to the end (file is created if missing)." },
+        ...baseDirSchemaProperties("file_path"),
       },
       required: ["file_path", "content"],
     },
@@ -45,7 +29,7 @@ export function streamWriteFileDefinition(): LocalToolDefinition {
 export function embedImageDefinition(): LocalToolDefinition {
   return {
     name: "embed_image",
-    description: "Replace local image refs in markdown with base64 data URIs.",
+    description: "Read a markdown file from the local workspace, replace every local image reference (![alt](relative/path.png)) with an inline base64 data URI, and write the result to output_path. Remote (http/https) and already-embedded images are left unchanged. The source file is not modified.",
     inputSchema: {
       type: "object",
       properties: {
@@ -56,7 +40,7 @@ export function embedImageDefinition(): LocalToolDefinition {
             FILE_PATH_SCHEMA_DESCRIPTION +
             " Defaults to <file_path> with '-embedded' inserted before the extension.",
         },
-        ...BASE_DIR_SCHEMA("file_path"),
+        ...baseDirSchemaProperties("file_path"),
       },
       required: ["file_path"],
     },

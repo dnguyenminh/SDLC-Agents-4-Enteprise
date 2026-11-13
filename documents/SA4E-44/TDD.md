@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-44 |
 | Title | Persistent Task Queue cho KB Ingest + Remove CodeIntelModule from Backend |
 | Author | SA Agent |
-| Version | 2.1 |
-| Date | 2026-07-17 |
+| Version | 2.2 |
+| Date | 2026-11-14 |
 | Status | Draft |
 | Related BRD | BRD-v3-SA4E-44.docx |
 | Related FSD | FSD-v2.2-SA4E-44.docx |
@@ -35,6 +35,7 @@
 | 1.0 | 2026-07-17 | SA Agent | Initial TDD — Task Queue only |
 | 2.0 | 2026-07-17 | SA Agent | **FULL REWRITE** — Dual scope aligned with FSD v2.2 |
 | 2.1 | 2026-07-17 | SA Agent | Security fixes — SEC-01 (mandatory API key auth), SEC-02 (task payload schema validation), SEC-07 (git command injection prevention) |
+| 2.2 | 2026-11-14 | SA Agent | Align backend runtime reference with Node 22.23.4 (SA4E-335 migration: debian:trixie-slim base image + Node v22.23.4, Python 3.13.5) |
 
 ---
 
@@ -60,7 +61,7 @@ This TDD specifies the technical design for SA4E-44: a dual-scope change impleme
 
 | Layer | Technology | Version |
 |-------|-----------|---------|
-| Language (Backend) | TypeScript / Node.js | ES2022 / Node 20+ |
+| Language (Backend) | TypeScript / Node.js | ES2022 / Node 22.23.4 |
 | Framework | Hono | 4.x |
 | Database | PostgreSQL via DatabaseAdapter | 15+ |
 | Protocol | MCP StreamableHTTP (JSON-RPC 2.0) | 1.0 |

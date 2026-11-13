@@ -2,42 +2,84 @@
 # =============================================================================
 # SA4E-335 Backend Dockerfile — Node.js 22.23.4 + Hono Code Intelligence MCP Server
 # -----------------------------------------------------------------------------
-# Multi-stage build (7 stages): base, deps, build, mcp-python, production,
-# development, test. `production` is the SOLE CI push target (TDD AD-2).
+# Multi-stage build (8 stages): node-runtime, base, deps, build, mcp-python,
+# production, development, test. `production` is the SOLE CI push target (TDD AD-2).
 # Build-only tooling never reaches the runtime image.
 #
 # Design decisions (TDD §3.2 / Security Review):
-#   - AD-1 : base = node:22.23.4-slim (Debian/glibc) so native modules such as
-#            onnxruntime-node link against glibc (musl/alpine is incompatible).
-#   - SEC-02 (Critical): base image pinned by immutable sha256 DIGEST, not only
-#            the mutable tag, to keep the build hermetic/reproducible. The human
-#            readable tag is kept as a comment; update the digest via Dependabot/
-#            Renovate (see documents/SA4E-335/BUILD-AND-REGISTRY.md).
-#   - SEC-05 (High): `git` and the compiler toolchain live ONLY in build-time
-#            stages (base/build). The runtime `production` stage installs the
-#            minimal runtime surface — no git, no compilers.
+#   - AD-1 : base = Debian 13 trixie (glibc) + official Node 22.23.4 binary tarball
+#            so native modules such as onnxruntime-node link against glibc
+#            (musl/alpine is incompatible).
+#   - SEC-02 (Critical): base image pinned by immutable sha256 DIGEST (debian:trixie-slim)
+#            AND the Node tarball SHA-256, not only mutable tags, to keep the build
+#            hermetic/reproducible. Both pins are authoritative; update via
+#            Dependabot/Renovate (see documents/SA4E-335/BUILD-AND-REGISTRY.md).
+#   - SEC-05 (High): `git`, `curl`, `xz-utils`, and the compiler toolchain live
+#            ONLY in build-time stages. The runtime `production` stage installs the
+#            minimal runtime surface — no git, no compilers, no curl, no xz.
 #   - BR-05 : non-root user `sa4e` (uid/gid 1001) in production/development/test.
 #   - AD-6 : SA4E-44 capability items (draw.io CLI/Electron/xvfb, model pre-cache,
 #            SERVER_WORKSPACES_ROOT) are guarded behind build args and DEFAULT OFF
 #            (SEC-08) — a bare `docker build --target production .` must succeed.
 #   - MCP-1 : two stdio MCP child servers (markitdown-mcp, markdown-exporter-
-#            mcp-local) are built into isolated /opt venvs in `mcp-python` and
-#            shipped read-only on PATH, so the orchestration module spawns them
-#            by bare command name. The runtime gains ONLY the python3
-#            interpreter — no pip, no git, no pandoc (SEC-05; pypandoc-binary
-#            bundles its own pandoc, onnxruntime ships as a manylinux wheel).
+#             mcp-local) are built into isolated /opt venvs in `mcp-python` and
+#             shipped read-only on PATH, so the orchestration module spawns them
+#             by bare command name. The runtime gains ONLY the python3
+#             interpreter — no pip, no git, no pandoc (SEC-05; pypandoc-binary
+#             bundles its own pandoc, onnxruntime ships as a manylinux wheel).
 # =============================================================================
 
 # --- Build-time arguments (NO secrets — build args must never carry credentials, BR-17) ---
 ARG NODE_VERSION=22.23.4
-# node:22.23.4-slim — pin by digest for a reproducible supply chain (SEC-02).
-# Tag kept for readability; the digest is the authoritative pin.
-ARG NODE_BASE_DIGEST=sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d
+# Debian 13 trixie — glibc, matches Node official image ABI for manylinux wheels.
+# Pinned by digest (SEC-02).
+ARG DEBIAN_BASE_IMAGE=debian:trixie-slim
+ARG DEBIAN_BASE_DIGEST=sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
+# Official Node v22.23.4 linux-x64 tarball — SHA-256 pin (SEC-02).
+# Source: https://nodejs.org/dist/v22.23.4/SHASUMS256.txt
+ARG NODE_TARBALL_SHA256=1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
+# Optional offline/enterprise mirror override (defaults to nodejs.org).
+# Must resolve to the same tarball whose SHA-256 is pinned above.
+ARG NODE_TARBALL_URL=https://nodejs.org/dist/
+
+# =============================================================================
+# node-runtime — shared Node runtime built from Debian trixie + official tarball.
+# The tarball is fetched IN-BUILD from nodejs.org and verified against
+# NODE_TARBALL_SHA256 before extraction — this keeps CI hermetic-by-hash without
+# committing a 30 MB binary to git. No host-side file is required; a clean
+# checkout builds end-to-end (SEC-02). Layout must match the official node image
+# exactly: bin/node, bin/npm, bin/npx, lib/node_modules/npm — the production
+# npm-CLI patch step depends on this.
+# =============================================================================
+FROM ${DEBIAN_BASE_IMAGE}@${DEBIAN_BASE_DIGEST} AS node-runtime
+ARG NODE_VERSION
+ARG NODE_TARBALL_SHA256
+ARG NODE_TARBALL_URL
+# Fetch + extract tools; purged before the runtime image is assembled so they
+# never reach production (SEC-05). ca-certificates is REQUIRED on trixie-slim
+# (it ships without the CA bundle → curl fails on TLS without it).
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl xz-utils \
+ && rm -rf /var/lib/apt/lists/*
+# Download + verify + install Node ${NODE_VERSION} from the official tarball.
+RUN NODE_TARBALL="node-v${NODE_VERSION}-linux-x64.tar.xz" \
+ && curl -fsSL -o "/tmp/${NODE_TARBALL}" \
+   "${NODE_TARBALL_URL}v${NODE_VERSION}/${NODE_TARBALL}" \
+ && echo "${NODE_TARBALL_SHA256}  /tmp/${NODE_TARBALL}" | sha256sum -c - \
+ && tar -xJf "/tmp/${NODE_TARBALL}" --strip-components=1 -C /usr/local \
+ && rm -f "/tmp/${NODE_TARBALL}" \
+ # Purge fetch-only tools from this stage so they don't persist in child stages.
+ && apt-get purge -y --auto-remove curl xz-utils \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/* \
+ # Fail-fast probes: verify the tarball install is intact.
+ && node --version \
+ && npm --version
 
 # -----------------------------------------------------------------------------
 # base — shared workdir + build toolchain (glibc). Build-time only.
 # -----------------------------------------------------------------------------
-FROM node:${NODE_VERSION}-slim@${NODE_BASE_DIGEST} AS base
+FROM node-runtime AS base
 WORKDIR /app
 # Native-module build toolchain (python3/make/g++) + git for build-time fetches.
 # Single layer with apt cleanup to keep intermediate layers lean. These packages
@@ -53,7 +95,20 @@ RUN apt-get update \
 FROM base AS deps
 COPY package.json package-lock.json ./
 # `npm ci` is hermetic: it installs exactly the locked versions (BR-03).
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev \
+  # ---- Trim onnxruntime-native binaries to the build host platform ----
+  # onnxruntime-node ships prebuilt binaries for win32+darwin+linux. This image is
+  # linux-only (Debian trixie / glibc), so win32+darwin are dead weight and the linux
+  # arch that does not match the build host is unused at runtime. Keeping
+  # linux/<host-arch> only saves ~500MB vs shipping all 3 platforms (single-arch
+  # image: build and deploy on the same arch).
+  && ORT_ARCH="$(uname -m | sed 's/aarch64/arm64/;s/x86_64/x64/')" \
+  && OTHER_ARCH="$( [ "${ORT_ARCH}" = "x64" ] && echo arm64 || echo x64 )" \
+  # Keep only the build host's linux arch; drop win32+darwin and the other linux arch.
+  && rm -rf /app/node_modules/onnxruntime-node/bin/napi-v6/win32 \
+           /app/node_modules/onnxruntime-node/bin/napi-v6/darwin \
+           "/app/node_modules/onnxruntime-node/bin/napi-v6/linux/${OTHER_ARCH}" \
+  && npm ls onnxruntime-node --depth=0 || true
 
 # -----------------------------------------------------------------------------
 # build — compile TypeScript -> dist/. Full (dev) dependency set.
@@ -127,6 +182,19 @@ ARG SETUPTOOLS_VERSION=84.0.0
 # (same PEP 440 pattern documented below). Probes fail the build on drift.
 ARG CERTIFI_VERSION=2026.10.19
 ARG PILLOW_VERSION=13.0.0
+
+# SA4E-335 / SA4E-406: soupsieve 2.10 ships in BOTH MCP venvs (pulled transitively
+# via beautifulsoup4 by markitdown[all] and markdown-exporter-mcp-local) and carries
+# CVE-2026-126190 (fixed upstream in 4.0.0). The base image is now Debian 13 trixie
+# which ships Python 3.13.5 — this natively satisfies soupsieve's
+# `Requires-Python >=3.11.5` floor, so no `--ignore-requires-python` override is
+# needed. The force-upgrade after the main install is kept for defence in depth:
+# beautifulsoup4 transitively pins an older soupsieve → pip conflict warning is
+# EXPECTED and non-fatal (same PEP 440 pattern as the pillow override below):
+# pip installs the requested version and exits 0. Trivy reads the installed
+# version's metadata, clearing the CVE. The importlib.metadata probe fails the
+# build if resolution ever regresses.
+ARG SOUPSIEVE_VERSION=4.0.1
 # `python3` already exists in base (build toolchain); only the venv/ensurepip
 # support is missing. One venv per server: independent dependency trees that
 # are pinned, upgraded and Trivy-scanned separately.
@@ -136,9 +204,14 @@ RUN apt-get update \
 RUN python3 -m venv /opt/markitdown-venv \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir \
       "markitdown-mcp==${MARKITDOWN_MCP_VERSION}" \
-      
  && test -x /opt/markitdown-venv/bin/markitdown-mcp \
  && /opt/markitdown-venv/bin/python -c "import markitdown_mcp" \
+ # SA4E-335: force-upgrade soupsieve to ${SOUPSIEVE_VERSION} (clears CVE-2026-126190).
+ # beautifulsoup4 transitively pins an older soupsieve → pip conflict warning is
+ # EXPECTED and non-fatal; the importlib.metadata probe below fails the build on
+ # any regression.
+ && /opt/markitdown-venv/bin/pip install --no-cache-dir "soupsieve==${SOUPSIEVE_VERSION}" \
+ && /opt/markitdown-venv/bin/python -c "from importlib.metadata import version; assert version('soupsieve') == '${SOUPSIEVE_VERSION}'; from bs4 import BeautifulSoup; assert BeautifulSoup('<div><span>x</span></div>','html.parser').select('div span')" \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
  && /opt/markitdown-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'" \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir "certifi==${CERTIFI_VERSION}" "pillow==${PILLOW_VERSION}" \
@@ -164,6 +237,12 @@ RUN python3 -m venv /opt/markdown-exporter-venv \
       "mcp>=1.27.0,<2.0.0" \
  && test -x /opt/markdown-exporter-venv/bin/markdown-exporter-mcp-local \
  && /opt/markdown-exporter-venv/bin/python -c "import markdown_exporter_mcp.server, md_exporter" \
+ # SA4E-335: force-upgrade soupsieve to ${SOUPSIEVE_VERSION} (clears CVE-2026-126190).
+ # beautifulsoup4 transitively pins an older soupsieve → pip conflict warning is
+ # EXPECTED and non-fatal; the importlib.metadata probe below fails the build on
+ # any regression.
+ && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "soupsieve==${SOUPSIEVE_VERSION}" \
+ && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('soupsieve') == '${SOUPSIEVE_VERSION}'; from bs4 import BeautifulSoup; assert BeautifulSoup('<div><span>x</span></div>','html.parser').select('div span')" \
  && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "pillow==${PILLOW_VERSION}" "certifi==${CERTIFI_VERSION}" \
  && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('pillow') == '${PILLOW_VERSION}' and version('certifi') == '${CERTIFI_VERSION}'" \
  && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
@@ -174,16 +253,17 @@ RUN python3 -m venv /opt/markdown-exporter-venv \
 
 # -----------------------------------------------------------------------------
 # production ★ — runtime image. SOLE CI push target. Minimal surface, non-root.
-# No git, no compilers (SEC-05). node:22.23.4-slim pinned by digest (SEC-02).
+# No git, no compilers, no curl, no xz (SEC-05). Debian trixie + Node tarball
+# pinned by digest + SHA-256 (SEC-02).
 # -----------------------------------------------------------------------------
-FROM node:${NODE_VERSION}-slim@${NODE_BASE_DIGEST} AS production
+FROM node-runtime AS production
 WORKDIR /app
 
 # SA4E-335 DEF-004 — CI Trivy gate (CRITICAL,HIGH + ignore-unfixed) counts the
 # npm CLI that the base image bundles under /usr/local/lib/node_modules/npm.
 # Those copies (pacote, sigstore, brace-expansion, picomatch, ip-address,
 # undici) are NOT reachable from backend/package-lock.json, and the pinned
-# node:22.23.4-slim digest is already the latest — so the fix is to bump the CLI
+# Node tarball is already the latest — so the fix is to bump the CLI
 # itself (10.9.9 → NPM_VERSION: pacote/sigstore majors land on patched lines)
 # and refresh the two packages upstream has not re-released yet, using
 # same-major releases only (5.0.9→5.0.12; undici 6.28.0→6.29.1 clears
@@ -205,11 +285,13 @@ RUN npm install -g npm@${NPM_VERSION} --no-audit --no-fund --loglevel=error \
   && rm -rf /tmp/*.tgz \
   && node -e "require('${NM}/brace-expansion'); require('${NM}/undici')" \
   && npm --version \
-  # SEC-04: upgrade Debian packages to fix CVE-2026-103111 (libpcre2-8-0 HIGH)
-  # and the perl CVE set found by Trivy on 2026-10-10 (CVE-2026-13221 CRITICAL,
-  # CVE-2026-42497 HIGH, CVE-2026-42496, CVE-2026-48962, CVE-2026-57432, CVE-2026-57433 — perl-base/perl-modules in node:22.23.4-slim)
+  # SEC-04: upgrade Debian packages to fix Trivy-flagged CVEs in the trixie base.
+  # libpcre2-8-0 and perl-base are upgraded here; perl-modules-5.36 (bookworm)
+  # does not exist in trixie (perl-modules is virtual, no candidate) and is
+  # deliberately omitted. Any remaining flagged package is reported, not
+  # exempted.
   && apt-get update \
-  && apt-get upgrade -y --no-install-recommends libpcre2-8-0 perl-base perl-modules-5.36 \
+  && apt-get upgrade -y --no-install-recommends libpcre2-8-0 perl-base \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -245,13 +327,14 @@ ENV PYTHONUNBUFFERED=1
 
 # Non-root runtime user (BR-05). Debian uses groupadd/useradd (not alpine addgroup).
 # `-r` = system account, `nologin` shell = no interactive login.
+# uid/gid 1001 is free on trixie (verified).
 RUN groupadd -g 1001 sa4e \
  && useradd -u 1001 -g sa4e -r -s /usr/sbin/nologin sa4e \
  && mkdir -p /app/.code-intel \
  && chown -R sa4e:sa4e /app \
  && mkdir -p /home/sa4e \
  && chmod -R 777 /home/sa4e
-
+  
 USER sa4e
 
 ENV NODE_ENV=production
@@ -266,10 +349,11 @@ ENV INDEX_CONCURRENCY_LIMIT=8
 
 EXPOSE 48721
 
-# Dependency-free health probe (SEC-12): node:22.23.4-slim does not ship `wget`, so a
-# wget-based probe would silently fail. Use node's built-in http client instead.
+# Dependency-free health probe (SEC-12): trixie + Node tarball does not ship
+# `wget`, so a wget-based probe would silently fail. Use node's built-in http
+# client instead.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
- CMD node -e "require('http').get('http://localhost:'+(process.env.PORT||48721)+'/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+  CMD node -e "require('http').get('http://localhost:'+(process.env.PORT||48721)+'/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
 
 CMD ["node", "dist/index.js"]
 

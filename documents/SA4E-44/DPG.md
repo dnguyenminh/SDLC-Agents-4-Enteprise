@@ -22,7 +22,7 @@
 
 | Component | Image / Runtime | Port | Purpose |
 |-----------|----------------|------|---------|
-| Backend Server | Node.js 20 / Hono | 48721 | MCP Server, Task Worker, Code Intel API |
+| Backend Server | Node.js 22.23.4 / Hono | 48721 | MCP Server, Task Worker, Code Intel API |
 | PostgreSQL 15 | postgres:15-alpine | 5432 | Persistent storage (tasks, code intel, KB) |
 | ONNX Runtime (optional) | onnxruntime/server | 8080 | Vector embeddings for semantic search |
 
@@ -40,7 +40,7 @@
 |---|------|-----------------|----------|
 | 1 | Docker installed | docker --version | >= 24.x |
 | 2 | Docker Compose installed | docker compose version | >= 2.20 |
-| 3 | Node.js 20+ | node --version | >= 20.0.0 |
+| 3 | Node.js 22.23.4 | node --version | >= 22.23.4 |
 | 4 | Git branch correct | git branch --show-current | SA4E-44 |
 | 5 | Dependencies installed | cd backend and npm ci | Exit 0 |
 | 6 | Build succeeds | npm run build | Exit 0 |
@@ -168,3 +168,5 @@ See .env.example for full reference.
 | PostgreSQL connection refused | Container not started | docker compose up postgres -d |
 | Migration relation already exists | Partial previous run | Safe (IF NOT EXISTS) |
 | Worker stuck in claiming | Stale claimed tasks | Restart worker (auto-recovery) |
+
+> **Base-image migration (SA4E-335):** The backend Docker image (`backend/Dockerfile`) was migrated from `node:22-slim` (Debian 12 bookworm) to `debian:trixie-slim` (Debian 13) + the official Node 22.23.4 binary tarball (SHA-256 pinned). Python in the runtime is now 3.13.5 (trixie) instead of 3.11.2 (bookworm). soupsieve in both MCP venvs is upgraded to 4.0.1 natively (no `--ignore-requires-python` needed). See `documents/SA4E-335/BUILD-AND-REGISTRY.md` for the full pin and digest-update process.

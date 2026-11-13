@@ -90,27 +90,61 @@ export function upsertEdgeStyleKeys(xml: string, id: string, keys: Record<string
   });
 }
 
+/** Re-parent a cell (waypoints are then interpreted in the new parent's space). */
+export function setCellParent(xml: string, id: string, parentId: string): string {
+  return patchCell(xml, id, (open, body) => {
+    if (!/\sparent="[^"]*"/.test(open)) return { open: `${open} parent="${parentId}"`, body };
+    return { open: open.replace(/\sparent="[^"]*"/, ` parent="${parentId}"`), body };
+  });
+}
+
+/**
+ * Drop stale terminal hints (`as="sourcePoint"` / `as="targetPoint"`) from an
+ * edge. For connected edges they only carry the OLD layout's attachment
+ * position and would otherwise be preferred over the fresh exit/entry anchors.
+ */
+export function clearEdgeTerminalPoints(xml: string, edgeId: string): string {
+  return patchCell(xml, edgeId, (open, body) => {
+    const cleaned = body.replace(/<mxPoint\b[^>]*\bas="(?:sourcePoint|targetPoint)"[^>]*\/>/g, '');
+    return cleaned === body ? null : { open, body: cleaned };
+  });
+}
+
 /** Apply a transform to the first <mxGeometry ...> tag inside a cell body. */
-function patchGeometryTag(body: string, transform: (tag: string) => string): string | null {
-  const geomRegex = /<mxGeometry\b[^>]*?(?:\/>|>)/;
+export function patchGeometryTag(body: string, transform: (tag: string) => string): string | null {  const geomRegex = /<mxGeometry\b[^>]*?(?:\/>|>)/;
   const geom = geomRegex.exec(body);
   if (!geom) return null;
   return `${body.slice(0, geom.index)}${transform(geom[0])}${body.slice(geom.index + geom[0].length)}`;
 }
 
-function hasAttr(tag: string, name: string): boolean {
+export function hasAttr(tag: string, name: string): boolean {
   return new RegExp(`\\s${name}="`).test(tag);
 }
 
-function replaceAttr(tag: string, name: string, value: number): string {
+export function replaceAttr(tag: string, name: string, value: number): string {
   return tag.replace(new RegExp(`\\s${name}="[^"]*"`), ` ${name}="${round(value)}"`);
 }
 
-function insertAttrs(tag: string, attrs: string): string {
+export function insertAttrs(tag: string, attrs: string): string {
   // Insert before the trailing "/>" or ">" of the mxGeometry tag
   const m = /(\s*\/?>)$/.exec(tag);
   const cut = m ? tag.length - m[0].length : tag.length;
   return `${tag.slice(0, cut)}${attrs}${tag.slice(cut)}`;
 }
 
-function round(v: number): number { return Math.round(v * 10) / 10; }
+export function round(v: number): number { return Math.round(v * 10) / 10; }
+
+/**
+ * SA4E-406 (i): unwrap an `<mxfile>` wrapper — the tool works on (and writes)
+ * the bare `<mxGraphModel>` with its inner `<root>` preserved verbatim.
+ * Files with several pages (or compressed diagram payloads that carry no plain
+ * model) are returned unchanged — flattening them would drop data.
+ */
+export function unwrapMxfileXml(xml: string): string {
+  if (!/<mxfile[\s>]/.test(xml)) return xml;
+  if (xml.split('<mxGraphModel').length !== 2) return xml;
+  const start = xml.indexOf('<mxGraphModel');
+  const end = xml.indexOf('</mxGraphModel>', start);
+  if (start === -1 || end === -1) return xml;
+  return xml.slice(start, end + '</mxGraphModel>'.length);
+}

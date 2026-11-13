@@ -1,6 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2026-11-09T00:00:00.000Z" agent="5.0 (Windows)" etag="test-overlap" version="24.7.6" type="device">
-  <diagram name="Test Overlap" id="test-overlap">
-    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+<mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
@@ -32,5 +30,3 @@
         </mxCell>
       </root>
     </mxGraphModel>
-  </diagram>
-</mxfile>

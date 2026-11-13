@@ -46,4 +46,6 @@ export interface NormalizedArgs {
   scope: 'auto' | 'positions' | 'ports';
   /** Force full ELK relayout even when a minimal local repair would do. */
   relayout: boolean;
+  /** True when the caller passed `direction` — humanize then honours it instead of its own flow defaults. */
+  directionExplicit?: boolean;
 }

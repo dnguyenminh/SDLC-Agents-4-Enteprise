@@ -6,14 +6,54 @@
 import type { RepairPlan } from './drawio-repair';
 import { distributePorts } from './drawio-ports';
 import type { DiagramGraph } from './drawio-parser';
-import { replaceCellGeometryXy, replaceCellSize, setEdgePointsXml, upsertEdgeStyleKeys } from './drawio-xml-utils';
+import { patchGeometryTag, hasAttr, replaceAttr, insertAttrs, round, type Point, upsertEdgeStyleKeys } from './drawio-xml-utils';
+import { rewriteCells, type CellPatch } from './drawio-xml-rewrite';
 
 /** Write moved positions, resized containers and rerouted edges into the XML. */
 export function applyRepairPlan(xml: string, plan: RepairPlan): string {
-  let out = xml;
-  for (const [id, p] of plan.moves) out = replaceCellGeometryXy(out, id, p.x, p.y);
-  for (const [id, s] of plan.resizes) out = replaceCellSize(out, id, s.w, s.h);
-  for (const [edgeId, points] of plan.routes) out = setEdgePointsXml(out, edgeId, points);
+  const geometryPatches = new Map<string, (open: string, body: string) => CellPatch | null>();
+  for (const [id, p] of plan.moves) {
+    geometryPatches.set(id, (_open, body) => {
+      const patched = patchGeometryTag(body, (tag) => {
+        let out = hasAttr(tag, 'x') ? replaceAttr(tag, 'x', p.x) : insertAttrs(tag, ` x="${round(p.x)}"`);
+        out = hasAttr(out, 'y') ? replaceAttr(out, 'y', p.y) : insertAttrs(out, ` y="${round(p.y)}"`);
+        return out;
+      });
+      return patched === null ? null : { open: _open, body: patched };
+    });
+  }
+  const sizePatches = new Map<string, (open: string, body: string) => CellPatch | null>();
+  for (const [id, s] of plan.resizes) {
+    sizePatches.set(id, (_open, body) => {
+      const patched = patchGeometryTag(body, (tag) => {
+        let out = hasAttr(tag, 'width') ? replaceAttr(tag, 'width', s.w) : tag;
+        out = hasAttr(out, 'height') ? replaceAttr(out, 'height', s.h) : out;
+        return out;
+      });
+      return patched === null ? null : { open: _open, body: patched };
+    });
+  }
+  const routePatches = new Map<string, (open: string, body: string) => CellPatch | null>();
+  for (const [edgeId, points] of plan.routes) {
+    const pointsXml = points.map(pt => `<mxPoint x="${round(pt.x)}" y="${round(pt.y)}"/>`).join('');
+    const array = points.length > 0 ? `<Array as="points">${pointsXml}</Array>` : '';
+    routePatches.set(edgeId, (_open, body) => {
+      const geomRegex = /<mxGeometry\b([^>]*?)(\/>|>([\s\S]*?)<\/mxGeometry>)/;
+      const geom = geomRegex.exec(body);
+      if (!geom) return null;
+      const [full, attrs, ending, inner = ''] = geom;
+      const cleaned = inner
+        .replace(/<Array\s+as="points"\s*\/>/g, '')
+        .replace(/<Array\s+as="points">[\s\S]*?<\/Array>/g, '');
+      const replacement = ending === '/>'
+        ? (array ? `<mxGeometry${attrs}>${array}</mxGeometry>` : full)
+        : `<mxGeometry${attrs}>${cleaned}${array}</mxGeometry>`;
+      return { open: _open, body: `${body.slice(0, geom.index)}${replacement}${body.slice(geom.index + full.length)}` };
+    });
+  }
+  let out = rewriteCells(xml, geometryPatches);
+  out = rewriteCells(out, sizePatches);
+  out = rewriteCells(out, routePatches);
   return out;
 }
 

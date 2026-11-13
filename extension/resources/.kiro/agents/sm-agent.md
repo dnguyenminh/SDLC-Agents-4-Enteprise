@@ -1536,11 +1536,6 @@ After each sub-agent completes:
 
 ---
 
-<!-- UI-DESIGN-GATE -->
-## ⛔ UI Design Gate — Phase 5/6 Blocker (MUST)
-
-Verify Phase 5/6 completion reports contain gate evidence (tool="design_gate_run", runId, score, pass/fail) for every design artifact touched; missing/incomplete → BLOCK completion and dispatch the owning agent to run `design_gate_run` (fix or justify). NEVER write gate evidence yourself — the owning agent must produce it (role boundary). Full rule: `.opencode/rules/sdlc/ui-design-gate.md`
-
 <!-- UG-EVIDENCE-POLICY -->
 ## UG Evidence & Running-App Policy (MANDATORY)
 

@@ -15,6 +15,9 @@ const ALGORITHM_MAP: Record<string, string> = {
   force: 'org.eclipse.elk.force',
   mrtree: 'org.eclipse.elk.mrtree',
   radial: 'org.eclipse.elk.radial',
+  // SA4E-406 (BRD STORY 3): stress — ELK's force-directed variant tuned for
+  // large unstructured graphs (repulsive model keeps big diagrams from clumping).
+  stress: 'org.eclipse.elk.stress',
 };
 
 export function mapAlgorithm(algorithm: string): string {

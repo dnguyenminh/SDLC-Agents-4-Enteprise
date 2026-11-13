@@ -1510,9 +1510,3 @@ After each sub-agent completes:
 ### ⛔ CRITICAL RULE
 
 **SM PHẢI chạy verification checklist SAU MỖI sub-agent call.** Không được skip verification khi chạy "tạo tài liệu đầy đủ" (pipeline mode). Pipeline mode = Phase 1 verify → Phase 2 verify → Phase 3 verify. Mỗi phase PHẢI pass verification trước khi chuyển sang phase tiếp theo.
-
-## ⛔ UI Design Gate — Phase 5/6 Completion Blocker (MANDATORY)
-
-- When verifying Phase 5 (Implementation) / Phase 6 (Testing) completion reports: REQUIRE gate evidence (tool="design_gate_run", runId, score, pass/fail) for every design artifact touched (`.html` `.htm` `.css` `.scss` `.sass` `.less` `.vue` `.svelte` `.tsx` `.jsx`).
-- Missing/incomplete evidence → BLOCK phase completion; dispatch the owning agent back to run `design_gate_run` (fix or justify per `instructions/ui-design-gate.md`).
-- NEVER write gate evidence yourself — the owning agent must produce it (role boundary).

@@ -3,20 +3,20 @@
  * discovery (find_tools / execute_dynamic_tool), and remote REST calls with
  * Base64ProxyService schema/input/output rewriting.
  */
-import { executeLocalTool, getLocalToolDefinitions, isLocalTool } from "../../backend-local-tools";
+import { executeLocalTool, getLocalToolDefinitions, isLocalTool, mergeLocalToolDefinitions } from "../../backend-local-tools";
 import { PathResolverError } from "../PathResolver";
 import type { WrapperServerDeps } from "./types";
 
 export class ToolRouter {
   constructor(private readonly deps: WrapperServerDeps) {}
 
-  async routeToolCall(params: any): Promise<any> {
+  async routeToolCall(params: any, ctx?: { sessionRoot?: string }): Promise<any> {
     try {
       // NOTE: every delegating return is `return await` — a bare `return promise`
       // inside try/catch ADOPTS the promise OUTSIDE the try block, so a rejection
       // (e.g. PathResolverError from proxyInput) would escape this catch entirely
       // and leak as a JSON-RPC -32603 (classic async return-await gotcha).
-      return await this.dispatch(params);
+      return await this.dispatch(params, ctx);
     } catch (err: any) {
       // SA4E-356 §5.6: path-resolution failures become MCP TOOL error results
       // (agent-readable Format 1/2 with CODE: prefix) — never JSON-RPC -32603.
@@ -28,13 +28,44 @@ export class ToolRouter {
     }
   }
 
-  private async dispatch(params: any): Promise<any> {
+  private async dispatch(params: any, ctx?: { sessionRoot?: string }): Promise<any> {
     const name = params.name as string;
     const args = (params.arguments || {}) as Record<string, unknown>;
-    if (isLocalTool(name)) return await executeLocalTool(name, args);
+    if (isLocalTool(name)) {
+      // SA4E-406 (qa B5 / security M1): local tools with a base64 contract go
+      // through the SAME proxy as remote tools. The schema rewriter promises
+      // file_path in / output_path written back — the dispatch must honor that
+      // promise, otherwise drawio_export_png requires content_base64 the LLM
+      // was told never to send.
+      if (this.localToolNeedsProxy(name)) return await this.callLocalWithProxy(name, args, ctx);
+      return await executeLocalTool(name, args, ctx);
+    }
     if (name === "find_tools") return await this.handleFindTools(args);
-    if (name === "execute_dynamic_tool") return await this.handleDynamic(args);
-    return await this.callWithProxy(name, args);
+    if (name === "execute_dynamic_tool") return await this.handleDynamic(args, ctx);
+    return await this.callWithProxy(name, args, ctx);
+  }
+
+  /**
+   * Local tool schemas are not in the backend tools/list, so they may never
+   * have been registered with the proxy — detect their base64 contract from
+   * the local definitions on first use (idempotent, list is small).
+   */
+  private localToolNeedsProxy(name: string): boolean {
+    if (this.deps.base64Proxy.needsInputProxy(name) || this.deps.base64Proxy.needsOutputProxy(name)) return true;
+    this.deps.base64Proxy.registerTools(getLocalToolDefinitions());
+    return this.deps.base64Proxy.needsInputProxy(name) || this.deps.base64Proxy.needsOutputProxy(name);
+  }
+
+  /** Proxy a local tool: file_path → content_base64 in, output_base64 → file written. */
+  private async callLocalWithProxy(
+    name: string,
+    args: Record<string, unknown>,
+    ctx?: { sessionRoot?: string },
+  ): Promise<any> {
+    const finalArgs = this.deps.base64Proxy.proxyInput(name, args, ctx);
+    let result = await executeLocalTool(name, finalArgs, ctx);
+    result = this.deps.base64Proxy.proxyOutput(name, args, result, ctx);
+    return result;
   }
 
   async getToolsRewritten(): Promise<any[]> {
@@ -48,7 +79,7 @@ export class ToolRouter {
     return this.rewriteFindToolsResponse(result);
   }
 
-  private async handleDynamic(args: Record<string, unknown>): Promise<any> {
+  private async handleDynamic(args: Record<string, unknown>, ctx?: { sessionRoot?: string }): Promise<any> {
     const unwrapped = this.deps.base64Proxy.unwrapDynamicTool(args);
     if (!unwrapped) return this.deps.restCallTool("execute_dynamic_tool", args);
     const { toolName, innerArgs } = unwrapped;
@@ -56,16 +87,16 @@ export class ToolRouter {
       const result = await this.deps.restCallTool("execute_dynamic_tool", args);
       return this.rewriteFindToolsResponse(result);
     }
-    if (isLocalTool(toolName)) return executeLocalTool(toolName, innerArgs);
+    if (isLocalTool(toolName)) return executeLocalTool(toolName, innerArgs, ctx);
     // File tools discovered at runtime (export_docx, …) may not be in any tool
     // list yet — resolve their schema once before deciding how to proxy.
     if ("file_path" in innerArgs && !this.deps.base64Proxy.needsInputProxy(toolName)) {
       await this.ensureProxyDetection(toolName);
     }
-    const proxied = this.deps.base64Proxy.proxyInput(toolName, innerArgs);
+    const proxied = this.deps.base64Proxy.proxyInput(toolName, innerArgs, ctx);
     const finalArgs = this.deps.base64Proxy.wrapDynamicTool(args, proxied);
     let result = await this.deps.restCallTool("execute_dynamic_tool", finalArgs);
-    result = this.deps.base64Proxy.proxyOutput(toolName, innerArgs, result);
+    result = this.deps.base64Proxy.proxyOutput(toolName, innerArgs, result, ctx);
     return result;
   }
 
@@ -113,17 +144,19 @@ export class ToolRouter {
 
   /** Append local tool definitions to a tool list, skipping duplicates by name. */
   private mergeLocalToolDefinitions(tools: any[]): any[] {
-    const localDefs = getLocalToolDefinitions();
-    const existing = new Set(tools.map((t) => t?.name));
-    const added = localDefs.filter((d) => !existing.has(d.name));
-    if (added.length === 0) return tools;
-    return [...tools, ...added];
+    return mergeLocalToolDefinitions(tools, getLocalToolDefinitions());
   }
 
-  private async callWithProxy(name: string, args: Record<string, unknown>): Promise<any> {
-    const finalArgs = this.deps.base64Proxy.proxyInput(name, args);
+  private async callWithProxy(
+    name: string,
+    args: Record<string, unknown>,
+    ctx?: { sessionRoot?: string },
+  ): Promise<any> {
+    // SA4E-406 A6/A8: ctx.sessionRoot (bound at initialize) is forwarded into
+    // the proxy — the session root governs relative file_path resolution.
+    const finalArgs = this.deps.base64Proxy.proxyInput(name, args, ctx);
     let result = await this.deps.restCallTool(name, finalArgs);
-    result = this.deps.base64Proxy.proxyOutput(name, args, result);
+    result = this.deps.base64Proxy.proxyOutput(name, args, result, ctx);
     return result;
   }
 }

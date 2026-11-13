@@ -60,10 +60,12 @@ export class ToolProxy {
         newArgs.content = fs.readFileSync(resolution.resolvedPath, "utf-8");
         newArgs.file_path = resolution.resolvedPath; // send absolute path so the backend dedups/scopes consistently
       } catch (err: any) {
+        // SA4E-406: workspace-anchored origins (workspace, workspace_candidate,
+        // session) all report the root honestly; only cwd_fallback says cwd.
         return { content: [{ type: "text", text:
           `Wrapper Error: FS_ERROR: Failed to read ${sanitizeLogText(resolution.resolvedPath)} (resolved against ` +
-          `${resolution.rootSource === "workspace" ? "workspace root " + sanitizeLogText(resolution.rootPath)
-            : "process.cwd() fallback = " + sanitizeLogText(resolution.rootPath)}): ${sanitizeLogText(String(err?.message ?? err))}` }] };
+          `${resolution.rootSource === "cwd_fallback" ? "process.cwd() fallback = " + sanitizeLogText(resolution.rootPath)
+            : "workspace root " + sanitizeLogText(resolution.rootPath)}): ${sanitizeLogText(String(err?.message ?? err))}` }] };
       }
     }
 

@@ -15,7 +15,8 @@ export const CORE_TOOLS: readonly string[] = [
   'mem_search', 'mem_ingest', 'mem_ingest_file',
   'code_search', 'get_curated_context',
   'find_tools', 'execute_dynamic_tool', 'orchestration_status',
-  'drawio_export_png', 'drawio_auto_layout',
+  // drawio_auto_layout runs LOCALLY in the extension (SA4E-406 migration) — not a backend tool
+  'drawio_export_png',
   'pega_get_rule', 'pega_get_session_context',
   'pega_query_rule', 'pega_list_rules', 'pega_save_rule',
   'pega_checkout_rule', 'pega_run_tests', 'pega_get_class_metadata',

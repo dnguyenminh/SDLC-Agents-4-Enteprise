@@ -2,29 +2,62 @@
  * PathResolver — workspace path resolution single source of truth
  * (SA4E-356): validate → root (per-call) → resolve → containment → result.
  * Pure string ops — NO I/O, NEVER throws (C-1, C-2).
+ *
+ * SA4E-406 F2/A6/A8: optional multi-root candidate selection — a bound
+ * session root (containment gate, first) and `rootCandidates` (ordered,
+ * first = preferred; the CALLER decides whether its provider probes fs
+ * existence) are iterated BEFORE the legacy folders[0] fallback. vscode
+ * access lives in workspace-roots.ts, containment in path-containment.ts,
+ * candidate logic in root-candidates.ts, error builders in path-format.ts
+ * (200-line budget) — all re-exported here so public symbols stay put.
  */
 import * as path from "path";
-import { sanitizeLogText } from "./path-format";
 import {
   INVALID_BASE_DIR,
   pickBaseDir,
   resolveWithBaseDir,
 } from "./base-dir-resolution";
-import type { TrustPort } from "./worktree-trust/types";
+import {
+  emptyPathError,
+  invalidPathError,
+  noWorkspaceError,
+  outsideWorkspaceError,
+} from "./path-format";
+import {
+  resolveViaCandidates,
+  sessionGateHit,
+  type RootCandidatesProvider,
+} from "./root-candidates";
+import { isPathWithinRoot } from "./path-containment";
+import { selectWorkspaceRoot } from "./workspace-roots";
 
 // ── Types (TDD §3.2) ────────────────────────────────────────────────────
 
-/** Resolution origin — in error messages on failure (BR-08). */
-export type PathRootSource = "workspace" | "cwd_fallback";
+/**
+ * Resolution origin — in error messages on failure (BR-08).
+ * SA4E-406 adds `workspace_candidate` (F2) and `session` (A6) — add-only,
+ * existing consumers keep working.
+ */
+export type PathRootSource =
+  | "workspace"
+  | "workspace_candidate"
+  | "session"
+  | "cwd_fallback";
 
 /** Workspace root AT CALL TIME — never cached (UC-01 AF-2). */
 export type WorkspaceRootProvider = () => string | undefined;
+
+/** SA4E-406 F2 — ordered candidate roots (first = preferred). */
+export type { RootCandidatesProvider };
 
 /** Machine-readable error codes (TDD §7.1) — `CODE:` prefix in message. */
 export type PathResolutionCode =
   | "PATH_EMPTY"
   | "PATH_INVALID"
   | "PATH_NO_WORKSPACE"
+  // SA4E-406 F3 — wrapper-level (Base64ProxyService): a relative path probed
+  // against the candidate roots was found under NONE of them.
+  | "PATH_NO_CANDIDATE"
   | "PATH_REJECTED_OUTSIDE_WORKSPACE"
   // SA4E-394 — base_dir not in the allowlist, or resolved path escapes the
   // effective root (same code as the backend multi-worktree resolver).
@@ -37,8 +70,10 @@ export interface PathResolutionOk {
   rootSource: PathRootSource;
   /** Workspace root OR process.cwd() — in failure messages (BR-08). */
   rootPath: string;
-  /** SA4E-393 A5 — origin of base_dir authority (additive; `rootSource` unchanged). */
-  trustSource?: "allowlist" | "worktree";
+  /** SA4E-406 F2 — index into the candidate list when candidate-resolved. */
+  candidateIndex?: number;
+  /** SA4E-406 F2/F5 — candidate roots considered during this resolution. */
+  candidatesProbed?: string[];
 }
 
 export interface PathResolutionErr {
@@ -58,36 +93,13 @@ export type PathResolutionResult = PathResolutionOk | PathResolutionErr;
 
 // ── Shared schema text (M-4 — anti-drift between static + rewrite path) ──
 export const FILE_PATH_SCHEMA_DESCRIPTION =
-  "Relative paths resolve against the primary workspace folder; absolute paths " +
-  "pass through; paths outside the workspace root are rejected.";
+  "Relative paths resolve against the bound MCP session workspace root (if the client declared one " +
+  "at initialize), else the first workspace folder; multi-root workspaces pick the first folder " +
+  "containing the file. Absolute paths pass through; paths outside the workspace root are rejected.";
 
-// ── vscode lazy-require (pattern proven backend-local-tools.ts:14–15) ────
-// NOTE: `require("vscode")` is unresolvable outside the extension host
-// (vitest alias mock is import-only). The root-selection LOGIC this feeds is
-// fully covered via mock-backed providers in path-resolver.test.ts.
-// We defer the require until the function is actually called (per-call lazy)
-// to avoid module-load-time errors in contexts where vscode is not available.
-/* v8 ignore start */
-function getVscode(): any {
-  try {
-    return require("vscode");
-  } catch (e: any) {
-    // Catch ALL errors including ReferenceError (which can occur in some contexts)
-    console.debug(`[PathResolver] vscode require failed: ${e?.message ?? e}`);
-    return undefined;
-  }
-}
-
-export function defaultWorkspaceRootProvider(): string | undefined {
-  try {
-    const vscode = getVscode();
-    return vscode?.workspace?.workspaceFolders?.[0]?.uri?.fsPath; // per-call, no cache
-  } catch (e: any) {
-    console.debug(`[PathResolver] defaultWorkspaceRootProvider failed: ${e?.message ?? e}`);
-    return undefined; // UC-05 EF-2
-  }
-}
-/* v8 ignore stop */
+// Extracted modules (SA4E-406) — re-exported so public symbols stay at this path.
+export { defaultWorkspaceRootProvider } from "./workspace-roots";
+export { isPathWithinRoot } from "./path-containment";
 
 // ── Throw-path error type (Base64ProxyService delegation — TDD §5.5) ─────
 export class PathResolverError extends Error {
@@ -100,15 +112,17 @@ export class PathResolverError extends Error {
 // ── Core API ─────────────────────────────────────────────────────────────
 export function resolveWorkspacePath(
   rawPath: unknown,
-opts?: { 
+  opts?: {
     rootProvider?: WorkspaceRootProvider,
+    /** SA4E-406 F2 — ordered candidate roots; caller may probe existence. */
+    rootCandidates?: RootCandidatesProvider,
+    /** SA4E-406 A6/A8(1) — bound MCP session root (containment gate first). */
+    sessionRoot?: string,
     /** SA4E-394 — per-call workspace root (alias: workspaceRoot). */
     baseDir?: unknown,
     workspaceRoot?: unknown,
     /** SA4E-394 — extension allowlist mirror (default: settings/env). */
     allowlist?: ReadonlySet<string>,
-    /** SA4E-393 A5 — worktree auto-trust port (test seam; default: extension singleton). */
-    worktreeTrust?: TrustPort,
   },
 ): PathResolutionResult {
   // SA4E-394 — a per-call base_dir/workspace_root becomes the EFFECTIVE root:
@@ -126,65 +140,35 @@ opts?: {
     };
   }
   if (baseDir !== undefined) {
-    return resolveWithBaseDir(rawPath, baseDir, { allowlist: opts?.allowlist, worktreeTrust: opts?.worktreeTrust });
+    return resolveWithBaseDir(rawPath, baseDir, { allowlist: opts?.allowlist, sessionRoot: opts?.sessionRoot });
   }
   // Step 1 — validate (UC-01 EF-3): fail-loud BEFORE resolving.
-  if (typeof rawPath !== "string" || rawPath.trim() === "") {
-    return {
-      ok: false,
-      code: "PATH_EMPTY",
-      message: "PATH_EMPTY: 'file_path' must be a non-empty string.",
-      rawPath: typeof rawPath === "string" ? rawPath : String(rawPath ?? ""),
-      resolvedPath: "",
-      rootSource: null,
-      rootPath: "",
-    };
-  }
-  // SEC-05 (AD-19): NUL → PATH_INVALID (fs.* would throw prefix-less — E-1).
-  if (rawPath.includes("\0")) {
-    return {
-      ok: false,
-      code: "PATH_INVALID",
-      message: "PATH_INVALID: 'file_path' contains invalid characters (NUL byte).",
-      rawPath: sanitizeLogText(rawPath), // sanitize — anti log-forging (§10.1)
-      resolvedPath: "",
-      rootSource: null,
-      rootPath: "",
-    };
-  }
+  if (typeof rawPath !== "string" || rawPath.trim() === "") return emptyPathError(rawPath);
+  if (rawPath.includes("\0")) return invalidPathError(rawPath); // SEC-05 (AD-19)
   const trimmed = rawPath.trim();
 
+  // SA4E-406 A8 — session gate + folder candidates apply to RELATIVE paths
+  // only; absolute paths keep the legacy containment semantics unchanged.
+  if (!path.isAbsolute(trimmed)) {
+    // Step 2s — A6/A8(1): the bound session root is the FIRST candidate
+    // (containment gate, no existence probe — new-file writes land here).
+    if (typeof opts?.sessionRoot === "string") {
+      const gate = sessionGateHit(trimmed, opts.sessionRoot);
+      if (gate) return gate;
+    }
+    // Step 2a — F2/A8(2): probed folder candidates; first containment wins.
+    const viaCandidates = resolveViaCandidates(trimmed, opts?.rootCandidates, opts?.sessionRoot);
+    if (viaCandidates) return viaCandidates;
+  }
+
   // Step 2 — root + rootSource (BR-02, BR-06; provider per-call — C-3).
-  const provider = opts?.rootProvider ?? defaultWorkspaceRootProvider;
-  let rootPath: string | undefined;
-  try {
-    rootPath = provider();
-  } catch {
-    rootPath = undefined;
-  }
-  let rootSource: PathRootSource;
-  if (rootPath && rootPath.trim() !== "") {
-    rootSource = "workspace";
-  } else {
-    rootPath = process.cwd(); // BR-06 fallback
-    rootSource = "cwd_fallback";
-  }
+  const selected = selectWorkspaceRoot(opts?.rootProvider);
+  const rootPath = selected.rootPath;
+  const rootSource = selected.rootSource;
 
   // Step 2b — SEC-02 (BR-06b, AD-16): reject relative on cwd_fallback.
   if (rootSource === "cwd_fallback" && !path.isAbsolute(trimmed)) {
-    const cleanRaw = sanitizeLogText(trimmed);
-    return {
-      ok: false,
-      code: "PATH_NO_WORKSPACE",
-      message:
-        "PATH_NO_WORKSPACE: no workspace open — use an absolute path inside the " +
-        `intended folder or open a workspace. (got relative '${cleanRaw}', ` +
-        `fallback root ${rootPath})`,
-      rawPath: cleanRaw,
-      resolvedPath: "",
-      rootSource,
-      rootPath,
-    };
+    return noWorkspaceError(trimmed, rootPath);
   }
 
   // Step 3 — resolve (BR-02, BR-03; path.resolve normalizes — UC-02 EF-3).
@@ -196,34 +180,11 @@ opts?: {
   // DISC-1 RESOLVED: none on cwd_fallback (intentional, BA-acked BRD v1.0.1
   // §1.5) — see TDD §8.2 + FSD v1.2 §6.3 Note.
   if (rootSource === "workspace" && !isPathWithinRoot(rootPath, resolvedPath)) {
-    return {
-      ok: false,
-      code: "PATH_REJECTED_OUTSIDE_WORKSPACE",
-      message:
-        `PATH_REJECTED_OUTSIDE_WORKSPACE: Path rejected: ${sanitizeLogText(trimmed)} resolves to ` +
-        `${sanitizeLogText(resolvedPath)} — outside workspace root ${sanitizeLogText(rootPath)}.`,
-      rawPath: trimmed,
-      resolvedPath,
-      rootSource,
-      rootPath,
-    };
+    return outsideWorkspaceError(trimmed, resolvedPath, rootPath);
   }
 
   // Step 5 — success.
   return { ok: true, resolvedPath, rootSource, rootPath };
-}
-
-// ── Containment (TDD §3.3) ───────────────────────────────────────────────
-export function isPathWithinRoot(root: string, candidate: string): boolean {
-  const sep = path.sep;
-  const rootNorm = path.normalize(root);
-  const rootWithSep = rootNorm.endsWith(sep) ? rootNorm : rootNorm + sep; // UC-03 EF-2
-  const candNorm = path.normalize(candidate);
-  const fold = (p: string): string =>
-    process.platform === "win32" ? p.toLowerCase() : p; // BR-04
-  return (
-    fold(candNorm).startsWith(fold(rootWithSep)) || fold(candNorm) === fold(rootNorm)
-  );
 }
 
 // ── Shared Format-1 builders — extracted to path-format.ts (BR-18);

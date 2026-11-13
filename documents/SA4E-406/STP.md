@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-406 |
 | Title | drawio_auto_layout: detector precision + verify loop + ELK compound + extension migration |
 | Author | QA Agent |
-| Version | 1.0 |
-| Date | 2026-11-09 |
+| Version | 2.2 |
+| Date | 2026-11-12 |
 | Status | Draft |
 | Related BRD | BRD-v1.0-SA4E-406.docx |
 | Related FSD | FSD-v1.0-SA4E-406.docx |
@@ -34,6 +34,9 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-11-09 | QA Agent | Initiate document — auto-generated from BRD, FSD, and TDD |
+| 2.0 | 2026-11-12 | QA Agent | QA rounds 1–3 complete: (a) STORY 7 diagram-quality guarantees (BR-57..BR-65) added to scope, strategy and RTM; (b) verify-loop + security testing strategy documented; (c) real execution counts from the 2026-11-12 run (drawio 21 files / 159 tests, full suite 458 files / 3,593 tests); (d) references to the deleted backend engine golden fixtures removed — corpus evidence is produced on temp copies of the repo diagrams |
+| 2.1 | 2026-11-12 | QA Agent | QA round 4 follow-up: PD-QA1 risk re-assessed (DEV fix partial — commitLayout forwards `portsOnly`, but `enforceFinalGate` in drawio-verify-loop.ts:87 re-snaps without it, QA-11 left skipped, production code NOT touched); security test strategy extended with F1 timing guard (drawio-xml-rewrite) and F2 file-level symlink guard (fs-guards); real execution counts refreshed (drawio 23 files / 169 tests, full suite 461 files / 3,606 tests); RTM coverage recomputed 128/128 and 162/162 = 100% |
+| 2.2 | 2026-11-12 | QA Agent | QA FINAL (close PD-QA1 + final verdict): QA-11 re-enabled and now PASS (drawio-verify-loop.ts:50-54 computes `portsOnly` once from original request scope; :79 passes `{portsOnly}` into `finalize`; :86,:89 forward `{portsOnly}` into `enforceFinalGate`; drawio-apply-validate.ts:79-86 `enforceFinalGate(filePath, opts?)` forwards `opts` to `snapDiagramToGrid`; drawio-grid-snap.ts:23-33 skips `debunch`/`separateContainers` when `opts?.portsOnly`); measured evidence — node c stays (400,80), honest `status='partial'`, `node_proximity` still reported, 3 distinct edge anchors (0.25/0.5/0.75). PD-QA1 → CLOSED (Major, fixed by DEV round 4c). Regression lock `drawio-ports-only-positions.test.ts` added (QA-20). Full suite re-measured: 462 files / 3,602 passed / 6 skipped (3,608), 0 failures; drawio suite 24 files / 171 passed / 0 skipped. Risk #9 PD-QA1 → CLOSED/mitigated. RTM coverage recomputed 128/128 = 100%. TEST-REPORT verdict → PASS (no test skipped due to unresolved production defect; 6 env-gated live-proxy skips are environment-gated, not defect-gated). |
 
 ---
 
@@ -58,6 +61,7 @@ This Software Test Plan (STP) defines the test strategy, scope, approach, resour
 4. **Extension MCP Bridge Migration** — Migration from legacy IPC to MCP orchestration with `find_tools`/`execute_dynamic_tool`
 5. **Multi-worktree Path Resolution** — Per-call `base_dir` parameter with workspace allowlist validation
 6. **Path Traversal Prevention (CWE-22)** — Allowlist-based validation, symlink resolution, generic error messages
+7. **Diagram Quality Guarantees (BRD STORY 7)** — Nine user-reported structural defects BR-57..BR-65: seven tool-owned (band sizing, child distribution, stale waypoints, cross-lane edge parenting, `childLayout=stackLayout` stripping, 10px grid alignment, `<mxfile>` unwrapping) and two content-owned detect-only (band titles, decision branch labels)
 
 ### 1.2 Test Objectives
 
@@ -122,7 +126,13 @@ The test approach follows a risk-based strategy with emphasis on automation:
 5. **E2E-UI Testing**: Not applicable (no UI for these MCP tools)
 6. **SIT (Manual)**: Exploratory testing of complex diagram scenarios, visual verification of layout quality, renderer fallback behavior
 
+**Verify-loop strategy (BRD STORY 2, FSD 3.2):** The verify loop is tested as an orchestrated pipeline, not per-strategy only — fix pass → re-parse → re-detect → escalate spacing (`SPACING_STEP = 40`) → best-of-3 retention with rollback-if-worse (`restoreBest`). Every write is funnelled through a single final gate (`commitLayout` / `enforceFinalGate`) that re-snaps to the 10px grid, labels unambiguous decision branches, re-plans stale routes, and re-checks the parent realpath before rewrites. Exit honesty is asserted: `status ∈ {fixed, partial, already_good}` must be derived from a fresh detection on the bytes that actually landed on disk (SA4E-406 f/i), and `remaining_issues` must never be silently optimistic.
+
+**Security strategy (BRD STORY 6 + STORY 7 hardening):** Adversarial-input robustness is tested in three layers: (1) bounded-time parsing/sanitizing of hostile files (unterminated tags, quadratic re-scan patterns — regression-locked by `drawio-security.test.ts`: a 1 MB unterminated-mxCell file parses in bounded time instead of the pre-fix 77s parse / 129s sanitize; the new F1 single-pass batch rewriter `rewriteCells()` (drawio-xml-rewrite.ts) brings the primitive rewrite from 158,092 ms → 26 ms and end-to-end sanitize 122,992 ms → 836 ms, output byte-identical); (2) resource pre-pass guards — files over the 25 MB byte cap (`MAX_INPUT_BYTES`) are refused before the first read, diagrams over 10,000 mxCell open tags (`MAX_INPUT_CELLS`) are refused with an actionable message before parse; (3) path-safety (CWE-22): allowlist containment, symlink realpath guards re-checked before every verify-loop rewrite, plus the new F2 file-level symlink guard (`checkSymlinkGuardForPath` in fs-guards.ts: realpaths only the parent dir, then rejects any existing workspace file that is itself a symlink pointing outside the root; non-existent paths still allowed for new-file writes) (A6/A7 session-root binding, per `drawio-session-root-binding.test.ts` and `fs-guards.symlink-file.test.ts`).
+
 **E2E Automation Coverage**: 95% of SIT scenarios automated as E2E-API tests. Only visual layout quality assessment and complex nested container edge cases remain manual.
+
+**QA Verification Suite (rounds 1–3, 2026-11-11/12):** 15 extension-level vitest tests in 4 files verify the STORY 7 guarantees end-to-end through the real tool (`executeLocalTool` on temp-copy fixtures): `drawio-sa406-defects.test.ts`, `drawio-final-gate.test.ts` (every tool exit on-grid + `<mxfile>`-free + honest `partial`), `drawio-corridor-invariants.test.ts` (no edge over unrelated content, skip edges background-only, edge-less bands never become corridors), `drawio-scope-args.test.ts` (`scope` parsing/defaults, ports-only anchors, positions escalation), plus session-root binding. One test is deliberately skipped — see STC §11 PD-QA1 (suspected production defect, documented with evidence).
 
 ### 2.4 Entry/Exit Criteria per Level
 
@@ -145,10 +155,11 @@ The test approach follows a risk-based strategy with emphasis on automation:
 | E2E-API | 34 | 167 | 201 | 201 | 0 |
 | E2E-UI | 0 | 0 | 0 | 0 | 0 |
 | SIT | 8 | 0 | 8 | 0 | 8 |
-| **Total Unique Test Cases** | **187** | — | — | **179 (96%)** | **8 (4%)** |
-| **Total Test Executions (all levels)** | — | — | **742** | **734 (99%)** | **8 (1%)** |
+| QA Verification (round 1–3 + F1/F2/F4 + QA-20 regression lock, extension vitest) | 20 | 0 | 20 | 20 | 0 |
+| **Total Unique Test Cases** | **206** | — | — | **197 (96%)** | **8 (4%)** |
+| **Total Test Executions (all levels)** | — | — | **761** | **752 (99%)** | **8 (1%)** |
 
-> **Note:** "Primary" = test cases designed specifically for this level. "Secondary" = same test cases also executed at this level for coverage (e.g., TC-001 runs at PBT, UT, IT, and E2E-API). "Total Executions" = sum across all levels. See STC Test Level Mapping table for detailed assignment. The 187 unique test cases in STC map to 742 test executions across 6 test levels.
+> **Note:** "Primary" = test cases designed specifically for this level. "Secondary" = same test cases also executed at this level for coverage (e.g., TC-001 runs at PBT, UT, IT, and E2E-API). "Total Executions" = sum across all levels. See STC Test Level Mapping table for detailed assignment. The 206 unique test cases in STC map to 761 test executions across the test levels. Measured 2026-11-12 (QA FINAL): the drawio suite alone is 24 files / 171 vitest tests (171 pass + 0 skipped; QA-11 re-enabled and passing, QA-20 regression lock included); the full extension suite is 462 files / 3,608 vitest tests (3,602 pass + 6 skipped, of which 6 are env-gated live-proxy tests — environment-gated, not defect-gated; 0 defect-gated skips remain since QA-11/PD-QA1 is closed).
 
 ![Test Execution Flow](diagrams/test-execution-flow.png)
 
@@ -169,6 +180,9 @@ The test approach follows a risk-based strategy with emphasis on automation:
 | 7 | PNG Export (CLI + fallback chain) | High | UC-04 (export), TDD 6.2-6.4 | Functional, E2E-API |
 | 8 | Performance Targets | Medium | BRD Section 6, TDD Section 8 | Performance |
 | 9 | Error Handling & Validation | High | FSD 3.1-3.6 Exception Flows | Functional, UT, E2E-API |
+| 10 | Diagram Quality Guarantees (band sizing, corner clusters, waypoints, edge parents, stackLayout, grid, titles, branch labels, mxfile root) | High | BRD STORY 7, BR-57 to BR-65 | Functional, UT, E2E-API (tool-level) |
+| 11 | `scope` parameter (auto/positions/ports) | High | FSD 3.1.4, BRD STORY 1 | Functional, UT |
+| 12 | Session-root binding + adversarial input guards | High | BRD STORY 6, TDD security | Security, UT |
 
 ![Test Coverage](diagrams/test-coverage.png)
 
@@ -232,14 +246,14 @@ The test approach follows a risk-based strategy with emphasis on automation:
 
 | Phase | Start Date | End Date | Duration | Milestone |
 |-------|-----------|----------|----------|-----------|
-| Test Planning | 2026-11-09 | 2026-11-09 | 1 day | STP + STC approved |
+| Test Planning | 2026-11-09 | 2026-11-09 | 1 day | STP + STC v1.0 (187 test cases, 14 CSV fixtures) |
 | Test Data Preparation | 2026-11-09 | 2026-11-10 | 1 day | CSV fixtures ready |
-| PBT/UT Execution | 2026-11-10 | 2026-11-11 | 1 day | Unit tests pass |
-| IT Execution | 2026-11-11 | 2026-11-12 | 1 day | Integration tests pass |
-| E2E-API Execution | 2026-11-12 | 2026-11-13 | 1 day | E2E API tests pass |
-| SIT Execution | 2026-11-13 | 2026-11-14 | 1 day | Manual exploratory complete |
-| Defect Fix & Retest | 2026-11-14 | 2026-11-15 | 1 day | All Critical/Major fixed |
-| Test Report | 2026-11-15 | 2026-11-15 | 0.5 day | TEST-REPORT.md complete |
+| PBT/UT Execution | 2026-11-10 | 2026-11-11 | 1 day | Unit tests pass (dev round: 21-test drawio verification suite green) |
+| IT / QA rounds 1–2 | 2026-11-11 | 2026-11-12 | 1 day | 9-defect corpus audit (idempotency 21/23→23/23, security benchmarks), 8 QA test files staged |
+| QA round 3 | 2026-11-12 | 2026-11-12 | 0.5 day | 2 residual failures resolved (1 fixture fix, 1 documented production defect PD-QA1); drawio suite green (21 files, 158 pass + 1 skipped); full suite green (458 files, 3,586 pass + 7 skipped) |
+| Test Report | 2026-11-12 | 2026-11-12 | 0.5 day | TEST-REPORT v3.0 + STP/STC v2.0 regenerated |
+| SIT Execution (manual) | 2026-11-13 | 2026-11-14 | 1 day | Manual exploratory complete (visual quality SIT-01..08) |
+| Defect Fix & Retest (PD-QA1 + 15 corpus residuals) | 2026-11-14 | 2026-11-15 | 1 day | Decision on PD-QA1; Critical/Major fixed |
 
 ---
 
@@ -267,6 +281,7 @@ The test approach follows a risk-based strategy with emphasis on automation:
 | 6 | 5% overlap threshold too sensitive (false positives) | Medium | Medium | Configurable threshold; default 5% but adjustable |
 | 7 | Extension bridge migration breaks tool discovery | High | Medium | Phased migration; legacy tools deprecated not removed immediately |
 | 8 | Compound node layout with nested containers fails | Medium | Medium | ELK.js has native compound support; test nested swimlanes |
+| 9 | PD-QA1: final-gate de-buncher moves nodes in `scope=ports` runs (FSD 3.1 "keep all node positions" violated) | Medium | High (reproduced, now FIXED) | **CLOSED/mitigated (DEV round 4c):** `drawio-verify-loop.ts:50-54` computes `portsOnly` once from the original request scope; `:79` passes `{portsOnly}` into `finalize`; `:86,:89` forward `{portsOnly}` into `enforceFinalGate`; `drawio-apply-validate.ts:79-86` `enforceFinalGate(filePath, opts?)` forwards `opts` to `snapDiagramToGrid`; `drawio-grid-snap.ts:23-33` skips `debunch()`/`separateContainers()` when `opts?.portsOnly`. Measured evidence — node c stays (400,80), honest `status='partial'`, `node_proximity` still reported, 3 distinct edge anchors (0.25/0.5/0.75). QA-11 re-enabled and PASS (was skipped); regression lock `drawio-ports-only-positions.test.ts` (QA-20) guards against reintroduction. Production code fixed by DEV round 4c (QA role boundary respected — QA did not touch production code). |
 
 ---
 
@@ -398,8 +413,17 @@ New → Open → In Progress → Fixed → Ready for Retest → Verified → Clo
 | | AC-4: NUL byte rejected | UC-06, BR-51 | TC-211, TC-350, TC-612 | ✅ |
 | | AC-5: Generic error messages | UC-06, BR-51, BR-56 | TC-350, TC-355, TC-613 | ✅ |
 | | AC-6: Audit logging | UC-06, BR-54 | TC-353, TC-615 | ✅ |
+| **Story 7: Diagram Quality Guarantees** | AC-1 / BR-57: oversized band resized to content | QA-D-01, QA-15 (STC §11) | ✅ |
+| | AC-2 / BR-58: children spread over band interior | QA-D-02 (STC §11) | ✅ |
+| | AC-3 / BR-59: no stale waypoints — edges re-planned from written geometry | QA-13, QA-14, QA-D-04 (STC §11) | ✅ |
+| | AC-4 / BR-60: cross-lane edges parented to root | QA-13, QA-D-04, QA-D-05 (STC §11) | ✅ |
+| | AC-5 / BR-61: `childLayout=stackLayout` stripped before write | QA-D-04 (STC §11) | ✅ |
+| | AC-6 / BR-62: every exit on the 10px grid | QA-03, QA-05, QA-06, QA-D-07 (STC §11) | ✅ |
+| | AC-7 / BR-63: empty lane titles detected, never synthesised (CONTENT-OWNED) | QA-07 (STC §11) | ✅ |
+| | AC-8 / BR-64: missing decision labels detected, never invented (CONTENT-OWNED) | QA-D-03, QA-03 (STC §11) | ✅ |
+| | AC-9 / BR-65: `<mxfile>` wrapper unwrapped, bare `<mxGraphModel>` root | QA-05, QA-D-06 (STC §11) | ✅ |
 
-**Total BRD Acceptance Criteria: 37 | Covered: 37 | Coverage: 100%**
+**Total BRD Acceptance Criteria: 46 | Covered: 46 | Coverage: 100%** (37 from Stories 1–6 at v1.0 + 9 from STORY 7)
 
 ### 11.2 FSD Use Cases Coverage
 
@@ -424,8 +448,9 @@ New → Open → In Progress → Fixed → Ready for Retest → Verified → Clo
 | BR-34 to BR-38 | 3.4.3 (MCP Bridge) | TC-333 to TC-337 | 5 | ✅ |
 | BR-39 to BR-46 | 3.5.3 (Multi-worktree) | TC-338 to TC-345 | 8 | ✅ |
 | BR-47 to BR-56 | 3.6.3 (Security) | TC-346 to TC-355 | 10 | ✅ |
+| BR-57 to BR-65 | BRD STORY 7 (quality guarantees) | QA-01 to QA-15, QA-D-01 to QA-D-07, QA-16 (F1 drawio-xml-rewrite), QA-17 (F1 timing guard), QA-18 (F2 fs-guards symlink), QA-19 (F4 session-root), QA-20 (ports-only positions regression lock, PD-QA1 close evidence) (STC §11) | 9 | ✅ (9 tool-owned detect/fix verified; 2 content-owned detect-only verified; QA-11 now ACTIVE and passing — PD-QA1 closed, see risk #9) |
 
-**Total Business Rules: 56 | Covered: 56 | Coverage: 100%**
+**Total Business Rules: 65 | Covered: 65 | Coverage: 100%**
 
 ### 11.4 Non-Functional & Error Codes Coverage
 
@@ -439,15 +464,15 @@ New → Open → In Progress → Fixed → Ready for Retest → Verified → Clo
 
 | Requirement Category | Total Items | Test Cases Mapped | Coverage % |
 |---------------------|-------------|-------------------|------------|
-| BRD User Stories | 6 | 6 | 100% |
-| BRD Acceptance Criteria | 37 | 37 | 100% |
+| BRD User Stories | 7 | 7 | 100% |
+| BRD Acceptance Criteria | 46 | 46 | 100% |
 | FSD Use Cases (UC-01 to UC-06) | 6 | 6 | 100% |
-| FSD Business Rules (BR-01 to BR-56) | 56 | 56 | 100% |
+| FSD Business Rules + BRD STORY 7 (BR-01 to BR-65) | 65 | 65 | 100% |
 | FSD Error Codes | 22 | 22 | 100% |
 | Non-Functional Requirements | 16 | 16 | 100% |
-| **Grand Total** | **143** | **143** | **100%** |
+| **Grand Total** | **162** | **162** | **100%** |
 
-> **Verification:** Every BRD acceptance criterion, FSD use case, FSD business rule, and error code has at least one mapped test case in STC. The RTM demonstrates 100% traceability coverage.
+> **Verification:** Every BRD acceptance criterion (Stories 1–7), FSD use case, business rule (BR-01..BR-65), and error code has at least one mapped test case in STC. The RTM demonstrates 100% traceability coverage: 128 items (STC) / 162 items (STP grand total), both 100%. New hardening tests QA-16..QA-19 add coverage for F1 (batch XML rewrite + timing guard), F2 (file-level symlink guard), and F4 (session-root threading) within existing requirements — no new requirements added, so totals are unchanged at 128/128 and 162/162 = 100%. Regression lock QA-20 (`drawio-ports-only-positions.test.ts`) guards the PD-QA1 fix within existing BR-16/FSD 3.1 coverage. QA-01/QA-02 (session-root binding, STC §11) reinforce the Story 6 security rows. QA-11 is now ACTIVE and passing — PD-QA1 closed (risk #9 mitigated).
 
 ---
 

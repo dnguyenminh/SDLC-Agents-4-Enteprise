@@ -8,37 +8,37 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { setCachedDrawioCliPath, exportWithCli, exportWithChrome, exportWithPuppeteer, findDrawioCli, hasUpstreamServer } from './drawio-renderers';
+import { setCachedDrawioCliPath, exportWithCli, findDrawioCli, hasUpstreamServer } from './drawio-renderers';
 import { sanitizeLogText, resolveWorkspacePath, FILE_PATH_SCHEMA_DESCRIPTION } from '../../services/PathResolver';
 import { extractBaseDirArg } from '../../services/base-dir-resolution';
+import { baseDirSchemaProperties } from '../../services/tool-descriptions';
+import type { ToolCallContext } from '../../backend-local-tools/registry';
 
 export const DRAWIO_EXPORT_PNG_DEFINITION = {
   name: 'drawio_export_png',
-  description: 'Export .drawio XML content (base64) to PNG. Returns output_base64 (PNG bytes). Runs locally in the extension.',
+  description:
+    'Render a .drawio diagram to a PNG image using the local draw.io desktop CLI (fallback: chrome-devtools-mcp / ' +
+    'puppeteer-mcp). Runs locally in the extension. Callers pass file_path (the .drawio file); the extension reads ' +
+    'it, renders, and writes the PNG to output_path (default: file_path with .drawio replaced by .png). ' +
+    'Does not modify the .drawio source. Returns JSON {success, file_path (the PNG written), size_bytes, renderer}; ' +
+    'fails with isError if no renderer is installed or the XML is invalid. ' +
+    'Tip: run drawio_auto_layout first, then export, then visually check the PNG. ' +
+    'Raw interface (no proxy): content_base64 in, output_base64 out.',
   inputSchema: {
     type: 'object',
     properties: {
-      content_base64: { type: 'string', description: 'Base64-encoded .drawio XML content' },
+      content_base64: { type: 'string', description: 'Base64-encoded .drawio XML content (raw interface; the proxy replaces it with file_path)' },
       file_path: {
         type: 'string',
         description:
-          FILE_PATH_SCHEMA_DESCRIPTION +
-          ' When content_base64 is provided this is reference only (render output returns as output_base64).',
+          'Path of the .drawio file to render. ' + FILE_PATH_SCHEMA_DESCRIPTION +
+          ' When content_base64 is provided this is reference only.',
       },
-      base_dir: {
-        type: 'string',
-        description:
-          'Optional workspace root to resolve relative file_path against. Example: /home/user/project-worktree-B',
-      },
-      workspace_root: {
-        type: 'string',
-        description: 'Deprecated alias of base_dir. Ignored when base_dir is present.',
-      },
+      ...baseDirSchemaProperties('file_path'),
     },
     required: ['content_base64'],
   },
 };
-
 type RendererType = 'drawio-cli' | 'chrome-devtools-mcp' | 'puppeteer-mcp' | 'none';
 
 let cachedRenderer: RendererType | null = null;
@@ -69,7 +69,7 @@ export function resetRendererCache(): void {
 /** Local tool handler — args in, MCP tool-result shape out. */
 export async function handleDrawioExportPng(
   args: Record<string, unknown>,
-  orchestrationEngine?: any,
+  ctx?: ToolCallContext,
 ): Promise<unknown> {
   const b64 = args.content_base64 as string | undefined;
   if (!b64) return toolText(jsonError('content_base64 is required'), true);
@@ -78,8 +78,10 @@ export async function handleDrawioExportPng(
   // temp dir and returns output_base64. When base_dir/file_path is supplied it
   // is still validated through the PathResolver (containment enforced); the
   // output_path write-back belongs to the caller (Base64ProxyService).
+  // F4: forward the bound session root so session-bound clients resolve
+  // against their session root.
   if (typeof args.file_path === 'string' && args.file_path.trim() !== '') {
-    const resolution = resolveWorkspacePath(args.file_path, { baseDir: extractBaseDirArg(args) });
+    const resolution = resolveWorkspacePath(args.file_path, { baseDir: extractBaseDirArg(args), sessionRoot: ctx?.sessionRoot });
     if (!resolution.ok) {
       console.warn(`[drawio-export-png] reference path rejected: ${sanitizeLogText(resolution.message)}`);
       return toolText(jsonError(resolution.message), true);
@@ -94,8 +96,12 @@ export async function handleDrawioExportPng(
   try {
     const xml = wrapXmlIfNeeded(content);
     fs.writeFileSync(tmpDrawio, xml, 'utf-8');
-    const renderer = detectRenderer(orchestrationEngine);
-    await renderWithEngine(renderer, tmpDrawio, tmpPng, orchestrationEngine);
+    // F5: local handler — no orchestrationEngine is threaded through
+    // executeLocalTool; CLI is the self-contained path. Upstream renderers
+    // (chrome-devtools/puppeteer) are not available here; falling back to CLI
+    // / a clean "No renderer available" error is acceptable, crashing is not.
+    const renderer = detectRenderer();
+    await renderWithEngine(renderer, tmpDrawio, tmpPng);
     if (!fs.existsSync(tmpPng)) return toolText(jsonError('Export failed — PNG not created'), true);
     const pngBuf = fs.readFileSync(tmpPng);
     const outputBase64 = pngBuf.toString('base64');
@@ -111,21 +117,23 @@ function decodeBase64Content(b64: string): string {
   return Buffer.from(b64, 'base64').toString('utf-8');
 }
 
+/**
+ * SA4E-406 (i): never ADD an <mxfile> wrapper — the layout tool writes bare
+ * <mxGraphModel> and draw.io renders that fine. Only a bare <root> fragment
+ * (no model around it) gets the missing model element.
+ */
 function wrapXmlIfNeeded(content: string): string {
   const trimmed = content.trim();
   if (trimmed.startsWith('<mxfile') || trimmed.startsWith('<?xml') || trimmed.startsWith('<mxGraphModel')) return content;
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<mxfile host="app.diagrams.net">\n<diagram name="Page-1">\n${content}\n</diagram>\n</mxfile>`;
+  return `<mxGraphModel>${trimmed}</mxGraphModel>`;
 }
 
 async function renderWithEngine(
   renderer: RendererType, inputPath: string, outputPath: string,
-  orchestrationEngine?: any
 ): Promise<void> {
   switch (renderer) {
     case 'drawio-cli': await exportWithCli(inputPath, outputPath); break;
-    case 'chrome-devtools-mcp': await exportWithChrome(inputPath, outputPath, '', orchestrationEngine); break;
-    case 'puppeteer-mcp': await exportWithPuppeteer(inputPath, outputPath, '', orchestrationEngine); break;
-    default: throw new Error('No renderer available. Install draw.io desktop or configure chrome-devtools-mcp.');
+    default: throw new Error('No renderer available. Install draw.io desktop.');
   }
 }
 

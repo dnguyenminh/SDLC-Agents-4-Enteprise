@@ -6,8 +6,8 @@
 
 | Field | Value |
 |-------|-------|
-| Version | v1.0.0 |
-| Release Date | 2026-11-08 |
+| Version | v1.55.20 |
+| Release Date | 2026-11-13 |
 | Jira Ticket | SA4E-406 |
 | Author | DevOps Agent |
 | Status | Released |
@@ -16,7 +16,7 @@
 
 ## Header
 
-### v1.0.0 — 2026-11-08
+### v1.55.20 — 2026-11-13
 
 **Release Notes for:** SDLC Agents 4 Enterprise — Backend MCP Server  
 **Ticket:** SA4E-406 — drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration
@@ -110,6 +110,22 @@
 | `SA4E_ELK_TIMEOUT_MS` | `10000` | ELK layout timeout (ms) |
 | `SA4E_ELK_SPACING_MAX` | `500` | Max node spacing (px) |
 
+> **Security hardening (SA4E-335):** soupsieve 2.10 (CVE-2026-126190, HIGH) was present in both MCP venvs of the backend
+> production image and failed the CI Trivy gate (run 43436002707). Fixed by upgrading soupsieve to 4.0.1 in both
+> `/opt/markitdown-venv` and `/opt/markdown-exporter-venv`. On the interim Debian 12 bookworm image (Python 3.11.2)
+> this required `pip install --ignore-requires-python` (since soupsieve >=3.0.2 declares Requires-Python >=3.11.5),
+> superseded by the Debian 13 trixie migration below where Python 3.13.5 satisfies the floor natively.
+> `importlib.metadata` assertion + descendant-selector smoke test verify the upgrade — not by Trivy
+> exemption. The Trivy workflow input `trivyignores: .trivyignore` was restored. CVE-2026-126190 is NOT added to
+> `.trivyignore`; existing SA4E-385 accepted-risk entries (body-parser, undici, zod, GHSA aliases) are retained.
+
+> **Base-image migration (SA4E-335):** The backend Docker image was migrated from `node:22-slim` (Debian 12 bookworm,
+> Python 3.11.2) to `debian:trixie-slim` (Debian 13) + the official Node 22.23.4 binary tarball (SHA-256 pinned,
+> `NODE_TARBALL_SHA256`). Python in the runtime is now 3.13.5 (trixie), which natively satisfies soupsieve's
+> `Requires-Python >=3.11.5` floor — the `--ignore-requires-python` override was removed. Trivy gate re-validated green
+> (0 CRITICAL, 0 HIGH with `aquasec/trivy:0.70.0`). See `documents/SA4E-335/BUILD-AND-REGISTRY.md` for the full pin
+> and digest-update process.
+
 ---
 
 ## Test Results
@@ -117,7 +133,7 @@
 | Test Level | Tests | Passed | Failed |
 |------------|-------|--------|--------|
 | Unit Tests (detect, repair, geometry, parser, writer, apply, tool) | 80 | 80 | 0 |
-| Golden Tests (deployment + sequence fixtures) | 4 | 4 | 0 |
+| Golden Tests (documents/SA4E-406/diagrams/deployment.drawio + sequence-verify-loop.drawio) | 4 | 4 | 0 |
 | Integration Tests (apply, export-png) | 3 | 3 | 0 |
 | E2E Tests (extension MCP bridge) | 2 | 2 | 0 |
 | **UAT Automation Tests** | **34** | **34** | **0** |

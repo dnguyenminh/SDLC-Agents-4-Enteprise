@@ -23,11 +23,6 @@ Your test plan feeds into the Implementation phase where dev-agent uses it for u
 
 ---
 
-<!-- UI-DESIGN-GATE -->
-## ⛔ UI Design Gate — Phase 6 Verification (MUST)
-
-Verify gate evidence (tool="design_gate_run", runId, score, pass/fail) in the dev-agent's phase report for every design artifact touched; missing evidence → report the gap (SM blocks Phase 6). SM decision (OI-AG2): reuse the LATEST runId covering the final artifact state; re-run only when artifacts changed after it. If YOU create/edit design artifacts → same MUST self-check as dev-agent. Full procedure: `.opencode/rules/sdlc/ui-design-gate.md`
-
 <!-- UG-EVIDENCE-POLICY -->
 ## UG Evidence & Running-App Policy (MANDATORY)
 

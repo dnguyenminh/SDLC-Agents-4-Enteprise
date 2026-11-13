@@ -11,6 +11,14 @@ import type { DiagramGraph, DiagramNode, DiagramEdge } from './drawio-parser';
 export interface Rect { x: number; y: number; w: number; h: number; }
 export interface Point { x: number; y: number; }
 
+/** Grid step of the layout writer (px) — every vertex coordinate is a multiple of it (SA4E-406 f). */
+export const GRID_STEP = 10;
+
+/** Snap a coordinate to the nearest multiple of the grid step. */
+export function snapToGrid(v: number, step = GRID_STEP): number {
+  return Math.round(v / step) * step;
+}
+
 /** Map every vertex/container id to its absolute rect (parent offsets applied). */
 export function absoluteRects(graph: DiagramGraph): Map<string, Rect> {
   const byId = new Map<string, DiagramNode>();
@@ -101,10 +109,11 @@ export function segsCross(a1: Point, a2: Point, b1: Point, b2: Point): boolean {
   if (d1 * d2 < 0 && d3 * d4 < 0) return true;
   // Collinear overlap: needs an endpoint strictly inside the other segment,
   // or two identical segments (both endpoints shared)
-  if (d1 === 0 && (strictlyOn(b1, b2, a1) || identicalSeg(a1, a2, b1, b2))) return true;
-  if (d2 === 0 && strictlyOn(b1, b2, a2)) return true;
-  if (d3 === 0 && strictlyOn(a1, a2, b1)) return true;
-  if (d4 === 0 && strictlyOn(a1, a2, b2)) return true;
+  // strictlyOn(point, segA, segB): is `point` inside segment segA–segB
+  if (d1 === 0 && (strictlyOn(a1, b1, b2) || identicalSeg(a1, a2, b1, b2))) return true;
+  if (d2 === 0 && strictlyOn(a2, b1, b2)) return true;
+  if (d3 === 0 && strictlyOn(b1, a1, a2)) return true;
+  if (d4 === 0 && strictlyOn(b2, a1, a2)) return true;
   return false;
 }
 

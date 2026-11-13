@@ -11,9 +11,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { getWorkspaceRoot, checkForUpgrade } from "./activation-helpers";
 import { runDetection } from "./slash";
-import { QualityReport as DesignQualityReport, DEFAULT_THRESHOLD } from "./slash/types";
-import { resolveWasmPath } from "./slash/detector-env";
-import { initDesignGateEnv } from "./tools/design-gate/design-gate-env";
+import { QualityReport as DesignQualityReport, EnvConfig, DEFAULT_THRESHOLD } from "./slash/types";
 import type { RenderedDetectionResult } from "./slash/integration.service";
 import { SettingsPanel } from "./panels/settings/SettingsPanel";
 import { ProxyAgentFactory } from "./proxy/ProxyAgentFactory";
@@ -80,10 +78,6 @@ export async function activate(context: vscode.ExtensionContext) {
   // Patch globalThis.fetch so ALL fetch() callers in this process route through proxy
   applyGlobalFetchPatch();
 
-  // SA4E-393: design-gate local tools resolve the WASM detector from the
-  // extension path per call (no bare `vscode` global in the wrapper path).
-  initDesignGateEnv(context.extensionPath);
-
   const workspaceRoot = getWorkspaceRoot();
   if (workspaceRoot) {
     await initializeWorkspace(context, workspaceRoot);
@@ -103,16 +97,31 @@ export async function activate(context: vscode.ExtensionContext) {
     if (!root) {
       throw new Error("No workspace folder open. Open a project folder first.");
     }
-    // SEC-F08: the live workspace folder is passed explicitly to runDetection
-    // (workspaceRoot) - never through process-global env.
+    // Pipeline resolves paths against WORKSPACE_ROOT (EnvConfig) — must point
+    // at the live workspace folder, NOT the IDE install cwd.
+    process.env[EnvConfig.WORKSPACE_ROOT] = root;
     return root;
   };
 
-  // resolveWasmPath (./slash/detector-env) is shared with the design-gate tools.
-  // SEC-F08: root travels explicitly as sourceRoot + workspaceRoot.
-  const gateConfig = (mode: "static" | "rendered" | "both", root: string) => ({
-    detectionMode: mode, sourceRoot: root, workspaceRoot: root, threshold: DEFAULT_THRESHOLD, cacheReuse: true,
-  });
+  const resolveWasmPath = (): string => {
+    // 1) Packaged VSIX: copy-resources ships detector binary at resources/wasm/
+    //    (esbuild bundles out/ to a single file — out/wasm does not survive packaging)
+    const packaged = path.join(context.extensionPath, "resources", "wasm", "detector.wasm");
+    if (fs.existsSync(packaged)) {
+      process.env[EnvConfig.IMPPECABLE_SKILL_PATH] = packaged;
+      return packaged;
+    }
+    // 2) Dev tsc build: out/wasm/detector.wasm
+    const built = path.join(context.extensionPath, "out", "wasm", "detector.wasm");
+    if (fs.existsSync(built)) {
+      process.env[EnvConfig.IMPPECABLE_SKILL_PATH] = built;
+      return built;
+    }
+    // 3) F5 / repo checkout: workspace source layout
+    const devCandidate = path.join(context.extensionPath, "..", "source", "source-slash", "wasm", "detector.wasm");
+    process.env[EnvConfig.IMPPECABLE_SKILL_PATH] = devCandidate;
+    return devCandidate;
+  };
 
   const showReport = (mode: string, report: DesignQualityReport, extra?: string): void => {
     const status = report.pass ? "PASS" : "FAIL";
@@ -131,8 +140,13 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("sdlcAgents.runDesignGateStatic", async () => {
       try {
         const root = resolveWorkspace();
-        resolveWasmPath(context.extensionPath);
-        const { report } = await runDetection(gateConfig("static", root));
+        resolveWasmPath();
+        const { report } = await runDetection({
+          detectionMode: "static",
+          sourceRoot: root,
+          threshold: DEFAULT_THRESHOLD,
+          cacheReuse: true,
+        });
         showReport("Static", report);
       } catch (error: any) {
         vscode.window.showErrorMessage(`Design Quality Gate (Static) failed: ${error?.message ?? error}`);
@@ -141,13 +155,23 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("sdlcAgents.runDesignGateRendered", async () => {
       try {
         const root = resolveWorkspace();
-        resolveWasmPath(context.extensionPath);
-        const { combinedResult, report } = await runDetection(gateConfig("rendered", root));
+        resolveWasmPath();
+        const { combinedResult, report } = await runDetection({
+          detectionMode: "rendered",
+          sourceRoot: root,
+          threshold: DEFAULT_THRESHOLD,
+          cacheReuse: true,
+        });
         const rendered = combinedResult as RenderedDetectionResult;
         if (rendered.fetchStatus !== "success") {
           // AF-1 (TC-03): dev server unreachable → graceful fallback to static-only
           gateOutput.appendLine(`[${new Date().toISOString()}] Rendered fetch ${rendered.fetchStatus} — falling back to static-only detection`);
-          const { report: staticReport } = await runDetection(gateConfig("static", root));
+          const { report: staticReport } = await runDetection({
+            detectionMode: "static",
+            sourceRoot: root,
+            threshold: DEFAULT_THRESHOLD,
+            cacheReuse: true,
+          });
           showReport("Rendered->Static fallback", staticReport, `fetchStatus: ${rendered.fetchStatus}`);
           return;
         }
@@ -159,8 +183,13 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("sdlcAgents.runDesignGateBoth", async () => {
       try {
         const root = resolveWorkspace();
-        resolveWasmPath(context.extensionPath);
-        const { report } = await runDetection(gateConfig("both", root));
+        resolveWasmPath();
+        const { report } = await runDetection({
+          detectionMode: "both",
+          sourceRoot: root,
+          threshold: DEFAULT_THRESHOLD,
+          cacheReuse: true,
+        });
         showReport("Both", report);
       } catch (error: any) {
         vscode.window.showErrorMessage(`Design Quality Gate (Both) failed: ${error?.message ?? error}`);

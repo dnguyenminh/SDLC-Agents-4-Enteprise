@@ -7,7 +7,7 @@
 import * as vscode from "vscode";
 import { ServerStatus } from "./types";
 import { AuthManager } from "./auth/AuthManager";
-import { getVisibleLocalToolDefinitions } from "./backend-local-tools";
+import { getVisibleLocalToolDefinitions, mergeLocalToolDefinitions } from "./backend-local-tools";
 import { Base64ProxyService } from "./services/Base64ProxyService";
 import { WrapperServer, resolveMcpMaxBodyBytes } from "./services/WrapperServer";
 import { writeRuntimeSettings, clearRuntimeSettings } from "./utils/runtime-settings";
@@ -19,7 +19,6 @@ import { AtlassianCredentialService } from "./services/AtlassianCredentialServic
 import { registerAtlassianLocalTools } from "./mcp/atlassian/index";
 import { registerDevtoolsTools } from "./mcp/devtools-bridge";
 import { registerIdeControlTools } from "./mcp/ide-control-tools";
-import { registerDesignGateLocalTools } from "./tools/design-gate/design-gate-tool";
 import { getSetting } from "./config/settings-migration";
 
 /** Health check timeout in milliseconds */
@@ -87,12 +86,6 @@ export class RemoteBackendClient implements vscode.Disposable {
       } catch (err) {
         console.warn(`[RemoteBackendClient] IDE control tools registration failed: ${(err as Error).message}`);
       }
-    }
-    // Design-gate tools (no credentials needed → outside secrets gate)
-    try {
-      registerDesignGateLocalTools();
-    } catch (err) {
-      console.warn(`[RemoteBackendClient] Design gate tools registration failed: ${(err as Error).message}`);
     }
   }
 
@@ -177,12 +170,7 @@ export class RemoteBackendClient implements vscode.Disposable {
         `${this.backendUrl}/api/tools`,
         { headers: this.buildAuthHeaders(), timeoutMs: 5000 }
       );
-      const tools = json.tools || [];
-      const existing = new Set(tools.map((t: any) => t.name));
-      for (const def of getVisibleLocalToolDefinitions()) {
-        if (!existing.has(def.name)) tools.push(def);
-      }
-      return tools;
+      return mergeLocalToolDefinitions(json.tools || [], getVisibleLocalToolDefinitions());
     } catch (err) {
       console.debug(`[RemoteBackendClient] restGetTools failed, using local tools: ${(err as Error).message}`);
       return getVisibleLocalToolDefinitions();

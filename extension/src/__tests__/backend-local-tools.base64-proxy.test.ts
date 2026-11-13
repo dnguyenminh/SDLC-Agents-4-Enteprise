@@ -60,9 +60,18 @@ describe('Base64ProxyService', () => {
     const abs = path.join(TMP_DIR, 'rel-input.txt');
     const absResult = rooted.proxyInput('drawio_export_png', { file_path: abs });
     expect(absResult.file_path).toBe(abs);
-    // Missing relative file reports the workspace-resolved path
-    expect(() => rooted.proxyInput('drawio_export_png', { file_path: 'nope.txt' }))
-      .toThrow(new RegExp(`Failed to read file ${path.join(TMP_DIR, 'nope.txt').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+    // Missing relative file reports the workspace-resolved context. SA4E-406
+    // F3: the wrapper probed every candidate root (folders + allowlist + the
+    // legacy root) — the actionable error lists them instead of a bare ENOENT.
+    let errText = "";
+    try {
+      rooted.proxyInput('drawio_export_png', { file_path: 'nope.txt' });
+    } catch (err) {
+      errText = (err as Error).message;
+    }
+    expect(errText).toContain("PATH_NO_CANDIDATE: 'nope.txt' not found under any of");
+    expect(errText).toContain(TMP_DIR); // legacy effective root is among the probed roots
+    expect(errText).toContain("Use base_dir or an absolute path.");
   });
 
   it('TC-45: proxyOutput resolves relative output_path against the workspace root (D2 regression)', () => {

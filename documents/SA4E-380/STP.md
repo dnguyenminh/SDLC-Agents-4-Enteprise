@@ -107,7 +107,7 @@ Each objective maps one-to-one to a user story and acceptance criterion in the B
 | Path-only artifact | An artifact descriptor that exposes only a host-local filesystem path; unreadable when the child runs on another host |
 | `ARTIFACT_FETCH_FAILED` | Error code: the artifact exists on the child's host but its bytes could not be obtained; no file was written |
 | `PROXY_WRITE_FAILED` | Error code: bytes were obtained but could not be written (zero-write or partial-write) |
-| `npm run test:e2e` | Runs the e2e suite (`vitest.e2e.config.ts`), including the live content-proxy suite against a running backend (port via `LIVE_BACKEND_PORT`, default 48721) |
+| `LIVE_BACKEND=1` | Environment flag that enables the live content-proxy suite against a running backend |
 | Silent corruption | A failure mode where the system reports success while no usable file exists — the defect this ticket eliminates |
 
 ---
@@ -198,7 +198,7 @@ Coverage intent: IT-01..05 exercise `McpClientManager.executeTool` (wrapper mapp
 |-----------|-------|
 | Objective | Verify the externally visible contract exactly as an agent sees it: the tool catalogue, the adapted schemas, and the six export calls through `execute_dynamic_tool` against a real running backend |
 | Technique | Start backend + child `markdown-exporter-mcp-local`; issue `tools/list`, `find_tools` and `execute_dynamic_tool`; assert HTTP status, response envelope, file existence, format signature and absence of host paths |
-| Environment | Local backend, child on the same host (stdio/local); writable temp workspace; live e2e suite (`npm run test:e2e`) not required |
+| Environment | Local backend, child on the same host (stdio/local); writable temp workspace; `LIVE_BACKEND` not required |
 | Entry criteria | Server started with the current code; child tools discovered; baseline `tools/list` snapshot captured **before** the first export |
 | Exit criteria | Zero new tool names versus baseline; six export calls write six valid files; direct-call shape unchanged; both negative payload cases return the exact documented error |
 | Planned cases | **16** (E2E-API-01..16) |
@@ -225,12 +225,12 @@ Case allocation: E2E-API-01 catalogue invariant (baseline diff = 0); E2E-API-02.
 | Attribute | Value |
 |-----------|-------|
 | Objective | Prove the capability against the **real child server and the real extension wrapper**, including the cases that cannot be asserted in-process: embedded images surviving conversion, multi-artifact writes, remote path-only failure, write confinement, and whether the running wrapper build is current |
-| Technique | `npm run test:e2e` live suite for the six exporters; manual/staged execution for the remaining scenarios with file-size, hash and package-part inspection; evidence captured as file listings and screenshots |
+| Technique | `LIVE_BACKEND=1` live suite for the six exporters; manual/staged execution for the remaining scenarios with file-size, hash and package-part inspection; evidence captured as file listings and screenshots |
 | Environment | Backend running locally; `markdown-exporter-mcp-local` as a stdio child; extension wrapper on port **9183** inside the Kiro window; temp workspace with writable `documents/SA4E-380/evidence/` |
 | Entry criteria | Backend started with current code; wrapper process confirmed to be the **post-change build** (SIT-11 smoke check); fixture `documents/SA4E-375/UG-embedded.md` present |
 | Exit criteria | SIT-01..10 pass; SIT-11 recorded as PASS or as BLOCKED with the reload action stated; no unexplained file; every failure path leaves **zero** files behind |
 | Planned cases | **11** (SIT-01..11) |
-| Automation | 0% in CI — 6 of 11 are exercised by the on-demand harness `extension/src/__tests__/live-content-proxy.e2e.test.ts` (e2e suite, `npm run test:e2e`), which is excluded from the unit suite by design; the tester runs it and interprets the artifacts |
+| Automation | 0% in CI — 6 of 11 are exercised by the on-demand harness `extension/src/__tests__/live-content-proxy.test.ts` (`LIVE_BACKEND=1`), which is excluded from CI by design; the tester runs it and interprets the artifacts |
 
 SIT case intent: SIT-01..06 = the six exporters through the wrapper (each asserts a non-zero file with the correct signature and a response containing `file_path` + `size_bytes`); SIT-07 = embedded-image DOCX (184,761 B source → 265,062 B output, OOXML valid, images intact); SIT-08 = multi-artifact result (`outputs[]`) writes N distinct files; SIT-09 = remote child returning only a host-local path → `ARTIFACT_FETCH_FAILED` with "No file was written." and no path in the payload; SIT-10 = write confinement (destination outside the workspace, or a symlinked target) → `PROXY_WRITE_FAILED` and no file; SIT-11 = wrapper-build smoke check / reload verification (see §12, BLOCKER-WRAPPER-RELOAD).
 
@@ -257,7 +257,7 @@ SIT case intent: SIT-01..06 = the six exporters through the wrapper (each assert
 | `backend/.../__tests__/McpClientManager.content-proxy.test.ts` | 5 | IT | Existing — passing |
 | `extension/src/__tests__/base64-proxy.dynamic-catalog.test.ts` | 4 | UT | Existing — passing |
 | `extension/src/__tests__/wrapper-server.dynamic-export.test.ts` | 4 | IT | Existing — passing |
-| `extension/src/__tests__/live-content-proxy.e2e.test.ts` (`npm run test:e2e`) | 6 | SIT | Existing — passing on demand |
+| `extension/src/__tests__/live-content-proxy.test.ts` (`LIVE_BACKEND=1`) | 6 | SIT | Existing — passing on demand |
 | **Subtotal existing** | **35** | | |
 | Planned additions (PBT 6, UT 23, IT 3, E2E-API 16, SIT 5) | 53 | Mixed | To be authored/documented in Phase 4b |
 | **Total planned** | **88** | | |
@@ -452,7 +452,7 @@ This is a documentation backfill, so the schedule describes the remaining work t
 |------|---------|
 | vitest (`npm test`, `test:unit`, `test:e2e-api`) | PBT, UT, IT, E2E-API execution |
 | fast-check | Property generation and shrinking |
-| `npm run test:e2e` + `extension/src/__tests__/live-content-proxy.e2e.test.ts` | On-demand live harness for SIT-01..06 |
+| `LIVE_BACKEND=1` + `extension/src/__tests__/live-content-proxy.test.ts` | On-demand live harness for SIT-01..06 |
 | `unzip -l` / ZIP inspection (Node or shell) | OOXML package-part assertions (DOCX/XLSX/PPTX) |
 | File-size / hash comparison | Proving artifacts are byte-complete, not truncated |
 | `documents/SA4E-380/evidence/` | Screenshots, file listings, response payloads captured during SIT |
@@ -756,7 +756,7 @@ Every STC case will carry: `ID, Level, Priority, Type, Requirement (STORY/AC/NFR
 | E-1 | Backend content-proxy unit + integration tests (12 + 4 + 5) | **21/21 passing** | No — quoted |
 | E-2 | Backend full suite | **3,493 passing**, 1 known unrelated failure (UT-11) | No — quoted |
 | E-3 | Extension full suite | **3,255 passing / 6 skipped** | No — quoted |
-| E-4 | Live content-proxy end-to-end (`npm run test:e2e`) | **6/6 passing** | No — quoted |
+| E-4 | Live content-proxy end-to-end (`LIVE_BACKEND=1`) | **6/6 passing** | No — quoted |
 | E-5 | Live DOCX with embedded images | `documents/SA4E-375/UG-embedded.md` **184,761 B** → DOCX **265,062 B**, OOXML valid, images intact | No — quoted |
 | E-6 | Live six-exporter run | xlsx **4,849 B** (`xl/workbook.xml`, `xl/worksheets/sheet1.xml`); docx **14,599 B**; pptx **29,296 B**; pdf **1,967 B** (`%PDF`); html **199 B**; json **31 B** (valid JSON) | No — quoted |
 | E-7 | Path-only contract reproduction | `ARTIFACT_FETCH_FAILED` with "No file was written." and no path in the payload | No — quoted |

@@ -431,26 +431,3 @@ The UI agent participates **inside Phase 2 (Specification)**, between the BA age
 ### ⛔ BA Review Gate (Step 2b.5)
 
 After the UI agent produces the mockups, they enter a mandatory business-correctness review by the BA agent. The UI agent's mockup is **NOT complete** until the BA agent returns **APPROVED**. On **CHANGES REQUESTED**, the UI agent fixes every listed business gap and resubmits to the BA agent (max 2 iterations). The UI agent must not consider the mockup done without the BA agent's APPROVED verdict.
-
-## ⛔ UI Design Gate — Agent Self-Check (MANDATORY)
-
-**Trigger:** You created or edited design artifacts (`.html` `.htm` `.css` `.scss` `.sass` `.less` `.vue` `.svelte` `.tsx` `.jsx`) → run the gate BEFORE reporting done.
-
-**Invoke:**
-```
-find_tools("design gate")
-execute_dynamic_tool(
-  toolName: "design_gate_run",
-  arguments: { "mode": "both", "source_path": "<workspace-relative path, or omit = whole workspace>" }
-)
-```
-⛔ `arguments` MUST be an OBJECT, never a JSON string.
-
-**Completion report evidence:** tool="design_gate_run", runId, score, pass/fail.
-
-**FAIL handling — no silent acceptance:**
-- (a) Fix in the same change + re-run until PASS, or
-- (b) Written justification (biên bản lý do) + follow-up ticket in shared backlog SA4E-438.
-- Never mask/force-pass findings (honest reporting). HIGH/MEDIUM fail the file; LOW = triage only. Finding paths stay workspace-relative (C5).
-
-**SM blocks Phase 5/6 completion without gate evidence.** Full procedure: `.claude/rules/ui-design-gate.md` (source: `.opencode/rules/sdlc/ui-design-gate.md`)

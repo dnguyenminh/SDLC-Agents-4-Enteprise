@@ -437,26 +437,3 @@ Before the SM invokes the TA agent, the DEV agent must prepare:
 - If the TA agent still returns CHANGES REQUESTED after 2 iterations, the DEV agent STOPS and reports to the SM with: the remaining items, a root-cause analysis, and whether the blocker is a code issue (DEV agent fixes) or a design gap (SA agent must revise the TDD). The DEV agent must never bypass the gate, never mark the code done, and never apply a workaround to "pass" the review.
 
 > ⛔ The DEV agent must not report the implementation as "done" until the TA agent's verdict is APPROVED. A green build without the TA agent's approval is NOT a completed implementation.
-
-## ⛔ UI Design Gate — Agent Self-Check (MANDATORY)
-
-**Trigger:** You created or edited design artifacts (`.html` `.htm` `.css` `.scss` `.sass` `.less` `.vue` `.svelte` `.tsx` `.jsx`) → run the gate BEFORE reporting done.
-
-**Invoke:**
-```
-find_tools("design gate")
-execute_dynamic_tool(
-  toolName: "design_gate_run",
-  arguments: { "mode": "both", "source_path": "<workspace-relative path, or omit = whole workspace>" }
-)
-```
-⛔ `arguments` MUST be an OBJECT, never a JSON string.
-
-**Completion report evidence:** tool="design_gate_run", runId, score, pass/fail.
-
-**FAIL handling — no silent acceptance:**
-- (a) Fix in the same change + re-run until PASS, or
-- (b) Written justification (biên bản lý do) + follow-up ticket in shared backlog SA4E-438.
-- Never mask/force-pass findings (honest reporting). HIGH/MEDIUM fail the file; LOW = triage only. Finding paths stay workspace-relative (C5).
-
-**SM blocks Phase 5/6 completion without gate evidence.** Full procedure: `.claude/rules/ui-design-gate.md` (source: `.opencode/rules/sdlc/ui-design-gate.md`)

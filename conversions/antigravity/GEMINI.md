@@ -33,6 +33,3 @@ RUN-LOG maintenance, and version-sync checks.
 
 ## Communication
 Respond to the user in **Vietnamese**; code, identifiers, and commit messages in **English**.
-
-## UI Design Gate
-Agents editing design artifacts (.html/.htm/.css/.scss/.sass/.less/.vue/.svelte/.tsx/.jsx) MUST run the design quality gate BEFORE reporting done — invoke `design_gate_run` via the extension's local tools (`find_tools("design gate")` → `execute_dynamic_tool(toolName: "design_gate_run", arguments: {...})`; arguments is an object, never a JSON string). Include gate evidence (tool, runId, score, pass/fail) in completion reports; FAIL → fix in the same change or justify (follow-up ticket SA4E-438); never mask findings. SM blocks Phase 5/6 completion without gate evidence — applies to dev-agent and ui-agent (self-check), qa-agent (Phase 6 verification), sm-agent (blocker). Full rule: AGENTS.md Key Rule 8; `.kiro/steering/ui-design-gate.md`.

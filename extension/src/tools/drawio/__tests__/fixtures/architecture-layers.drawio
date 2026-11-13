@@ -1,0 +1,91 @@
+<mxfile host="65bd71144e">
+    <diagram id="gztl2FcIrmyx3BvFeu2S" name="Page-1">
+        <mxGraphModel dx="1776" dy="2008" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="layer-ux" parent="1" style="swimlane;startSize=40;fillColor=#e3f2fd;strokeColor=#1976d2;html=1;fontStyle=1;fontSize=14;" value="LAYER 1: AGENT UX LAYER (Phase 2–3)" vertex="1">
+                    <mxGeometry height="400" width="1560" x="20" y="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="ux-ext" parent="layer-ux" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1976d2;fontSize=11;" value="VS Code Extension (Agent Runtime)&#xa;pi-workflow · pi-agent · Budget Gate · Tokenizer" vertex="1">
+                    <mxGeometry height="80" width="460" x="30" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="ux-tools" parent="layer-ux" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1976d2;fontSize=11;" value="Core Agent Tools&#xa;search_symbols · get_file_skeleton · read_code_block · query_call_graph&#xa;Session pin mandatory · DSL output" vertex="1">
+                    <mxGeometry height="80" width="460" x="30" y="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="ux-scratch" parent="layer-ux" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" value="Scratchpad &amp; Eviction&#xa;Goal/DeadEnds/Facts/Plan format&#xa;S_evict = Age×200 + Tokens − Ref×1000&#xa;Tombstones preserve tool_call_id" vertex="1">
+                    <mxGeometry height="80" width="460" x="520" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="ux-repo" parent="layer-ux" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" value="Repo Map (PageRank)&#xa;AST call graph · Query personalization&#xa;Binary-search token packing (~1,500 tok)" vertex="1">
+                    <mxGeometry height="80" width="460" x="520" y="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="ux-budget" parent="layer-ux" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontSize=11;" value="Runtime Token Budget&#xa;llama.cpp /tokenize · Tier resolution (8K/32K/128K)&#xa;Escalation: Compress → Drop-Steering → Min-Loadout" vertex="1">
+                    <mxGeometry height="80" width="460" x="1010" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="ux-patch" parent="layer-ux" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#e65100;fontSize=11;" value="Patch Protocol &amp; SSE&#xa;Stage → Approve → Apply (stale-base revalidation)&#xa;SSE durable log + Last-Event-ID replay&#xa;Pinned index_snapshot_id API guard" vertex="1">
+                    <mxGeometry height="80" width="460" x="1010" y="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="ux-state" parent="layer-ux" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8eaf6;strokeColor=#3949ab;fontSize=11;" value="Agent State Recovery&#xa;summarizeForResume() from zero in-memory state&#xa;Plan/Step/Approval/Transition persistence" vertex="1">
+                    <mxGeometry height="80" width="460" x="1010" y="260" as="geometry"/>
+                </mxCell>
+                <mxCell id="layer-engine" parent="1" style="swimlane;startSize=40;fillColor=#f3e5f5;strokeColor=#7b1fa2;html=1;fontStyle=1;fontSize=14;" value="LAYER 2: CODE INTELLIGENCE ENGINE (Phase 1)" vertex="1">
+                    <mxGeometry height="380" width="1560" x="20" y="440" as="geometry"/>
+                </mxCell>
+                <mxCell id="eng-pipeline" parent="layer-engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#7b1fa2;fontSize=11;" value="Indexing Pipeline (10 Stages A–J)&#xa;A: Repo discovery → B: File inventory → C: Build config → D: Syntax (Tree-sitter)&#xa;E: Dependency resolution → F: Semantic → G: Graph reconciliation&#xa;H: Chunk &amp; embed → I: Validate → J: Atomic publication (READY)&#xa;Per-language isolation · WAL durability" vertex="1">
+                    <mxGeometry height="120" width="760" x="30" y="480" as="geometry"/>
+                </mxCell>
+                <mxCell id="eng-retrieval" parent="layer-engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d1c4e9;strokeColor=#7b1fa2;fontSize=11;" value="Snapshot-Scoped Retrieval&#xa;Hybrid: Exact symbol &gt; Proven reference &gt; Text similarity&#xa;Lexical (FTS5) + Vector (embedding_set) + Graph (CALLERS/CALLEES)&#xa;index_snapshot_id = primary filter · Composite FK ownership (18 triggers)" vertex="1">
+                    <mxGeometry height="100" width="760" x="30" y="620" as="geometry"/>
+                </mxCell>
+                <mxCell id="eng-persistence" parent="layer-engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d1c4e9;strokeColor=#7b1fa2;fontSize=11;" value="Agent Persistence&#xa;agent_run · agent_plan (versioned) · agent_step (deps + I/O)&#xa;agent_state_transition · agent_tool_execution · retrieval_evidence&#xa;agent_workspace · change_set · approval_request · execution_run" vertex="1">
+                    <mxGeometry height="100" width="740" x="820" y="480" as="geometry"/>
+                </mxCell>
+                <mxCell id="eng-security" parent="layer-engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#c62828;fontSize=11;" value="Patch &amp; Sandbox Security&#xa;Staged: stage() validates (base hash, path, symlinks) → applyAfterApproval()&#xa;Zod schema validation · No shell concat · Network deny by default&#xa;Container: rootless, non-root, capability/mount/memory/CPU limits" vertex="1">
+                    <mxGeometry height="100" width="740" x="820" y="600" as="geometry"/>
+                </mxCell>
+                <mxCell id="eng-sse" parent="layer-engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontSize=11;" value="SSE Durable Event Log&#xa;agent_event table · Append before publish&#xa;Last-Event-ID replay · Gap detection (SseGapError)&#xa;Monotonic event_id · Retention policy" vertex="1">
+                    <mxGeometry height="80" width="740" x="820" y="720" as="geometry"/>
+                </mxCell>
+                <mxCell id="layer-storage" parent="1" style="swimlane;startSize=40;fillColor=#e8f5e9;strokeColor=#388e3c;html=1;fontStyle=1;fontSize=14;" value="LAYER 3: STORAGE" vertex="1">
+                    <mxGeometry height="300" width="1560" x="20" y="840" as="geometry"/>
+                </mxCell>
+                <mxCell id="store-sqlite" parent="layer-storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" value="SQLite Engine Store (ADR-001)&#xa;.code-intel/index.db per workspace · WAL journal mode&#xa;Immutable file boundary · 29 tables + 18 composite FK triggers&#xa;Additive V6 migration (28→29 tables) · Dual-dialect (SQLite + PG)" vertex="1">
+                    <mxGeometry height="120" width="760" x="30" y="880" as="geometry"/>
+                </mxCell>
+                <mxCell id="store-pg" parent="layer-storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" value="PostgreSQL Platform DB (Unchanged)&#xa;sa4e-postgres (DEV + Prod) · Orchestration, tickets, KB, jobs&#xa;pg_dump 02:00 daily · Task Scheduler SA4E-PG-Backup&#xa;Docker volume protection: no &#39;docker compose down -v&#39;" vertex="1">
+                    <mxGeometry height="120" width="740" x="820" y="880" as="geometry"/>
+                </mxCell>
+                <mxCell id="store-reused" parent="layer-storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57f17;fontSize=11;" value="Reused Capabilities (Wired, Not Rewritten)&#xa;F2: Tree-sitter + FTS5 + Graph + Incremental + WAL&#xa;F4: get_ai_context/edit/curated + Budget Governance&#xa;BudgetCalculator + ThresholdGate + Tiering + Steering (DefaultResourceLoader)" vertex="1">
+                    <mxGeometry height="100" width="760" x="30" y="1020" as="geometry"/>
+                </mxCell>
+                <mxCell id="store-gates" parent="layer-storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;" value="Quality Gates (Verified)&#xa;✅ npm run build (exit 0)&#xa;✅ npm test (backend 500f/3825p + ext 443f/3469p)&#xa;✅ test:ac (17 AC suite) · test:token · test:regression (218 tests)&#xa;✅ SA4E-335 Docker volume protection active" vertex="1">
+                    <mxGeometry height="100" width="740" x="820" y="1020" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="ux-ext" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" target="ux-tools" value="MCP bridge">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="ux-tools" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" target="eng-pipeline" value="pins session">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="ux-tools" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" target="eng-retrieval" value="queries snapshot">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="eng-persistence" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" target="store-sqlite" value="persists to">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="eng-pipeline" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" target="store-sqlite" value="stores immutable snapshots">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="eng-pipeline" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;dashed=1;strokeColor=#999999;" target="store-reused" value="reuses F2/F4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="ux-budget" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;dashed=1;strokeColor=#999999;" target="store-reused" value="wires budget">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="store-sqlite" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;dashed=1;strokeColor=#388e3c;" target="store-pg" value="separate layer">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

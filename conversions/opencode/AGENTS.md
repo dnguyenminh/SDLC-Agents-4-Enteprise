@@ -356,15 +356,3 @@ Located at `.kiro/steering/patterns/` — these define architecture pattern dete
 | `plugin.md` | Extension module for an existing host system |
 
 SM MUST detect project pattern using `catalog.md` signals before each ticket, then adjust pipeline emphasis (BRD, diagrams, testing) according to the matching pattern file.
-
----
-
-## UI Design Gate
-
-Agents editing design artifacts (`.html` `.htm` `.css` `.scss` `.sass` `.less` `.vue` `.svelte` `.tsx` `.jsx`) MUST run the design quality gate BEFORE reporting done:
-
-- Invoke: `find_tools("design gate")` → `execute_dynamic_tool(toolName: "design_gate_run", arguments: { "mode": "both", "source_path": "<workspace-relative path, or omit = whole workspace>" })` — `arguments` MUST be an OBJECT, never a JSON string.
-- Also available: `design_gate_list_rules` — rule catalog (30 rules). The gate runs locally in the extension's `LOCAL_TOOL_REGISTRY` (no new MCP server, no npx/binary); finding paths are always workspace-relative (C5).
-- Completion report evidence: tool="design_gate_run", runId, score, pass/fail. FAIL → fix in the same change or written justification + follow-up ticket in the shared backlog (SA4E-438); never mask/force-pass findings; HIGH/MEDIUM fail the file, LOW = triage only.
-- Roles: dev-agent + ui-agent (MUST self-check), qa-agent (Phase 6 verification — reuse the latest runId covering final artifact state per OI-AG2), sm-agent (blocks Phase 5/6 completion without gate evidence; never writes evidence itself).
-- Full rule: `.opencode/rules/sdlc/ui-design-gate.md`

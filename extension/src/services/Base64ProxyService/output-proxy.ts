@@ -12,13 +12,15 @@ import {
   sanitizeLogText,
   PathResolverError,
 } from "../PathResolver";
-import { checkSymlinkGuard, checkSymlinkGuardBeforeEnsureDir } from "../../backend-local-tools";
+import { checkSymlinkGuard } from "../../backend-local-tools";
 
 /** Instance-backed context injected by Base64ProxyService. */
 export interface OutputProxyContext {
   /** SA4E-394: optional per-call base_dir forwarded into resolution. */
   resolvePath: (filePath: string, baseDir?: unknown) => string;
   resolveRoot: () => string | undefined;
+  /** SA4E-406 A6: bound MCP session root for this request (may be unset). */
+  sessionRoot?: string;
 }
 
 /** Proxy output: extract base64 payloads → write files → rewrite response. */
@@ -55,6 +57,7 @@ export function proxyToolOutput(
       const outputPath = resolveOutputPath(ctx, args, output.file_name, multi);
       if (!outputPath) continue;
       const buf = Buffer.from(output.output_base64, "base64");
+      ensureDir(path.dirname(outputPath));
       // I-7 guard for the proxy write (re-resolve is idempotent — PBT-02).
       // SEC-03 (CWE-283): forward the per-call base_dir/workspace_root so the
       // re-resolve validates against the SAME effective root as the derivation
@@ -67,12 +70,9 @@ export function proxyToolOutput(
         rootProvider: () => ctx.resolveRoot(),
         baseDir: args.base_dir,
         workspaceRoot: args.workspace_root,
+        sessionRoot: ctx.sessionRoot, // SA4E-406 A6 — session root governs writes too
       });
       if (!outResolution.ok) throw new PathResolverError(outResolution.message);
-      // SEC-WT-22: containment BEFORE ensureDir (mkdir follows links); full guard stays after.
-      const preGuardError = checkSymlinkGuardBeforeEnsureDir(outResolution, sanitizeLogText(outputPath));
-      if (preGuardError) throw new PathResolverError(preGuardError);
-      ensureDir(path.dirname(outputPath));
       const guardError = checkSymlinkGuard(outResolution, sanitizeLogText(outputPath));
       if (guardError) throw new PathResolverError(guardError);
       fs.writeFileSync(outputPath, buf);

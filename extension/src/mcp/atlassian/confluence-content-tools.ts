@@ -2,7 +2,12 @@
  * SA4E-110 — Confluence content tools (7 tools) registered in-process.
  * Attachments, history, version, page_analytics, comments.
  */
-import { checkSymlinkGuard, registerLocalTool, LocalToolDefinition } from "../../backend-local-tools";
+import {
+  checkSymlinkGuard,
+  registerLocalTool,
+  LocalToolDefinition,
+  type ToolCallContext,
+} from "../../backend-local-tools";
 import {
   resolveWorkspacePath,
   sanitizeLogText,
@@ -12,25 +17,8 @@ import {
 } from "../../services/PathResolver";
 import { extractBaseDirArg } from "../../services/base-dir-resolution";
 import { AtlassianHttpClient, toResult, toErrorResult } from "./atlassian-http-client";
+import { baseDirSchemaProperties } from "../../services/tool-descriptions";
 
-/** SA4E-394 — shared base_dir/workspace_root schema (BR-08/BR-22, AC5). */
-const BASE_DIR_SCHEMA = (pathArg: string) => ({
-  base_dir: {
-    type: "string",
-    description:
-      `Optional workspace root to resolve relative ${pathArg} against. Must be ` +
-      "registered in the server allowlist (MCP_WORKSPACE_ROOTS). Relative values " +
-      "are normalized to absolute. Example: /home/user/project-worktree-B",
-  },
-  workspace_root: {
-    type: "string",
-    description:
-      `Deprecated alias of base_dir (same semantics — optional workspace root to ` +
-      `resolve relative ${pathArg} against; must be in the MCP_WORKSPACE_ROOTS ` +
-      "allowlist). Ignored when base_dir is present. " +
-      "Example: /home/user/project-worktree-B",
-  },
-});
 
 /** Register Confluence content and comment tools (7 tools) */
 export function registerConfluenceContentTools(client: AtlassianHttpClient): void {
@@ -42,18 +30,19 @@ export function registerConfluenceContentTools(client: AtlassianHttpClient): voi
     return toResult(await client.request("GET", `/wiki/rest/api/content/${a.page_id}/child/attachment?start=${a.start ?? 0}&limit=${a.limit ?? 25}`));
   });
 
-  reg("confluence_add_attachment", "Upload a file to a page", {
+  reg("confluence_add_attachment", "Upload a local workspace file as an attachment to a Confluence page (page_id). Reads the file from disk in the extension (no base64 needed). Returns the created attachment metadata. Fails if file_path is outside the workspace root/allowlist, missing, or a symlink escaping the root.", {
     type: "object",
     properties: {
       page_id: { type: "string" },
       file_path: { type: "string", description: FILE_PATH_SCHEMA_DESCRIPTION },
-      ...BASE_DIR_SCHEMA("file_path"),
+      ...baseDirSchemaProperties("file_path"),
     },
     required: ["page_id", "file_path"],
-  }, async (a) => {
+  }, async (a, ctx) => {
     // SA4E-356: resolve FIRST — before FormData/HTTP (I-1, I-3).
     // SA4E-394: per-call base_dir/workspace_root becomes the effective root.
-    const resolution = resolveWorkspacePath(a.file_path, { baseDir: extractBaseDirArg(a) });
+    // SA4E-406 A6: the bound MCP session root gates resolution first.
+    const resolution = resolveWorkspacePath(a.file_path, { baseDir: extractBaseDirArg(a), sessionRoot: ctx?.sessionRoot });
     if (!resolution.ok) {
       console.warn(`[confluence-content-tools] confluence_add_attachment resolve failed: ${resolution.message}`);
       return toErrorResult(new Error(resolution.message));
@@ -123,10 +112,10 @@ export function registerConfluenceContentTools(client: AtlassianHttpClient): voi
 /** DRY helper — registers a tool with hidden:true + error boundary */
 function reg(
   name: string, description: string, inputSchema: Record<string, unknown>,
-  handler: (args: Record<string, any>) => Promise<any>,
+  handler: (args: Record<string, any>, ctx?: ToolCallContext) => Promise<any>,
 ): void {
   const def: LocalToolDefinition = { name, description, inputSchema, hidden: true };
-  registerLocalTool(name, async (args) => {
-    try { return await handler(args); } catch (e) { return toErrorResult(e); }
+  registerLocalTool(name, async (args, ctx) => {
+    try { return await handler(args, ctx); } catch (e) { return toErrorResult(e); }
   }, def);
 }

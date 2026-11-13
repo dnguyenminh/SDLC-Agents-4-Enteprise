@@ -4,10 +4,15 @@
  */
 
 import * as fs from 'fs';
+import {
+  parseAttrs, parseGeometry, parseLabelPosition, parseStyleAnchor, parseTerminalPoint, parseWaypoints,
+} from './drawio-parser-attrs';
 
 export interface DiagramNode {
   id: string;
   parentId: string;
+  /** Raw `value` attribute (label text, may contain entities/HTML). */
+  label?: string;
   x: number;
   y: number;
   width: number;
@@ -23,6 +28,12 @@ export interface DiagramEdge {
   style: string;
   /** Parent cell id — waypoints are stored relative to this cell's origin. */
   parentId: string;
+  /** Raw `value` attribute (edge label, may contain entities/HTML); '' when unlabeled. */
+  label?: string;
+  /** Label position along the edge (-1 source … 0 middle … 1 target). */
+  labelPos?: number;
+  /** Child edgeLabel cell carrying the label geometry, when draw.io stored it there. */
+  labelCellId?: string;
   /** Stored waypoints (relative to edge parent origin), in file order. */
   points: Array<{ x: number; y: number }>;
   /** Fixed exit anchor as fractions of the source rect (exitX/exitY), or null. */
@@ -46,8 +57,44 @@ export interface DiagramGraph {
 /** Parse .drawio XML file into DiagramGraph. */
 export function parseDrawio(filePath: string): { raw: string; graph: DiagramGraph } {
   const raw = fs.readFileSync(filePath, 'utf-8');
-  const graph = extractGraph(raw);
-  return { raw, graph };
+  return { raw, graph: parseDrawioXml(raw) };
+}
+
+/** Parse draw.io XML text (no file I/O) — used to re-read geometry after a relayout. */
+export function parseDrawioXml(xml: string): DiagramGraph {
+  return extractGraph(xml);
+}
+
+interface RawCell { attrs: Record<string, string>; body: string; }
+
+/**
+ * SA4E-406 (H1): non-backtracking cell scan. The old lazy regex
+ * `<mxCell\s([^>]*?)(?:\/>|>([\s\S]*?)<\/mxCell>)` rescans the remaining
+ * input from EVERY position once a file carries an unterminated <mxCell
+ * (2 MB ≈ 77 s). Literal open-tag anchors + indexOf keep the scan O(n) while
+ * preserving the old tolerance (first '>' ends the open tag; an unterminated
+ * cell is skipped, later cells still parse).
+ */
+function scanCells(xml: string): RawCell[] {
+  const cells: RawCell[] = [];
+  const openTag = /<mxCell\s/g;
+  let m: RegExpExecArray | null;
+  while ((m = openTag.exec(xml)) !== null) {
+    const attrsStart = m.index + m[0].length;
+    const tagEnd = xml.indexOf('>', attrsStart);
+    if (tagEnd < 0) break; // unterminated open tag — nothing else can match
+    const selfClosing = xml[tagEnd - 1] === '/';
+    const attrsEnd = selfClosing ? tagEnd - 1 : tagEnd;
+    if (selfClosing) {
+      cells.push({ attrs: parseAttrs(xml.slice(attrsStart, attrsEnd)), body: '' });
+      continue;
+    }
+    const close = xml.indexOf('</mxCell>', tagEnd + 1);
+    if (close < 0) { openTag.lastIndex = tagEnd + 1; continue; } // skip, keep scanning
+    cells.push({ attrs: parseAttrs(xml.slice(attrsStart, attrsEnd)), body: xml.slice(tagEnd + 1, close) });
+    openTag.lastIndex = close; // resume after the close tag, like the old regex
+  }
+  return cells;
 }
 
 function extractGraph(xml: string): DiagramGraph {
@@ -56,26 +103,21 @@ function extractGraph(xml: string): DiagramGraph {
   const containers: DiagramNode[] = [];
   const looseEdges: DiagramEdge[] = [];
 
-  // Match all mxCell elements (self-closing or with children)
-  const cellRegex = /<mxCell\s([^>]*?)(?:\/>|>([\s\S]*?)<\/mxCell>)/g;
-  const cells: Array<{ attrs: Record<string, string>; body: string }> = [];
-  let match: RegExpExecArray | null;
+  const cells = scanCells(xml);
 
-  while ((match = cellRegex.exec(xml)) !== null) {
-    const attrs = parseAttrs(match[1]);
-    const body = match[2] ?? '';
-    cells.push({ attrs, body });
-  }
-
+  const tableParts = tableInternals(cells);
+  const edgeIds = new Set(cells.filter(c => c.attrs['edge'] === '1').map(c => c.attrs['id'] ?? ''));
+  const labelCells = edgeLabelCells(cells, edgeIds);
   for (const cell of cells) {
     const id = cell.attrs['id'] ?? '';
     const style = cell.attrs['style'] ?? '';
     const parent = cell.attrs['parent'] ?? '1';
 
     if (cell.attrs['edge'] === '1') {
+      const label = edgeLabel(cell, labelCells.get(id));
       const edge: DiagramEdge = {
         id, sourceId: cell.attrs['source'] ?? '', targetId: cell.attrs['target'] ?? '',
-        style, parentId: parent,
+        style, parentId: parent, label: label.label, labelPos: label.labelPos, labelCellId: label.labelCellId,
         points: parseWaypoints(cell.body),
         exit: parseStyleAnchor(style, 'exit'),
         entry: parseStyleAnchor(style, 'entry'),
@@ -85,11 +127,16 @@ function extractGraph(xml: string): DiagramGraph {
       if (edge.sourceId && edge.targetId) edges.push(edge);
       else if (edge.sourcePoint && edge.targetPoint) looseEdges.push(edge);
     } else if (id !== '0' && id !== '1') {
+      if (tableParts.has(id)) continue; // positioned by its table, not by us
+      // An edge label is a child of its edge with RELATIVE geometry (x = position along the edge, y = offset):
+      // it follows the edge, so it is neither a node to place nor a container child. Writing absolute
+      // coordinates into it throws the label far off the page and blanks the whole export.
+      if (edgeIds.has(parent) || /(?:^|;)edgeLabel(?:;|$)/.test(style)) continue;
       const geom = parseGeometry(cell.body, cell.attrs);
       if (!geom) continue;
-      const isCont = hasChildren(id, cells) || isContainerStyle(style, geom.w, geom.h);
+      const isCont = !TABLE_ROOT.test(style) && (hasChildren(id, cells) || isContainerStyle(style, geom.w, geom.h));
       const node: DiagramNode = {
-        id, parentId: parent,
+        id, parentId: parent, label: cell.attrs['value'] ?? '',
         x: geom.x, y: geom.y, width: geom.w, height: geom.h,
         style, isContainer: isCont,
       };
@@ -99,63 +146,57 @@ function extractGraph(xml: string): DiagramGraph {
   return { nodes, edges, containers, looseEdges };
 }
 
-function parseGeometry(body: string, _cellAttrs: Record<string, string>): { x: number; y: number; w: number; h: number } | null {
-  // Look for mxGeometry in body or as sibling in raw XML
-  const geomRegex = /<mxGeometry\s([^>]*?)(?:\/>|>)/;
-  const geomMatch = body.match(geomRegex);
-  if (!geomMatch) return null;
-  const attrs = parseAttrs(geomMatch[1]);
-  if (attrs['as'] !== 'geometry') return null;
-  return {
-    x: parseFloat(attrs['x'] ?? '0'),
-    y: parseFloat(attrs['y'] ?? '0'),
-    w: parseFloat(attrs['width'] ?? '80'),
-    h: parseFloat(attrs['height'] ?? '40'),
+/** draw.io tables: the table, its rows and cells are laid out by childLayout=tableLayout. */
+const TABLE_ROOT = /(?:^|;)(?:shape=table|childLayout=tableLayout)(?:;|$)/;
+const TABLE_PART = /(?:^|;)shape=(?:tableRow|tableCell|partialRectangle)(?:;|$)/;
+
+/**
+ * Ids of rows/cells that belong to a table. Their geometry omits x/width (the table
+ * computes them), so reading them as free nodes yields fake overlaps and 'outside
+ * container' reports, and moving them would corrupt the table. The table itself
+ * stays a single opaque node.
+ */
+function tableInternals(cells: Array<{ attrs: Record<string, string> }>): Set<string> {
+  const byId = new Map(cells.map(c => [c.attrs['id'] ?? '', c]));
+  const memo = new Map<string, boolean>();
+  const inside = (id: string, depth = 0): boolean => {
+    if (memo.has(id)) return memo.get(id)!;
+    const cell = byId.get(id);
+    const result = depth < 50 && !!cell && TABLE_PART.test(cell.attrs['style'] ?? '');
+    memo.set(id, result);
+    return result;
   };
+  return new Set([...byId.keys()].filter(id => id !== '' && inside(id)));
 }
 
-function parseAttrs(attrStr: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  const regex = /(\w+)="([^"]*)"/g;
-  let m: RegExpExecArray | null;
-  while ((m = regex.exec(attrStr)) !== null) {
-    result[m[1]] = m[2];
+/** A parsed mxCell: its attributes and inner markup. */
+interface CellEntry { attrs: Record<string, string>; body: string; }
+
+/**
+ * The edgeLabel CHILD cell of each edge — draw.io's canonical label carrier.
+ * draw.io stores the label as `<mxCell style="edgeLabel;…" value="…" parent=edgeId>`
+ * with a RELATIVE geometry whose `x` is the position along the edge; the edge's
+ * own value/geometry is only the legacy form (SA4E-406: the child form parsed as
+ * unlabeled, so the placer and detectors never saw the label).
+ */
+function edgeLabelCells(cells: CellEntry[], edgeIds: Set<string>): Map<string, CellEntry> {
+  const out = new Map<string, CellEntry>();
+  for (const cell of cells) {
+    const parent = cell.attrs['parent'] ?? '';
+    if (!edgeIds.has(parent) || !/(?:^|;)edgeLabel(?:;|$)/.test(cell.attrs['style'] ?? '')) continue;
+    out.set(parent, cell);
   }
-  return result;
+  return out;
 }
 
-/** Extract stored waypoints from an edge's <Array as="points"> section. */
-function parseWaypoints(body: string): Array<{ x: number; y: number }> {
-  const arr = /<Array\s+as="points">([\s\S]*?)<\/Array>/.exec(body);
-  if (!arr) return [];
-  const points: Array<{ x: number; y: number }> = [];
-  const pointRegex = /<mxPoint\s([^>]*?)\/?>/g;
-  let m: RegExpExecArray | null;
-  while ((m = pointRegex.exec(arr[1])) !== null) {
-    const attrs = parseAttrs(m[1]);
-    points.push({ x: parseFloat(attrs['x'] ?? '0'), y: parseFloat(attrs['y'] ?? '0') });
-  }
-  return points;
-}
-
-/** Parse exit/entry anchor fractions (exitX/exitY, entryX/entryY) from edge style. */
-function parseStyleAnchor(style: string, kind: 'exit' | 'entry'): { x: number; y: number } | null {
-  const x = new RegExp(`${kind}X=([^;]*)`).exec(style)?.[1];
-  const y = new RegExp(`${kind}Y=([^;]*)`).exec(style)?.[1];
-  if (x === undefined && y === undefined) return null;
-  return { x: parseFloat(x ?? '0.5'), y: parseFloat(y ?? '0.5') };
-}
-
-/** Extract a stored terminal hint point (as="sourcePoint"|"targetPoint"). */
-function parseTerminalPoint(body: string, kind: 'sourcePoint' | 'targetPoint'): { x: number; y: number } | null {
-  const tagRe = /<mxPoint\s([^>]*?)\/?>/g;
-  let m: RegExpExecArray | null;
-  while ((m = tagRe.exec(body)) !== null) {
-    if (!m[1].includes(`as="${kind}"`)) continue;
-    const attrs = parseAttrs(m[1]);
-    return { x: parseFloat(attrs['x'] ?? '0'), y: parseFloat(attrs['y'] ?? '0') };
-  }
-  return null;
+/** Label text + position of an edge: the edgeLabel child when present, else the edge itself. */
+function edgeLabel(edge: CellEntry, child: CellEntry | undefined): { label: string; labelPos: number; labelCellId?: string } {
+  if (!child) return { label: edge.attrs['value'] ?? '', labelPos: parseLabelPosition(edge.body) };
+  return {
+    label: child.attrs['value'] ?? edge.attrs['value'] ?? '',
+    labelPos: parseLabelPosition(child.body),
+    labelCellId: child.attrs['id'],
+  };
 }
 
 function hasChildren(nodeId: string, cells: Array<{ attrs: Record<string, string>; body: string }>): boolean {

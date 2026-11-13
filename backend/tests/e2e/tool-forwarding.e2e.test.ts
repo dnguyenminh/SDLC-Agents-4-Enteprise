@@ -12,7 +12,7 @@ const TEST_TIMEOUT = 30000; // 30s per test for heavy DB queries
 
 const EXPECTED_TOOLS = [
   'code_search', 'code_symbols', 'code_context', 'code_modules', 'code_index_status',
-  'stream_write_file', 'code_kb_export', 'drawio_auto_layout', 'code_callers', 'code_callees',
+  'stream_write_file', 'code_kb_export', 'code_callers', 'code_callees',
   'code_dependencies', 'code_impact', 'code_traverse', 'complexity_analysis', 'find_entry_points',
   'find_circular_deps', 'find_related_tests', 'find_hot_paths', 'find_dead_imports', 'module_summary',
   'get_ai_context', 'get_edit_context', 'get_curated_context', 'find_duplicates', 'find_dead_code',

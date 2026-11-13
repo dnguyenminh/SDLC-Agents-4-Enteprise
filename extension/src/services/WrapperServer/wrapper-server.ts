@@ -18,6 +18,7 @@ import { BodyReader } from "./body-reader";
 import { DEFAULT_MAX_BODY_SIZE } from "./constants";
 import { JsonRpcWriter } from "./json-rpc-writer";
 import { RequestHandler } from "./request-handler";
+import { McpSessionRoots } from "./session-roots";
 import { ToolRouter } from "./tool-router";
 import type { WrapperServerDeps } from "./types";
 
@@ -38,8 +39,10 @@ export class WrapperServer {
     this.bodyReader = new BodyReader(this.maxBodySize);
     this.writer = new JsonRpcWriter(this.maxBodySize);
     this.toolRouter = new ToolRouter(deps);
+    // SA4E-406 A6 — per-instance session workspace binding (tests may inject).
     this.handler = new RequestHandler(
       deps, this.maxBodySize, () => this.port, this.bodyReader, this.writer, this.toolRouter,
+      deps.sessionRoots ?? new McpSessionRoots(),
     );
   }
 

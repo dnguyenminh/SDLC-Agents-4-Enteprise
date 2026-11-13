@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.19-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.20-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/tools-66+-teal?style=for-the-badge" alt="Tools">
   <img src="https://img.shields.io/badge/node-%3E%3D18-green?style=for-the-badge" alt="Node">
 </p>
@@ -121,7 +121,7 @@ curl -X POST http://localhost:48721/mcp/tools/call \
 | **Analytics** | 5 | `complexity_analysis`, `find_hot_paths`, `find_duplicates`, `find_dead_code` |
 | **KB Graph** | 5 | `mem_map`, `mem_discover`, `git_search`, `git_index` |
 | **Web** | 6 | `fetch_url`, `web_search`, `git_clone_browse`, `download_file`, `api_call`, `read_webpage` |
-| **Utility** | 4 | `stream_write_file`, `drawio_auto_layout`, `drawio_export_png`, `agent_log` |
+| **Utility** | 3 | `stream_write_file`, `drawio_export_png`, `agent_log` |
 
 ---
 

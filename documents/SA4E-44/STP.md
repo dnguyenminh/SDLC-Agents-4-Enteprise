@@ -105,7 +105,7 @@ This STP defines the test strategy, test levels, environment specifications, ent
 
 | Component | Specification |
 |-----------|--------------|
-| Runtime | Node.js 20+ |
+| Runtime | Node.js 22.23.4 |
 | Database | PostgreSQL 15+ via Testcontainers |
 | Framework | Hono 4.x |
 | Test Runner | Vitest 1.x |

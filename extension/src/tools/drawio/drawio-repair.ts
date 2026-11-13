@@ -4,12 +4,13 @@
  * reroute edges that cut through shapes. Preserves the overall layout.
  */
 
-import type { DiagramGraph, DiagramNode } from './drawio-parser';
+import type { DiagramGraph } from './drawio-parser';
 import { absoluteRects, cellIndex } from './drawio-geometry';
 import type { Point, Rect } from './drawio-geometry';
 import { computeRoute } from './drawio-router';
-import { MIN_GAP } from './drawio-detect';
-import type { LayoutIssue } from './drawio-detect';
+import { detectThresholds, type LayoutIssue } from './drawio-detect';
+import { addShift, curRect, type Ctx } from './drawio-repair-ctx';
+import { rerouteEdges } from './drawio-repair-routes';
 
 export interface RepairPlan {
   /** New parent-relative positions for moved cells. */
@@ -24,14 +25,6 @@ const PUSH_PASSES = 3;   // let cascaded pushes settle
 const CONTAIN_MARGIN = 10; // padding kept between a child and its container
 const STACK_OFFSET = 24;   // perpendicular offset for stacked parallel edges
 
-interface Ctx {
-  byId: Map<string, DiagramNode>;
-  rects: Map<string, Rect>;                  // original absolute rects
-  shift: Map<string, Point>;                 // accumulated absolute deltas
-  resizes: Map<string, { w: number; h: number }>;
-  spacing: number;
-}
-
 /** Plan minimal repairs for the given issues. Returns an empty plan when nothing is actionable. */
 export function planLocalRepair(graph: DiagramGraph, issues: LayoutIssue[], spacing: number): RepairPlan {
   const ctx: Ctx = {
@@ -45,23 +38,6 @@ export function planLocalRepair(graph: DiagramGraph, issues: LayoutIssue[], spac
   containChildren(ctx, issues);
   const routes = rerouteEdges(ctx, graph, issues);
   return buildPlan(ctx, routes);
-}
-
-/** Current absolute rect of a cell, including accumulated shift and resize. */
-function curRect(ctx: Ctx, id: string): Rect {
-  const base = ctx.rects.get(id);
-  if (!base) return { x: 0, y: 0, w: 0, h: 0 };
-  const s = ctx.shift.get(id) ?? { x: 0, y: 0 };
-  const r = ctx.resizes.get(id);
-  return {
-    x: base.x + s.x, y: base.y + s.y,
-    w: r ? Math.max(base.w, r.w) : base.w, h: r ? Math.max(base.h, r.h) : base.h,
-  };
-}
-
-function addShift(shift: Map<string, Point>, id: string, d: Point): void {
-  const cur = shift.get(id) ?? { x: 0, y: 0 };
-  shift.set(id, { x: cur.x + d.x, y: cur.y + d.y });
 }
 
 /** Unique node pairs to separate, tagged with the issue kind. */
@@ -86,7 +62,9 @@ function pushApart(ctx: Ctx, pairs: Array<{ a: string; b: string; kind: 'overlap
   for (let pass = 0; pass < PUSH_PASSES; pass++) {
     for (const pair of pairs) {
       const ra = curRect(ctx, pair.a), rb = curRect(ctx, pair.b);
-      const required = pair.kind === 'overlap' ? Math.max(ctx.spacing * 0.5, MIN_GAP) : MIN_GAP;
+      const required = pair.kind === 'overlap'
+        ? Math.max(ctx.spacing * 0.5, detectThresholds().gap)
+        : detectThresholds().gap;
       const { da, db } = separationDelta(ra, rb, required);
       if (da.x === 0 && da.y === 0) continue;
       addShift(ctx.shift, pair.a, da);
@@ -146,60 +124,6 @@ function containChildren(ctx: Ctx, issues: LayoutIssue[]): void {
     const dy = clampTo(rc.y, grown.y + CONTAIN_MARGIN, grown.y + grown.h - rc.h - CONTAIN_MARGIN) - rc.y;
     if (dx !== 0 || dy !== 0) addShift(ctx.shift, child, { x: dx, y: dy });
   }
-}
-
-/** Reroute crossing edges around their detected obstacle; split stacked pairs. */
-function rerouteEdges(ctx: Ctx, graph: DiagramGraph, issues: LayoutIssue[]): Map<string, Point[]> {
-  const routes = new Map<string, Point[]>();
-  for (const issue of issues) {
-    if (issue.type === 'edge_crossing' || issue.type === 'edge_container_crossing') {
-      rerouteOne(ctx, graph, String(issue.edge_id), String(issue.crosses_node ?? issue.crosses_container), routes);
-    } else if (issue.type === 'stacked_edges') {
-      offsetStacked(ctx, graph, String(issue.edge_a), String(issue.edge_b), routes);
-    }
-  }
-  return routes;
-}
-
-function rerouteOne(ctx: Ctx, graph: DiagramGraph, edgeId: string, obstacleId: string, routes: Map<string, Point[]>): void {
-  const edge = graph.edges.find(e => e.id === edgeId);
-  const obstacle = ctx.byId.get(obstacleId);
-  if (!edge || !obstacle) return;
-  const src = absCell(ctx, edge.sourceId), tgt = absCell(ctx, edge.targetId);
-  if (!src || !tgt) return;
-  const waypoints = computeRoute(src, tgt, [absCell(ctx, obstacleId)!]);
-  if (waypoints.length === 0) return; // router found no detour — reported as remaining
-  routes.set(edgeId, toEdgeSpace(ctx, edge.parentId, waypoints));
-}
-
-/** Give the second of two stacked parallel edges a perpendicular detour. */
-function offsetStacked(ctx: Ctx, graph: DiagramGraph, edgeAId: string, edgeBId: string, routes: Map<string, Point[]>): void {
-  const edgeA = graph.edges.find(e => e.id === edgeAId);
-  const edgeB = graph.edges.find(e => e.id === edgeBId);
-  const src = ctx.rects.get(edgeB?.sourceId ?? '');
-  const tgt = ctx.rects.get(edgeB?.targetId ?? '');
-  if (!edgeA || !edgeB || !src || !tgt) return;
-  const sx = src.x + src.w / 2, sy = src.y + src.h / 2;
-  const tx = tgt.x + tgt.w / 2, ty = tgt.y + tgt.h / 2;
-  const mx = (sx + tx) / 2, my = (sy + ty) / 2;
-  const len = Math.max(1, Math.hypot(tx - sx, ty - sy));
-  const waypoint = { x: mx + (-(ty - sy) / len) * STACK_OFFSET, y: my + ((tx - sx) / len) * STACK_OFFSET };
-  routes.set(edgeBId, toEdgeSpace(ctx, edgeB.parentId, [waypoint]));
-}
-
-/** Clone a cell with absolute coordinates for the router. */
-function absCell(ctx: Ctx, id: string): DiagramNode | null {
-  const cell = ctx.byId.get(id);
-  if (!cell) return null;
-  const r = curRect(ctx, id);
-  return { ...cell, x: r.x, y: r.y };
-}
-
-/** Absolute waypoints → edge-parent space (parent origin + parent shift). */
-function toEdgeSpace(ctx: Ctx, parentId: string, points: Point[]): Point[] {
-  const origin = ctx.rects.get(parentId) ?? { x: 0, y: 0 };
-  const s = ctx.shift.get(parentId) ?? { x: 0, y: 0 };
-  return points.map(p => ({ x: p.x - origin.x - s.x, y: p.y - origin.y - s.y }));
 }
 
 /** Finalize: accumulated absolute deltas → parent-relative positions. */

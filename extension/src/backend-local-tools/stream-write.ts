@@ -15,11 +15,12 @@ import {
   formatFsError,
   type PathResolutionOk,
 } from "../services/PathResolver";
+import type { ToolCallContext } from "./registry";
 import { extractBaseDirArg } from "../services/base-dir-resolution";
 import { STREAM_WRITE_MAX_BYTES } from "./constants";
-import { checkSymlinkGuard, checkSymlinkGuardBeforeEnsureDir, ensureDir } from "./fs-guards";
+import { checkSymlinkGuard, ensureDir } from "./fs-guards";
 
-export function handleStreamWriteFile(args: Record<string, unknown>): any {
+export function handleStreamWriteFile(args: Record<string, unknown>, ctx?: ToolCallContext): any {
   // SA4E-356 (SEC-08b, AD-22): the `path` alias is kept (callers outside the
   // schema may use it) but NOT added to the schema (BR-09 minimal). Both
   // aliases flow through the same helper, so there is no bypass.
@@ -38,19 +39,18 @@ export function handleStreamWriteFile(args: Record<string, unknown>): any {
   }
   // (1) resolve FIRST — before any fs.* (I-1).
   // SA4E-394: per-call base_dir/workspace_root becomes the effective root.
-  const resolution = resolveWorkspacePath(rawPath, { baseDir: extractBaseDirArg(args) });
+  // SA4E-406 A6: the bound MCP session root gates resolution first
+  // (rootSource "session") so writes land inside the agent's bound worktree.
+  const resolution = resolveWorkspacePath(rawPath, {
+    baseDir: extractBaseDirArg(args),
+    sessionRoot: ctx?.sessionRoot,
+  });
   // (2) fail → forward VERBATIM, return NOW (C-5, C-6).
   if (!resolution.ok) {
     console.warn(`[backend-local-tools] stream_write_file resolve failed: ${resolution.message}`);
     return { isError: true, content: [{ type: "text", text: resolution.message }] };
   }
   const resolvedPath = resolution.resolvedPath;
-  // SEC-WT-22: containment BEFORE ensureDir — mkdir would follow repo-authored links.
-  const preGuardError = checkSymlinkGuardBeforeEnsureDir(resolution, rawDisplay);
-  if (preGuardError) {
-    console.warn(`[backend-local-tools] stream_write_file pre-guard blocked: ${preGuardError}`);
-    return { isError: true, content: [{ type: "text", text: preGuardError }] };
-  }
   try {
     ensureDir(path.dirname(resolvedPath));
   } catch (err: any) {

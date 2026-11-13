@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.19.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.20.vsix
 ```
 
 ### 3. Use
@@ -66,14 +66,6 @@ MIT
 
 ## Changelog
 
-### v1.55.19 (2026-11-13)
-**SA4E-393 — Agent-invocable design gate + worktree auto-trust**
-- 🎨 **Design gate MCP tools** — `design_gate_run` / `design_gate_list_rules` (30 rules) callable via `execute_dynamic_tool`; agents MUST self-check design artifacts (`ui-design-gate` rule) before reporting done
-- 🐛 **Design gate fixes** — `vscode is not defined` (bare identifier), `fileCount` always 0, cache false-PASS in `both` mode, `PATH_NOT_FOUND` with relative path, no absolute path in errors/logs; workspace root now required (no `process.cwd()` fallback creating stray `.code-intel/`)
-- 🌳 **Worktree auto-trust** (extension) — a `base_dir` that is a verified git worktree of the open/allowlisted repo is accepted without `MCP_WORKSPACE_ROOTS` registration (back-link check; submodule, bare, spoofed `.git`, symlink/junction rejected). Disable: setting `sdlcAgents.workspace.worktreeAutoTrust` or env `MCP_WORKTREE_AUTOTRUST=0`
-- 🔐 **Entra SSO config** — restore https-only, optional `ENTRA_AUTHORITY`/`ENTRA_ISSUER`/`ENTRA_JWKS_URI` (regression `df1a4f12`: `.default('')` returned `'` under zod v4 and skipped the https check)
-- 🧪 **Tests** — `live-content-proxy` moved to the e2e suite (`npm run test:e2e`); unit suites: extension 3566 pass, backend 3676 pass, 0 failures
-- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.19`
 ### v1.55.18 (2026-11-08)
 
 **SA4E-406 — drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration**
@@ -84,8 +76,46 @@ MIT
 - 🌉 **Extension migration** — `drawio_auto_layout` + `drawio_export_png` available via MCP bridge (`execute_dynamic_tool`)
 - 🔐 **Multi-worktree path resolution** (SA4E-394) — `base_dir`/`workspace_root` support, path traversal prevention (CWE-22)
 - ⚙️ **Configurable limits** — `SA4E_ELK_MAX_NODES=500`, `SA4E_ELK_TIMEOUT_MS=10000`, `SA4E_ELK_SPACING_MAX=500`
-- ✅ **Tests**: 148 drawio tests PASS (80 unit + 4 golden + 3 integration + 2 E2E + 34 UAT automation), CI 7/7 jobs green
+- ✅ **Tests**: 171 drawio tests PASS (80 unit + 4 golden + 3 integration + 2 E2E + 34 UAT automation + QA-11 re-enabled), CI 7/7 jobs green
 - 🔖 **Version sync** — root/`backend`/`extension` → `1.55.18`
+
+### v1.55.20 (2026-11-13)
+
+**SA4E-406 Round 4 Complete + CI Trigger**
+
+- **F1 (HIGH)**: batch XML writer `rewriteCells` (drawio-xml-rewrite.ts) — 1-pass scan reduces primitive 158,092 ms → 26 ms (~6,016x), sanitizeDrawioXml 122,992 ms → 836 ms (~147x), full preflight 887 ms. Output byte-identical.
+- **F2 (MEDIUM)**: file-level symlink guard (`checkSymlinkGuardForPath`) resolves symlink real target via `realpathSync`; internal links allowed, escapes rejected with `PATH_REJECTED_OUTSIDE_WORKSPACE:`.
+- **F3 (MEDIUM)**: backend `drawio-renderers.ts` now uses `execFileSync` with argument array instead of shell command string.
+- **F4/F5 (MEDIUM-LOW)**: drawio handlers accept `ctx` and forward `ctx?.sessionRoot` into `resolveWorkspacePath`; export handler signature corrected.
+- **F9 (LOW)**: `root-trust.ts:119` wraps `normalizedRoot` with `sanitizeLogText()`.
+- **PD-QA1 (Major)**: `scope='ports'` preserves node positions; `enforceFinalGate` now forwards `opts.portsOnly`; QA-11 re-enabled and passing.
+- **F2 rework**: internal symlinks (e.g. node_modules/.bin-style) pass guard; escaping symlinks rejected. New test `fs-guards.symlink-file.test` verifies both cases.
+
+- 📦 **VSIX**: 1.55.20 build via `publish.yml`; regenerate 23 diagram via fixed `drawio_auto_layout` tool.
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.20`
+
+- 🛡 **Trivy SEC-04 gate fix** — soupsieve 2.10 (CVE-2026-126190, HIGH) was present in BOTH MCP venvs of the production image
+  (/opt/markitdown-venv and /opt/markdown-exporter-venv), failing the CI Trivy gate on run 43436002707.
+- 🐳 **Dockerfile mcp-python stage**:
+  - Restored `ARG MARKITDOWN_MCP_VERSION=0.0.1a8` (regressed to 0.0.1a7 by a bad merge).
+  - Added `ARG SOUPSIEVE_VERSION=4.0.1`. Force-upgrade soupsieve to 4.0.1 after the main install in BOTH venvs, then assert via
+    `importlib.metadata` and run a descendant-selector smoke test (`BeautifulSoup(...).select('div span')`). The pip
+    dependency-conflict warning from beautifulsoup4's older soupsieve pin is EXPECTED and non-fatal (same PEP 440 pattern
+    as the pillow override).
+- 🐳 **Base-image migration (SA4E-335)** — moved from `node:22-slim` (Debian 12 bookworm, Python 3.11.2) to
+  `debian:trixie-slim` (Debian 13) + official Node 22.23.4 binary tarball (SHA-256 pinned via `NODE_TARBALL_SHA256`).
+  The tarball is pre-downloaded on the host and `COPY`'ed into the image; its SHA-256 is verified inside the container
+  before extraction (`sha256sum` check fails the build on mismatch). Python is now 3.13.5 (trixie), which natively
+  satisfies soupsieve's `Requires-Python >=3.11.5` floor — the `--ignore-requires-python` override was removed. A shared
+  `node-runtime` stage fetches/installs Node once; both `base` and `production` inherit from it. `curl`/`xz-utils` are
+  purged from node-runtime so they never reach the runtime image (SEC-05). Trivy gate re-validated green:
+  `Total: 0 (HIGH: 0, CRITICAL: 0)` with `aquasec/trivy:0.70.0`.
+- 🔁 **CI workflow** — restored `trivyignores: .trivyignore` wiring on the Trivy step (was dropped by the bad merge,
+  leaving `INPUT_TRIVYIGNORES` empty). CVE-2026-126190 is NOT added to the ignore file; the upgrade is expected to remove
+  it from the image.
+- 📄 **.trivyignore** — header updated: soupsieve CVE-2026-126190 is fixed by upgrade, not exemption; existing SA4E-385
+  accepted-risk entries (body-parser, undici, zod, GHSA aliases) retained. No `backend/.trivyignore` (single source of truth).
+- 🔖 **Version sync** — root/`backend`/`extension` package.json + package-lock.json → `1.55.20`.
 
 ### v1.55.16 (2026-11-04)
 
@@ -216,7 +246,7 @@ MIT
 
 **SA4E-386 — Node.js security upgrade to 22.23.4**
 
-- 🔒 **Node.js 22.23.4 pin** — 4-layer enforcement: `.nvmrc` 8B, `engines` root+backend+lockfile, `Dockerfile ARG NODE_VERSION + NODE_BASE_DIGEST`, 27 workflow literals
+- 🔒 **Node.js 22.23.4 pin** — 4-layer enforcement: `.nvmrc` 8B, `engines` root+backend+lockfile, `Dockerfile ARG NODE_VERSION + NODE_TARBALL_SHA256 + DEBIAN_BASE_DIGEST`, 27 workflow literals
 - � CR-01 **Scope amendment** — delete `build-native.yml`; ONNX workflow preserved; update `auto-release.yml` + `scheduled-prebuild-scan.yml`
 - 📄 **SDLC docs** — BRD v1.0 (English per template), FSD v1.3, TDD v1.1 (AD-11, all discrepancies closed), TEST-REPORT.md, UG.md with §7 Manual Test Procedure
 - 🔖 **Version sync** — root/`backend`/`extension` → `1.55.9`

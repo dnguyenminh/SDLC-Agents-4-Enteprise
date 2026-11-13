@@ -36,8 +36,7 @@ export interface DetectionConfig {
   detectionMode?: "static" | "rendered" | "both";
   threshold?: number; // 0-1 quality score threshold
   cacheReuse?: boolean;
-  sourceRoot?: string; // directory to scan (inside the workspace)
-  workspaceRoot?: string; // SEC-F08: explicit workspace root (containment, cache, reports)
+  sourceRoot?: string; // workspace root for path validation
   localhostUrl?: string; // dev server URL for rendered detection
   urls?: string[]; // additional pages for rendered detection
 }
@@ -57,8 +56,6 @@ export interface QualityReport {
     medium: number;
     high: number;
   };
-  /** Number of files in the scan scope (denominator of the score). */
-  fileCount?: number;
   /** C6: sanitized error/fallback notice (never raw stack traces) */
   message?: string;
 }
@@ -125,8 +122,6 @@ export enum DetectionError {
   FETCH_FAILED = "FETCH_FAILED",
   DEV_SERVER_UNREACHABLE = "DEV_SERVER_UNREACHABLE",
   ERROR_LEAK = "ERROR_LEAK",
-  /** The caller did not supply a workspace root (no cwd/env fallback exists). */
-  WORKSPACE_ROOT_REQUIRED = "WORKSPACE_ROOT_REQUIRED",
 }
 
 /** Custom error class for detection errors */
@@ -151,6 +146,7 @@ export enum EnvConfig {
   QUALITY_GATE_THRESHOLD = "QUALITY_GATE_THRESHOLD",
   DESIGN_DETECTION_MODE = "DESIGN_DETECTION_MODE",
   LOCALHOST_DEV_SERVER_URL = "LOCALHOST_DEV_SERVER_URL",
+  WORKSPACE_ROOT = "WORKSPACE_ROOT",
 }
 
 /** Default quality gate threshold — configurable via QUALITY_GATE_THRESHOLD env (DPG.md) */
