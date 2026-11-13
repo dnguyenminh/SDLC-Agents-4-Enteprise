@@ -196,6 +196,18 @@
     "addendum5": {
       "title": "Auto-trust git worktree for base_dir",
       "approvedBy": "user (product owner)",
+      "correction": {
+        "status": "done",
+        "scope": "extension-only (USER-APPROVED)",
+        "note": "Đề xuất sửa backend do main agent đưa ra là sai phạm vi; embed_image/base_dir là extension-local, backend chạy máy khác. Block 'backend' bên dưới là lịch sử, đã revert.",
+        "commits": ["477b6b2a", "d4c8e675", "9a5a2482", "3aebf293", "f54a83be", "8c260a86", "0d0ac5e1"],
+        "backendDiffVsFf753553": "empty",
+        "taReview": "APPROVED",
+        "securityReview": "PASS (SEC-WT-25 Low: thiếu test extension; SEC-WT-30/31 Info)",
+        "docs": "FSD v1.3, TDD v1.7 (diagram A5-1/A5-2 chưa vẽ lại, backlog SA4E-438)",
+        "vsix": "dist-sa4e-393-worktree-ext.vsix (chưa cài)",
+        "pushed": false
+      },
       "design": {
         "status": "done",
         "fsd": "FSD Addendum 5 (f334ab36)",

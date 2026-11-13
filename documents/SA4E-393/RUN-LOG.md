@@ -93,3 +93,10 @@
 | 93 | 2026-11-13 | qa-agent | Full suites + mutation | Ext 3519/0 skip; backend 9 fail trùng baseline ff753553; M1 3 đỏ, M2 16 đỏ, M3 4 đỏ, đã hoàn tác | ✅ | - | - |
 | 94 | 2026-11-13 | sa-agent | TDD as-built | TDD v1.6 AB1-AB7 | ✅ | - | - |
 | 95 | 2026-11-13 | SM | verify/package | esbuild-production lại (bundle cũ thiếu code mới) rồi vsce package -> dist-sa4e-393-worktree.vsix 9.28MB, không cài. STATUS addendum5 implementation done / e2e pending. Không push | ✅ | - | - |
+| 96 | 2026-11-13 | SM | Corrective Addendum 5 | USER-APPROVED: scope chỉ extension. Root cause (trung thực): đề xuất sửa backend do main agent đưa ra là SAI phạm vi; embed_image/base_dir là extension-local, backend chạy máy khác không đọc được .git worktree | ✅ | - | - |
+| 97 | 2026-11-13 | dev-agent | Revert backend + extension là nguồn gốc | revert 760316a5/1ac80e4b (477b6b2a, d4c8e675); xoá sync script/drift-guard; bỏ MCP_OPEN_WORKSPACE_FOLDERS; git diff ff753553 -- backend/ rỗng; tsc sạch, eslint 0 error, vitest ext 3563 pass/2 skip runtime (symlink Windows); backend 9 fail, 0 mới; mất test SEC-WT-25 (known gap); VSIX rebuilt | ✅ | - | - |
+| 98 | 2026-11-13 | ta-agent | Conformance review | APPROVED (extension-only) | ✅ | - | - |
+| 99 | 2026-11-13 | security-agent | Re-assessment | PASS, section 7 "Correction – extension-only"; SEC-WT-25 Low (thiếu test), SEC-WT-30/31 Info | ✅ | - | - |
+| 100 | 2026-11-13 | ba-agent | FSD Addendum 5 v1.3 | Extension-only + correction note; OI-WT7 | ✅ | - | - |
+| 101 | 2026-11-13 | sa-agent | TDD Addendum 5 v1.7 | Extension-only + correction note; diagram A5-1/A5-2 chưa vẽ lại (backlog SA4E-438) | ✅ | - | - |
+| 102 | 2026-11-13 | SM | Verify/STATUS | Cập nhật STATUS addendum5 correction. Không push | ✅ | - | - |

@@ -189,3 +189,65 @@ R2-1 (superseded-text markers, diagram step 16 = 10 s) is a document item and wa
 | Info | 3 (SEC-WT-26, 27, 29) |
 
 **Verdict: PASS.** No Critical, High or Medium finding is open. The two release-blocking items from Round 1 (SEC-WT-20, SEC-WT-21) are fixed and verified by code, tests and the PoC. SEC-WT-16 remains closed. The overall risk rating drops from MEDIUM to **LOW**. Remaining Low/Info items are non-blocking and can be tracked in the shared backlog (SA4E-438).
+
+---
+
+## 7. Correction – extension-only (commits `9652ba0a..HEAD`)
+
+| Field | Value |
+|-------|-------|
+| Scope | 7 commits `477b6b2a`, `d4c8e675`, `9a5a2482`, `3aebf293`, `f54a83be`, `8c260a86`, `0d0ac5e1` (branch `dnguyenminh/SA4E-393-2`) |
+| Change | Backend reverted to `ff753553` (no worktree-trust, no UNC guard, no SEC-WT-25 test). `worktree-trust` is now extension-owned source (GENERATED headers, sync script and drift guard removed). `MCP_OPEN_WORKSPACE_FOLDERS` / `MCP_WORKTREE_AUTOTRUST` are no longer written to the backend env. |
+| Method | Static diff review plus a re-run of the extension tests. No source file modified. |
+| Test run | `vitest run` on `worktree-trust/*`, `worktree-setting.manifest` and `backend-local-tools.worktree`: 5 files, 62 passed, 2 skipped, 0 failed. |
+| Verdict | **PASS, no security regression.** One Low residual risk (test gap, SEC-WT-25, section 7.3). |
+
+### 7.1 Re-confirmation of closed findings (extension)
+
+| ID | Status | Evidence |
+|----|--------|----------|
+| SEC-WT-16 | **Still CLOSED** | `services/worktree-trust/symlink-containment.ts` (`symlinkEscapeCheck`) is used by `backend-local-tools/fs-guards.ts`. Only the GENERATED header changed. Tests "SEC-WT-16 checkSymlinkGuard" and `worktree-security.test.ts` (symlink containment) pass. |
+| SEC-WT-20 | **Still CLOSED** | `bare-layout.ts` (`isBareRepoRoot`: no `.git` entry plus HEAD, `objects/`, `refs/`) is only header-trimmed. Covered by `worktree-verifier.test.ts` and `worktree-security.test.ts`. |
+| SEC-WT-21 | **Moot, intent preserved** | See 7.2. |
+| SEC-WT-22 | **Still CLOSED** | `checkSymlinkGuardBeforeEnsureDir` is still called before `ensureDir` in `stream-write.ts:49`, `embed-image.ts:107` and `Base64ProxyService/output-proxy.ts:73`. None of these files is in the diff. |
+| SEC-WT-24 | **Still CLOSED** | `trust-service.ts` `ctxSig` still hashes the sorted, folded allowlist roots. The test "removing an allowlist root invalidates a cached positive" passes. |
+| SEC-WT-25 | **Behaviour change reverted, test lost** | See 7.3. |
+
+### 7.2 Removed backend UNC guard and SEC-WT-21 (moot)
+
+- **UNC guard (backend):** the backend runs on another machine and does not read local files. The UNC and device-path rejection that matters runs where files are read, in the extension. There it is intact: `path-fold.ts` `isUncOrDevice` is exported and used by `git-files.ts` (pointer text rules). No extension code depends on the backend guard. **No impact.**
+- **Kill switch (SEC-WT-21):** the backend no longer receives `MCP_WORKTREE_AUTOTRUST` (`autoTrustEnv()` removed from `mcp-config-builder.ts`), and the backend has no auto-trust code to switch off. The extension still honours both controls itself in `worktree-open-folders.ts`: `loadTrustConfig(process.env, isWorktreeAutoTrustSettingEnabled)` gives effective = env AND setting.
+  - Env: `parseAutotrustFlag` treats unknown values as off and logs a warning (WT-UT-25).
+  - Setting: unset = on, a non-boolean value or a throwing reader = off (fail-closed). Machine scope is unchanged. The test `base-dir-resolution.worktree.test.ts` ("worktreeAutoTrust=false disables") passes.
+  - **SEC-WT-28 (delayed kill switch) is also moot.** The setting is read on each call, so `false` takes effect immediately in the extension. The env flag is read once at construction, so a change needs a reload window.
+- **Removed `openFolders` env parsing:** `TrustConfig.openFolders` is gone. The service now gets open folders from `vscode.workspace.workspaceFolders` (read per call, never from a request) and filters them with `filterOpenFolders` (existing dir with `.git` dir, not fs root or home, SEC-WT-11). The attack surface is smaller, because no env value feeds the allowlist any more.
+
+### 7.3 SEC-WT-25: lost regression test
+
+- **What was removed:** `backend/src/shared/__tests__/legacy-path-gate.missing-root.test.ts` (2 tests). It guarded the fail-closed behaviour of the legacy gate when the root cannot be realpath-ed.
+- **Why the original risk is gone:** SEC-WT-25 was a behaviour change in the backend legacy gate (`path-containment.ts`), caused by making `symlinkEscape` fail-closed. The backend is back at `ff753553`, so that change no longer exists and the test guards nothing there.
+- **Residual risk: Low.** The same fail-closed logic now lives in the extension (`symlinkEscapeCheck`, used by `fs-guards.ts`), and it has no explicit "root cannot be resolved" test. `worktree-security.test.ts` covers junction, `..` collapse and fake-fs cases, but I found no case where the root itself is missing or unresolvable. A future edit could turn the check fail-open without a failing test. Impact is limited to workspace-root containment in local file tools.
+- **Recommendation (non-blocking, a separate test-only commit):** add 1-2 extension tests, one with a non-existent root and one with a root whose `realpath` throws. Both must make `symlinkEscapeCheck` return a non-null result. Track it in the shared backlog (SA4E-438).
+
+### 7.4 Other observations
+
+| ID | Sev | Note |
+|----|-----|------|
+| SEC-WT-30 | Info | `trust-service.ts`, `symlink-containment.ts` and the other `worktree-trust` files are now hand-edited source with no drift guard. The drift guard was only needed for the duplicated backend copy, so this is expected. `extension/src/__tests__/worktree-trust/*` is now the only regression net, so keep it in CI. |
+| SEC-WT-31 | Info | Checksums and `.kiro` manifests show as modified in `git status`. They are not part of these commits and I did not touch them. |
+
+### 7.5 Not verified
+
+- Backend behaviour at `ff753553` (I only confirmed from the diff that the worktree-trust code was removed).
+- Windows 8.3 names and POSIX-specific symlink behaviour (as in section 4).
+- That the backend never receives local paths from other clients. I assumed it does not, per the stated architecture.
+
+### 7.6 Verdict after correction
+
+| Severity | Open |
+|----------|------|
+| Critical / High / Medium | **0** |
+| Low | SEC-WT-23 (accepted), SEC-WT-24 race (accepted), SEC-WT-25 test gap (new residual) |
+| Info | SEC-WT-26, 27, 29, 30, 31 |
+
+**PASS.** No security regression from the extension-only correction. The overall risk rating stays **LOW**.
