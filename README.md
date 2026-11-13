@@ -98,13 +98,18 @@ MIT
   (/opt/markitdown-venv and /opt/markdown-exporter-venv), failing the CI Trivy gate on run 43436002707.
 - 🐳 **Dockerfile mcp-python stage**:
   - Restored `ARG MARKITDOWN_MCP_VERSION=0.0.1a8` (regressed to 0.0.1a7 by a bad merge).
-  - Added `ARG SOUPSIEVE_VERSION=4.0.1` with a documented rationale: base image Debian bookworm ships Python 3.11.2;
-    soupsieve >=3.0.2 declares `Requires-Python >=3.11.5` (a CPython security-backport floor, not a soupsieve API requirement);
-    soupsieve is pure Python and verified working on 3.11.2 (bs4 4.15.0 + soupsieve 4.0.1, descendant-selector smoke test).
-  - Force-upgrade soupsieve to 4.0.1 (`--ignore-requires-python`) after the main install in BOTH venvs, then assert via
+  - Added `ARG SOUPSIEVE_VERSION=4.0.1`. Force-upgrade soupsieve to 4.0.1 after the main install in BOTH venvs, then assert via
     `importlib.metadata` and run a descendant-selector smoke test (`BeautifulSoup(...).select('div span')`). The pip
     dependency-conflict warning from beautifulsoup4's older soupsieve pin is EXPECTED and non-fatal (same PEP 440 pattern
     as the pillow override).
+- 🐳 **Base-image migration (SA4E-335)** — moved from `node:22-slim` (Debian 12 bookworm, Python 3.11.2) to
+  `debian:trixie-slim` (Debian 13) + official Node 22.23.4 binary tarball (SHA-256 pinned via `NODE_TARBALL_SHA256`).
+  The tarball is pre-downloaded on the host and `COPY`'ed into the image; its SHA-256 is verified inside the container
+  before extraction (`sha256sum` check fails the build on mismatch). Python is now 3.13.5 (trixie), which natively
+  satisfies soupsieve's `Requires-Python >=3.11.5` floor — the `--ignore-requires-python` override was removed. A shared
+  `node-runtime` stage fetches/installs Node once; both `base` and `production` inherit from it. `curl`/`xz-utils` are
+  purged from node-runtime so they never reach the runtime image (SEC-05). Trivy gate re-validated green:
+  `Total: 0 (HIGH: 0, CRITICAL: 0)` with `aquasec/trivy:0.55.2`.
 - 🔁 **CI workflow** — restored `trivyignores: .trivyignore` wiring on the Trivy step (was dropped by the bad merge,
   leaving `INPUT_TRIVYIGNORES` empty). CVE-2026-126190 is NOT added to the ignore file; the upgrade is expected to remove
   it from the image.
@@ -241,7 +246,7 @@ MIT
 
 **SA4E-386 — Node.js security upgrade to 22.23.4**
 
-- 🔒 **Node.js 22.23.4 pin** — 4-layer enforcement: `.nvmrc` 8B, `engines` root+backend+lockfile, `Dockerfile ARG NODE_VERSION + NODE_BASE_DIGEST`, 27 workflow literals
+- 🔒 **Node.js 22.23.4 pin** — 4-layer enforcement: `.nvmrc` 8B, `engines` root+backend+lockfile, `Dockerfile ARG NODE_VERSION + NODE_TARBALL_SHA256 + DEBIAN_BASE_DIGEST`, 27 workflow literals
 - � CR-01 **Scope amendment** — delete `build-native.yml`; ONNX workflow preserved; update `auto-release.yml` + `scheduled-prebuild-scan.yml`
 - 📄 **SDLC docs** — BRD v1.0 (English per template), FSD v1.3, TDD v1.1 (AD-11, all discrepancies closed), TEST-REPORT.md, UG.md with §7 Manual Test Procedure
 - 🔖 **Version sync** — root/`backend`/`extension` → `1.55.9`

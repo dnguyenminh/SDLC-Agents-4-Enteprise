@@ -168,3 +168,5 @@ See .env.example for full reference.
 | PostgreSQL connection refused | Container not started | docker compose up postgres -d |
 | Migration relation already exists | Partial previous run | Safe (IF NOT EXISTS) |
 | Worker stuck in claiming | Stale claimed tasks | Restart worker (auto-recovery) |
+
+> **Base-image migration (SA4E-335):** The backend Docker image (`backend/Dockerfile`) was migrated from `node:22-slim` (Debian 12 bookworm) to `debian:trixie-slim` (Debian 13) + the official Node 22.23.4 binary tarball (SHA-256 pinned). Python in the runtime is now 3.13.5 (trixie) instead of 3.11.2 (bookworm). soupsieve in both MCP venvs is upgraded to 4.0.1 natively (no `--ignore-requires-python` needed). See `documents/SA4E-335/BUILD-AND-REGISTRY.md` for the full pin and digest-update process.

@@ -8,7 +8,7 @@ published image. It implements FSD Story 4 (BR-20..BR-23).
 |-------|-------|
 | Jira Ticket | SA4E-335 |
 | Artifacts | `backend/Dockerfile`, `backend/docker-compose.yml`, `.github/workflows/build-push-backend.yml` |
-| Base image | `node:22-slim` (Debian/glibc), pinned by digest |
+| Base image | `debian:trixie-slim` (Debian 13, glibc) + official Node 22.23.4 binary tarball (SHA-256 pinned) |
 | Runtime | Node.js 22 + Hono MCP server (Code Intelligence), port `48721` |
 | Registry (default) | GHCR (`ghcr.io`), configurable via repo variables |
 
@@ -16,19 +16,17 @@ published image. It implements FSD Story 4 (BR-20..BR-23).
 
 ## 1. Base-image decision
 
-- **`node:22-slim` (Debian, glibc)** — chosen over `node:22-alpine` (musl) because
-  native modules such as `onnxruntime-node` require glibc; musl is incompatible
-  (TDD AD-1, BR-02).
-- The base image is **pinned by immutable digest** in the Dockerfile build arg
-  `NODE_BASE_DIGEST` (SEC-02). The readable tag (`node:22-slim`) is kept as a
-  comment. `pgvector/pgvector:pg16` in compose is likewise digest-pinned.
-- **Digest-update process:** bump `NODE_BASE_DIGEST` (Dockerfile) and the
-  `postgres` image digest (compose) via Dependabot/Renovate, or manually:
+- **`debian:trixie-slim` (Debian 13, glibc) + official Node 22.23.4 binary tarball** — chosen over `node:22-slim` because Node official images have no trixie variant, so Node is installed from the official tarball. glibc is required because native modules such as `onnxruntime-node` link against glibc; musl/alpine is incompatible (TDD AD-1, BR-02).
+- The base image is **pinned by immutable digest** in the Dockerfile build args `DEBIAN_BASE_IMAGE` and `DEBIAN_BASE_DIGEST` (SEC-02). The Node tarball is additionally pinned by SHA-256 (`NODE_TARBALL_SHA256`). Both pins are authoritative.
+- **Digest-update process:** bump `DEBIAN_BASE_DIGEST` and `NODE_TARBALL_SHA256` (Dockerfile) and the `postgres` image digest (compose) via Dependabot/Renovate, or manually:
 
   ```bash
-  docker buildx imagetools inspect node:22-slim        # copy the top-level Digest
+  docker buildx imagetools inspect debian:trixie-slim        # copy the top-level Digest
+  # Node tarball SHA-256: fetch from https://nodejs.org/dist/v22.23.4/SHASUMS256.txt
   docker buildx imagetools inspect pgvector/pgvector:pg16
   ```
+
+- The Node tarball is pre-downloaded on the host and `COPY`'ed into the image (it is not downloaded at build time), so the build does not depend on network access to nodejs.org. The tarball SHA-256 is verified inside the container before extraction.
 
 ---
 
@@ -52,6 +50,18 @@ The `production` runtime image is intentionally minimal (SEC-05):
 ## 3. Build commands (local)
 
 All commands run from the `backend/` directory.
+
+### Prerequisite: download the Node tarball
+
+The Node v22.23.4 tarball is **not committed** (30 MB binary, see `backend/.gitignore`).
+Download it before building:
+
+```bash
+curl -fsSL -o node-v22.23.4-linux-x64.tar.xz \
+  https://nodejs.org/dist/v22.23.4/node-v22.23.4-linux-x64.tar.xz
+# Verify SHA-256 against NODE_TARBALL_SHA256 in the Dockerfile:
+#   1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
+```
 
 | Target | Command | Purpose |
 |--------|---------|---------|
@@ -210,37 +220,43 @@ ships two Python stdio MCP child servers plus the ONNX embedding model:
 - `development`: parity (same venv copies + ENV).
 - Embedding model bake is now **default ON** (§2 said "default OFF" — superseded).
 
-### 8.2 Stage map (7 stages)
+### 8.2 Stage map (8 stages)
 
 | # | Stage | Role |
 |---|-------|------|
-| 1 | `base` | Shared workdir + build toolchain (python3/make/g++/git) on digest-pinned node:22-slim (build-time only) |
-| 2 | `deps` | `npm ci --omit=dev` → pruned production `node_modules` |
-| 3 | `build` | Full `npm ci` + `tsc` → `dist/`; bakes the ONNX model into `/app/models-cache` when `BAKE_EMBEDDING_MODEL=true` |
-| 4 | `mcp-python` | Builds the two stdio MCP venvs under `/opt/*` (`git` used here only, SEC-05) |
-| 5 | `production` ★ | Sole CI push target — runtime: node_modules + dist + models-cache + python3 + 2 read-only venvs; npm CLI bump (DEF-004) + Debian CVE upgrades (SEC-04) |
-| 6 | `development` | Hot-reload image (tsx watch), MCP venv parity |
-| 7 | `test` | In-container vitest |
+| 1 | `node-runtime` | Shared Node runtime: Debian trixie + official Node 22.23.4 tarball (SHA-256 verified), curl/xz purged after install (build-time only) |
+| 2 | `base` | Shared workdir + build toolchain (python3/make/g++/git) on trixie-based node-runtime (build-time only) |
+| 3 | `deps` | `npm ci --omit=dev` → pruned production `node_modules` |
+| 4 | `build` | Full `npm ci` + `tsc` → `dist/`; bakes the ONNX model into `/app/models-cache` when `BAKE_EMBEDDING_MODEL=true` |
+| 5 | `mcp-python` | Builds the two stdio MCP venvs under `/opt/*` (`git` used here only, SEC-05) |
+| 6 | `production` ★ | Sole CI push target — runtime: node_modules + dist + models-cache + python3 + 2 read-only venvs; npm CLI bump (DEF-004) + Debian CVE upgrades (SEC-04) |
+| 7 | `development` | Hot-reload image (tsx watch), MCP venv parity |
+| 8 | `test` | In-container vitest |
 
 ### 8.3 New build ARGs
 
 | ARG | Default | Purpose |
 |-----|---------|---------|
-| `MARKITDOWN_MCP_VERSION` | `0.0.1a7` | PyPI version pin for markitdown-mcp |
+| `NODE_VERSION` | `22.23.4` | Node.js version (unchanged from before) |
+| `DEBIAN_BASE_IMAGE` | `debian:trixie-slim` | Debian 13 trixie base image (SEC-02) |
+| `DEBIAN_BASE_DIGEST` | `sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2` | Debian trixie digest pin (SEC-02) |
+| `NODE_TARBALL_SHA256` | `1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce` | Node v22.23.4 linux-x64 tarball SHA-256 (SEC-02) |
+| `MARKITDOWN_MCP_VERSION` | `0.0.1a8` | PyPI version pin for markitdown-mcp |
 | `MARKDOWN_EXPORTER_MCP_REF` | `1429b6a94767a709f7f5119219ca5951042d9d3c` | Upstream commit pin (hermetic git-source analogue of SEC-02) |
 | `BAKE_EMBEDDING_MODEL` | `true` | Bakes `Xenova/paraphrase-multilingual-MiniLM-L12-v2` (quantized, ~130 MB) into `/app/models-cache` (`ENV TRANSFORMERS_CACHE=/app/models-cache`). `false` → slim build; mount a volume (§8.7) |
 
-Pre-existing ARGs unchanged: `NODE_VERSION`, `NODE_BASE_DIGEST` (SEC-02),
-`NPM_VERSION` (DEF-004 npm CLI bump, 11.21.0).
+Pre-existing ARGs unchanged: `NPM_VERSION` (DEF-004 npm CLI bump, 11.21.0).
 
 ### 8.4 Production image contents inventory
 
 | Path / aspect | Content | Notes |
 |---------------|---------|-------|
 | `/app/models-cache` | `model_quantized.onnx` + `config.json` (~130 MB) | Baked by default; read-only rootfs OK (cache hits need no writes) |
-| `/opt/markitdown-venv` | markitdown-mcp venv | root-owned, read-only, pip stripped |
-| `/opt/markdown-exporter-venv` | markdown-exporter-mcp-local venv | same hardening |
-| apt layer | `python3` only | pip/pip3/git/pandoc **ABSENT** at runtime (SEC-05) |
+| `/opt/markitdown-venv` | markitdown-mcp venv (Python 3.13.5) | root-owned, read-only, pip stripped |
+| `/opt/markdown-exporter-venv` | markdown-exporter-mcp-local venv (Python 3.13.5) | same hardening |
+| `/usr/local` | Node 22.23.4 (official tarball, SHA-256 verified) | bin/node, bin/npm, bin/npx, lib/node_modules/npm |
+| apt layer | `python3` only (trixie 3.13.5) | pip/pip3/git/pandoc **ABSENT** at runtime (SEC-05); curl/xz absent (purged from node-runtime) |
+| OS | Debian 13 trixie-slim | glibc; onnxruntime-node/manylinux wheels compatible |
 | ENV | `PATH=/opt/markitdown-venv/bin:/opt/markdown-exporter-venv/bin:…`, `PYTHONUNBUFFERED=1`, `TRANSFORMERS_CACHE=/app/models-cache` | bare commands resolve under user `sa4e` (BR-05) and its stdio children |
 
 ### 8.5 `mcp>=1.27.0,<2.0.0` constraint rationale

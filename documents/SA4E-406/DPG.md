@@ -69,6 +69,13 @@ SA4E-406 delivers critical improvements to the `drawio_auto_layout` MCP tool:
 > exemption. The Trivy workflow input `trivyignores: .trivyignore` was restored. Existing SA4E-385 accepted-risk entries
 > (body-parser, undici, zod, GHSA aliases) are retained in `.trivyignore`; CVE-2026-126190 is NOT added there.
 
+> **Base-image migration (SA4E-335):** The backend Docker image was migrated from `node:22-slim` (Debian 12 bookworm,
+> Python 3.11.2) to `debian:trixie-slim` (Debian 13) + the official Node 22.23.4 binary tarball (SHA-256 pinned,
+> `NODE_TARBALL_SHA256`). Python in the runtime is now 3.13.5 (trixie), which natively satisfies soupsieve's
+> `Requires-Python >=3.11.5` floor — the `--ignore-requires-python` override was removed. Trivy gate re-validated green
+> (0 CRITICAL, 0 HIGH with `aquasec/trivy:0.55.2`). See `documents/SA4E-335/BUILD-AND-REGISTRY.md` for the full pin
+> and digest-update process.
+
 ### 1.2 Deployment Scope
 
 | Item | Type | Description |

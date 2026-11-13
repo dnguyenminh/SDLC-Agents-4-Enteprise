@@ -164,6 +164,8 @@ GitHub Actions workflow (ci-sa4e-44.yml):
 - Extension must be installed and connected for code intelligence to work
 - First scan of large workspaces (>1000 files) may take 30-60s
 
+> **Base-image migration (SA4E-335):** The backend Docker image (`backend/Dockerfile`) was migrated from `node:22-slim` (Debian 12 bookworm) to `debian:trixie-slim` (Debian 13) + the official Node 22.23.4 binary tarball (SHA-256 pinned). Python in the runtime is now 3.13.5 (trixie) instead of 3.11.2 (bookworm). soupsieve in both MCP venvs is upgraded to 4.0.1 natively (no `--ignore-requires-python` needed). See `documents/SA4E-335/BUILD-AND-REGISTRY.md` for the full pin and digest-update process.
+
 ---
 
 ## Upgrade Instructions
