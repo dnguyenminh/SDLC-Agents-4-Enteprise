@@ -223,42 +223,34 @@ SA4E-406 delivers critical improvements to the `drawio_auto_layout` MCP tool:
 
 ### 5.3 Docker Deployment (if applicable)
 
-```dockerfile
-# Dockerfile for Backend MCP Server with drawio tools
-FROM node:22-alpine AS builder
+The backend Docker image is built from `backend/Dockerfile` (single source of truth),
+which uses `debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2`
+(Debian 13 trixie, glibc) + the official Node v22.23.4 linux-x64 tarball fetched in-build
+and verified against SHA-256 `1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce`.
+The image extracts Node to `/usr/local` and builds both MCP venvs (markitdown-mcp,
+markdown-exporter-mcp-local) at Python 3.13.5. See `backend/Dockerfile` for the full
+multi-stage definition (8 stages: node-runtime, base, deps, build, mcp-python,
+production, development, test).
 
-WORKDIR /app
-COPY backend/package.json backend/package-lock.json* ./
-RUN npm ci --omit=dev
+```bash
+# Build the production image (run from backend/):
+docker build --target production -t sa4e-backend:local .
 
-COPY backend/src ./src
-COPY backend/tsconfig.json ./
-RUN npm run build
-
-FROM node:22-alpine
-
-WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY backend/package.json ./
-
-# Install draw.io CLI for export_png (optional)
-# RUN apk add --no-cache openjdk11 && npm install -g @drawio/cli
-
-ENV CODE_INTEL_PORT=9183 \
-    SA4E_ELK_MAX_NODES=500 \
-    SA4E_ELK_TIMEOUT_MS=10000 \
-    SA4E_ELK_SPACING_MAX=500
-
-EXPOSE 9183
-
-CMD ["node", "dist/index.ts"]
+# Run the production image (/health on port 48721):
+docker run --rm -p 48721:48721 sa4e-backend:local
+curl -fsS http://127.0.0.1:48721/health
 ```
 
 **Docker configuration notes:**
-- Image size: ~150MB (alpine + node 22)
-- ENV variables configurable at container start
-- Port mapping: `-p 9183:9183`
+- Base: Debian 13 trixie (glibc) — NOT alpine. Alpine was dropped because it lacks
+  glibc (incompatible with native modules such as bcrypt/sqlite3 and manylinux-only
+  wheels like onnxruntime/magika) and previously removed the Python runtime needed by
+  the MCP stdio child servers (ENOENT).
+- Node: v22.23.4 from official tarball (SHA-256 pinned), extracted to `/usr/local`.
+- Python: 3.13.5 (trixie) — installed only in `production` for the MCP venvs.
+- ENV variables configurable at container start: `PORT`, `INDEX_CONCURRENCY_LIMIT`,
+  `TRANSFORMERS_CACHE`, `PYTHONUNBUFFERED`.
+- Port mapping: `-p 48721:48721`
 - Volume mount for diagrams: `-v ${DIAGRAMS_DIR}:/workspace/documents`
 
 ### 5.4 Configuration Changes

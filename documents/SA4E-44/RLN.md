@@ -68,7 +68,7 @@ This release introduces two major architectural changes:
 
 | File | Purpose |
 |------|---------|
-| backend/Dockerfile | Multi-stage Docker build (Node.js 20) |
+| backend/Dockerfile | Multi-stage Docker build (Debian 13 trixie + SHA-256-pinned Node 22.23.4 tarball, 8 stages) |
 | backend/docker-compose.yml | Full dev environment (backend + PostgreSQL + ONNX) |
 | backend/docker-compose.test.yml | Test environment override |
 | .github/workflows/ci-sa4e-44.yml | CI pipeline for SA4E-44 branch |

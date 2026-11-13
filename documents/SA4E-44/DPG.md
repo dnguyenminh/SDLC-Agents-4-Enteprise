@@ -22,7 +22,7 @@
 
 | Component | Image / Runtime | Port | Purpose |
 |-----------|----------------|------|---------|
-| Backend Server | Node.js 20 / Hono | 48721 | MCP Server, Task Worker, Code Intel API |
+| Backend Server | Node.js 22.23.4 / Hono | 48721 | MCP Server, Task Worker, Code Intel API |
 | PostgreSQL 15 | postgres:15-alpine | 5432 | Persistent storage (tasks, code intel, KB) |
 | ONNX Runtime (optional) | onnxruntime/server | 8080 | Vector embeddings for semantic search |
 
@@ -40,7 +40,7 @@
 |---|------|-----------------|----------|
 | 1 | Docker installed | docker --version | >= 24.x |
 | 2 | Docker Compose installed | docker compose version | >= 2.20 |
-| 3 | Node.js 20+ | node --version | >= 20.0.0 |
+| 3 | Node.js 22.23.4 | node --version | >= 22.23.4 |
 | 4 | Git branch correct | git branch --show-current | SA4E-44 |
 | 5 | Dependencies installed | cd backend and npm ci | Exit 0 |
 | 6 | Build succeeds | npm run build | Exit 0 |
