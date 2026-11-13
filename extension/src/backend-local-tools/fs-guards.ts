@@ -52,6 +52,18 @@ function outsideMessage(resolution: PathResolutionOk, rawDisplay: string): strin
   );
 }
 
+/**
+ * SEC-WT-22: component-wise containment check that needs NO existing parent, so it can run
+ * BEFORE ensureDir (mkdir follows links and would create directories outside the root).
+ * The post-ensureDir {@link checkSymlinkGuard} stays as the second check.
+ */
+export function checkSymlinkGuardBeforeEnsureDir(
+  resolution: PathResolutionOk,
+  rawDisplay: string,
+): string | null {
+  if (resolution.rootSource !== "workspace") return null;
+  return checkFullPathEscape(resolution, rawDisplay);
+}
 export function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }

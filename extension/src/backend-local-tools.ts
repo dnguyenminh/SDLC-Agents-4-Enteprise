@@ -23,5 +23,5 @@ export {
   getLocalToolDefinitions,
   getVisibleLocalToolDefinitions,
 } from "./backend-local-tools/registry";
-export { checkSymlinkGuard } from "./backend-local-tools/fs-guards";
+export { checkSymlinkGuard, checkSymlinkGuardBeforeEnsureDir } from "./backend-local-tools/fs-guards";
 export { embedMarkdownImages } from "./backend-local-tools/embed-image";

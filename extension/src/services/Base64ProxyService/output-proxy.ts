@@ -12,7 +12,7 @@ import {
   sanitizeLogText,
   PathResolverError,
 } from "../PathResolver";
-import { checkSymlinkGuard } from "../../backend-local-tools";
+import { checkSymlinkGuard, checkSymlinkGuardBeforeEnsureDir } from "../../backend-local-tools";
 
 /** Instance-backed context injected by Base64ProxyService. */
 export interface OutputProxyContext {
@@ -55,7 +55,6 @@ export function proxyToolOutput(
       const outputPath = resolveOutputPath(ctx, args, output.file_name, multi);
       if (!outputPath) continue;
       const buf = Buffer.from(output.output_base64, "base64");
-      ensureDir(path.dirname(outputPath));
       // I-7 guard for the proxy write (re-resolve is idempotent — PBT-02).
       // SEC-03 (CWE-283): forward the per-call base_dir/workspace_root so the
       // re-resolve validates against the SAME effective root as the derivation
@@ -70,6 +69,10 @@ export function proxyToolOutput(
         workspaceRoot: args.workspace_root,
       });
       if (!outResolution.ok) throw new PathResolverError(outResolution.message);
+      // SEC-WT-22: containment BEFORE ensureDir (mkdir follows links); full guard stays after.
+      const preGuardError = checkSymlinkGuardBeforeEnsureDir(outResolution, sanitizeLogText(outputPath));
+      if (preGuardError) throw new PathResolverError(preGuardError);
+      ensureDir(path.dirname(outputPath));
       const guardError = checkSymlinkGuard(outResolution, sanitizeLogText(outputPath));
       if (guardError) throw new PathResolverError(guardError);
       fs.writeFileSync(outputPath, buf);

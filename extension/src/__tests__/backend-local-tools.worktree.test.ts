@@ -8,6 +8,7 @@ import * as path from "path";
 import { executeLocalTool, checkSymlinkGuard } from "../backend-local-tools";
 import type { PathResolutionOk } from "../services/PathResolver";
 import { resetDefaultTrust } from "../services/worktree-open-folders";
+import { proxyToolOutput } from "../services/Base64ProxyService/output-proxy";
 import { addWorktree, cleanupTmp, makeRepo, makeTmp } from "./worktree-trust/worktree-fixture";
 
 afterAll(cleanupTmp);
@@ -85,5 +86,34 @@ describe("SEC-WT-16 checkSymlinkGuard (component-wise realResolve)", () => {
   it("cwd_fallback is still skipped entirely", () => {
     const r: PathResolutionOk = { ok: true, resolvedPath: "/x", rootSource: "cwd_fallback", rootPath: "/" };
     expect(checkSymlinkGuard(r, "x")).toBeNull();
+  });
+});
+describe("SEC-WT-22 symlink guard runs BEFORE ensureDir", () => {
+  function linked() {
+    const w = world();
+    fs.symlinkSync(w.outside, path.join(w.wt, "link"), "junction");
+    return w;
+  }
+  it("stream_write_file link/newdir/f.txt creates nothing outside", async () => {
+    const { wt, outside } = linked();
+    const r = await executeLocalTool("stream_write_file", { file_path: "link/newdir/f.txt", content: "x", base_dir: wt });
+    expect(r.isError).toBe(true);
+    expect(fs.existsSync(path.join(outside, "newdir"))).toBe(false);
+  });
+  it("embed_image output_path link/newdir/o.md creates nothing outside", async () => {
+    const { wt, outside } = linked();
+    fs.writeFileSync(path.join(wt, "in.md"), "# t\n");
+    const r = await executeLocalTool("embed_image", { file_path: "in.md", output_path: "link/newdir/o.md", base_dir: wt });
+    expect(r.isError).toBe(true);
+    expect(fs.existsSync(path.join(outside, "newdir"))).toBe(false);
+  });
+  it("output proxy write-back to link/newdir/f.bin creates nothing outside", () => {
+    const { wt, outside } = linked();
+    const ctx = { resolvePath: (fp: string) => path.resolve(wt, fp), resolveRoot: () => wt };
+    const text = JSON.stringify({ file_name: "f.bin", output_base64: Buffer.from("x").toString("base64") });
+    const r = proxyToolOutput(ctx, "t", { output_path: "link/newdir/f.bin", file_path: "in", base_dir: wt },
+      { content: [{ type: "text", text }] });
+    expect(JSON.stringify(r)).not.toContain('"size_bytes"');
+    expect(fs.existsSync(path.join(outside, "newdir"))).toBe(false);
   });
 });
