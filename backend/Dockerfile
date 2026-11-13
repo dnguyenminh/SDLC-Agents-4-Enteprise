@@ -238,8 +238,8 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 COPY --from=mcp-python /opt/markitdown-venv /opt/markitdown-venv
 COPY --from=mcp-python /opt/markdown-exporter-venv /opt/markdown-exporter-venv
-# Copy .trivyignore to root for Trivy vulnerability scan exceptions (e.g., CVE-2026-126190 in soupsieve)
-COPY .trivyignore /.trivyignore
+# Copy .trivyignore to WORKDIR for Trivy vulnerability scan exceptions (e.g., CVE-2026-126190 in soupsieve)
+COPY .trivyignore .trivyignore
 # Console scripts resolve on the PATH inherited by the backend process and its
 # stdio children; PYTHONUNBUFFERED keeps stderr logs streaming (no MCP breakage).
 ENV PATH="/opt/markitdown-venv/bin:/opt/markdown-exporter-venv/bin:${PATH}"
