@@ -129,7 +129,6 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           severity: CRITICAL,HIGH
-          ignore-vuln: CVE-2026-126190
 
       # 6b. Push the scanned image to registries (only on non-PR events).
       - name: Push image to registries
