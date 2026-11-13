@@ -21,7 +21,7 @@ export function resolveConfig(variant: McpVariant, root: string): Record<string,
     config.cwd = variant.config.cwd.replace("${mcpServersDir}", serversDir).replace("${workspaceFolder}", root);
   }
   config.env = {
-    CODE_INTEL_WORKSPACE: root, CODE_INTEL_VIEWER_PORT: "3200", FORCE_RESTART: "15", ...openFoldersEnv(),
+    CODE_INTEL_WORKSPACE: root, CODE_INTEL_VIEWER_PORT: "3200", FORCE_RESTART: "15", ...openFoldersEnv(), ...autoTrustEnv(),
   };
   return config;
 }
@@ -35,6 +35,16 @@ function openFoldersEnv(): Record<string, string> {
   const folders = vscode.workspace.workspaceFolders ?? [];
   const paths = folders.map((f) => f.uri.fsPath).filter((p) => p !== "" && !p.includes(path.delimiter));
   return paths.length > 0 ? { MCP_OPEN_WORKSPACE_FOLDERS: paths.join(path.delimiter) } : {};
+}
+/**
+ * SEC-WT-21 kill switch: when `sdlcAgents.workspace.worktreeAutoTrust` is not `true`
+ * (unset = default true) the backend gets MCP_WORKTREE_AUTOTRUST=0. The value is baked in
+ * when the MCP config is written; no re-injection runs on setting changes, so a changed
+ * setting takes effect after the MCP config is regenerated (reload window / restart MCP server).
+ */
+function autoTrustEnv(): Record<string, string> {
+  const value = vscode.workspace.getConfiguration("sdlcAgents.workspace").get("worktreeAutoTrust");
+  return value === undefined || value === true ? {} : { MCP_WORKTREE_AUTOTRUST: "0" };
 }
 export function writeDefaultOrchestrationConfig(root: string): void {
   const orchPath = path.join(root, ".code-intel", "orchestration.json");

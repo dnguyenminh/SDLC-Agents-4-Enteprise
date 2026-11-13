@@ -12,6 +12,24 @@ const original = (vscode.workspace as any).workspaceFolders;
 const folder = (p: string, index: number) => ({ uri: { fsPath: p }, name: `f${index}`, index });
 afterEach(() => { (vscode.workspace as any).workspaceFolders = original; });
 
+describe("resolveConfig MCP_WORKTREE_AUTOTRUST kill switch (SEC-WT-21)", () => {
+  const origCfg = (vscode.workspace as any).getConfiguration;
+  afterEach(() => { (vscode.workspace as any).getConfiguration = origCfg; });
+  const withSetting = (v: unknown) => { (vscode.workspace as any).getConfiguration = () => ({ get: () => v }); };
+  it("writes MCP_WORKTREE_AUTOTRUST=0 when the setting is false or non-boolean", () => {
+    for (const v of [false, "true", 1, null]) {
+      withSetting(v);
+      expect((resolveConfig(variant, "/r") as any).env.MCP_WORKTREE_AUTOTRUST).toBe("0");
+    }
+  });
+  it("omits the variable when the setting is true or unset (default on)", () => {
+    for (const v of [true, undefined]) {
+      withSetting(v);
+      expect((resolveConfig(variant, "/r") as any).env).not.toHaveProperty("MCP_WORKTREE_AUTOTRUST");
+    }
+  });
+});
+
 describe("resolveConfig MCP_OPEN_WORKSPACE_FOLDERS", () => {
   it("lists every open folder joined by path.delimiter", () => {
     const a = path.resolve("/sa4e393/a"), b = path.resolve("/sa4e393/b");
