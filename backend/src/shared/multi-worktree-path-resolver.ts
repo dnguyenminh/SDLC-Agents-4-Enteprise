@@ -14,7 +14,15 @@ import type { Logger } from 'pino';
 import { isWithinRoot, resolveWithinWorkspace } from './path-safety.js';
 import { sanitizePathText, type PathResolutionErr, type PathResolutionResult } from './path-resolution-types.js';
 import { WorkspaceAllowlist } from './workspace-allowlist.js';
+import { buildRejectionDetail } from './worktree-trust/messages.js';
+import { isUncOrDevice } from './worktree-trust/path-fold.js';
+import { containsFolded, symlinkEscape } from './path-containment.js';
+import type { TrustPort, WorktreeReason } from './worktree-trust/types.js';
+import { createWorktreeTrust } from './worktree-trust-factory.js';
 
+type TrustSource = 'allowlist' | 'worktree';
+
+export { containsFolded, symlinkEscape } from './path-containment.js';
 export { getSharedPathResolver, resetSharedPathResolver } from './path-resolver-provider.js';
 
 export interface ResolvePathInput {
@@ -28,13 +36,17 @@ export interface ResolvePathInput {
 
 export class MultiWorktreePathResolver {
   private readonly log: Logger;
+  private readonly trust: TrustPort;
 
+  /** @param trust optional worktree-trust port (Addendum 5); default is built from env + allowlist. */
   constructor(
     private readonly allowlist: WorkspaceAllowlist,
     private readonly legacyRoot: string,
     logger: Logger,
+    trust?: TrustPort,
   ) {
     this.log = logger.child({ module: 'mw-path-resolver' });
+    this.trust = trust ?? createWorktreeTrust(allowlist, legacyRoot, logger);
   }
 
   /** Per-call resolution — see module doc for the normative pipeline. */
@@ -84,24 +96,35 @@ export class MultiWorktreePathResolver {
   /** BR-05/06 — allowlist membership BEFORE filesystem existence (BR-11). */
   private resolveWithBaseDir(rawBaseDir: string, filePath: unknown): PathResolutionResult {
     const baseDir = path.resolve(rawBaseDir.trim()); // BR-09 — before allowlist check (T8)
-    if (!this.allowlist.contains(baseDir)) {
-      this.log.warn({ base_dir: sanitizePathText(baseDir) }, 'base_dir rejected — not in allowlist');
-      return err(
-        'PATH_REJECTED_OUTSIDE_ALLOWLIST',
-        `Workspace root '${sanitizePathText(baseDir)}' is not registered in the allowlist. ` +
-          'Configure MCP_WORKSPACE_ROOTS to include this path.',
-        baseDir,
-        '',
-      );
-    }
+    const admitted = this.admit(baseDir);
+    if (typeof admitted !== 'string') return admitted;
     if (!isDirectory(baseDir)) {
       return err('FS_ERROR', `Workspace root '${sanitizePathText(baseDir)}' does not exist on filesystem`, baseDir, '');
     }
-    return this.containAndResolve(baseDir, filePath);
+    return this.containAndResolve(baseDir, filePath, admitted);
+  }
+
+  /**
+   * Addendum 5 admission order: UNC/device guard (SEC-WT-2, before ANY realpath) →
+   * allowlist (always wins, BR-WT1) → verified git worktree of a trusted repo.
+   * Returns where trust came from, or the rejection (legacy text unless a worktree pointer failed).
+   */
+  private admit(baseDir: string): TrustSource | PathResolutionErr {
+    if (isUncOrDevice(baseDir, process.platform) && !this.allowlist.hasLiteral(baseDir)) {
+      return this.rejectBase(baseDir, 'unc_unsupported');
+    }
+    if (this.allowlist.contains(baseDir)) return 'allowlist';
+    const verdict = this.trust.check(baseDir);
+    return verdict.trusted ? 'worktree' : this.rejectBase(baseDir, verdict.reason);
+  }
+
+  private rejectBase(baseDir: string, reason: WorktreeReason): PathResolutionErr {
+    this.log.warn({ base_dir: sanitizePathText(baseDir) }, 'base_dir rejected — not in allowlist');
+    return err('PATH_REJECTED_OUTSIDE_ALLOWLIST', buildRejectionDetail(baseDir, reason), baseDir, '');
   }
 
   /** BR-02/04 + BR-07 — resolve file_path, then enforce containment (T1/T2). */
-  private containAndResolve(baseDir: string, filePath: unknown): PathResolutionResult {
+  private containAndResolve(baseDir: string, filePath: unknown, trustSource: TrustSource): PathResolutionResult {
     if (typeof filePath !== 'string' || filePath.trim() === '') {
       return err('PATH_REJECTED_OUTSIDE_ALLOWLIST', 'file_path must be a non-empty string', baseDir, '');
     }
@@ -115,7 +138,7 @@ export class MultiWorktreePathResolver {
     if (!containsFolded(baseDir, resolvedPath)) return this.containmentErr(baseDir, resolvedPath);
     const escape = symlinkEscape(baseDir, resolvedPath); // T3 — runtime symlink guard
     if (escape !== null) return this.containmentErr(baseDir, escape);
-    return { ok: true, resolvedPath, effectiveRoot: baseDir, rootSource: 'base_dir' };
+    return { ok: true, resolvedPath, effectiveRoot: baseDir, rootSource: 'base_dir', trustSource };
   }
 
   private containmentErr(baseDir: string, resolvedPath: string): PathResolutionResult {
@@ -161,31 +184,6 @@ function isDirectory(baseDir: string): boolean {
   } catch {
     return false;
   }
-}
-
-/** T3 — realpath the deepest existing ancestor + containment re-check; returns the escaped real path or null. */
-export function symlinkEscape(root: string, resolvedPath: string): string | null {
-  try {
-    let cursor = resolvedPath;
-    while (cursor !== path.dirname(cursor) && !fs.existsSync(cursor)) {
-      cursor = path.dirname(cursor);
-    }
-    if (!fs.existsSync(cursor)) return null;
-    const real = fs.realpathSync(cursor);
-    return containsFolded(root, real) ? null : real;
-  } catch {
-    return null; // best-effort — string containment already passed
-  }
-}
-
-/** T5/T9 — separator-boundary + win32 case-fold containment (extension parity). */
-export function containsFolded(root: string, candidate: string): boolean {
-  if (process.platform !== 'win32') return isWithinRoot(root, candidate);
-  const fold = (p: string): string => p.toLowerCase();
-  const resolvedRoot = path.resolve(root);
-  const resolved = path.resolve(candidate);
-  if (fold(resolved) === fold(resolvedRoot)) return true;
-  return fold(resolved).startsWith(fold(resolvedRoot + path.sep));
 }
 
 function err(

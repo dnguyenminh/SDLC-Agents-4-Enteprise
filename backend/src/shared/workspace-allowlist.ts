@@ -10,6 +10,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Logger } from 'pino';
+import { isUncOrDevice } from './worktree-trust/path-fold.js';
 
 /** Soft cap (TDD §6.1 / Open Question #5) — defensive only, no hard failure. */
 const MAX_ROOTS = 100;
@@ -56,12 +57,16 @@ export class WorkspaceAllowlist {
   contains(root: string): boolean {
     const resolved = path.resolve(root);
     if (this.lookup.has(foldKey(resolved))) return true;
+    if (isUncOrDevice(resolved, process.platform)) return false; // SEC-WT-2: never realpath an unlisted UNC/device path
     try {
       return this.lookup.has(foldKey(fs.realpathSync(resolved)));
     } catch {
       return false;
     }
   }
+
+  /** Pure folded Set lookup (no fs): lets a literally listed UNC root keep working (SEC-WT-2). */
+  hasLiteral(root: string): boolean { return this.lookup.has(foldKey(path.resolve(root))); }
 
   isLegacyMode(): boolean { return this.legacyMode; }        // BR-16
   /** Startup log snapshot (BR-19). */
