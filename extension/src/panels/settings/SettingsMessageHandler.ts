@@ -14,7 +14,6 @@ import { LlmSettingsHandler } from "./handlers/LlmSettingsHandler";
 import { BackendSettingsHandler } from "./handlers/BackendSettingsHandler";
 import { PegaSettingsHandler } from "./handlers/PegaSettingsHandler";
 import { AtlassianSettingsHandler } from "./handlers/AtlassianSettingsHandler";
-import { ProfileSettingsHandler } from "./handlers/ProfileSettingsHandler";
 
 export class SettingsMessageHandler {
   private readonly configService: ProviderConfigService;
@@ -23,15 +22,13 @@ export class SettingsMessageHandler {
   private readonly backend: BackendSettingsHandler;
   private readonly pega: PegaSettingsHandler;
   private readonly atlassian: AtlassianSettingsHandler;
-  private readonly profiles: ProfileSettingsHandler;
 
   constructor(
     private readonly secrets: vscode.SecretStorage,
-    private readonly postMessage: (msg: any) => void,
-    globalState?: vscode.Memento
+    private readonly postMessage: (msg: any) => void
   ) {
-    const llmTestService = new LlmTestService(secrets, globalState);
-    this.configService = new ProviderConfigService(secrets, globalState);
+    const llmTestService = new LlmTestService(secrets);
+    this.configService = new ProviderConfigService(secrets);
     this.proxyHandler = new ProxyMessageHandler(secrets, postMessage);
     const atlassianService = new AtlassianCredentialService(secrets);
     const refresh = () => this.sendCurrentState();
@@ -40,8 +37,6 @@ export class SettingsMessageHandler {
     this.backend = new BackendSettingsHandler(postMessage);
     this.pega = new PegaSettingsHandler(secrets, this.configService, postMessage, refresh);
     this.atlassian = new AtlassianSettingsHandler(atlassianService, postMessage, refresh);
-    // SA4E-390: multi-provider table + Edit Provider modal + Save All.
-    this.profiles = new ProfileSettingsHandler(this.configService, llmTestService, postMessage);
   }
 
   async handle(msg: any): Promise<void> {
@@ -49,9 +44,6 @@ export class SettingsMessageHandler {
       await this.proxyHandler.handle(msg);
       return;
     }
-    // SA4E-390: provider profile CRUD / test / Save All — routed first so the
-    // multi-provider table works independently of the legacy single-provider flow.
-    if (await this.profiles.handle(msg)) { return; }
     if (await this.routeLlm(msg)) { return; }
     if (await this.routeBackend(msg)) { return; }
     if (await this.routePega(msg)) { return; }
@@ -75,7 +67,7 @@ export class SettingsMessageHandler {
       case "clearApiKey": await this.llm.clearApiKey(msg.provider); return true;
       case "testOllamaConnection": await this.llm.testOllama(msg.url); return true;
       case "testLlm":
-      case "testLlmConnection": await this.llm.testLlm(msg.provider, msg.baseUrl, msg.model); return true;
+      case "testLlmConnection": await this.llm.testLlm(msg.provider, msg.baseUrl); return true;
       default: return false;
     }
   }

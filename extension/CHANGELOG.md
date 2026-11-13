@@ -1,4 +1,13 @@
 # Changelog
+## [1.55.19] - 2026-11-13
+### Added
+- **SA4E-393: design gate MCP tools** — `design_gate_run`, `design_gate_list_rules` (local tool registry, no external binary).
+- **SA4E-393: worktree auto-trust for `base_dir`** — verified git worktrees of the open/allowlisted repo are accepted without allowlist registration. Setting `sdlcAgents.workspace.worktreeAutoTrust` (machine, default `true`); env `MCP_WORKTREE_AUTOTRUST=0` disables.
+### Fixed
+- Design gate: `vscode is not defined`, `fileCount` 0, cache false-PASS, absolute-path leaks, `process.cwd()` root fallback.
+- Entra SSO config: https-only optional authority/issuer/jwksUri restored (backend).
+### Changed
+- `live-content-proxy` test moved to the e2e suite (`npm run test:e2e`).
 
 ## [1.53.11] - 2026-10-18
 

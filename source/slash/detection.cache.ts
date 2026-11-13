@@ -154,11 +154,11 @@ export function getCachedResult(
           return fileContent.result;
         }
       } catch (error: any) {
-        console.error(`Failed to parse cache file: ${error.message}`);
+        console.error("Failed to parse cache file: " + error.message);
       }
     }
   } catch (error: any) {
-    console.error(`Cache read error: ${error.message}`);
+    console.error("Cache read error: " + error.message);
   }
 
   return undefined;
@@ -174,7 +174,7 @@ function readCacheFile(filePath: string): string {
   try {
     return fs.readFileSync(filePath, "utf-8");
   } catch (error: any) {
-    throw new Error(`Failed to read cache file: ${error.message}`);
+    throw new Error("Failed to read cache file: " + error.message);
   }
 }
 
@@ -198,7 +198,7 @@ export function invalidateCache(
       memoryCache.delete(cacheKey);
 
       // Delete JSON file if it exists
-      const filePath = path.join(cacheDir, `${cacheKey}.json`);
+      const filePath = path.join(cacheDir, cacheKey + ".json");
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
@@ -217,7 +217,7 @@ export function invalidateCache(
       }
     }
   } catch (error: any) {
-    console.error(`Failed to invalidate cache: ${error.message}`);
+    console.error("Failed to invalidate cache: " + error.message);
   }
 }
 
@@ -241,7 +241,7 @@ export function clearAllCache(): void {
       }
     }
   } catch (error: any) {
-    console.error(`Failed to clear all cache: ${error.message}`);
+    console.error("Failed to clear all cache: " + error.message);
   }
 }
 
@@ -283,7 +283,7 @@ export function listCachedRuns(): Array<{ runId: string; timestamp: number }> {
       }
     }
   } catch (error: any) {
-    console.error(`Failed to list cached runs: ${error.message}`);
+    console.error("Failed to list cached runs: " + error.message);
   }
 
   // Sort by timestamp DESC

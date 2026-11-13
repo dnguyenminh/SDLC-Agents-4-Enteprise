@@ -10,6 +10,7 @@ import {
   pickBaseDir,
   resolveWithBaseDir,
 } from "./base-dir-resolution";
+import type { TrustPort } from "./worktree-trust/types";
 
 // ── Types (TDD §3.2) ────────────────────────────────────────────────────
 
@@ -36,6 +37,8 @@ export interface PathResolutionOk {
   rootSource: PathRootSource;
   /** Workspace root OR process.cwd() — in failure messages (BR-08). */
   rootPath: string;
+  /** SA4E-393 A5 — origin of base_dir authority (additive; `rootSource` unchanged). */
+  trustSource?: "allowlist" | "worktree";
 }
 
 export interface PathResolutionErr {
@@ -62,18 +65,25 @@ export const FILE_PATH_SCHEMA_DESCRIPTION =
 // NOTE: `require("vscode")` is unresolvable outside the extension host
 // (vitest alias mock is import-only). The root-selection LOGIC this feeds is
 // fully covered via mock-backed providers in path-resolver.test.ts.
+// We defer the require until the function is actually called (per-call lazy)
+// to avoid module-load-time errors in contexts where vscode is not available.
 /* v8 ignore start */
-let vscode: any;
-try {
-  vscode = require("vscode");
-} catch {
-  /* stay undefined — fallback cwd */
+function getVscode(): any {
+  try {
+    return require("vscode");
+  } catch (e: any) {
+    // Catch ALL errors including ReferenceError (which can occur in some contexts)
+    console.debug(`[PathResolver] vscode require failed: ${e?.message ?? e}`);
+    return undefined;
+  }
 }
 
 export function defaultWorkspaceRootProvider(): string | undefined {
   try {
+    const vscode = getVscode();
     return vscode?.workspace?.workspaceFolders?.[0]?.uri?.fsPath; // per-call, no cache
-  } catch {
+  } catch (e: any) {
+    console.debug(`[PathResolver] defaultWorkspaceRootProvider failed: ${e?.message ?? e}`);
     return undefined; // UC-05 EF-2
   }
 }
@@ -97,6 +107,8 @@ opts?: {
     workspaceRoot?: unknown,
     /** SA4E-394 — extension allowlist mirror (default: settings/env). */
     allowlist?: ReadonlySet<string>,
+    /** SA4E-393 A5 — worktree auto-trust port (test seam; default: extension singleton). */
+    worktreeTrust?: TrustPort,
   },
 ): PathResolutionResult {
   // SA4E-394 — a per-call base_dir/workspace_root becomes the EFFECTIVE root:
@@ -114,7 +126,7 @@ opts?: {
     };
   }
   if (baseDir !== undefined) {
-    return resolveWithBaseDir(rawPath, baseDir, { allowlist: opts?.allowlist });
+    return resolveWithBaseDir(rawPath, baseDir, { allowlist: opts?.allowlist, worktreeTrust: opts?.worktreeTrust });
   }
   // Step 1 — validate (UC-01 EF-3): fail-loud BEFORE resolving.
   if (typeof rawPath !== "string" || rawPath.trim() === "") {

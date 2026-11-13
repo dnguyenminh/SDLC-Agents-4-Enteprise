@@ -30,16 +30,35 @@ export function applyLayoutToXml(rawXml: string, laidOut: ElkNode): XmlWriteResu
   const oldPos = readCurrentPositions(rawXml);
 
   let xml = rawXml;
+
+  // Write node positions (x/y) for all nodes
   for (const [id, p] of positions) {
     xml = replaceCellGeometryXy(xml, id, p.x, p.y);
-    // SA4E-410 (DISC-5): ELK resizes a container so that it can hold its
-    // children. Writing only x/y keeps the OLD container size in the XML
-    // while the children are placed at the positions ELK computed for the
-    // NEW size — the children then end up outside their parent border and
-    // the effective canvas (parent offset + child offset) grows without
-    // bound. Writing the new size keeps the geometry self-consistent.
+  }
+
+  // SA4E-410 (DISC-5) + SA4E-406 UAT fix: ELK compound layout returns CONTAINERS
+  // with enlarged width/height that encompass their children — the writer MUST
+  // apply them, otherwise children laid out inside the container still render
+  // OUTSIDE the (too-small) band and child_outside_container issues never resolve.
+  // Size is parent-space-independent (w/h carry no coordinate offset).
+  //
+  // We apply container sizes from TWO sources for maximum robustness:
+  // 1. From the `positions` map (already shifted coordinates)
+  // 2. From the `laidOut` ELK nodes (original layout dimensions)
+  // This dual-write ensures container sizes are always applied correctly
+  // regardless of which coordinate space the container ID was resolved in.
+  for (const [id, p] of positions) {
     if (p.w > 0 && p.h > 0) xml = replaceCellSize(xml, id, p.w, p.h);
   }
+  for (const node of flattenAll(laidOut)) {
+    if (node.id === 'root') continue;
+    if (node.children && node.children.length > 0
+      && Number.isFinite(node.width) && Number.isFinite(node.height)
+      && node.width > 0 && node.height > 0) {
+      xml = replaceCellSize(xml, node.id, node.width, node.height);
+    }
+  }
+
   for (const route of collectEdgeRoutes(laidOut)) xml = writeEdgeRoute(xml, route, positions, dx, dy);
   return { xml, repositionedNodes: buildRepositioned(oldPos, positions) };
 }

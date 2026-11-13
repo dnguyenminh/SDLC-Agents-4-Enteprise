@@ -19,6 +19,7 @@ import { AtlassianCredentialService } from "./services/AtlassianCredentialServic
 import { registerAtlassianLocalTools } from "./mcp/atlassian/index";
 import { registerDevtoolsTools } from "./mcp/devtools-bridge";
 import { registerIdeControlTools } from "./mcp/ide-control-tools";
+import { registerDesignGateLocalTools } from "./tools/design-gate/design-gate-tool";
 import { getSetting } from "./config/settings-migration";
 
 /** Health check timeout in milliseconds */
@@ -86,6 +87,12 @@ export class RemoteBackendClient implements vscode.Disposable {
       } catch (err) {
         console.warn(`[RemoteBackendClient] IDE control tools registration failed: ${(err as Error).message}`);
       }
+    }
+    // Design-gate tools (no credentials needed → outside secrets gate)
+    try {
+      registerDesignGateLocalTools();
+    } catch (err) {
+      console.warn(`[RemoteBackendClient] Design gate tools registration failed: ${(err as Error).message}`);
     }
   }
 

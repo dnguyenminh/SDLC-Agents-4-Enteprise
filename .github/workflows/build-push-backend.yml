@@ -129,6 +129,7 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           severity: CRITICAL,HIGH
+          trivyignores: .trivyignore
 
       # 6b. Push the scanned image to registries (only on non-PR events).
       - name: Push image to registries
@@ -158,4 +159,3 @@ jobs:
           echo "tags<<EOF" >> "$GITHUB_OUTPUT"
           echo "${{ steps.meta.outputs.tags }}" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
-

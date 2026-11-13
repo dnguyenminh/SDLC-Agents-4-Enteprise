@@ -17,7 +17,7 @@ import {
 } from "../services/PathResolver";
 import { extractBaseDirArg } from "../services/base-dir-resolution";
 import { STREAM_WRITE_MAX_BYTES } from "./constants";
-import { checkSymlinkGuard, ensureDir } from "./fs-guards";
+import { checkSymlinkGuard, checkSymlinkGuardBeforeEnsureDir, ensureDir } from "./fs-guards";
 
 export function handleStreamWriteFile(args: Record<string, unknown>): any {
   // SA4E-356 (SEC-08b, AD-22): the `path` alias is kept (callers outside the
@@ -45,6 +45,12 @@ export function handleStreamWriteFile(args: Record<string, unknown>): any {
     return { isError: true, content: [{ type: "text", text: resolution.message }] };
   }
   const resolvedPath = resolution.resolvedPath;
+  // SEC-WT-22: containment BEFORE ensureDir — mkdir would follow repo-authored links.
+  const preGuardError = checkSymlinkGuardBeforeEnsureDir(resolution, rawDisplay);
+  if (preGuardError) {
+    console.warn(`[backend-local-tools] stream_write_file pre-guard blocked: ${preGuardError}`);
+    return { isError: true, content: [{ type: "text", text: preGuardError }] };
+  }
   try {
     ensureDir(path.dirname(resolvedPath));
   } catch (err: any) {

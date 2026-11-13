@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 import * as path from "path";
 
 // Dedicated config for `npm run test:e2e`.
-// The default vitest.config.ts hard-excludes the two E2E files so they don't
+// The default vitest.config.ts hard-excludes the E2E files so they don't
 // run during the normal unit suite; this config re-includes them.
 export default defineConfig({
   resolve: {
@@ -14,6 +14,7 @@ export default defineConfig({
     include: [
       "src/__tests__/cross-process.e2e.test.ts",
       "src/__tests__/drawio-convert.e2e.test.ts",
+      "src/__tests__/live-content-proxy.e2e.test.ts",
     ],
     exclude: [
       "src/anthropic/__tests__/handlers.test.ts",

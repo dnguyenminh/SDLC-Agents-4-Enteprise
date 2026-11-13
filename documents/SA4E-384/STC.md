@@ -958,7 +958,7 @@ Environment: in-process fake MCP `Client` (`listTools` + `callTool`) injected in
 
 ## 6. End-to-End API Tests (E2E-API) — 16 cases
 
-Environment: real backend at `http://127.0.0.1:3000` + real child `markdown-exporter-mcp-local` (stdio/local); writable temp workspace; `LIVE_BACKEND` not required. Entry (SA4E-380 STP G4): server started with current code; child tools discovered; **baseline `tools/list` snapshot captured before the first export**. Exit (STP G4): zero new tool names; six export calls write six valid files; direct-call shape unchanged; both negative payload cases return the exact documented error.
+Environment: real backend at `http://127.0.0.1:3000` + real child `markdown-exporter-mcp-local` (stdio/local); writable temp workspace; live e2e suite (`npm run test:e2e`) not required. Entry (SA4E-380 STP G4): server started with current code; child tools discovered; **baseline `tools/list` snapshot captured before the first export**. Exit (STP G4): zero new tool names; six export calls write six valid files; direct-call shape unchanged; both negative payload cases return the exact documented error.
 
 > These 16 cases are the only place where the contract is observable **from outside the process**; E2E-API-01..07 also substitute for the missing UI surface (SA4E-380 STP §2.5). The planned `backend/tests/e2e-api/*.e2e.test.ts` specs were not authored in the SA4E-380 release — the externally visible contract they target is currently delivered by the live runs (R-4/R-8) and suite-level pins, recorded per case below.
 

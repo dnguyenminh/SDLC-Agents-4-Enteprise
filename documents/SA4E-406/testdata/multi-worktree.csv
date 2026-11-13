@@ -1,0 +1,11 @@
+test_case_id,description,file_path,base_dir,workspace_root,expected_effective_root,expected_root_source,expected_status,notes
+TC-022,"Cross-worktree access",diagrams/test.drawio,C:/worktree-B,,C:/worktree-B,base_dir,success,"Agent in worktree A accesses B"
+TC-023,"Legacy no base_dir",diagrams/test.drawio,,,C:/primary,legacy,success,"Backward compatible"
+TC-024,"Absolute path with base_dir",C:/worktree-B/diagrams/test.drawio,C:/worktree-B,,C:/worktree-B,base_dir,success,"Absolute validated within base_dir"
+TC-025,"workspace_root alias",diagrams/test.drawio,,C:/worktree-B,C:/worktree-B,base_dir,success,"Deprecated alias works"
+TC-026,"Absolute no base_dir primary",C:/primary/diagrams/test.drawio,,,C:/primary,legacy,success,"Validated against primary"
+TC-027,"Relative escape with base_dir",../../secrets.txt,C:/worktree-B,,,base_dir,error,"PATH_REJECTED_OUTSIDE_ALLOWLIST"
+TC-028,"Unregistered base_dir",diagrams/test.drawio,C:/unregistered,,,base_dir,error,"PATH_REJECTED_OUTSIDE_ALLOWLIST"
+TC-029,"Non-existent base_dir",diagrams/test.drawio,C:/nonexistent,,,base_dir,error,"FS_ERROR: does not exist"
+TC-030,"Empty base_dir treated absent",diagrams/test.drawio,,,,legacy,success,"Empty string = absent"
+TC-031,"Whitespace base_dir",diagrams/test.drawio,   ,,,legacy,success,"Whitespace = absent"

@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.16.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.19.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,27 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.19 (2026-11-13)
+**SA4E-393 — Agent-invocable design gate + worktree auto-trust**
+- 🎨 **Design gate MCP tools** — `design_gate_run` / `design_gate_list_rules` (30 rules) callable via `execute_dynamic_tool`; agents MUST self-check design artifacts (`ui-design-gate` rule) before reporting done
+- 🐛 **Design gate fixes** — `vscode is not defined` (bare identifier), `fileCount` always 0, cache false-PASS in `both` mode, `PATH_NOT_FOUND` with relative path, no absolute path in errors/logs; workspace root now required (no `process.cwd()` fallback creating stray `.code-intel/`)
+- 🌳 **Worktree auto-trust** (extension) — a `base_dir` that is a verified git worktree of the open/allowlisted repo is accepted without `MCP_WORKSPACE_ROOTS` registration (back-link check; submodule, bare, spoofed `.git`, symlink/junction rejected). Disable: setting `sdlcAgents.workspace.worktreeAutoTrust` or env `MCP_WORKTREE_AUTOTRUST=0`
+- 🔐 **Entra SSO config** — restore https-only, optional `ENTRA_AUTHORITY`/`ENTRA_ISSUER`/`ENTRA_JWKS_URI` (regression `df1a4f12`: `.default('')` returned `'` under zod v4 and skipped the https check)
+- 🧪 **Tests** — `live-content-proxy` moved to the e2e suite (`npm run test:e2e`); unit suites: extension 3566 pass, backend 3676 pass, 0 failures
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.19`
+### v1.55.18 (2026-11-08)
+
+**SA4E-406 — drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration**
+
+- 🎯 **Detector precision** — calibrated thresholds: node overlaps (OVERLAP_EPS=0.05), proximity (MIN_GAP=40px), container escape (CONTAINMENT_TOL=5px), diagonal edges (20px), edge crossings (3 types)
+- 🔄 **Verify loop** — fix → re-parse → re-detect cycle; `remaining_issues` returned in all fix responses
+- 🏗️ **ELK compound layout** — hierarchical container support; 4 algorithms: `layered`/`force`/`mrtree`/`radial`; strategy selection (ports-only → local repair → full ELK)
+- 🌉 **Extension migration** — `drawio_auto_layout` + `drawio_export_png` available via MCP bridge (`execute_dynamic_tool`)
+- 🔐 **Multi-worktree path resolution** (SA4E-394) — `base_dir`/`workspace_root` support, path traversal prevention (CWE-22)
+- ⚙️ **Configurable limits** — `SA4E_ELK_MAX_NODES=500`, `SA4E_ELK_TIMEOUT_MS=10000`, `SA4E_ELK_SPACING_MAX=500`
+- ✅ **Tests**: 148 drawio tests PASS (80 unit + 4 golden + 3 integration + 2 E2E + 34 UAT automation), CI 7/7 jobs green
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.18`
 
 ### v1.55.16 (2026-11-04)
 

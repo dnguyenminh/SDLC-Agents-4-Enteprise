@@ -41,8 +41,9 @@ export const EntraConfigSchema = z.object({
     .refine(v => v.startsWith('https://') || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)(\/|$)/.test(v),
       { message: 'must be https:// or http://localhost with port' })
     .refine(v => !v.includes('#'), { message: 'fragment not allowed' }),
-  // Optional: absent values are tenant-derived by applyDerivedDefaults().
-  // Blank env vars are normalized to undefined by the env parser.
+  // Optional + https-only (ERR-03). Must stay `undefined` when absent so
+  // applyDerivedDefaults() can derive tenant values via `??`. A `.default('')`
+  // here (regression df1a4f12) yields '' under zod v4 and bypasses the https refine.
   authority: httpsUrl.optional(),
   issuer: httpsUrl.optional(),
   jwksUri: httpsUrl.optional(),

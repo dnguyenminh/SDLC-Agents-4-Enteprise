@@ -1,0 +1,35 @@
+{
+  "capturedAt": "2026-11-09T22:03:40.785Z",
+  "source": "Kiro IDE - installed extension sdlc-agents-4-enterprise-1.55.18.vsix (commit 36660bb9, word-boundary heuristic + normalized scoring)",
+  "summary": "Design Quality Gate (Both): PASS - Score: 1.00 - Findings: 2",
+  "runId": "run_1794261820785_z9z0exm7",
+  "detectionMode": "both",
+  "threshold": 0.8,
+  "score": 0.9955,
+  "pass": true,
+  "timestamp": "2026-11-09T22:03:40.785Z",
+  "findings": [
+    {
+      "findingId": "find_1794261820197_8v83vcd",
+      "runId": "inst_1794261820021_55p1dhj",
+      "mode": "static",
+      "file": "backend\\\\servers\\\\nextjs\\\\app\\\\(presentation-generator)\\\\components\\\\ImageEditor.tsx",
+      "severity": "low",
+      "message": "Pending-work marker (TODO) in design artifact"
+    },
+    {
+      "findingId": "find_1794261820220_slozsoi",
+      "runId": "inst_1794261820021_55p1dhj",
+      "mode": "static",
+      "file": "backend\\\\servers\\\\nextjs\\\\app\\\\presentation-templates\\\\index.tsx",
+      "severity": "low",
+      "message": "Pending-work marker (TODO) in design artifact"
+    }
+  ],
+  "totalIssues": 2,
+  "severityBreakdown": {
+    "low": 2,
+    "medium": 0,
+    "high": 0
+  }
+}

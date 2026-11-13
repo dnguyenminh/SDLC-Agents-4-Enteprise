@@ -29,12 +29,10 @@
   window.addEventListener("message", function (event) {
     var msg = event.data;
     switch (msg.type) {
-      case "state": if (SS.handleState) { SS.handleState(msg); } break;
-      case "models": if (SS.handleModels) { SS.handleModels(msg); } break;
-      // SA4E-390: key/ollama handlers lived in the removed single-provider
-      // modules — guard so legacy messages are harmless no-ops.
-      case "keySaved": if (SS.handleKeySaved) { SS.handleKeySaved(msg); } break;
-      case "keyCleared": if (SS.handleKeyCleared) { SS.handleKeyCleared(msg); } break;
+      case "state": SS.handleState(msg); break;
+      case "models": SS.handleModels(msg); break;
+      case "keySaved": SS.handleKeySaved(msg); break;
+      case "keyCleared": SS.handleKeyCleared(msg); break;
       case "ollamaTestResult": handleOllamaTestResult(msg); break;
       case "llmTestResult": handleLlmTestResult(msg); break;
       case "backendTestResult":
@@ -72,13 +70,14 @@
   });
 
   function handleOllamaTestResult(msg) {
-    // SA4E-390: Ollama section was removed from the LLM tab — guard the DOM.
-    if (!testOllamaBtn) { return; }
     testOllamaBtn.classList.remove("loading");
     testOllamaBtn.disabled = false;
-    if (ollamaStatus) {
-      ollamaStatus.textContent = (msg.success ? "\u2705 " : "\u274C ") + msg.message;
-      ollamaStatus.className = "status-indicator " + (msg.success ? "success" : "error");
+    if (msg.success) {
+      ollamaStatus.textContent = "\u2705 " + msg.message;
+      ollamaStatus.className = "status-indicator success";
+    } else {
+      ollamaStatus.textContent = "\u274C " + msg.message;
+      ollamaStatus.className = "status-indicator error";
     }
   }
 
@@ -107,19 +106,6 @@
     // Save per-provider
     var s = SS.getProviderState(SS.currentProvider);
     s.testResult = { success: msg.success, html: html };
-  }
-
-  // ─── Test LLM binding (SA4E-390) ────────────────────────────────────────────
-  // The single-provider inputs module was removed, so bind the standalone
-  // "Test LLM" button here. With no provider/model/baseUrl override, the host
-  // tests the ACTIVE profile (or the flat llm.* config fallback) end-to-end.
-  if (testLlmBtn) {
-    testLlmBtn.addEventListener("click", function () {
-      testLlmBtn.classList.add("loading");
-      testLlmBtn.disabled = true;
-      if (testResult) { testResult.style.display = "none"; }
-      vscode.postMessage({ type: "testLlmConnection" });
-    });
   }
 
   // ─── Init ─────────────────────────────────────────────────────────────────

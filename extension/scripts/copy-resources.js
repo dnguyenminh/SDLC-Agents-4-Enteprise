@@ -24,6 +24,9 @@ const MAPPINGS = [
     { src: ".code-intel/hooks", dst: ".code-intel/hooks" },
     { src: ".code-intel/steering", dst: ".code-intel/steering" },
     { src: "documents/templates", dst: "documents/templates" },
+    // SA4E-393: design-gate detector binary must ship inside the VSIX
+    // (esbuild bundles out/ to a single file — out/wasm would be wiped).
+    { src: "source/source-slash/wasm", dst: "wasm" },
     // NOTE: webview-assets are NOT copied here any more — extension/webview-assets/
     // is the single source of truth and is packaged directly (loaded at runtime
     // via extensionUri/webview-assets, see ChatHtmlBuilder.ts / SettingsPanel.ts).

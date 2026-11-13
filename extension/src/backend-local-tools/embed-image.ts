@@ -17,7 +17,7 @@ import {
   type PathResolutionOk,
 } from "../services/PathResolver";
 import { extractBaseDirArg } from "../services/base-dir-resolution";
-import { checkSymlinkGuard, ensureDir } from "./fs-guards";
+import { checkSymlinkGuard, checkSymlinkGuardBeforeEnsureDir, ensureDir } from "./fs-guards";
 
 /** MIME types by image extension for data-URI embedding. */
 const IMAGE_MIME: Record<string, string> = {
@@ -103,6 +103,12 @@ function embedAndWrite(
     path.dirname(resolution.resolvedPath),
     resolution.rootPath,
   );
+  // SEC-WT-22: containment BEFORE ensureDir — mkdir would follow repo-authored links.
+  const preGuardError = checkSymlinkGuardBeforeEnsureDir(outputResolution, rawDisplay);
+  if (preGuardError) {
+    console.warn(`[backend-local-tools] embed_image output pre-guard blocked: ${preGuardError}`);
+    return { isError: true, content: [{ type: "text", text: preGuardError }] };
+  }
   try {
     ensureDir(path.dirname(outputPath));
   } catch (err: any) {

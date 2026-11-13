@@ -1,0 +1,279 @@
+<mxfile host="app.diagrams.net" modified="2026-11-09T00:00:00.000Z" agent="5.0 (Windows)" etag="sequence-elk-layout" version="24.7.6" type="device">
+  <diagram name="ELK Layout Sequence" id="elk-layout">
+    <mxGraphModel dx="1422" dy="784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="apply" value="drawio-apply.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#bf360c;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="132" y="696" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="elk" value="elk-layout.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ce93d8;strokeColor=#6a1b9a;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="132" y="424" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="elkjs" value="ELK.js (elkjs npm)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d1c4e9;strokeColor=#512da8;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="132" y="152" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="writer" value="drawio-writer.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="121.7" y="968" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="applyts" value="drawio-apply.ts (caller)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#bf360c;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="417.7" y="968" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="l1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#bf360c;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="apply" target="elk">
+          <mxGeometry relative="1" as="geometry"/>
+          <Array as="points">
+            <mxPoint x="220" y="80" as=""/>
+            <mxPoint x="220" y="150" as=""/>
+            <mxPoint x="280" y="150" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg1" value="buildElkGraph(graph, args)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#bf360c;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="apply" target="elk">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"/>
+        </mxCell>
+        <mxCell id="l2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.48;entryX=0;entryY=0.52;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="122" y="462.4"/><mxPoint x="122" y="465.6"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="280" y="150" as=""/>
+            <mxPoint x="280" y="220" as=""/>
+            <mxPoint x="280" y="220" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg2" value="Create root ElkNode" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.44;entryX=0;entryY=0.56;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="112" y="459.2"/><mxPoint x="112" y="468.8"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.4;entryX=0;entryY=0.6;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="102" y="456"/><mxPoint x="102" y="472"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="280" y="250" as=""/>
+            <mxPoint x="280" y="300" as=""/>
+            <mxPoint x="280" y="300" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg3" value="Map containers → children + padding/spacing" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.36;entryX=0;entryY=0.64;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="92" y="452.8"/><mxPoint x="92" y="475.2"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.32;entryX=0;entryY=0.68;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="82" y="449.6"/><mxPoint x="82" y="478.4"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="280" y="330" as=""/>
+            <mxPoint x="280" y="380" as=""/>
+            <mxPoint x="280" y="380" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg4" value="Map nodes → width/height" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.28;entryX=0;entryY=0.72;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="72" y="446.4"/><mxPoint x="72" y="481.6"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.24;entryX=0;entryY=0.76;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="62" y="443.2"/><mxPoint x="62" y="484.8"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="280" y="410" as=""/>
+            <mxPoint x="280" y="460" as=""/>
+            <mxPoint x="280" y="460" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg5" value="Map edges → internal vs cross-container" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.2;entryX=0;entryY=0.8;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="52" y="440"/><mxPoint x="52" y="488"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.16;entryX=0;entryY=0.84;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="42" y="436.8"/><mxPoint x="42" y="491.2"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="280" y="490" as=""/>
+            <mxPoint x="280" y="540" as=""/>
+            <mxPoint x="280" y="540" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg6" value="Root layoutOptions (algorithm, direction, spacing)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.12;entryX=0;entryY=0.88;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="32" y="433.6"/><mxPoint x="32" y="494.4"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="elk" target="apply">
+          <mxGeometry relative="1" as="geometry"/>
+          <Array as="points">
+            <mxPoint x="280" y="80" as=""/>
+            <mxPoint x="280" y="580" as=""/>
+            <mxPoint x="220" y="580" as=""/>
+            <mxPoint x="220" y="580" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg7" value="ElkNode root" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="elk" target="apply">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"/>
+        </mxCell>
+        <mxCell id="l8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#bf360c;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="apply" target="elk">
+          <mxGeometry relative="1" as="geometry"/>
+          <Array as="points">
+            <mxPoint x="220" y="80" as=""/>
+            <mxPoint x="220" y="620" as=""/>
+            <mxPoint x="280" y="620" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg8" value="runElkLayout(elkGraph, 10000)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#bf360c;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="apply" target="elk">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"/>
+        </mxCell>
+        <mxCell id="l9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#512da8;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="elk" target="elkjs">
+          <mxGeometry relative="1" as="geometry"/>
+          <Array as="points">
+            <mxPoint x="460" y="80" as=""/>
+            <mxPoint x="460" y="150" as=""/>
+            <mxPoint x="520" y="150" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg9" value="new ELK().layout(elkGraph, options)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#512da8;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="elk" target="elkjs">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"/>
+        </mxCell>
+        <mxCell id="l10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#512da8;strokeWidth=2;endArrow=block;exitX=0;exitY=0.4;entryX=0;entryY=0.6;" edge="1" parent="1" source="elkjs" target="elkjs">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="122" y="184"/><mxPoint x="122" y="200"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="520" y="150" as=""/>
+            <mxPoint x="520" y="220" as=""/>
+            <mxPoint x="520" y="220" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg10" value="Layout computation (timeout: 10s)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#512da8;strokeWidth=2;endArrow=block;exitX=0;exitY=0.2;entryX=0;entryY=0.8;" edge="1" parent="1" source="elkjs" target="elkjs">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="112" y="168"/><mxPoint x="112" y="216"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#512da8;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="elkjs" target="elk">
+          <mxGeometry relative="1" as="geometry"/>
+          <Array as="points">
+            <mxPoint x="520" y="250" as=""/>
+            <mxPoint x="460" y="250" as=""/>
+            <mxPoint x="460" y="250" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg11" value="Laid-out ElkNode (x,y, sections with bendPoints)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#512da8;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="elkjs" target="elk">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"/>
+        </mxCell>
+        <mxCell id="l12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.08;entryX=0;entryY=0.92;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="22" y="430.4"/><mxPoint x="22" y="497.6"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="280" y="280" as=""/>
+            <mxPoint x="280" y="350" as=""/>
+            <mxPoint x="280" y="350" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg12" value="validateLayoutOutput (finite coords, positive dims)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.04;entryX=0;entryY=0.96;" edge="1" parent="1" source="elk" target="elk">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="12" y="427.2"/><mxPoint x="12" y="500.8"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="elk" target="apply">
+          <mxGeometry relative="1" as="geometry"/>
+          <Array as="points">
+            <mxPoint x="280" y="380" as=""/>
+            <mxPoint x="280" y="620" as=""/>
+            <mxPoint x="220" y="620" as=""/>
+            <mxPoint x="220" y="620" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg13" value="Validated ElkNode" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="elk" target="apply">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"/>
+        </mxCell>
+        <mxCell id="l14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#bf360c;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="apply" target="writer">
+          <mxGeometry relative="1" as="geometry"/>
+          <Array as="points">
+            <mxPoint x="220" y="80" as=""/>
+            <mxPoint x="220" y="680" as=""/>
+            <mxPoint x="760" y="680" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg14" value="applyLayoutToXml(rawXml, laidOut)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#bf360c;strokeWidth=2;endArrow=block;exitX=0.29;exitY=1;entryX=0.4;entryY=0;" edge="1" parent="1" source="apply" target="writer">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="183.4" y="796"/><mxPoint x="193.7" y="796"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.48;entryX=0;entryY=0.52;" edge="1" parent="1" source="writer" target="writer">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="111.7" y="1006.1"/><mxPoint x="111.7" y="1009.9"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="760" y="150" as=""/>
+            <mxPoint x="760" y="220" as=""/>
+            <mxPoint x="760" y="220" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg15" value="collectRootPositions → normalize offset (dx,dy)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.43;entryX=0;entryY=0.57;" edge="1" parent="1" source="writer" target="writer">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="101.7" y="1002.3"/><mxPoint x="101.7" y="1013.7"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.38;entryX=0;entryY=0.62;" edge="1" parent="1" source="writer" target="writer">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="91.7" y="998.5"/><mxPoint x="91.7" y="1017.5"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="760" y="250" as=""/>
+            <mxPoint x="760" y="300" as=""/>
+            <mxPoint x="760" y="300" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg16" value="collectPositions (root shifted, nested parent-relative)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.33;entryX=0;entryY=0.67;" edge="1" parent="1" source="writer" target="writer">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="81.7" y="994.7"/><mxPoint x="81.7" y="1021.3"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.29;entryX=0;entryY=0.71;" edge="1" parent="1" source="writer" target="writer">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="71.7" y="990.9"/><mxPoint x="71.7" y="1025.1"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="760" y="330" as=""/>
+            <mxPoint x="760" y="380" as=""/>
+            <mxPoint x="760" y="380" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg17" value="collectEdgeRoutes (sections → waypoints + anchors)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.24;entryX=0;entryY=0.76;" edge="1" parent="1" source="writer" target="writer">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="61.7" y="987"/><mxPoint x="61.7" y="1029"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.19;entryX=0;entryY=0.81;" edge="1" parent="1" source="writer" target="writer">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="51.7" y="983.2"/><mxPoint x="51.7" y="1032.8"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="760" y="410" as=""/>
+            <mxPoint x="760" y="460" as=""/>
+            <mxPoint x="760" y="460" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg18" value="replaceCellGeometryXy for each node" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.14;entryX=0;entryY=0.86;" edge="1" parent="1" source="writer" target="writer">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="41.7" y="979.4"/><mxPoint x="41.7" y="1036.6"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.1;entryX=0;entryY=0.9;" edge="1" parent="1" source="writer" target="writer">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="31.7" y="975.6"/><mxPoint x="31.7" y="1040.4"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="760" y="490" as=""/>
+            <mxPoint x="760" y="540" as=""/>
+            <mxPoint x="760" y="540" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg19" value="setEdgePointsXml + upsertEdgeStyleKeys for each edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0;exitY=0.05;entryX=0;entryY=0.95;" edge="1" parent="1" source="writer" target="writer">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="21.7" y="971.8"/><mxPoint x="21.7" y="1044.2"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0.6;exitY=0;entryX=0.43;entryY=1;" edge="1" parent="1" source="writer" target="apply">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="229.7" y="856"/><mxPoint x="209.1" y="856"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="760" y="80" as=""/>
+            <mxPoint x="760" y="580" as=""/>
+            <mxPoint x="220" y="580" as=""/>
+            <mxPoint x="220" y="580" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg20" value="{xml, repositionedNodes}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#6a1b9a;strokeWidth=2;endArrow=block;exitX=0.8;exitY=0;entryX=0.57;entryY=1;" edge="1" parent="1" source="writer" target="apply">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="265.7" y="836"/><mxPoint x="234.9" y="836"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#bf360c;strokeWidth=2;endArrow=block;exitX=0.71;exitY=1;entryX=0.33;entryY=0;" edge="1" parent="1" source="apply" target="applyts">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="260.6" y="816"/><mxPoint x="477.7" y="816"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="220" y="80" as=""/>
+            <mxPoint x="220" y="720" as=""/>
+            <mxPoint x="1000" y="720" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg21" value="validateReparse (temp file + parseDrawio)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#bf360c;strokeWidth=2;endArrow=block;exitX=0.86;exitY=1;entryX=0.67;entryY=0;" edge="1" parent="1" source="apply" target="applyts">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="286.3" y="796"/><mxPoint x="537.7" y="796"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="l22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#bf360c;strokeWidth=2;endArrow=block;exitX=0;exitY=0.4;entryX=0;entryY=0.6;" edge="1" parent="1" source="applyts" target="applyts">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="407.7" y="1000"/><mxPoint x="407.7" y="1016"/></Array></mxGeometry>
+          <Array as="points">
+            <mxPoint x="1000" y="150" as=""/>
+            <mxPoint x="1000" y="220" as=""/>
+            <mxPoint x="1000" y="220" as=""/>
+          </Array>
+        </mxCell>
+        <mxCell id="msg22" value="fs.writeFileSync(filePath, xml)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;strokeColor=#bf360c;strokeWidth=2;endArrow=block;exitX=0;exitY=0.2;entryX=0;entryY=0.8;" edge="1" parent="1" source="applyts" target="applyts">
+          <mxGeometry relative="1" as="geometry" offset="0" x="0" y="-20"><Array as="points"><mxPoint x="397.7" y="984"/><mxPoint x="397.7" y="1032"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="note1" value="ELK Algorithms:&#xa;• layered: org.eclipse.elk.layered (default)&#xa;• stress: org.eclipse.elk.stress (NEW)&#xa;• force: org.eclipse.elk.force&#xa;• radial: org.eclipse.elk.radial&#xa;&#xa;Container padding: [top=40,left=20,bottom=20,right=20]&#xa;Inner spacing: max(spacing*0.6, 30)&#xa;Edge routing: ORTHOGONAL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8eaf6;strokeColor=#3f51b5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="744" y="32" width="220" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="note2" value="ELK Layout Options:&#xa;• elk.algorithm: mapped from args&#xa;• elk.direction: args.direction&#xa;• elk.spacing.nodeNode: args.spacing&#xa;• elk.layered.spacing.nodeNodeBetweenLayers: spacing*2&#xa;• elk.edgeRouting: ORTHOGONAL&#xa;• elk.layered.spacing.edgeNodeBetweenLayers: 20&#xa;• elk.layered.spacing.edgeEdgeBetweenLayers: 20&#xa;• elk.layered.nodePlacement.strategy: BRANDES_KOEPF&#xa;• elk.hierarchyHandling: INCLUDE_CHILDREN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#6a1b9a;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="408" y="12" width="240" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="note3" value="Compound Node Support:&#xa;• Containers mapped to ElkNode with children[]&#xa;• Single algorithm drives entire hierarchy&#xa;• Container resized to encompass children + margin&#xa;• Nested containers supported&#xa;• Cross-container edges at root level&#xa;• Internal edges within container" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#6a1b9a;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="32" width="220" height="180" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

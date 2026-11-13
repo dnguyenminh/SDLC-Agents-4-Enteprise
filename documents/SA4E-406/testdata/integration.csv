@@ -1,0 +1,12 @@
+test_case_id,description,setup,expected_result,notes
+TC-700,"MCP tool registration",MCP orchestration running,"Both tools listed in find_tools","Schema includes all parameters"
+TC-701,"execute_dynamic_tool invocation",Tools registered,"Tool executes, valid response","Correct routing"
+TC-702,"Extension bridge base_dir",Bridge connected,"Path resolved by bridge","Bridge handles base_dir"
+TC-703,"Workspace allowlist loading",MCP_WORKSPACE_ROOTS set,"Allowlist populated at startup","Contains configured roots"
+TC-704,"ELK.js dynamic import",elkjs npm installed,"ELK loaded, layout executes","Factory pattern"
+TC-705,"CLI detection",draw.io CLI in PATH,"CLI detected as primary","findDrawioCli()"
+TC-706,"Chrome DevTools fallback",CLI removed, Chrome MCP,"Fallback to Chrome","Chain of Responsibility"
+TC-707,"Puppeteer fallback",CLI + Chrome removed,"Fallback to Puppeteer","Third in chain"
+TC-708,"Content base64 passthrough",Base64 XML input,"XML processed, base64 output","No file I/O"
+TC-709,"Structured pino logging",Tool execution,"JSON logs with params, timing","name=drawio-tool"
+TC-710,"Metrics collection",Multiple calls,"Counters: invocations, duration, issues","Prometheus format"

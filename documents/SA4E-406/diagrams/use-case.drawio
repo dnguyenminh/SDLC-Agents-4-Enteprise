@@ -1,0 +1,113 @@
+<mxGraphModel adaptiveColors="auto">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+
+<!-- Actors -->
+<mxCell id="actor_ai" value="AI Agent&#10;(BA/SA/QA/DevOps)" style="shape=mxgraph.flowchart.annotation_2;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="119.3" y="12" width="140" height="80" as="geometry"/>
+</mxCell>
+
+<mxCell id="actor_user" value="End User&#10;(Document Consumer)" style="shape=mxgraph.flowchart.annotation_2;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="1249.6" y="12" width="140" height="80" as="geometry"/>
+</mxCell>
+
+<!-- System Boundary -->
+<mxCell id="system_boundary" value="drawio_auto_layout System" style="swimlane;startSize=30;horizontal=0;fillColor=#e8f0fe;strokeColor=#1a73e8;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="12" y="297" width="600" height="480" as="geometry"/>
+</mxCell>
+
+<!-- Use Cases inside System -->
+<mxCell id="uc1" value="UC-01: Validate&#10;draw.io XML" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#1a73e8;fontSize=11;" vertex="1" parent="system_boundary">
+<mxGeometry x="654" y="40" width="160" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="uc2" value="UC-02: Detect Layout Issues&#10;(5% overlap, 40px gap,&#10;crossings, diagonals)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#1a73e8;fontSize=11;" vertex="1" parent="system_boundary">
+<mxGeometry x="20" y="40" width="200" height="80" as="geometry"/>
+</mxCell>
+
+<mxCell id="uc3" value="UC-03: Verify Loop&#10;Auto-fix up to 3 iterations" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#1a73e8;fontSize=11;" vertex="1" parent="system_boundary">
+<mxGeometry x="60" y="312" width="180" height="70" as="geometry"/>
+</mxCell>
+
+<mxCell id="uc4" value="UC-04: ELK Compound Layout&#10;(layered/stress/force/radial&#10;+ compound nodes)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#1a73e8;fontSize=11;" vertex="1" parent="system_boundary">
+<mxGeometry x="83.3" y="574" width="200" height="80" as="geometry"/>
+</mxCell>
+
+<mxCell id="uc5" value="UC-05: Orthogonal Edge Routing&#10;(L-shape/Z-shape + 40px gap)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#1a73e8;fontSize=11;" vertex="1" parent="system_boundary">
+<mxGeometry x="116.7" y="846" width="200" height="80" as="geometry"/>
+</mxCell>
+
+<mxCell id="uc6" value="UC-06: Write Positioned XML&#10;(preserve styles/labels)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#1a73e8;fontSize=11;" vertex="1" parent="system_boundary">
+<mxGeometry x="156.7" y="1118" width="180" height="70" as="geometry"/>
+</mxCell>
+
+<mxCell id="uc7" value="UC-07: Multi-worktree Path Resolution&#10;(base_dir parameter)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#1a73e8;fontSize=11;" vertex="1" parent="system_boundary">
+<mxGeometry x="871.6" y="40" width="200" height="80" as="geometry"/>
+</mxCell>
+
+<mxCell id="uc8" value="UC-08: Path Traversal Prevention&#10;(CWE-22 security)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#e67e22;fontSize=11;" vertex="1" parent="system_boundary">
+<mxGeometry x="442" y="40" width="180" height="70" as="geometry"/>
+</mxCell>
+
+<mxCell id="uc9" value="UC-09: Export PNG&#10;(CLI > Chrome > Puppeteer)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#1a73e8;fontSize=11;" vertex="1" parent="system_boundary">
+<mxGeometry x="1199.6" y="297" width="180" height="70" as="geometry"/>
+</mxCell>
+
+<mxCell id="uc10" value="UC-10: Extension MCP Bridge&#10;(execute_dynamic_tool)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#1a73e8;fontSize=11;" vertex="1" parent="system_boundary">
+<mxGeometry x="241" y="40" width="180" height="70" as="geometry"/>
+</mxCell>
+
+<!-- Relationships: Actor to Use Cases -->
+<mxCell id="e1" edge="1" parent="1" source="actor_ai" target="uc1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a73e8;exitX=0.73;exitY=1;entryX=0.57;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="221.1" y="152"/><mxPoint x="746" y="152"/></Array></mxGeometry>
+</mxCell>
+<mxCell id="e2" edge="1" parent="1" source="actor_ai" target="uc2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a73e8;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e3" edge="1" parent="1" source="actor_ai" target="uc3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a73e8;exitX=0.18;exitY=1;entryX=0.73;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="144.7" y="272"/><mxPoint x="242" y="272"/><mxPoint x="242" y="437"/><mxPoint x="192" y="437"/></Array></mxGeometry>
+</mxCell>
+<mxCell id="e4" edge="1" parent="1" source="actor_ai" target="uc4" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a73e8;exitX=0.36;exitY=1;entryX=0.73;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="170.2" y="232"/><mxPoint x="443" y="232"/><mxPoint x="443" y="699"/><mxPoint x="228.7" y="699"/></Array></mxGeometry>
+</mxCell>
+<mxCell id="e5" edge="1" parent="1" source="actor_ai" target="uc5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a73e8;exitX=0.55;exitY=1;entryX=0.73;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="195.6" y="192"/><mxPoint x="644" y="192"/><mxPoint x="644" y="971"/><mxPoint x="262" y="971"/></Array></mxGeometry>
+</mxCell>
+<mxCell id="e6" edge="1" parent="1" source="actor_ai" target="uc6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a73e8;exitX=0.64;exitY=1;entryX=0.73;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="208.4" y="172"/><mxPoint x="655" y="172"/><mxPoint x="655" y="1243"/><mxPoint x="288.7" y="1243"/></Array></mxGeometry>
+</mxCell>
+<mxCell id="e7" edge="1" parent="1" source="actor_ai" target="uc7" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a73e8;exitX=0.82;exitY=1;entryX=0.56;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="233.8" y="132"/><mxPoint x="983.6" y="132"/></Array></mxGeometry>
+</mxCell>
+<mxCell id="e8" edge="1" parent="1" source="actor_ai" target="uc8" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e67e22;exitX=0.45;exitY=1;entryX=0.57;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="182.9" y="212"/><mxPoint x="544" y="212"/></Array></mxGeometry>
+</mxCell>
+<mxCell id="e9" edge="1" parent="1" source="actor_ai" target="uc9" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a73e8;exitX=0.91;exitY=1;entryX=0.33;entryY=0;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="246.5" y="112"/><mxPoint x="1259.6" y="112"/></Array></mxGeometry>
+</mxCell>
+<mxCell id="e10" edge="1" parent="1" source="actor_ai" target="uc10" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1a73e8;exitX=0.27;exitY=1;entryX=0.57;entryY=1;">
+<mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="157.5" y="252"/><mxPoint x="343" y="252"/></Array></mxGeometry>
+</mxCell>
+
+<!-- End User to Export PNG -->
+<mxCell id="e11" edge="1" parent="1" source="actor_user" target="uc9" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#27ae60;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Internal relationships -->
+<mxCell id="e12" edge="1" parent="1" source="uc2" target="uc3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#8e44ad;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e13" edge="1" parent="1" source="uc3" target="uc4" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#8e44ad;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e14" edge="1" parent="1" source="uc4" target="uc5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#8e44ad;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e15" edge="1" parent="1" source="uc5" target="uc6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#8e44ad;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+</root>
+</mxGraphModel>

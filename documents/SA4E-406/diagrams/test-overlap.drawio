@@ -1,0 +1,36 @@
+<mxfile host="app.diagrams.net" modified="2026-11-09T00:00:00.000Z" agent="5.0 (Windows)" etag="test-overlap" version="24.7.6" type="device">
+  <diagram name="Test Overlap" id="test-overlap">
+    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <!-- Overlapping nodes - node2 overlaps with node1 -->
+        <mxCell id="node1" value="Node A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="12" y="12" width="150" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="node2" value="Node B (Overlaps A)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#bf360c;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="242" y="12" width="150" height="80" as="geometry"/>
+        </mxCell>
+        <!-- Node with gap issue - edge passes too close -->
+        <mxCell id="node3" value="Node C" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="27" y="252" width="120" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="node4" value="Node D" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="257" y="252" width="120" height="80" as="geometry"/>
+        </mxCell>
+        <!-- Diagonal edge -->
+        <mxCell id="edge1" style="edgeStyle=none;html=1;strokeColor=#1565c0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="node1" target="node3">
+          <mxGeometry relative="1" as="geometry">
+            
+          </mxGeometry>
+        </mxCell>
+        <!-- Edge crossing through node -->
+        <mxCell id="edge2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e65100;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="node2" target="node4">
+          <mxGeometry relative="1" as="geometry">
+            
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

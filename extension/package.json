@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.55.16",
+  "version": "1.55.19",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -178,6 +178,21 @@
       {
         "command": "sdlcAgents.openPegaIngester",
         "title": "SDLC Agents: Open Pega Ingester"
+      },
+      {
+        "command": "sdlcAgents.runDesignGateStatic",
+        "title": "SDLC Agents: Run Design Quality Gate (Static)",
+        "icon": "$(check)"
+      },
+      {
+        "command": "sdlcAgents.runDesignGateRendered",
+        "title": "SDLC Agents: Run Design Quality Gate (Rendered)",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "sdlcAgents.runDesignGateBoth",
+        "title": "SDLC Agents: Run Design Quality Gate (Both)",
+        "icon": "$(check-all)"
       }
     ],
     "viewsContainers": {
@@ -329,6 +344,12 @@
           },
           "default": [],
           "description": "SA4E-394 allowlist mirror: workspace roots permitted as per-call base_dir for file_path tools. MUST mirror the backend MCP_WORKSPACE_ROOTS (backend remains source of truth). Falls back to the MCP_WORKSPACE_ROOTS env var when empty."
+        },
+        "sdlcAgents.workspace.worktreeAutoTrust": {
+          "type": "boolean",
+          "default": true,
+          "scope": "machine",
+          "description": "SA4E-393: automatically accept a verified git worktree (its .git pointer, back-link and parent repository all check out) as a per-call base_dir when its parent repository is allowlisted or open in this window. Disable to require every base_dir to be listed in workspaceRoots / MCP_WORKSPACE_ROOTS. The env var MCP_WORKTREE_AUTOTRUST=0 also disables it."
         },
         "sdlcAgents.llm.profiles": {
           "type": "array",
@@ -558,9 +579,6 @@
     "gen-checksums": "node scripts/gen-checksums.js",
     "test": "vitest run",
     "test:unit": "vitest run",
-    "test:ac": "vitest run src/pi-agent/__tests__/acceptance-ac17.test.ts",
-    "test:token": "vitest run src/pi-agent/__tests__/token-eviction.integration.test.ts",
-    "test:regression": "vitest run src/connection/__tests__ src/__tests__/remote-backend-health.test.ts src/__tests__/mcp-handshake.regression.test.ts src/__tests__/sa4e-regression.test.ts src/pi-workflow/__tests__/pi-workflow-e2e.integration.test.ts src/pi-workflow/__tests__/phase-router.test.ts src/pi-agent/__tests__/budget-gate-decisions.test.ts src/pi-agent/__tests__/budget-gate-enforce.test.ts src/pi-agent/__tests__/budget-gate-escalation.test.ts src/pi-agent/__tests__/context-governance-matrix.integration.test.ts src/pi-agent/__tests__/context-budget-resolver.test.ts src/pi-agent/__tests__/session-budget-gate.test.ts src/pi-agent/__tests__/session-tier-wiring.test.ts src/pi-agent/__tests__/role-scope.test.ts src/pi-agent/__tests__/scoped-steering.test.ts src/pi-agent/__tests__/tool-loadout-invariants.test.ts src/pi-agent/__tests__/tool-loadout-roles.test.ts src/pi-agent/__tests__/tool-loadout-cap.test.ts src/pi-agent/__tests__/token-eviction.integration.test.ts",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:watch": "vitest watch",
@@ -568,7 +586,7 @@
     "lint:fix": "npx eslint src/ --fix"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
+    "@eslint/js": "^10.0.1",
     "@types/diff": "^5.2.3",
     "@types/express": "^5.0.6",
     "@types/glob": "^8.1.0",
@@ -578,18 +596,18 @@
     "@types/uuid": "^10.0.0",
     "@types/vscode": "^1.85.0",
     "@vitest/coverage-v8": "4.1.12",
-    "@vscode/vsce": "^4.1.0",
+    "@vscode/vsce": "^2.24.0",
     "esbuild": "0.28.2",
     "fast-check": "^4.9.0",
-    "glob": "^14.0.4",
+    "glob": "^13.0.6",
     "globals": "^17.7.0",
     "jsdom": "^29.1.1",
-    "mocha": "^11.4.0",
+    "mocha": "^10.7.3",
     "sinon": "^17.0.1",
     "svelte": "^5.56.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.0",
-    "typescript-eslint": "^8.36.0",
+    "typescript-eslint": "^8.67.0",
     "uuid": "^14.0.1",
     "vitest": "4.1.12"
   },
@@ -600,7 +618,7 @@
     "@earendil-works/pi-agent-core": "0.99.1",
     "@earendil-works/pi-ai": "0.99.1",
     "@earendil-works/pi-codemode": "0.99.1",
-    "@earendil-works/pi-coding-agent": "^1.5.0",
+    "@earendil-works/pi-coding-agent": "0.99.1",
     "@earendil-works/pi-mcp": "0.99.1",
     "@earendil-works/pi-tui": "0.99.1",
     "@juicesharp/rpiv-ask-user-question": "2.11.0",
@@ -615,12 +633,11 @@
     "core-js": "^3.49.0",
     "debug": "^4.4.3",
     "diff": "^5.2.2",
-    "eslint": "9.39.5",
-    "pi-subagents": "^0.87.0",
+    "elkjs": "^0.9.3",
+    "pi-subagents": "^0.76.1",
     "pi-web-access": "0.41.0",
     "puppeteer-core": "^25.16.0",
     "semver": "^7.7.4",
-    "sharp": "0.35.5",
     "typebox": "^1.1.38",
     "undici": "^6.29.1",
     "urlpattern-polyfill": "^10.1.0",
@@ -652,14 +669,6 @@
     },
     "@modelcontextprotocol/sdk": {
       "zod": "4.6.6"
-    },
-    "pi-subagents": {
-      "@earendil-works/pi-ai": "0.99.1"
-    },
-    "minimatch@>=7.0.0 <11.0.1": "11.0.5",
-    "glob@>=9.0.0 <14.0.2": "14.0.4",
-    "diff@>=6.0.0 <8.0.3": "8.0.3",
-    "serialize-javascript@<7.1.3": "7.1.4",
-    "@hono/node-server@>=1.19.10 <2.1.3": "2.1.6"
+    }
   }
 }

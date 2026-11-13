@@ -1,0 +1,12 @@
+test_case_id,description,file_content_or_path,expected_error,error_code,notes
+TC-200,"Malformed XML",invalid_xml.xml,"Analysis failed: <exception message>",INVALID_XML,"XML parsing failure"
+TC-201,"Detector exception",detector_crash.drawio,"Partial results returned",,"Continue other detections"
+TC-206,"Write permission denied",readonly/diagram.drawio,"Failed to write fixed diagram",,"File I/O error"
+TC-217,"Invalid mxGraphModel",not_mxgraph.xml,"INVALID_XML: Analysis failed: <details>",INVALID_XML,"Valid XML but wrong root"
+TC-218,"Zero vertex cells",empty_graph.drawio,"NO_NODES: No nodes found in diagram",NO_NODES,"Empty diagram"
+TC-219,"File not found",nonexistent.drawio,"FILE_NOT_FOUND: File not found or not accessible",FILE_NOT_FOUND,"Missing file"
+TC-221,"Layout failed all strategies",total_failure.drawio,"LAYOUT_FAILED: Layout engine failed",LAYOUT_FAILED,"All fix strategies exhausted"
+TC-222,"Diagram too large 501 nodes",large_501.drawio,"DIAGRAM_TOO_LARGE: Diagram too large (501 nodes, max 500)",DIAGRAM_TOO_LARGE,"Exceeds SA4E_ELK_MAX_NODES"
+TC-223,"Repair failed",repair_fail.drawio,"REPAIR_FAILED: Local repair failed",REPAIR_FAILED,"Local repair exception"
+TC-224,"ELK init failed",elk_init_fail.drawio,"ELK_INIT_FAILED: Layout engine failed to initialize",ELK_INIT_FAILED,"ELK.js constructor throws"
+TC-225,"ELK timeout",slow_layout.drawio,"ELK_TIMEOUT: Layout engine timed out after 1000ms",ELK_TIMEOUT,"Exceeds SA4E_ELK_TIMEOUT_MS"
