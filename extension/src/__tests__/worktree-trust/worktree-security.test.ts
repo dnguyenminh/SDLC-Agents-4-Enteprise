@@ -11,9 +11,12 @@ import { addWorktree, cleanupTmp, makeRepo, makeTmp, realDeps } from './worktree
 
 afterAll(cleanupTmp);
 
-/** Create a link or skip the test when the OS forbids it (Windows without privilege). */
+/** Create a link or fail the test with a clear error when the OS forbids it. */
 function link(ctx: { skip: () => void }, target: string, at: string, type: 'dir' | 'file' | 'junction' = 'dir'): boolean {
-  try { fs.symlinkSync(target, at, type); return true; } catch { ctx.skip(); return false; }
+  try { fs.symlinkSync(target, at, type); return true; } catch (e: any) {
+    // Fail explicitly instead of silently skipping
+    throw new Error(`Failed to create ${type} symlink: target=${target}, at=${at}, error=${e.message}`);
+  }
 }
 const dirLink = process.platform === 'win32' ? 'junction' : 'dir';
 

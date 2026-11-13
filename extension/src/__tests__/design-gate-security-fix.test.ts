@@ -25,13 +25,14 @@ afterAll(() => {
 });
 
 describe("SEC-F01 resolveSourceRoot message", () => {
-  it("does not leak absolute path or workspace root", () => {
+  it("does not leak absolute path or workspace root for non-existent paths", () => {
     const r = resolveSourceRoot("..\\..\\escape", ws);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.message).not.toContain(ws);
       expect(r.message).not.toContain(tmp);
-      expect(r.message).toContain("source_path resolves outside the workspace");
+      expect(r.message).toContain("PATH_NOT_FOUND");
+      expect(r.message).toContain("source_path does not exist");
     }
   });
 });
@@ -44,6 +45,19 @@ describe("SEC-F02 symlink/junction escape", () => {
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.message).not.toContain(outside);
+      expect(r.message).toContain("source_path resolves outside the workspace");
+    }
+  });
+
+  it("rejects an existing directory path outside the workspace", () => {
+    const outsideDir = path.join(outside, "existing");
+    fs.mkdirSync(outsideDir, { recursive: true });
+    const r = resolveSourceRoot(path.relative(ws, outsideDir), ws);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.message).not.toContain(outsideDir);
+      expect(r.message).not.toContain(outside);
+      expect(r.message).not.toContain(tmp);
       expect(r.message).toContain("source_path resolves outside the workspace");
     }
   });
