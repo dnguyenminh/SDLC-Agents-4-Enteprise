@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.20.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.21.vsix
 ```
 
 ### 3. Use
@@ -77,7 +77,7 @@ MIT
 - 🔐 **Multi-worktree path resolution** (SA4E-394) — `base_dir`/`workspace_root` support, path traversal prevention (CWE-22)
 - ⚙️ **Configurable limits** — `SA4E_ELK_MAX_NODES=500`, `SA4E_ELK_TIMEOUT_MS=10000`, `SA4E_ELK_SPACING_MAX=500`
 - ✅ **Tests**: 171 drawio tests PASS (80 unit + 4 golden + 3 integration + 2 E2E + 34 UAT automation + QA-11 re-enabled), CI 7/7 jobs green
-- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.20`
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.18`
 
 ### v1.55.20 (2026-11-13)
 
@@ -93,6 +93,28 @@ MIT
 
 - 📦 **VSIX**: 1.55.20 build via `publish.yml`; regenerate 23 diagram via fixed `drawio_auto_layout` tool.
 - 🔖 **Version sync** — root/`backend`/`extension` → `1.55.20`
+
+### v1.55.21 (2026-11-13)
+
+**SA4E-406 / SA4E-335 — CI Trivy gate red → green: soupsieve hardening + version sync**
+
+- 🛡 **Trivy SEC-04 gate fix** — soupsieve 2.10 (CVE-2026-126190, HIGH) was present in BOTH MCP venvs of the production image
+  (/opt/markitdown-venv and /opt/markdown-exporter-venv), failing the CI Trivy gate on run 43436002707.
+- 🐳 **Dockerfile mcp-python stage**:
+  - Restored `ARG MARKITDOWN_MCP_VERSION=0.0.1a8` (regressed to 0.0.1a7 by a bad merge).
+  - Added `ARG SOUPSIEVE_VERSION=4.0.1` with a documented rationale: base image Debian bookworm ships Python 3.11.2;
+    soupsieve >=3.0.2 declares `Requires-Python >=3.11.5` (a CPython security-backport floor, not a soupsieve API requirement);
+    soupsieve is pure Python and verified working on 3.11.2 (bs4 4.15.0 + soupsieve 4.0.1, descendant-selector smoke test).
+  - Force-upgrade soupsieve to 4.0.1 (`--ignore-requires-python`) after the main install in BOTH venvs, then assert via
+    `importlib.metadata` and run a descendant-selector smoke test (`BeautifulSoup(...).select('div span')`). The pip
+    dependency-conflict warning from beautifulsoup4's older soupsieve pin is EXPECTED and non-fatal (same PEP 440 pattern
+    as the pillow override).
+- 🔁 **CI workflow** — restored `trivyignores: .trivyignore` wiring on the Trivy step (was dropped by the bad merge,
+  leaving `INPUT_TRIVYIGNORES` empty). CVE-2026-126190 is NOT added to the ignore file; the upgrade is expected to remove
+  it from the image.
+- 📄 **.trivyignore** — header updated: soupsieve CVE-2026-126190 is fixed by upgrade, not exemption; existing SA4E-385
+  accepted-risk entries (body-parser, undici, zod, GHSA aliases) retained. No `backend/.trivyignore` (single source of truth).
+- 🔖 **Version sync** — root/`backend`/`extension` package.json + package-lock.json → `1.55.21`.
 
 ### v1.55.16 (2026-11-04)
 

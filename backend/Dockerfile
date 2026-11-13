@@ -96,7 +96,7 @@ RUN mkdir -p /app/models-cache \
 # pandoc needed) match the runtime ABI. `git` exists only here (SEC-05).
 # -----------------------------------------------------------------------------
 FROM base AS mcp-python
-ARG MARKITDOWN_MCP_VERSION=0.0.1a7
+ARG MARKITDOWN_MCP_VERSION=0.0.1a8
 # markdown-exporter-mcp-local has no PyPI release — pin the exact upstream
 # commit (main @ 2026-04-07) for a hermetic build (git-source analogue of SEC-02).
 ARG MARKDOWN_EXPORTER_MCP_REF=1429b6a94767a709f7f5119219ca5951042d9d3c
@@ -127,6 +127,24 @@ ARG SETUPTOOLS_VERSION=84.0.0
 # (same PEP 440 pattern documented below). Probes fail the build on drift.
 ARG CERTIFI_VERSION=2026.10.19
 ARG PILLOW_VERSION=13.0.0
+
+# SA4E-335 / SA4E-406: soupsieve 2.10 ships in BOTH MCP venvs (pulled transitively
+# via beautifulsoup4 by markitdown[all] and markdown-exporter-mcp-local) and carries
+# CVE-2026-126190 (fixed upstream in 4.0.0). The base image is Debian bookworm
+# which ships Python 3.11.2; soupsieve >=3.0.2 declares `Requires-Python >=3.11.5`.
+# That 3.11.5 floor is a CPython security-backport level, NOT a soupsieve API
+# requirement — soupsieve is pure Python and verified working on 3.11.2
+# (bs4 4.15.0 + soupsieve 4.0.1, descendant-selector smoke test passes in this
+# exact base image). Force-upgrade after the main install using
+# --ignore-requires-python, then assert via importlib.metadata.
+#
+# The force-upgrade AFTER the main install triggers a pip metadata conflict
+# warning ("beautifulsoup4 requires soupsieve<... ... incompatible") — EXPECTED
+# and non-fatal (same PEP 440 pattern as the pillow override below): pip installs
+# the requested version and exits 0. Trivy reads the installed version's metadata,
+# clearing the CVE. The importlib.metadata probe fails the build if resolution
+# ever regresses.
+ARG SOUPSIEVE_VERSION=4.0.1
 # `python3` already exists in base (build toolchain); only the venv/ensurepip
 # support is missing. One venv per server: independent dependency trees that
 # are pinned, upgraded and Trivy-scanned separately.
@@ -138,6 +156,12 @@ RUN python3 -m venv /opt/markitdown-venv \
       "markitdown-mcp==${MARKITDOWN_MCP_VERSION}" \
  && test -x /opt/markitdown-venv/bin/markitdown-mcp \
  && /opt/markitdown-venv/bin/python -c "import markitdown_mcp" \
+ # SA4E-335: force-upgrade soupsieve to ${SOUPSIEVE_VERSION} (clears CVE-2026-126190).
+ # beautifulsoup4 transitively pins an older soupsieve → pip conflict warning is
+ # EXPECTED and non-fatal; the importlib.metadata probe below fails the build on
+ # any regression.
+ && /opt/markitdown-venv/bin/pip install --no-cache-dir --ignore-requires-python "soupsieve==${SOUPSIEVE_VERSION}" \
+ && /opt/markitdown-venv/bin/python -c "from importlib.metadata import version; assert version('soupsieve') == '${SOUPSIEVE_VERSION}'; from bs4 import BeautifulSoup; assert BeautifulSoup('<div><span>x</span></div>','html.parser').select('div span')" \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
  && /opt/markitdown-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'" \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir "certifi==${CERTIFI_VERSION}" "pillow==${PILLOW_VERSION}" \
@@ -163,6 +187,12 @@ RUN python3 -m venv /opt/markdown-exporter-venv \
       "mcp>=1.27.0,<2.0.0" \
  && test -x /opt/markdown-exporter-venv/bin/markdown-exporter-mcp-local \
  && /opt/markdown-exporter-venv/bin/python -c "import markdown_exporter_mcp.server, md_exporter" \
+ # SA4E-335: force-upgrade soupsieve to ${SOUPSIEVE_VERSION} (clears CVE-2026-126190).
+ # beautifulsoup4 transitively pins an older soupsieve → pip conflict warning is
+ # EXPECTED and non-fatal; the importlib.metadata probe below fails the build on
+ # any regression.
+ && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir --ignore-requires-python "soupsieve==${SOUPSIEVE_VERSION}" \
+ && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('soupsieve') == '${SOUPSIEVE_VERSION}'; from bs4 import BeautifulSoup; assert BeautifulSoup('<div><span>x</span></div>','html.parser').select('div span')" \
  && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "pillow==${PILLOW_VERSION}" "certifi==${CERTIFI_VERSION}" \
  && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('pillow') == '${PILLOW_VERSION}' and version('certifi') == '${CERTIFI_VERSION}'" \
  && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \

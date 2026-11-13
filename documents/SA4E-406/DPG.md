@@ -9,7 +9,7 @@
 | Jira Ticket | SA4E-406 |
 | Title | drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration |
 | Author | DevOps Agent |
-| Version | 1.1 |
+| Version | 1.55.21 |
 | Date | 2026-11-12 |
 | Status | Draft |
 | Related TDD | documents/SA4E-406/TDD.md (if exists) |
@@ -22,6 +22,7 @@
 |---------|------|--------|---------|
 | 1.0 | 2026-11-08 | DevOps Agent | Initiate document — based on merge commit 3061986b |
 | 1.1 | 2026-11-12 | DevOps Agent | Re-pointed stale backend test-fixture references to surviving diagram corpus (deployment.drawio, sequence-verify-loop.drawio) |
+| 1.55.21 | 2026-11-13 | DevOps Agent | SA4E-335/SA4E-406: CI Trivy gate red → green — soupsieve 2.10 → 4.0.1 in both MCP venvs (CVE-2026-126190 fixed by upgrade, not exemption); restored `trivyignores: .trivyignore` wiring; MARKITDOWN_MCP_VERSION back to 0.0.1a8; version sync → 1.55.21 |
 
 ---
 
@@ -60,6 +61,13 @@ SA4E-406 delivers critical improvements to the `drawio_auto_layout` MCP tool:
 5. **Multi-worktree Path Resolution** (SA4E-394) — `base_dir` + `workspace_root` support
 
 6. **Security** — Path traversal prevention (CWE-22), configurable limits
+
+> **Security hardening (SA4E-335):** soupsieve 2.10 (CVE-2026-126190, HIGH) was present in both MCP venvs of the backend
+> production image and failed the CI Trivy gate (run 43436002707). Fixed by upgrading soupsieve to 4.0.1 in both
+> `/opt/markitdown-venv` and `/opt/markdown-exporter-venv` (Dockerfile `mcp-python` stage: `ARG SOUPSIEVE_VERSION=4.0.1`,
+> `pip install --ignore-requires-python`, `importlib.metadata` assertion + descendant-selector smoke test) — not by Trivy
+> exemption. The Trivy workflow input `trivyignores: .trivyignore` was restored. Existing SA4E-385 accepted-risk entries
+> (body-parser, undici, zod, GHSA aliases) are retained in `.trivyignore`; CVE-2026-126190 is NOT added there.
 
 ### 1.2 Deployment Scope
 

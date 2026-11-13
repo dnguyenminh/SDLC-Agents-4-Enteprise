@@ -6,8 +6,8 @@
 
 | Field | Value |
 |-------|-------|
-| Version | v1.0.1 |
-| Release Date | 2026-11-12 |
+| Version | v1.55.21 |
+| Release Date | 2026-11-13 |
 | Jira Ticket | SA4E-406 |
 | Author | DevOps Agent |
 | Status | Released |
@@ -16,7 +16,7 @@
 
 ## Header
 
-### v1.0.1 — 2026-11-12
+### v1.55.21 — 2026-11-13
 
 **Release Notes for:** SDLC Agents 4 Enterprise — Backend MCP Server  
 **Ticket:** SA4E-406 — drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration
@@ -109,6 +109,13 @@
 | `SA4E_ELK_MAX_NODES` | `500` | Max diagram nodes for ELK |
 | `SA4E_ELK_TIMEOUT_MS` | `10000` | ELK layout timeout (ms) |
 | `SA4E_ELK_SPACING_MAX` | `500` | Max node spacing (px) |
+
+> **Security hardening (SA4E-335):** soupsieve 2.10 (CVE-2026-126190, HIGH) was present in both MCP venvs of the backend
+> production image and failed the CI Trivy gate (run 43436002707). Fixed by upgrading soupsieve to 4.0.1 in both
+> `/opt/markitdown-venv` and `/opt/markdown-exporter-venv` (Dockerfile `mcp-python` stage: `ARG SOUPSIEVE_VERSION=4.0.1`,
+> `pip install --ignore-requires-python`, `importlib.metadata` assertion + descendant-selector smoke test) — not by Trivy
+> exemption. The Trivy workflow input `trivyignores: .trivyignore` was restored. CVE-2026-126190 is NOT added to
+> `.trivyignore`; existing SA4E-385 accepted-risk entries (body-parser, undici, zod, GHSA aliases) are retained.
 
 ---
 
