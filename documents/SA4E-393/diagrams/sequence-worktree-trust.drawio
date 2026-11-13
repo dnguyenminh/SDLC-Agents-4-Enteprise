@@ -62,7 +62,7 @@
         <mxPoint x="300" y="110" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m2" value="2. GUARD (no fs): isUncOrDevice / trailing dot-space / 8.3 -&gt; LEGACY reject (C2)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="m2" value="2. GUARD (no fs): isUncOrDevice only -&gt; LEGACY reject (C2); dot/space/8.3 only in trust path" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
         <mxPoint x="300" y="150" as="sourcePoint"/>
         <mxPoint x="360" y="150" as="targetPoint"/>
@@ -98,7 +98,7 @@
         <mxPoint x="700" y="350" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m8" value="8. lstat(.git).isFile; open O_NONBLOCK|O_NOFOLLOW; fstat; read max 4KB (C1)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="m8" value="8. lstat(.git).isFile; open (O_NONBLOCK/O_NOFOLLOW where available); fstat; read 4KB (C1)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
         <mxPoint x="700" y="390" as="sourcePoint"/>
         <mxPoint x="900" y="390" as="targetPoint"/>
@@ -146,7 +146,7 @@
         <mxPoint x="500" y="670" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m16" value="16. verdict + cache 30s (positive 128 / negative 64 buckets)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=open;endFill=0;dashed=1;" edge="1" parent="1">
+    <mxCell id="m16" value="16. verdict + cache 10s (positive 128 / negative 64 buckets)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=open;endFill=0;dashed=1;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
         <mxPoint x="500" y="710" as="sourcePoint"/>
         <mxPoint x="300" y="710" as="targetPoint"/>

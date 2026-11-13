@@ -247,3 +247,107 @@ Git for Windows writes `C:/path/.git` (forward slashes; `path.resolve` normalise
 - SEC-WT-8, 9, 11, 12 hardening; OI-WT11 for SEC-WT-13; UG notes for SEC-WT-14/15 and the kill switch.
 
 Phase 5.7 (Security Code Review) will re-check C1-C9 against the real implementation. This document does not modify TDD, FSD or code, and nothing was committed.
+
+
+---
+
+## 7. Re-review (round 2) - TDD v1.4, E11
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-11-13 |
+| Scope | Document only (TDD v1.4 E11, E11.9/E11.10, diagram `sequence-worktree-trust.png` which I opened). No code exists; nothing executed. TDD, FSD and code NOT modified; nothing committed. |
+| Verdict | **APPROVED-WITH-CONDITIONS (updated).** 2 of 3 High closed (SEC-WT-1, SEC-WT-2). SEC-WT-3 is designed but the pseudocode introduces one new High (SEC-WT-16) that must be corrected before DEV writes the shared `symlinkEscape`. No Critical. |
+
+### 7.1 Are SEC-WT-1/2/3 really designed? (question 1)
+
+| Finding | Pseudocode | Test map | DEV files | Result |
+|---------|-----------|----------|-----------|--------|
+| SEC-WT-1 | Yes: `readSmall` lstat-first, `stepTrustedPrefix` with concrete candidate set, step order stated | WT-UT-19/20, WT-IT-25 (real mkfifo, 2 s timeout) | Yes (`worktree-git-files.ts`, verifier) | **Closed.** Wording caveat in 7.4 (O_NONBLOCK on win32). |
+| SEC-WT-2 | Yes: call order 1-3 in both resolvers, `literalAllowlistHit`, guard inside `WorkspaceAllowlist.contains`, extension root-set cache | WT-UT-21/31 (spy, zero realpath) | Yes (`workspace-allowlist.ts`, extension resolver, v1.4 list at line ~1251) | **Closed.** |
+| SEC-WT-3 | Yes, but flawed (see SEC-WT-16) | WT-IT-26/27, WT-UT-22 | Yes (`multi-worktree-path-resolver.ts`, `fs-guards.ts`; exact extension file "confirm at implementation") | **Not closed** until SEC-WT-16 is fixed. |
+
+All three are more than name-drops. The Medium items C4-C7 also have concrete rules and tests.
+
+### 7.2 Contradictions between E11 and E2-E10 (question 2)
+
+E11 states precedence and the 30 s -> 10 s, 256 -> 128/64, 3 metadata calls, 13 calls and "env wins" withdrawal explicitly, and line ~1251 patches the file list. Residual risk is that the superseded text is still in place and unmarked, so a DEV reading top-down can implement the old value:
+
+| # | Stale text (still present) | E11 value | Risk |
+|---|---------------------------|-----------|------|
+| 1 | E3 table: positive TTL **30 s**, cache **256 FIFO**, "2 lstat + 0 reads", "<= 12 metadata calls" | 10 s, 128/64, 2 lstat + 1 realpath, <= 13 | Medium (DEV picks wrong constant; AC-WT13 test then fails or, worse, is "fixed" toward 2) |
+| 2 | E2.1 module table: `worktree-cache.ts` "TTL 30 s / 5 s, 256 entries"; `readBounded` "lstat/open/fstat identity check"; verifier "5 step functions" | 10 s; `readSmall` internal lstat; 7 steps incl. `stepTrustedPrefix`, `stepPlacement` | Medium |
+| 3 | E4.2 verifier loop `[stepGitFile, stepAdmin, stepCommon, stepBacklink, stepParent]` and E4.3 `readBounded(path, l, d)` with caller signature | new order + `stepPlacement` after `stepParent` | Medium |
+| 4 | E2.5: "`workspace-allowlist.ts` NOT modified" | modified | Low (patched by v1.4 note) |
+| 5 | OI-WT3 "env wins" | withdrawn | Low (E11.7 says so) |
+| 6 | **Diagram step 16: "cache 30s"**; E11.10 says the diagram "was redrawn" | 10 s | Medium (visual contradiction with TDD text) |
+
+No logical conflict that cannot be resolved by the precedence rule; the issue is documentation hygiene. **Condition R2-1:** SA adds a one-line "SUPERSEDED by E11.x" marker to each row above and corrects diagram step 16 to 10 s. Non-blocking for starting Gate A code, blocking for Phase 5.7 sign-off. Diagram otherwise renders correctly: 6 lifelines, 20 numbered steps, labels not clipped, ALT note at the bottom, steps 2/6/10 are short self-arrows that read as "internal check". Step 8 shows `O_NONBLOCK|O_NOFOLLOW` unconditionally (see 7.4).
+
+### 7.3 New findings caused by E11 (question 3)
+
+#### SEC-WT-16 (High): `symlinkEscape` collapses `..` lexically after a symlink hop, so a committed symlink pair escapes the containment
+
+**Description.** E11.3 follows a link with `cursor = resolve(dirname(cursor), readlinkSync(cursor))` and then checks `isInside(realRoot, cursor)` lexically. `path.resolve` removes `..` textually. The OS does not: `d/../f` where `d` is a symlink resolves to the PARENT OF d's TARGET. After the hop, the loop `lstat`s the collapsed path (ENOENT), climbs to the root (a real directory inside), calls `realpath(root)` and returns `null` (allowed). The actual write goes outside.
+
+**Attack scenario.** The branch commits `d -> /home/user/.config` (symlink) and `L -> d/../x`. The loop never visits `d` itself when only `L` is the target. Call with `file_path="L"`: cursor `root/L` is a symlink; link text `d/../x` resolves lexically to `root/x`, which is inside; `lstat(root/x)` ENOENT; climb to `root`; `realpath(root)` inside; return null. The OS opens `root/L` -> `root/d/../x` -> (`d` -> `/home/user/.config`) -> `/home/user/x`. Write lands outside the worktree. Two committed symlinks are enough; no race needed. It is the same threat class as SEC-WT-3 (repo-authored symlinks in an auto-trusted worktree), so it is rated High for the same reason.
+
+**Remediation (condition R2-2, blocking Gate A for the shared helper).** Do not use `path.resolve` on link text. Resolve component by component like `realpath`: keep a stack of components; for each component `lstat` the accumulated prefix; if it is a symlink, `readlink`, splice its components in front of the remaining ones (absolute link text resets the prefix), count hops against `MAX_LINK_DEPTH`; handle `..` by popping the already-resolved real prefix, never textually; on ENOENT/ENOTDIR append the remaining components unresolved (they can only be created inside the last real directory, so check that directory); any other error rejects. Final check: the resolved real prefix plus remaining components is inside `realRoot`. Equivalent shortcut: if `realpathSync` succeeds use it; else realpath the deepest existing ancestor via the same hop loop and append the tail. Add scenarios `symlinkDotDotCollapse` (`L -> d/../x` with `d` pointing outside) and `symlinkDotDotInside` (valid) to the shared matrix and to WT-IT-26/27.
+
+#### SEC-WT-17 (Medium): lexical `isInside(realRoot, cursor)` false-rejects valid links and `realRoot` is undefined
+
+**Description.** The pseudocode tests the lexical link target against `realRoot`, but never defines `realRoot` (the signature has `root`). If a link text uses a non-real spelling of the same location (macOS `/tmp` -> `/private/tmp`, `/var`, Windows junction or `subst` drive, a worktree opened through a symlinked parent), the lexical test fails closed and valid in-worktree links (absolute-path links created by tooling) are rejected as `link_outside`. This is a functional break of a legitimate use case, not a hole (fail-closed).
+
+**Remediation.** Define `realRoot = realpathSync(root)` once per call and compare against the realpath-resolved target (per SEC-WT-16 algorithm, which yields real paths), not the raw link text. Add a test with root reached through a symlinked ancestor and an absolute in-root link. Acceptable alternative: document links pointing outside as unsupported (they already were for existing targets).
+
+#### SEC-WT-18 (Medium): win32 `~\d+` / trailing dot-space precheck may reject legitimate paths
+
+**Description.** E11.4 rejects any win32 component matching `/~\d+/` (unanchored) or ending in `.`/space. (a) The regex also hits real names such as `proj~2`, `v~1-fix`, and 8.3 aliases that appear in common environment paths (`C:\Users\LONGUS~1\AppData\Local\Temp`, `PROGRA~1`). Tests that create worktrees under `os.tmpdir()` on Windows CI or users with long names may fail. (b) It is ambiguous whether the rule applies only inside `trust.check` or to all `base_dir` precheck. The TDD diagram step 2 draws it in the shared GUARD (step 2 of the resolver) for every `base_dir`, which would regress allowlisted roots that are spelled with 8.3 today (regression of legacy behavior, contradicts "byte-identical LEGACY").
+
+**Remediation.** (1) Anchor to the real 8.3 shape: `^[^~.\\/]{1,6}~\d+(\.[^.\\/]{0,3})?$` per component. (2) State that the dot/space/8.3 rule is applied only on the worktree-trust path (not before `literalAllowlistHit`/allowlist), while UNC/device stays in the shared guard. (3) WT-UT-24 adds negatives: `proj~2` of length > 8-pattern, `a.b`, and a literal allowlisted 8.3 root still accepted. Fail-closed, so Medium.
+
+#### SEC-WT-19 (Low): residual wording and platform items in E11
+
+- `readSmall`: `O_RDONLY | O_NONBLOCK | (O_NOFOLLOW ?? 0)` - `O_NONBLOCK` is also undefined on win32 (`fs.constants`); `x | undefined` is `0` at runtime but fails strict TS and misleads. Use `(O_NONBLOCK ?? 0)`. Diagram step 8 should read "O_NONBLOCK/O_NOFOLLOW where available". On win32 the safety rests on lstat-first plus the post-open `fstat` identity (the open itself is not race-proof; a swap between lstat and open to a named-pipe-reaching link is not realistic in a trusted-prefix repo). Accept.
+- dev/ino on Windows: Node returns NTFS file index and volume serial as bigint; on FAT/exFAT, some network and virtual filesystems `ino` is `0n`. E11.4 falls back to string equality only when `ino === 0n`; require "either side `0n`", and log at `debug`. The weakening is limited to those filesystems (fold-collision case needs NTFS case-insensitivity anyway); accepted. Use `bigint: true` consistently (done in `readSmall`; state it for `statSig`).
+- `stepTrustedPrefix` accepts `join(S,'worktrees')` for every trusted root `S` even if `S` is not bare. Harmless because `stepParent` still requires the realpath-based match and placement checks, but mention it as defence-in-depth in a code comment.
+- Cache-hit now does 3 metadata calls including `realpath(baseDir)`; for UNC allowlisted roots the hit path performs realpath (admin chose it); fine.
+- SEC-WT-4/5/6/7 designs are consistent with my round-1 recommendations. One gap: E11.5 (3) compares `base_dir` with `homedir()`; also reject `base_dir` that is an ancestor of `homedir()` (e.g. `C:\Users`). Add to WT-IT-29.
+
+### 7.4 Answers to the specific questions
+
+| Question | Answer |
+|----------|--------|
+| `O_NONBLOCK|O_NOFOLLOW` on Windows | Not a defect: both undefined on win32, flags collapse to `O_RDONLY`; lstat-first carries the protection. Fix wording only (SEC-WT-19). |
+| dev/ino 0 on FAT/exFAT/network | Handled by the fallback; tighten to "either side 0n"; accepted residual. |
+| `symlinkEscape` fail-closed breaks valid use cases | Partly: new false rejections for non-real spellings (SEC-WT-17) and 8.3 (SEC-WT-18); more importantly the algorithm has an escape (SEC-WT-16). New writes to non-existent files inside the root still work (ENOENT climb). |
+| E11 vs E2-E10 | Resolved by precedence rule but stale text left in place (7.2). |
+| Diagram | Opened. Renders correctly; step 16 still says 30 s; step 8 flags unconditional. |
+
+### 7.5 Updated findings status
+
+| ID | Round 1 | Round 2 |
+|----|---------|---------|
+| SEC-WT-1 | High | **Closed (design)** |
+| SEC-WT-2 | High | **Closed (design)** |
+| SEC-WT-3 | High | **Open** - superseded by SEC-WT-16 fix |
+| SEC-WT-4..7 | Medium | Design accepted; verify in code at 5.7 |
+| SEC-WT-8..12 | Low | Design accepted |
+| SEC-WT-16 | new | **High, open** |
+| SEC-WT-17, 18 | new | Medium |
+| SEC-WT-19 | new | Low |
+
+**Remaining Critical: 0. Remaining High: 1 (SEC-WT-16, which completes SEC-WT-3).**
+
+### 7.6 Conditions for DEV batch 2 (updated)
+
+Blocking before the shared `symlinkEscape` is coded:
+- R2-2. Replace the E11.3 hop loop with the component-wise resolution described under SEC-WT-16 (SA erratum of a few lines in E11.3; no redesign). Add scenarios `symlinkDotDotCollapse`, `symlinkDotDotInside`, `symlinkedAncestorViaAbsoluteLink` to the matrix and WT-IT-26/27. DEV MAY start `worktree-trust/` (C1, C2, C4-C7) in parallel; the shared containment helper waits for R2-2.
+
+Blocking at Phase 5.7:
+- R2-1. Mark superseded text (7.2 rows 1-5) and fix diagram step 16 (10 s) and step 8 wording.
+- R2-3. SEC-WT-17: define `realRoot`; compare resolved real paths, not link text.
+- R2-4. SEC-WT-18: anchor the 8.3 regex, scope the dot/space/8.3 rule to the trust path only, add negative tests.
+- R2-5. Original Gate B C4-C9 verification against real code, plus SEC-WT-19 small items (`O_NONBLOCK ?? 0`, "either side 0n", ancestor-of-home).
+
+No further document round is required if R2-2 is handled as an erratum; code review at Phase 5.7 re-checks C1-C9 and R2-1..R2-5. Not verified: all runtime behavior (Windows filesystems, git versions, Node fs semantics were reasoned from documentation, not executed).

@@ -37,6 +37,7 @@
 | 1.2 | 2026-11-13 | SA Agent | Addendum 4: Open Issues rewritten from FIX-EVIDENCE (batches 1-3), DESIGN-addendum4-openissues-fix, ANALYSIS-settings-worktree, SECURITY-ASSESSMENT-addendum4-fix (re-review PASS), TEST-REPORT-addendum4-fix. SEC-F04..F08, log redaction, size 200/20 → CLOSED; D1 as-built (explicit workspaceRoot, `{runId}.json` + `cache/{sha}.json`). Remaining items stated with residual risk; e2e D6 on this build PENDING. No diagram changes. |
 | 1.3 | 2026-11-13 | SA Agent | Addendum 5 (batch 1/2, design only): auto-trust git worktree for `base_dir` — module design, decisions OI-WT1..6, pseudocode, security analysis, test plan + RTM. New diagrams `sequence-worktree-trust`, `component-worktree-trust`. Earlier sections unchanged. |
 | 1.4 | 2026-11-13 | SA Agent | Addendum 5 (batch 1/2, design only): resolution of SECURITY-REVIEW-addendum5 (APPROVED-WITH-CONDITIONS, 3 High). New section E11 (Gate A: C1 trusted-first + lstat-before-open, C2 UNC/device guard both surfaces with OI-WT8 in scope, C3 fail-closed `symlinkEscape`; Gate B: C4..C9; SEC-WT -> TDD mapping). E11 supersedes conflicting text in E2.5, E3, E4, E5, E8, E10. Sequence diagram `sequence-worktree-trust` redrawn (guard, trusted-first, identity, overlap); component diagram unchanged. |
+| 1.5 | 2026-11-13 | SA Agent | Addendum 5 (batch 1/2, design only): resolution of SECURITY-REVIEW-addendum5 section 7 (re-review round 2). E11.3 rewritten: component-wise realpath resolution (no `path.resolve` over link text), `realRoot` defined, scenarios `symlinkDotDotCollapse` / `symlinkDotDotInside` / `symlinkedAncestorViaAbsoluteLink` (SEC-WT-16/17, R2-2/R2-3). SUPERSEDED markers on stale E2.1/E2.5/E3/E4.2/E4.3/E5 text and a banner (R2-1). E11.4 8.3 rule anchored and scoped to the trust path only (SEC-WT-18, R2-4). E11.1/E11.4/E11.5: `O_NONBLOCK ?? 0`, either-side `0n` fallback + debug log, ancestor-of-home rejected (SEC-WT-19, R2-5). DEV file list corrected: extension equivalent is `extension/src/backend-local-tools/fs-guards.ts` (`checkSymlinkGuard`), not a `symlinkEscape`. Diagram `sequence-worktree-trust` fixed (step 2 scope, step 8 flags, step 16 TTL 10 s) and re-exported. |
 
 ---
 
@@ -1136,6 +1137,8 @@ re-run is recorded in FIX-EVIDENCE; the QA report itself has not been re-issued 
 
 **Status:** Design only (batch 1/2). No production or test code is written in this batch. **Counterpart:** FSD Addendum 5 (BR-WT1..13, UC-WT1..7, NFR-WT1..6, OI-WT1..6, AC-WT1..13). **Approved design (USER):** if `base_dir` is not in the allowlist, accept it only when (1) `<base_dir>/.git` is a FILE `gitdir: <repo>/.git/worktrees/<name>`, (2) the back-link `<admin>/gitdir` points at exactly `<base_dir>/.git`, (3) the parent repo is in the allowlist OR is a workspace folder open in this instance, (4) every compared path is `realpath`-ed and case-folded on win32, (5) on pass `base_dir` becomes a root and containment (BR-07) is unchanged; on fail the call returns `PATH_REJECTED_OUTSIDE_ALLOWLIST` + hint with no extra absolute path. Files are read directly; `git` is never spawned.
 
+> **⚠ SUPERSEDED-TEXT BANNER (v1.5, R2-1).** Sections E2-E10 were written before the security review. Where a passage is marked `SUPERSEDED by E11.x` below, **E11 is normative** and the marked text (struck through `~~...~~`) must NOT be implemented. Marked places: E2.1 module table, E2.5 file list, E3.1 numbers table, E4.2 verifier step list and `stepGitFile`/`stepCommon`/`stepBacklink` read calls, E4.3 `readBounded` signature, E4.4 TTL/size comments, E5 table rows 16 and 18. Precedence rule: E11 > E2-E10.
+
 ### E1. Summary of decisions
 
 | # | Decision | Section |
@@ -1158,9 +1161,9 @@ The library imports only `fs` and `path`, has no `pino`/`vscode`/`zod`/ESM-only 
 |---|---|---|
 | `worktree-types.ts` | `WorktreeReason` enum, `WorktreeVerdict`, `TrustDeps`, `FsLike`, `TrustLogger`, `TrustPort`, `PointerResult` | ≤90 |
 | `worktree-path-fold.ts` | `foldKey`, `samePath`, `stripExtendedPrefix`, `isUncOrDevice`, `isReservedWinName`, `hasAdsColon`, `isUnderGitModules`, `realpathOrNull` | ≤110 |
-| `worktree-git-files.ts` | `readBounded` (lstat/open/fstat identity check, 4 KB cap), `parseGitdirPointer`, `statSig` | ≤120 |
-| `worktree-verifier.ts` | `verifyWorktree` + 5 step functions (`stepGitFile`, `stepAdmin`, `stepCommon`, `stepBacklink`, `stepParent`) | ≤180 |
-| `worktree-cache.ts` | `TrustCache` (TTL 30 s / 5 s, 256 entries FIFO, stat-signature validation) | ≤110 |
+| `worktree-git-files.ts` | ~~`readBounded` (lstat/open/fstat identity check, 4 KB cap)~~ **SUPERSEDED by E11.1:** `readSmall(p, maxBytes)` with internal lstat-first (4 KB cap), `parseGitdirPointer`, `statSig` | ≤120 |
+| `worktree-verifier.ts` | `verifyWorktree` + ~~5 step functions (`stepGitFile`, `stepAdmin`, `stepCommon`, `stepBacklink`, `stepParent`)~~ **SUPERSEDED by E11.1/E11.5:** 7 steps `stepGitFile`, `stepTrustedPrefix`, `stepAdmin`, `stepCommon`, `stepBacklink`, `stepParent`, `stepPlacement` | ≤180 |
+| `worktree-cache.ts` | `TrustCache` (~~TTL 30 s / 5 s, 256 entries FIFO~~ **SUPERSEDED by E11.6/E11.8:** positive TTL 10 s / negative 5 s; buckets positive 128 / negative 64; signature `dev:ino:size:mtimeNs:ctimeNs` + `realpath(baseDir)` re-bind) | ≤110 |
 | `worktree-config.ts` | `loadTrustConfig(env)`: switch + open folders list (pure; env injected) | ≤60 |
 | `worktree-messages.ts` | `reasonGroup`, `buildRejectionDetail` (single source of client text for both surfaces) | ≤60 |
 | `worktree-trust-service.ts` | `WorktreeTrustService` facade: switch → cache → verifier → log; implements `TrustPort` | ≤130 |
@@ -1236,7 +1239,7 @@ Rejected alternative: hand-copied mirror (what SA4E-394 did for the resolver). I
 - `backend/src/shared/__tests__/multi-worktree-path-resolver.worktree.test.ts` (resolver integration, compat, no-spawn)
 - `backend/src/shared/__tests__/per-tool-base-dir.worktree.test.ts` (one file tool end-to-end, E2E-API)
 
-**Modify — backend:** `backend/src/shared/multi-worktree-path-resolver.ts`, `backend/src/shared/path-resolution-types.ts`. (`path-resolver-provider.ts` and `workspace-allowlist.ts` are NOT modified; `legacy-path-gate.ts` untouched.)
+**Modify — backend:** `backend/src/shared/multi-worktree-path-resolver.ts`, `backend/src/shared/path-resolution-types.ts`. (~~`path-resolver-provider.ts` and `workspace-allowlist.ts` are NOT modified; `legacy-path-gate.ts` untouched~~ **SUPERSEDED by v1.4/v1.5 list below:** `workspace-allowlist.ts` IS modified; `legacy-path-gate.ts` is not edited but calls the hardened `symlinkEscape`, so it is covered by the new tests.)
 
 **Create — extension / repo**
 - `extension/src/services/worktree-trust/*` (9 GENERATED files, do not edit)
@@ -1248,7 +1251,7 @@ Rejected alternative: hand-copied mirror (what SA4E-394 did for the resolver). I
 **Modify — extension / repo:** `extension/src/services/base-dir-resolution.ts`, `extension/src/services/PathResolver.ts`, `extension/src/mcp-config-builder.ts`, `extension/package.json` (setting), root `package.json` (`sync:worktree-trust`, `check:worktree-trust` scripts).
 **Must remain unmodified and green:** `extension/src/__tests__/backend-local-tools.base-dir.test.ts` (TC-702/TC-309, includes an exact-message `toBe`), `backend/src/shared/__tests__/{multi-worktree-path-resolver,per-tool-base-dir.*}.test.ts`.
 
-**v1.4 additions to the DEV file list (security review, see E11.9):** also MODIFY `backend/src/shared/workspace-allowlist.ts` (UNC/device guard before `realpathSync` in `contains`; previously "not modified"), `extension/src/fs-guards.ts` (path of the extension `symlinkEscape` parity; confirm exact file at implementation, it is keyed on `rootSource === "workspace"`) and `extension/package.json` setting with `"scope": "machine"`; CREATE `backend/src/shared/worktree-trust/__tests__/worktree-security.test.ts` and `extension/src/__tests__/{symlink-escape.worktree,unc-guard.worktree}.test.ts`; CREATE `backend/src/shared/__tests__/{symlink-escape.worktree,unc-guard.worktree}.test.ts`. Backend `multi-worktree-path-resolver.ts` also gets the hardened `symlinkEscape`. If a file would pass 200 lines, extract `symlink-containment.ts` (backend) with the extension copy added to the generator.
+**v1.4 additions to the DEV file list (security review, see E11.9):** also MODIFY `backend/src/shared/workspace-allowlist.ts` (UNC/device guard before `realpathSync` in `contains`; previously "not modified"), `extension/package.json` setting with `"scope": "machine"`; **v1.5 file list for the shared symlink containment (verified by grep, R2-2):** the backend function is `symlinkEscape` at `backend/src/shared/multi-worktree-path-resolver.ts:167` (exported; also called by `backend/src/shared/legacy-path-gate.ts:58`, so the rewrite hardens the legacy path too: its existing tests must stay green and get the new matrix). The extension has **no `symlinkEscape`**. Its equivalent is `checkSymlinkGuard` in `extension/src/backend-local-tools/fs-guards.ts` (re-exported by `backend-local-tools.ts`; callers `stream-write.ts`, `embed-image.ts`, `Base64ProxyService.ts`, `output-proxy.ts`, `ToolProxy.ts`, `atlassian/{confluence-content,jira-attachment}-tools.ts`), keyed on `rootSource === "workspace"`. It realpaths only the PARENT dir, so a committed symlink as the final component is not followed. DEV MODIFY it to additionally call the shared component-wise resolver of E11.3 on the full `resolvedPath` (existing `PATH_REJECTED_OUTSIDE_WORKSPACE` / `FS_ERROR` messages unchanged; `fs-guards.ts` must stay <= 200 lines). The resolver is a new pure file `symlink-containment.ts` (`fs`+`path` only) inside the `worktree-trust` library (single source in backend, GENERATED copy in extension; add to the file list of `scripts/sync-worktree-trust.mjs`); backend `symlinkEscape` becomes a thin wrapper over it. Other extension `realpathSync` users (`pi-agent/context-retrieval/path-containment.ts`, `mcp/ide-launch-helpers.ts`, `slash/*`, `tools/design-gate/*`) are out of scope; CREATE `backend/src/shared/worktree-trust/__tests__/worktree-security.test.ts` and `extension/src/__tests__/{symlink-escape.worktree,unc-guard.worktree}.test.ts`; CREATE `backend/src/shared/__tests__/{symlink-escape.worktree,unc-guard.worktree}.test.ts`. Backend `multi-worktree-path-resolver.ts` also gets the hardened `symlinkEscape` (wrapper over `worktree-trust/symlink-containment.ts`, see above). New tests are `symlink-escape.worktree.test.ts` on both surfaces.
 
 **Docs (owners other than DEV):** UG/DPG note for the two switches and `MCP_OPEN_WORKSPACE_FOLDERS` (DevOps/BA).
 
@@ -1273,12 +1276,12 @@ Rejected alternative: hand-copied mirror (what SA4E-394 did for the resolver). I
 |-----------|--------------|----------|--------|
 | Max bytes per evidence file | 4 KB | **4096 (keep)**; pointer text additionally ≤ **1024 chars** | Real `.git`/`gitdir`/`commondir` files are < 300 B. 1024 ≈ 4× typical Windows MAX_PATH use. |
 | Total budget | 250 ms | **250 ms (keep)**, checked before every step | Sync fs cannot be pre-empted inside one syscall (hung network share). Mitigation: UNC/device paths are rejected before any fs call (`unc_unsupported`), negative result cached 5 s, steps are few. Residual: mapped network drive that hangs inside one `lstat`. |
-| Positive TTL | ≤ 30 s | **30 s** | Bounds the TOCTOU/staleness window; evidence signature is re-checked on every hit anyway. |
+| Positive TTL | ≤ 30 s | ~~**30 s**~~ **SUPERSEDED by E11 header: 10 s** | Bounds the TOCTOU/staleness window; evidence signature is re-checked on every hit anyway. |
 | Negative TTL | ≤ 5 s | **5 s** | A user who just ran `git worktree add` retries quickly; still absorbs request floods. |
-| Cache entries | 256 | **256, FIFO eviction** | Orca-style tooling creates dozens of worktrees, not thousands; FIFO is enough (no LRU bookkeeping). |
+| Cache entries | 256 | ~~**256, FIFO eviction**~~ **SUPERSEDED by E11.8: positive 128 / negative 64, separate buckets** | Orca-style tooling creates dozens of worktrees, not thousands; FIFO is enough (no LRU bookkeeping). |
 | Reads per verification | ≤ 3 | **3 content reads** (`.git`, `<admin>/commondir`, `<admin>/gitdir`) | |
-| lstat/realpath calls | ≤ 6 | **≤ 12 metadata calls typical** (adjusted) | Honest count: realpath(base), lstat(.git), realpath(admin), stat(admin), realpath(common), stat(HEAD), realpath(back-link target), allowlist realpath, ≤ 3 open-folder realpaths. Each ~10 µs warm; NFR-WT1 (≤ 50 ms cold) still holds. |
-| Cache-hit cost | ≤ 1 ms, "no file reads" | **2 `lstat` + 0 content reads** | Detecting mtime changes (FR-WT13) requires stat. AC-WT13 is read as "no content reads/parsing on hit"; test asserts `readSmall` count 0 and `lstat` count 2. |
+| lstat/realpath calls | ≤ 6 | ~~**≤ 12 metadata calls typical**~~ **SUPERSEDED by E11 header: ≤ 13** (adjusted) | Honest count: realpath(base), lstat(.git), realpath(admin), stat(admin), realpath(common), stat(HEAD), realpath(back-link target), allowlist realpath, ≤ 3 open-folder realpaths. Each ~10 µs warm; NFR-WT1 (≤ 50 ms cold) still holds. |
+| Cache-hit cost | ≤ 1 ms, "no file reads" | ~~**2 `lstat` + 0 content reads**~~ **SUPERSEDED by E11.6: 2 `lstat` + 1 `realpath(baseDir)` + 0 content reads** | Detecting mtime changes (FR-WT13) requires stat. AC-WT13 is read as "no content reads/parsing on hit"; test asserts `readSmall` count 0 and `lstat` count 2. |
 | Open-folder list | — | max **16** | Defensive cap. |
 
 #### E3.2 FSD points resolved or deviated (for BA/SM acknowledgement)
@@ -1315,6 +1318,8 @@ export function verifyWorktree(baseDir: string, d: TrustDeps): WorktreeVerdict {
 ```
 
 #### E4.2 Steps
+
+> **SUPERSEDED in part by E11.1 / E11.5 (v1.5 marker).** The step order below (`stepGitFile, stepAdmin, stepCommon, stepBacklink, stepParent`) is OUTDATED. Normative order: `stepGitFile -> stepTrustedPrefix -> stepAdmin -> stepCommon -> stepBacklink -> stepParent -> stepPlacement`. Every `readBounded(p, l, d)` call below is replaced by `readSmall(p, maxBytes)` (internal lstat-first, E11.1). The step bodies are otherwise still valid reference pseudocode.
 
 ```typescript
 // 1. .git must be a regular FILE, <= 4 KB, never a symlink/dir (FR-WT2.1, FR-WT12)
@@ -1379,6 +1384,8 @@ function stepParent(s) {
 
 #### E4.3 `readBounded` (worktree-git-files.ts)
 
+> **SUPERSEDED by E11.1 (v1.5 marker).** The signature `readBounded(p, lstatSig, d)` with a caller-supplied lstat is withdrawn; use `readSmall(p, maxBytes)` which lstats internally and never opens non-regular files. The block below is kept for history only.
+
 ```typescript
 function readBounded(p, lstatSig, d): ReadResult {
   // d.fs.readSmall = openSync(p,'r') -> fstat -> compare dev/ino with lstatSig (detects swap between lstat and open)
@@ -1404,7 +1411,7 @@ check(baseDir: string): WorktreeVerdict {
 
 // TrustCache.get(key, ctx):
 //   e = map.get(key); if !e -> miss
-//   if now >= e.expiresAt -> delete, miss                         (30 s positive / 5 s negative)
+//   if now >= e.expiresAt -> delete, miss                         (SUPERSEDED by E11: 10 s positive / 5 s negative)
 //   if e.ctx !== ctx -> delete, miss                              (open-folder list or switch changed)
 //   if sig(lstat(e.gitPath)) !== e.gitSig -> delete, miss         (.git rewritten/removed/replaced; missing -> 'absent')
 //   if e.trusted && sig(lstat(e.linkPath)) !== e.linkSig -> delete, miss   (back-link rewritten/removed)
@@ -1457,9 +1464,9 @@ private resolveWithBaseDir(raw: string, filePath: unknown): PathResolutionResult
 | 13 | `base_dir` itself is a symlink/junction to a real, trusted worktree | verification passes on the real path, but the effective root stays the string the caller sent and the existing `symlinkEscape` (T3) check then sees the real path outside that root → every `file_path` rejected. Net effect: fail-closed; callers must pass the real path | unchanged T3 guard |
 | 14 | `base_dir` is a sub-directory of a worktree (no own `.git`) | rejected `not_a_worktree` (FR-WT10) | `lstat` ENOENT |
 | 15 | Giant `.git` (> 4 KB), slow filesystem | rejected `limit_exceeded` | size cap, 250 ms budget between steps |
-| 16 | Cache poisoning / flooding | bounded 256 FIFO; negative TTL 5 s; each hit re-checks stat signatures | E4.4 |
+| 16 | Cache poisoning / flooding | ~~bounded 256 FIFO~~ (**SUPERSEDED by E11.8: 128/64 buckets**); negative TTL 5 s; each hit re-checks stat signatures | E4.4 |
 | 17 | win32 case variants, `\\?\C:\...` spellings | accepted when equal after realpath + fold | `samePath` |
-| 18 | 8.3 short names | false negative only | fail-closed, documented |
+| 18 | 8.3 short names | false negative only (**refined by E11.4 / SEC-WT-18**: alias vs real name is decided per component on the trust path only) | fail-closed, documented |
 | 19 | Separate-git-dir main repo (`.git` is a file in the main worktree) | its common dir is not named `.git` → treated as "bare" → needs explicit allowlist | conservative |
 
 **TOCTOU.** (a) lstat→open: closed by fstat identity. (b) verify→use: the grant is only "`base_dir` is a root"; every `file_path` is still resolved and checked with containment + `symlinkEscape` per call, so swapping the directory for a link after verification is caught at use time (residual: the existing check→use gap of T3, unchanged). (c) The cache window (≤ 30 s) is closed by signature re-check on every hit: rewriting or removing `.git` or the back-link invalidates the entry. Not covered: changes to `commondir` or admin-dir internals inside the trusted repo (needs write access there; bounded by 30 s). (d) Deleted worktree: missing `.git` invalidates; the `isDirectory` re-check runs on every call.
@@ -1622,7 +1629,7 @@ Regression gates: all existing tests listed under "Must remain unmodified and gr
 function readSmall(p, maxBytes): ReadResult {
   const l = lstatSync(p, { bigint: true });                    // ENOENT -> {ok:false,reason:'missing'}
   if (!l.isFile() || l.size > BigInt(maxBytes)) return fail(l.isFile() ? 'limit_exceeded' : 'not_a_worktree'); // FIFO, device, dir, symlink: NEVER opened
-  const flags = O_RDONLY | O_NONBLOCK | (O_NOFOLLOW ?? 0);    // O_NOFOLLOW undefined on win32: the lstat isFile check carries it
+  const flags = O_RDONLY | (O_NONBLOCK ?? 0) | (O_NOFOLLOW ?? 0); // both undefined on win32 (fs.constants): safety there = lstat-first + post-open fstat identity (v1.5, SEC-WT-19)
   const fd = openSync(p, flags);
   try { const f = fstatSync(fd, { bigint: true });             // identity: f.dev === l.dev && f.ino === l.ino && f.isFile()
         if (!sameIdentity(f, l) || !f.isFile()) return fail('not_a_worktree');
@@ -1664,37 +1671,80 @@ Further hardening in the same files: `WorkspaceAllowlist.contains` (modify `back
 
 #### E11.3 Gate A / C3 (SEC-WT-3): `symlinkEscape` fail-closed
 
-This changes the shared containment helper (backend `multi-worktree-path-resolver.ts`, extension `fs-guards.ts` path); E2.3 is widened to touch it. New algorithm:
+This changes the shared containment helper (backend `symlinkEscape` at `multi-worktree-path-resolver.ts:167`, used also by `legacy-path-gate.ts`; extension `checkSymlinkGuard` in `extension/src/backend-local-tools/fs-guards.ts`, see the v1.5 file list in E2.5); E2.3 is widened to touch them.
+
+> **v1.4 pseudocode WITHDRAWN (v1.5, SEC-WT-16, R2-2).** The v1.4 loop did `cursor = path.resolve(dirname(cursor), readlinkSync(cursor))` and then tested the cursor lexically. `path.resolve` collapses `..` textually, but the OS applies `..` AFTER following a symlink (`d/../x` with `d -> /home/u/.config` is `/home/u/x`). A committed pair `d -> /outside/dir` and `L -> d/../x` therefore passed (lexical `root/x`, ENOENT, climb to root, `null`) while the real write left the worktree. Do not implement it.
+
+**Normative algorithm (v1.5): resolve component by component, realpath style.** Never call `path.resolve`/`path.normalize` on link text or on any path that may contain a symlink. `..` pops the already-resolved REAL prefix, never a textual component.
 
 ```typescript
-const MAX_LINK_DEPTH = 40;   // ELOOP-like bound, prevents link cycles
-function symlinkEscape(root: string, target: string): Escape | null {
-  let cursor = target; let hops = 0;
-  for (;;) {
-    let st; try { st = lstatSync(cursor); }
-    catch (e) { if (code(e) === 'ENOENT' || code(e) === 'ENOTDIR') { cursor = dirname(cursor); if (cursor === dirname(cursor)) break; continue; }
-                return ESCAPE('fs_error'); }                           // any other error: fail-closed (was: null)
-    if (st.isSymbolicLink()) {                                          // dangling or not: follow the link text, not the target
-      if (++hops > MAX_LINK_DEPTH) return ESCAPE('link_depth');
-      cursor = resolve(dirname(cursor), readlinkSync(cursor));          // readlink failure -> ESCAPE('fs_error')
-      if (!isInside(realRoot, cursor)) return ESCAPE('link_outside');   // lexical check of the link target, even if it does not exist
-      continue;
+const MAX_LINK_DEPTH = 40;   // ELOOP-like bound, prevents link cycles (shared by hops of all components)
+type Resolved = { real: string } | { escape: 'fs_error' | 'link_depth' | 'dotdot_after_missing' };
+
+// realResolve(abs): physical location the OS would use for `abs`. Lives in worktree-trust/symlink-containment.ts (fs + path only).
+function realResolve(abs: string): Resolved {
+  let prefix = rootOf(abs);                         // '/' or drive root; always a REAL directory
+  let todo = components(abs).reverse();             // stack, next component at the end
+  let hops = 0; let missing = false;                // missing = a component did not exist; remaining ones are appended unresolved
+  while (todo.length > 0) {
+    const c = todo.pop()!;
+    if (c === '' || c === '.') continue;
+    if (c === '..') {
+      if (missing) return { escape: 'dotdot_after_missing' };   // OS returns ENOENT for missing/..; fail-closed, never collapse
+      prefix = dirname(prefix); continue;           // physical parent of a REAL prefix (parent of the symlink TARGET after a hop)
     }
-    return isInside(realRoot, realpathSync(cursor)) ? null : ESCAPE('real_outside');
+    const next = join(prefix, c);
+    if (missing) { prefix = next; continue; }       // tail below the last real directory: only creatable there
+    let st; try { st = lstatSync(next); }
+    catch (e) { if (code(e) === 'ENOENT' || code(e) === 'ENOTDIR') { missing = true; prefix = next; continue; }
+                return { escape: 'fs_error' }; }     // EACCES, EIO, ELOOP...: fail-closed (was: null)
+    if (!st.isSymbolicLink()) { prefix = next; continue; }
+    if (++hops > MAX_LINK_DEPTH) return { escape: 'link_depth' };
+    let link; try { link = readlinkSync(next); } catch { return { escape: 'fs_error' }; }
+    if (isAbsolute(link)) prefix = rootOf(link);    // absolute link text resets the prefix (win32: also drive/UNC -> see E11.2 guard)
+    todo.push(...components(link).reverse());       // splice link components IN FRONT of the remaining ones
   }
-  return null;
+  return { real: prefix };                          // dangling link: its missing target is the creatable location, checked below
+}
+
+function symlinkEscape(root: string, target: string): Escape | null {
+  let realRoot; try { realRoot = realpathSync(root); } catch { return ESCAPE('fs_error'); }  // defined ONCE per call (SEC-WT-17)
+  const r = realResolve(target);
+  if ('escape' in r) return ESCAPE(r.escape);
+  return isInsideFolded(realRoot, r.real) ? null : ESCAPE('real_outside');   // realpath vs realpath; win32 foldKey + stripExtendedPrefix
 }
 ```
 
-Behavior pinned: dangling link pointing outside is rejected for read and write; chained links and symlinked ancestors are resolved hop by hop; exceptions other than ENOENT/ENOTDIR reject. `rootSource` stays `'workspace'` (extension) for worktree trust, which keeps the extension guard keyed on `rootSource === "workspace"` active; WT-UT-22 pins this (worktree-trusted result has `rootSource==='workspace'` and the guard is invoked). Scenarios added to the shared matrix: `danglingSymlinkOutside`, `symlinkChain`, `symlinkCycle`, `symlinkedAncestor`, `symlinkEscapeErrorFailClosed` (fake fs throwing EACCES). Tests: WT-IT-26 (dangling outside, write and read, both surfaces, worktree root created by real `git worktree add` with a committed symlink), WT-IT-27 (chain depth 41 rejected, cycle rejected, ancestor), WT-UT-22.
+**`realRoot` and valid links (SEC-WT-17, R2-3).** `realRoot = realpathSync(root)` (root = the `base_dir` / trusted root being enforced). The final check compares the REAL resolved location of the target with `realRoot`; it never compares link text or a lexical root. Consequences: an in-worktree link written with another spelling of the same place (macOS `/tmp` -> `/private/tmp`, `/var`, a Windows junction or `subst` drive, a worktree opened through a symlinked parent) resolves to a real path inside `realRoot` and is accepted; a link whose real target is outside is rejected whatever its spelling. If `realpathSync(root)` fails, fail-closed `fs_error`.
+
+**Call sites.** Backend `resolveWithBaseDir` and `legacy-path-gate.ts` call `symlinkEscape(root, resolvedPath)` as today. Extension `checkSymlinkGuard` keeps its parent-realpath check and additionally calls `realResolve(resolution.resolvedPath)` + the same `isInsideFolded(realpath(rootPath), real)` test, so a symlink as the FINAL component (which the parent-only check misses) is also rejected; its public return values (`null` | message string) are unchanged.
+
+Behavior pinned: dangling link pointing outside is rejected for read and write; chained links and symlinked ancestors are resolved hop by hop; exceptions other than ENOENT/ENOTDIR reject. `rootSource` stays `'workspace'` (extension) for worktree trust, which keeps the extension guard keyed on `rootSource === "workspace"` active; WT-UT-22 pins this (worktree-trusted result has `rootSource==='workspace'` and the guard is invoked). Scenarios added to the shared matrix: `danglingSymlinkOutside`, `symlinkChain`, `symlinkCycle`, `symlinkedAncestor`, `symlinkEscapeErrorFailClosed` (fake fs throwing EACCES), and (v1.5):
+
+| Scenario | Fixture | Expected |
+|----------|---------|----------|
+| `symlinkDotDotCollapse` | `d -> <outside dir>` and `L -> d/../x` committed in the worktree; call with `file_path="L"` (read and write) | REJECT `real_outside` (resolves to `<parent of outside dir>/x`) |
+| `symlinkDotDotInside` | `d -> sub/deep` (inside) and `L -> d/../x` | ACCEPT: real `<root>/sub/x` is inside |
+| `symlinkedAncestorViaAbsoluteLink` | root reached through a symlinked ancestor spelling; in-root link with an ABSOLUTE target written with that spelling (macOS `/tmp` -> `/private/tmp` simulated on POSIX, junction on win32 CI) | ACCEPT (compare realpath vs `realRoot`, not lexical) |
+| `dotDotAfterMissing` | `file_path="missingdir/../x"` | REJECT `dotdot_after_missing` (fail-closed) |
+| `absoluteLinkOutsideSpelledInside` | link text that lexically starts with the root string but a middle component is a symlink out | REJECT `real_outside` |
+
+Tests: WT-IT-26 (dangling outside, write and read, both surfaces, worktree root created by real `git worktree add` with a committed symlink; also `symlinkDotDotCollapse`), WT-IT-27 (chain depth 41 rejected, cycle rejected, ancestor, `symlinkDotDotInside`, `symlinkedAncestorViaAbsoluteLink`, `dotDotAfterMissing`), WT-UT-22, new WT-UT-32 (fake `FsLike` for `realResolve`: `..` pops the real prefix after a hop; no `path.resolve` over link text, asserted by spying `path.resolve`/`normalize` with link input), WT-UT-33 (extension `checkSymlinkGuard`: final-component symlink to outside rejected, new-file write inside still accepted, existing exact messages unchanged). POSIX-only fixtures are skipped on win32 with an explicit `it.skipIf` reason; junction cases run on the Windows CI job (E11.8).
 
 #### E11.4 Gate B / C4 (SEC-WT-4): file identity
 
-In `stepBacklink` after the string compare passes, additionally require `statSig(lstat(<realBase>/.git)).dev/ino === statSig(stat(backlinkTarget)).dev/ino` (bigint; NTFS file IDs, Node >= 12; if `ino === 0n` on a filesystem, fall back to string equality only and log `debug`). String compare remains the fast negative. `precheck` and pointer validation (win32) additionally reject any path component that ends with `.` or space, or matches `/~\d+/` (8.3), except `.` / `..` components and drive prefix; reason `malformed` for `base_dir`, `unc_unsupported`-group for pointers (LEGACY/GENERIC text unchanged). Tests: WT-UT-23 (identity mismatch with equal strings via fake FsLike), WT-UT-24 (win32 trailing dot/space/8.3 precheck table), WT-IT-28 (win32 `copiedWorktreeFoldCollision` using U+212A look-alike directory; hardlink-copy of `.git` file: same inode, different path still fails string check).
+In `stepBacklink` after the string compare passes, additionally require `statSig(lstat(<realBase>/.git)).dev/ino === statSig(stat(backlinkTarget)).dev/ino` (bigint; NTFS file IDs, Node >= 12; `bigint: true` for `statSig` as for `readSmall`; **v1.5 (SEC-WT-19): if `ino === 0n` OR `dev === 0n` on EITHER side (FAT/exFAT, some network and virtual filesystems), fall back to comparing the already folded strings and log one `debug` line (no path, reason `identity_unavailable`);** the weakened case is limited to those filesystems and accepted). String compare remains the fast negative. **Win32 component rule (v1.5, SEC-WT-18, replaces the v1.4 unanchored `/~\d+/` rule).**
+
+- *Scope.* Applied ONLY inside the worktree-trust path (`trust.check`: `precheck` of `base_dir` after `allowlist.contains` has returned false, and pointer validation in `stepTrustedPrefix`). It is NOT part of the shared GUARD of E11.2 and never runs before `literalAllowlistHit` / `allowlist.contains`, so allowlisted roots spelled with 8.3 names (`C:\Users\LONGUS~1\...`, `PROGRA~1`) keep today's behavior (LEGACY byte-identical). The shared GUARD (step 2 in the diagram) keeps only UNC/device.
+- *Trailing dot / space.* A component (not `.`/`..`, not the drive prefix) ending with `.` or space -> reject (`malformed` for `base_dir`, `unc_unsupported`-group for pointers; client text unchanged).
+- *8.3 shape.* Only a component that really has short-name shape, `^[^.\s]{1,6}~\d+(\.\w{1,3})?$`, is examined (so `a.b`, `v~1-fix`, `proj~2x`, `release~10.0` with a long extension do not match). It is rejected ONLY IF the verified path shows it is an alias: for such a component, `fs.realpathSync.native(<prefix up to and including it>)` is taken (the native call expands 8.3 on Windows; it runs only for matching components, a handful per verification, cost inside the <= 13 budget of E11 header) and its last component must equal the component under `foldKey`. Equal -> it is the real directory name (`proj~2`, `ASUS~1` genuinely named so) -> accepted. Different (alias of a long name), non-existent, or native call fails -> reject (fail-closed). The check is applied to the paths already verified by the chain (`base_dir` realpath and pointer/admin prefix), never as a blanket regex over arbitrary input or over allowlist entries.
+- *Why it exists.* An alias and its long name are two spellings of one directory that `foldKey` equality cannot unify (identity gap closed by the dev/ino check above); rejecting aliases on the trust path keeps `samePath` honest, while real names that merely look like aliases stay usable.
+
+Tests: WT-UT-23 (identity mismatch with equal strings via fake FsLike), WT-UT-24 (win32 table; positive rejects: trailing dot, trailing space, `PROGRA~1` where native expands to `Program Files`; **negatives that MUST be accepted**: component `proj~2` whose native realpath is `proj~2`, `ASUS~1` confirmed as the real name, `a.b`, `v~1-fix`; a literal allowlisted 8.3 root such as `C:\Users\LONGUS~1\repo` still accepted via the allowlist path with the rule never invoked, asserted with a spy on `realpathSync.native`), WT-IT-34 (win32 CI: real directory named `proj~2` containing a worktree under `os.tmpdir()`-style path accepted; alias spelling of the same directory rejected), WT-IT-28 (win32 `copiedWorktreeFoldCollision` using U+212A look-alike directory; hardlink-copy of `.git` file: same inode, different path still fails string check).
 
 #### E11.5 Gate B / C5 (SEC-WT-5): where a trusted worktree may live
 
-After `stepParent` returns trusted, `stepPlacement` rejects (`submodule_or_unknown_layout`, no new message group) when any holds, comparing realpath-folded paths: (1) `base_dir` is inside, equal to, or an ancestor of the common dir; (2) `base_dir` is an ancestor-or-self of `repoRoot` or of any allowlist/open-folder root; (3) `base_dir` is a filesystem/drive root or equals `os.homedir()` (realpath, injected via `TrustDeps.homedir()`); (4) `warn` (non-blocking) when `base_dir` is not under `dirname(repoRoot)`. Tests: WT-IT-29 (worktree registered at `<repo>/.git/x`, at `<repo>/..`, at `/` or drive root, at `$HOME`; all rejected; sibling directory accepted).
+After `stepParent` returns trusted, `stepPlacement` rejects (`submodule_or_unknown_layout`, no new message group) when any holds, comparing realpath-folded paths: (1) `base_dir` is inside, equal to, or an ancestor of the common dir; (2) `base_dir` is an ancestor-or-self of `repoRoot` or of any allowlist/open-folder root; (3) `base_dir` is a filesystem/drive root, equals `os.homedir()`, **or is an ancestor of `os.homedir()`** such as `C:\Users` or `/home` (v1.5, SEC-WT-19; realpath, injected via `TrustDeps.homedir()`); (4) `warn` (non-blocking) when `base_dir` is not under `dirname(repoRoot)`. Defence-in-depth note for DEV (code comment): `stepTrustedPrefix` accepts `join(S,'worktrees')` for every trusted root `S` even if `S` is not bare; harmless because `stepParent` and `stepPlacement` still decide on realpaths. Tests: WT-IT-29 (worktree registered at `<repo>/.git/x`, at `<repo>/..`, at `/` or drive root, at `$HOME`, at an ancestor of `$HOME` (`/home`, `C:\Users`); all rejected; sibling directory accepted).
 
 #### E11.6 Gate B / C6 (SEC-WT-6): cache re-binding
 
@@ -1719,7 +1769,12 @@ On every hit `TrustCache.get` also compares `realpath(baseDir)` with the stored 
 | SEC-WT-1 FIFO/blocking open, hostile pointer | High | C1 | E11.1 (+ E4.2 step order, E4.3 superseded) | WT-UT-19, 20, WT-IT-25, WT-UT-16 ext. |
 | SEC-WT-2 UNC realpath, OI-WT8 | High | C2 | E11.2, E10 (OI-WT8 in scope), E2.5 additions | WT-UT-21, 31 |
 | SEC-WT-3 `symlinkEscape` fail-open | High | C3 | E11.3, E2.3 widened | WT-IT-26, 27, WT-UT-22 |
-| SEC-WT-4 fold != identity | Med | C4 | E11.4 | WT-UT-23, 24, WT-IT-28 |
+| **SEC-WT-16** (round 2) lexical `..` collapse after symlink hop | High | R2-2 (blocks shared helper) | E11.3 v1.5 component-wise `realResolve`; v1.4 pseudocode withdrawn; extension equivalent = `checkSymlinkGuard` in `backend-local-tools/fs-guards.ts` (E2.5) | `symlinkDotDotCollapse`, `dotDotAfterMissing` in WT-IT-26/27, WT-UT-32, 33 |
+| **SEC-WT-17** (round 2) `realRoot` undefined, lexical false rejects | Med | R2-3 | E11.3: `realRoot = realpathSync(root)`, realpath-vs-realpath compare | `symlinkDotDotInside`, `symlinkedAncestorViaAbsoluteLink` in WT-IT-27 |
+| **SEC-WT-18** (round 2) 8.3 / dot-space precheck over-blocks | Med | R2-4 | E11.4 v1.5: anchored shape, per-component alias check via native realpath, trust path only, GUARD keeps UNC/device only | WT-UT-24 (negatives `proj~2`, `ASUS~1`, allowlisted 8.3 root), WT-IT-34 |
+| **SEC-WT-19** (round 2) wording/platform items | Low | R2-5 | `O_NONBLOCK ?? 0` (E11.1); either-side `0n` + debug log (E11.4); ancestor-of-home (E11.5); `stepTrustedPrefix` note; diagram steps 2/8/16 | WT-UT-09/19, WT-UT-23, WT-IT-29 |
+| R2-1 stale text | - | R2-1 | Banner + SUPERSEDED markers in E2.1, E2.5, E3.1, E4.2, E4.3, E4.4, E5; diagram step 16 = 10 s | - |
+| SEC-WT-4 fold != identity | Med | C4 | E11.4 (+ v1.5 either-side `0n` fallback) | WT-UT-23, 24, WT-IT-28 |
 | SEC-WT-5 placement/overlap | Med | C5 | E11.5 | WT-IT-29 |
 | SEC-WT-6 cache re-bind, signature | Med | C6 | E11.6 (AC-WT13 updated) | WT-IT-19 (updated), WT-IT-30 |
 | SEC-WT-7 flag semantics | Med | C7 | E11.7 (OI-WT3 amended) | WT-UT-25, 26 |
@@ -1756,5 +1811,9 @@ On every hit `TrustCache.get` also compares `realpath(baseDir)` with the stored 
 | WT-IT-28 | IT | win32 Kelvin fold collision; hardlinked `.git` copy | SEC-WT-4 |
 | WT-IT-29 | IT | placement: inside `.git`, `<repo>/..`, root, home | SEC-WT-5 |
 | WT-IT-30 | IT | `base_dir` swapped for junction within TTL -> rejected | SEC-WT-6 |
+| WT-UT-32 | UT | `realResolve` with fake FsLike: `..` after a hop pops the real prefix; `path.resolve`/`normalize` never applied to link text | SEC-WT-16 |
+| WT-UT-33 | UT | extension `checkSymlinkGuard`: final-component symlink outside rejected; new file inside accepted; existing messages unchanged | SEC-WT-16 |
+| WT-IT-26/27 (extended v1.5) | IT | `symlinkDotDotCollapse`, `symlinkDotDotInside`, `symlinkedAncestorViaAbsoluteLink`, `dotDotAfterMissing`, `absoluteLinkOutsideSpelledInside` | SEC-WT-16, 17 |
+| WT-IT-34 | IT | win32: real `proj~2` directory accepted, alias spelling rejected; allowlisted 8.3 root unaffected | SEC-WT-18 |
 
-RTM additions: BR-WT3/NFR-WT5 (security) -> WT-UT-19..24, WT-IT-25, 28, 29, 30; BR-WT8 (containment) -> WT-IT-26, 27, WT-UT-22; FR-WT15 -> WT-UT-25, 26; BR-WT10 -> WT-UT-27, 28; NFR-WT3 / AC-WT13 -> WT-IT-19 (updated), WT-UT-30; FR-WT14 -> WT-UT-29. QA assigns final STC numbers; this TDD does not edit STC.md. The sequence diagram (A5-1) was redrawn to show the C2 guard, the C1 trusted-first step, the C4 identity check, the C5 placement guard and the C6 re-bind. The component diagram (A5-2) is unchanged: no new component or dependency was added (`workspace-allowlist.ts` and the `symlinkEscape` helpers are existing boxes whose behavior changed).
+RTM additions: BR-WT3/NFR-WT5 (security) -> WT-UT-19..24, WT-IT-25, 28, 29, 30; BR-WT8 (containment) -> WT-IT-26, 27, WT-UT-22, 32, 33; NFR-WT5 (8.3 / path forms) -> WT-UT-24, WT-IT-34; FR-WT15 -> WT-UT-25, 26; BR-WT10 -> WT-UT-27, 28; NFR-WT3 / AC-WT13 -> WT-IT-19 (updated), WT-UT-30; FR-WT14 -> WT-UT-29. QA assigns final STC numbers; this TDD does not edit STC.md. The sequence diagram (A5-1) was redrawn to show the C2 guard, the C1 trusted-first step, the C4 identity check, the C5 placement guard and the C6 re-bind. The component diagram (A5-2) is unchanged: no new component or dependency was added (`workspace-allowlist.ts` and the `symlinkEscape` helpers are existing boxes whose behavior changed).
