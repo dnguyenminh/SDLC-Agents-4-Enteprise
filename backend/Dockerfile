@@ -136,7 +136,7 @@ RUN apt-get update \
 RUN python3 -m venv /opt/markitdown-venv \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir \
       "markitdown-mcp==${MARKITDOWN_MCP_VERSION}" \
-      "soupsieve>=3.0.1" \
+      
  && test -x /opt/markitdown-venv/bin/markitdown-mcp \
  && /opt/markitdown-venv/bin/python -c "import markitdown_mcp" \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
