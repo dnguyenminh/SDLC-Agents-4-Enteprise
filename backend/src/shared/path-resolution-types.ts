@@ -20,8 +20,6 @@ export interface PathResolutionOk {
   /** base_dir (normalized) or legacy pinned root. */
   effectiveRoot: string;
   rootSource: 'base_dir' | 'legacy';
-  /** SA4E-393 Addendum 5 (additive): how a base_dir root was admitted. Absent on the legacy branch. */
-  trustSource?: 'allowlist' | 'worktree';
 }
 
 export interface PathResolutionErr {
