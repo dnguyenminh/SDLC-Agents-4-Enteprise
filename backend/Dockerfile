@@ -38,31 +38,38 @@ ARG DEBIAN_BASE_DIGEST=sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f07
 # Official Node v22.23.4 linux-x64 tarball — SHA-256 pin (SEC-02).
 # Source: https://nodejs.org/dist/v22.23.4/SHASUMS256.txt
 ARG NODE_TARBALL_SHA256=1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
+# Optional offline/enterprise mirror override (defaults to nodejs.org).
+# Must resolve to the same tarball whose SHA-256 is pinned above.
+ARG NODE_TARBALL_URL=https://nodejs.org/dist/
 
 # =============================================================================
 # node-runtime — shared Node runtime built from Debian trixie + official tarball.
-# The tarball is pre-downloaded on the host (COPY'ed below) so the build does not
-# depend on network access to nodejs.org at build time; both `base` and
-# `production` inherit from it. Layout must match the official node image exactly:
-# bin/node, bin/npm, bin/npx, lib/node_modules/npm — the production npm-CLI patch
-# step depends on this.
+# The tarball is fetched IN-BUILD from nodejs.org and verified against
+# NODE_TARBALL_SHA256 before extraction — this keeps CI hermetic-by-hash without
+# committing a 30 MB binary to git. No host-side file is required; a clean
+# checkout builds end-to-end (SEC-02). Layout must match the official node image
+# exactly: bin/node, bin/npm, bin/npx, lib/node_modules/npm — the production
+# npm-CLI patch step depends on this.
 # =============================================================================
 FROM ${DEBIAN_BASE_IMAGE}@${DEBIAN_BASE_DIGEST} AS node-runtime
 ARG NODE_VERSION
 ARG NODE_TARBALL_SHA256
-# Minimal host tools to verify + extract the Node tarball; purged before the
-# runtime image is assembled so they never reach production (SEC-05).
+ARG NODE_TARBALL_URL
+# Fetch + extract tools; purged before the runtime image is assembled so they
+# never reach production (SEC-05). ca-certificates is REQUIRED on trixie-slim
+# (it ships without the CA bundle → curl fails on TLS without it).
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates xz-utils \
+ && apt-get install -y --no-install-recommends ca-certificates curl xz-utils \
  && rm -rf /var/lib/apt/lists/*
-# Install Node 22.23.4 from the pre-downloaded official tarball (SHA-256 verified).
-COPY node-v${NODE_VERSION}-linux-x64.tar.xz /tmp/node.tar.xz
-RUN ACTUAL_HASH="$(sha256sum /tmp/node.tar.xz | cut -d' ' -f1)" \
- && test "$ACTUAL_HASH" = "${NODE_TARBALL_SHA256}" \
- && tar -xJf /tmp/node.tar.xz --strip-components=1 -C /usr/local \
- && rm -f /tmp/node.tar.xz \
+# Download + verify + install Node ${NODE_VERSION} from the official tarball.
+RUN NODE_TARBALL="node-v${NODE_VERSION}-linux-x64.tar.xz" \
+ && curl -fsSL -o "/tmp/${NODE_TARBALL}" \
+   "${NODE_TARBALL_URL}v${NODE_VERSION}/${NODE_TARBALL}" \
+ && echo "${NODE_TARBALL_SHA256}  /tmp/${NODE_TARBALL}" | sha256sum -c - \
+ && tar -xJf "/tmp/${NODE_TARBALL}" --strip-components=1 -C /usr/local \
+ && rm -f "/tmp/${NODE_TARBALL}" \
  # Purge fetch-only tools from this stage so they don't persist in child stages.
- && apt-get purge -y --auto-remove xz-utils \
+ && apt-get purge -y --auto-remove curl xz-utils \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  # Fail-fast probes: verify the tarball install is intact.

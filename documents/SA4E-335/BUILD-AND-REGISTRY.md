@@ -49,19 +49,10 @@ The `production` runtime image is intentionally minimal (SEC-05):
 
 ## 3. Build commands (local)
 
-All commands run from the `backend/` directory.
-
-### Prerequisite: download the Node tarball
-
-The Node v22.23.4 tarball is **not committed** (30 MB binary, see `backend/.gitignore`).
-Download it before building:
-
-```bash
-curl -fsSL -o node-v22.23.4-linux-x64.tar.xz \
-  https://nodejs.org/dist/v22.23.4/node-v22.23.4-linux-x64.tar.xz
-# Verify SHA-256 against NODE_TARBALL_SHA256 in the Dockerfile:
-#   1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
-```
+All commands run from the `backend/` directory. No host-side artifact is
+required — the `node-runtime` stage downloads the Node tarball from
+`${NODE_TARBALL_URL}` (defaults to nodejs.org) at build time and verifies it
+against `NODE_TARBALL_SHA256` (fail-fast on mismatch).
 
 | Target | Command | Purpose |
 |--------|---------|---------|
@@ -241,6 +232,7 @@ ships two Python stdio MCP child servers plus the ONNX embedding model:
 | `DEBIAN_BASE_IMAGE` | `debian:trixie-slim` | Debian 13 trixie base image (SEC-02) |
 | `DEBIAN_BASE_DIGEST` | `sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2` | Debian trixie digest pin (SEC-02) |
 | `NODE_TARBALL_SHA256` | `1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce` | Node v22.23.4 linux-x64 tarball SHA-256 (SEC-02) |
+| `NODE_TARBALL_URL` | `https://nodejs.org/dist/` | Optional offline/enterprise mirror override |
 | `MARKITDOWN_MCP_VERSION` | `0.0.1a8` | PyPI version pin for markitdown-mcp |
 | `MARKDOWN_EXPORTER_MCP_REF` | `1429b6a94767a709f7f5119219ca5951042d9d3c` | Upstream commit pin (hermetic git-source analogue of SEC-02) |
 | `BAKE_EMBEDDING_MODEL` | `true` | Bakes `Xenova/paraphrase-multilingual-MiniLM-L12-v2` (quantized, ~130 MB) into `/app/models-cache` (`ENV TRANSFORMERS_CACHE=/app/models-cache`). `false` → slim build; mount a volume (§8.7) |
