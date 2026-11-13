@@ -5,10 +5,12 @@
 # NOTE: CVE-2026-126190 (soupsieve 2.10) is NOT exempted here. It is fixed by
 # upgrading soupsieve to 4.0.1 in both MCP venvs (/opt/markitdown-venv and
 # /opt/markdown-exporter-venv) in the Dockerfile mcp-python stage
-# (ARG SOUPSIEVE_VERSION=4.0.1, --ignore-requires-python, importlib.metadata
-# assertion + descendant-selector smoke test). Do NOT add CVE-2026-126190 to
-# this file — if a post-fix Trivy scan still reports it, report it explicitly
-# instead of silently exempting it.
+# (ARG SOUPSIEVE_VERSION=4.0.1). Debian 13 trixie ships Python 3.13.5 which
+# natively satisfies soupsieve's Requires-Python >=3.11.5 floor, so the upgrade
+# installs natively — no --ignore-requires-python override is needed.
+# importlib.metadata assertion + descendant-selector smoke test verify the
+# upgrade. Do NOT add CVE-2026-126190 to this file — if a post-fix Trivy scan
+# still reports it, report it explicitly instead of silently exempting it.
 
 # body-parser 2.3.0 — DoS via unhandled decompression stream error.
 # Fixed in 2.4.0; locked resolution pending scheduled dependency bump (SA4E-385).

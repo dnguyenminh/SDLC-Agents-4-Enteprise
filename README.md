@@ -109,7 +109,7 @@ MIT
   satisfies soupsieve's `Requires-Python >=3.11.5` floor — the `--ignore-requires-python` override was removed. A shared
   `node-runtime` stage fetches/installs Node once; both `base` and `production` inherit from it. `curl`/`xz-utils` are
   purged from node-runtime so they never reach the runtime image (SEC-05). Trivy gate re-validated green:
-  `Total: 0 (HIGH: 0, CRITICAL: 0)` with `aquasec/trivy:0.55.2`.
+  `Total: 0 (HIGH: 0, CRITICAL: 0)` with `aquasec/trivy:0.70.0`.
 - 🔁 **CI workflow** — restored `trivyignores: .trivyignore` wiring on the Trivy step (was dropped by the bad merge,
   leaving `INPUT_TRIVYIGNORES` empty). CVE-2026-126190 is NOT added to the ignore file; the upgrade is expected to remove
   it from the image.

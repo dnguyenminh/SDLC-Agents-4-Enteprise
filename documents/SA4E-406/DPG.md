@@ -64,8 +64,10 @@ SA4E-406 delivers critical improvements to the `drawio_auto_layout` MCP tool:
 
 > **Security hardening (SA4E-335):** soupsieve 2.10 (CVE-2026-126190, HIGH) was present in both MCP venvs of the backend
 > production image and failed the CI Trivy gate (run 43436002707). Fixed by upgrading soupsieve to 4.0.1 in both
-> `/opt/markitdown-venv` and `/opt/markdown-exporter-venv` (Dockerfile `mcp-python` stage: `ARG SOUPSIEVE_VERSION=4.0.1`,
-> `pip install --ignore-requires-python`, `importlib.metadata` assertion + descendant-selector smoke test) — not by Trivy
+> `/opt/markitdown-venv` and `/opt/markdown-exporter-venv`. On the interim Debian 12 bookworm image (Python 3.11.2)
+> this required `pip install --ignore-requires-python` (since soupsieve >=3.0.2 declares Requires-Python >=3.11.5),
+> superseded by the Debian 13 trixie migration below where Python 3.13.5 satisfies the floor natively.
+> `importlib.metadata` assertion + descendant-selector smoke test verify the upgrade — not by Trivy
 > exemption. The Trivy workflow input `trivyignores: .trivyignore` was restored. Existing SA4E-385 accepted-risk entries
 > (body-parser, undici, zod, GHSA aliases) are retained in `.trivyignore`; CVE-2026-126190 is NOT added there.
 
@@ -73,7 +75,7 @@ SA4E-406 delivers critical improvements to the `drawio_auto_layout` MCP tool:
 > Python 3.11.2) to `debian:trixie-slim` (Debian 13) + the official Node 22.23.4 binary tarball (SHA-256 pinned,
 > `NODE_TARBALL_SHA256`). Python in the runtime is now 3.13.5 (trixie), which natively satisfies soupsieve's
 > `Requires-Python >=3.11.5` floor — the `--ignore-requires-python` override was removed. Trivy gate re-validated green
-> (0 CRITICAL, 0 HIGH with `aquasec/trivy:0.55.2`). See `documents/SA4E-335/BUILD-AND-REGISTRY.md` for the full pin
+> (0 CRITICAL, 0 HIGH with `aquasec/trivy:0.70.0`). See `documents/SA4E-335/BUILD-AND-REGISTRY.md` for the full pin
 > and digest-update process.
 
 ### 1.2 Deployment Scope
