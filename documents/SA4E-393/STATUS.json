@@ -182,7 +182,7 @@
     "mcpWrapper9183": "up (stream_write_file, embed_image, jira tools via execute_dynamic_tool)",
     "jiraAccess": "OK - jira_get_issue working via execute_dynamic_tool (discovered after restart)"
   },
-  "lastUpdated": "2026-11-13T16:24:05.5371465+07:00",
+  "lastUpdated": "2026-11-13T17:00:00Z",
   "scopeExtension": {
     "requestedAt": "2026-11-12",
     "requestedBy": "user (product owner)",
@@ -192,7 +192,7 @@
       "UI agents (dev-agent, ui-agent — any agent editing .tsx/.svelte/.html/.css) MUST self-run gate before completion; FAIL must fix or justify; SM blocks Phase 5/6 without gate evidence"
     ],
     "decisions": "Extend scope SA4E-393 (no new ticket); enforcement MUST + blocker",
-    "signOffStatus": "e2e D6 PASS on fresh instance (RUN-LOG #58); UAT sign-off lại vẫn do user quyết định",
+    "signOffStatus": "COMPLETE — merged to main (commit 7182cd67), CI green on main (run 43404090401)",
     "addendum5": {
       "title": "Auto-trust git worktree for base_dir",
       "approvedBy": "user (product owner)",
