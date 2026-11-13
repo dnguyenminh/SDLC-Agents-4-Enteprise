@@ -15,7 +15,9 @@
     "test:e2e": "npm run test:e2e --prefix e2e",
     "test:e2e:report": "npm run test:e2e:report --prefix e2e",
     "test:e2e:clean": "npm run test:e2e:clean --prefix e2e",
-    "postinstall": "node scripts/patch-vendored-deps.mjs"
+    "postinstall": "node scripts/patch-vendored-deps.mjs",
+    "sync:worktree-trust": "node scripts/sync-worktree-trust.mjs",
+    "check:worktree-trust": "node scripts/sync-worktree-trust.mjs --check"
   },
   "engines": {
     "node": "22.23.4"
