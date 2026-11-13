@@ -4,6 +4,7 @@
  * line per reason per 10 s with a suppressed counter; `repoRoot` only at `debug`;
  * every path passes the control-character sanitizer (T6).
  */
+import { createHash } from 'crypto';
 import { TrustCache } from './cache.js';
 import { filterOpenFolders } from './config.js';
 import { foldKey } from './path-fold.js';
@@ -51,7 +52,10 @@ export class WorktreeTrustService implements TrustPort {
 
   private ctxSig(): string {
     const open = this.o.openFolders().map((f) => foldKey(f, this.o.platform)).join('|');
-    return `${this.o.enabled()}|${open}`;
+    // SEC-WT-24: allowlist changes must drop cached positives immediately (sha256 keeps the key short).
+    const allow = this.o.allowlistRoots().map((r) => foldKey(r, this.o.platform)).sort().join('|');
+    const allowHash = createHash('sha256').update(allow).digest('hex');
+    return `${this.o.enabled()}|${open}|${allowHash}`;
   }
 
   private logDecision(v: WorktreeVerdict, baseDir: string, elapsed: number): void {

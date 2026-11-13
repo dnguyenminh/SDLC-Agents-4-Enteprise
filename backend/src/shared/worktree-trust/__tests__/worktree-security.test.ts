@@ -123,6 +123,19 @@ describe('WorktreeTrustService', () => {
     expect(JSON.stringify(log.warn.mock.calls)).not.toContain(repo);
     expect(JSON.stringify(log.info.mock.calls)).not.toContain(repo);
   });
+  it('SEC-WT-24 removing an allowlist root invalidates a cached positive immediately', () => {
+    const tmp = makeTmp(); const repo = makeRepo(tmp, 'repo');
+    const wt = addWorktree(repo, path.join(tmp, 'w'), 'bw24');
+    let roots: string[] = [fs.realpathSync(repo)];
+    const base = realDeps({ allowlist: [repo] });
+    const s = new WorktreeTrustService({
+      ...base, enabled: () => true, logger: quiet(),
+      allowlistRoots: () => roots, isAllowlisted: (p: string) => roots.includes(p),
+    });
+    expect(s.check(wt)).toMatchObject({ trusted: true });
+    roots = [];
+    expect(s.check(wt)).toMatchObject({ trusted: false });
+  });
   it('rate-limits repeated rejections per reason', () => {
     const { s, log } = svc(true, []);
     const bad = path.join(makeTmp(), 'none');
