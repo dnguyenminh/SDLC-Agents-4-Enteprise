@@ -76,7 +76,7 @@ function diffs(root, outputs) {
   for (const [rel, content] of outputs) {
     const abs = path.join(root, rel);
     if (!fs.existsSync(abs)) bad.push(`missing: ${rel}`);
-    else if (fs.readFileSync(abs, 'utf8') !== content) bad.push(`differs: ${rel}`);
+    else if (normalizeEol(fs.readFileSync(abs, 'utf8')) !== content) bad.push(`differs: ${rel}`);
   }
   return [...bad, ...staleFiles(root, outputs).map((r) => `stale: ${r}`)];
 }

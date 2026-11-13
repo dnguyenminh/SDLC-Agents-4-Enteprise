@@ -23,7 +23,7 @@ describe("worktree-trust sync (drift guard)", () => {
     for (const [rel, content] of outputs) {
       const abs = path.join(ROOT, rel);
       expect(fs.existsSync(abs), `missing generated file ${rel}`).toBe(true);
-      expect(fs.readFileSync(abs, "utf8"), `drift in ${rel}`).toBe(content);
+      expect(fs.readFileSync(abs, "utf8").replace(/\r\n/g, "\n"), `drift in ${rel}`).toBe(content);
     }
   });
 
