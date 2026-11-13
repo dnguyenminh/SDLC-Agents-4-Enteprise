@@ -227,7 +227,8 @@ R2-1 (superseded-text markers, diagram step 16 = 10 s) is a document item and wa
 - **What was removed:** `backend/src/shared/__tests__/legacy-path-gate.missing-root.test.ts` (2 tests). It guarded the fail-closed behaviour of the legacy gate when the root cannot be realpath-ed.
 - **Why the original risk is gone:** SEC-WT-25 was a behaviour change in the backend legacy gate (`path-containment.ts`), caused by making `symlinkEscape` fail-closed. The backend is back at `ff753553`, so that change no longer exists and the test guards nothing there.
 - **Residual risk: Low.** The same fail-closed logic now lives in the extension (`symlinkEscapeCheck`, used by `fs-guards.ts`), and it has no explicit "root cannot be resolved" test. `worktree-security.test.ts` covers junction, `..` collapse and fake-fs cases, but I found no case where the root itself is missing or unresolvable. A future edit could turn the check fail-open without a failing test. Impact is limited to workspace-root containment in local file tools.
-- **Recommendation (non-blocking, a separate test-only commit):** add 1-2 extension tests, one with a non-existent root and one with a root whose `realpath` throws. Both must make `symlinkEscapeCheck` return a non-null result. Track it in the shared backlog (SA4E-438).
+- **Recommendation (non-blocking, a separate test-only commit):** add 1-2 extension tests, one with a non-existent root and one with a root whose `realpath` throws. Both must make `symlinkEscapeCheck` return a non-null result.
+- **Resolution (2026-11-13, CLOSED):** `extension/src/__tests__/worktree-trust/worktree-missing-root.test.ts` (commit `d638e03d`, 3 tests): non-existent root → `fs_error`; `realpathSync` throws → `fs_error` with no raw error text; the real guard with mocked `fs.realpathSync` → `PATH_REJECTED` without throwing. Mutation check: replacing `catch { return { reason: 'fs_error' }; }` in `symlink-containment.ts` with `catch { realRoot = root; }` turns all 3 tests red; reverted, file clean.
 
 ### 7.4 Other observations
 
@@ -247,7 +248,7 @@ R2-1 (superseded-text markers, diagram step 16 = 10 s) is a document item and wa
 | Severity | Open |
 |----------|------|
 | Critical / High / Medium | **0** |
-| Low | SEC-WT-23 (accepted), SEC-WT-24 race (accepted), SEC-WT-25 test gap (new residual) |
+| Low | SEC-WT-23 (accepted), SEC-WT-24 race (accepted). SEC-WT-25 test gap: **closed** (`d638e03d`, see 7.3) |
 | Info | SEC-WT-26, 27, 29, 30, 31 |
 
 **PASS.** No security regression from the extension-only correction. The overall risk rating stays **LOW**.

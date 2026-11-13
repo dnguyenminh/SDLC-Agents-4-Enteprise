@@ -100,3 +100,9 @@
 | 100 | 2026-11-13 | ba-agent | FSD Addendum 5 v1.3 | Extension-only + correction note; OI-WT7 | ✅ | - | - |
 | 101 | 2026-11-13 | sa-agent | TDD Addendum 5 v1.7 | Extension-only + correction note; diagram A5-1/A5-2 chưa vẽ lại (backlog SA4E-438) | ✅ | - | - |
 | 102 | 2026-11-13 | SM | Verify/STATUS | Cập nhật STATUS addendum5 correction. Không push | ✅ | - | - |
+| 103 | 2026-11-13 | dev-agent | Close-out A5 | SEC-WT-25 extension test `worktree-missing-root.test.ts` (d638e03d); comment "generated" removed (8510df56) | ✅ | - | - |
+| 104 | 2026-11-13 | sa-agent | Diagram A5-1/A5-2 | drawio redrawn extension-only (not exported: sm-agent timed out 60 min) | ⚠️ | - | - |
+| 105 | 2026-11-13 | SM | Circuit | sm-agent timeout (60 min) — result unavailable; main agent verified side effects and finished the remaining steps | ⚠️ | - | 3600s |
+| 106 | 2026-11-13 | SM | Verify | Main agent: export PNG + visual check A5-1/A5-2; SEC-WT-25 mutation 3/3 red then reverted; tsc 0, eslint 0 errors | ✅ | - | - |
+| 107 | 2026-11-13 | SM | E2E (real) | Main agent on fresh instance: worktree auto-trust 4/4 PASS; design gate D6 PASS (run_1794547862160_tuold3k6, run_1794547862715_08ppzhmm, run_1794547863247_o7mb0uw8; score 0.3333, fileCount 3) | ✅ | - | - |
+| 108 | 2026-11-13 | SM | Docs | TDD v1.8 (AB9 e2e, SEC-WT-25 closed, diagrams redrawn), SECURITY-ASSESSMENT-addendum5 7.3/7.6, STATUS addendum5.e2e=PASS | ✅ | - | - |

@@ -1,184 +1,174 @@
-<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1250" pageHeight="1100" math="0" shadow="0">
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="920" math="0" shadow="0">
   <root>
     <mxCell id="0"/>
     <mxCell id="1" parent="0"/>
-    <mxCell id="h1" value="Tool handler&#xa;(file_path, base_dir)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="30" y="20" width="140" height="50" as="geometry"/>
+    <mxCell id="hA" value="MCP client / agent&lt;br&gt;embed_image, stream_write" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="20" width="160" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="h2" value="MultiWorktree&#xa;PathResolver" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="230" y="20" width="140" height="50" as="geometry"/>
+    <mxCell id="hR" value="base-dir-resolution.ts&lt;br&gt;(PathResolver) modified" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="260" y="20" width="160" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="h3" value="WorktreeTrust&#xa;Service (+cache)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="430" y="20" width="140" height="50" as="geometry"/>
+    <mxCell id="hL" value="allowlist-mirror.ts&lt;br&gt;modified (realpath)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="500" y="20" width="160" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="h4" value="worktree-verifier&#xa;verifyWorktree()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="630" y="20" width="140" height="50" as="geometry"/>
+    <mxCell id="hS" value="trust-service.ts&lt;br&gt;+ cache.ts (new)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="740" y="20" width="160" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="h5" value="Filesystem&#xa;(fs sync, no git)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="830" y="20" width="140" height="50" as="geometry"/>
+    <mxCell id="hV" value="verifier.ts&lt;br&gt;trust-steps, admin-steps (new)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="980" y="20" width="160" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="h6" value="Allowlist +&#xa;open folders" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="1030" y="20" width="140" height="50" as="geometry"/>
+    <mxCell id="hF" value="Filesystem (fs sync)&lt;br&gt;no git process" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1220" y="20" width="160" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="l1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+    <mxCell id="hG" value="fs-guards.ts +&lt;br&gt;symlink-containment.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1460" y="20" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="lA" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
         <mxPoint x="100" y="70" as="sourcePoint"/>
-        <mxPoint x="100" y="1000" as="targetPoint"/>
+        <mxPoint x="100" y="840" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="l2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+    <mxCell id="lR" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="300" y="70" as="sourcePoint"/>
-        <mxPoint x="300" y="1000" as="targetPoint"/>
+        <mxPoint x="340" y="70" as="sourcePoint"/>
+        <mxPoint x="340" y="840" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="l3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+    <mxCell id="lL" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="500" y="70" as="sourcePoint"/>
-        <mxPoint x="500" y="1000" as="targetPoint"/>
+        <mxPoint x="580" y="70" as="sourcePoint"/>
+        <mxPoint x="580" y="840" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="l4" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+    <mxCell id="lS" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="700" y="70" as="sourcePoint"/>
-        <mxPoint x="700" y="1000" as="targetPoint"/>
+        <mxPoint x="820" y="70" as="sourcePoint"/>
+        <mxPoint x="820" y="840" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="l5" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+    <mxCell id="lV" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="900" y="70" as="sourcePoint"/>
-        <mxPoint x="900" y="1000" as="targetPoint"/>
+        <mxPoint x="1060" y="70" as="sourcePoint"/>
+        <mxPoint x="1060" y="840" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="l6" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+    <mxCell id="lF" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="1100" y="70" as="sourcePoint"/>
-        <mxPoint x="1100" y="1000" as="targetPoint"/>
+        <mxPoint x="1300" y="70" as="sourcePoint"/>
+        <mxPoint x="1300" y="840" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-        <mxCell id="m1" value="1. resolve(file_path, base_dir)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="lG" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1540" y="70" as="sourcePoint"/>
+        <mxPoint x="1540" y="840" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1. embed_image(file_path, base_dir)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
         <mxPoint x="100" y="110" as="sourcePoint"/>
-        <mxPoint x="300" y="110" as="targetPoint"/>
+        <mxPoint x="340" y="110" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m2" value="2. GUARD (no fs): isUncOrDevice only -&gt; LEGACY reject (C2); dot/space/8.3 only in trust path" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="m2" value="2. UNC/device guard, isRootAllowlisted" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="300" y="150" as="sourcePoint"/>
-        <mxPoint x="360" y="150" as="targetPoint"/>
+        <mxPoint x="340" y="150" as="sourcePoint"/>
+        <mxPoint x="580" y="150" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m3" value="3. allowlist.contains(base_dir) - realpath only AFTER guard (BR-WT1)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="m3" value="3. false: not allowlisted" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="300" y="190" as="sourcePoint"/>
-        <mxPoint x="1100" y="190" as="targetPoint"/>
+        <mxPoint x="580" y="190" as="sourcePoint"/>
+        <mxPoint x="340" y="190" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m4" value="4. false (hit = legacy flow, no .git read)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=open;endFill=0;dashed=1;" edge="1" parent="1">
+    <mxCell id="m4" value="4. check(base_dir)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="1100" y="230" as="sourcePoint"/>
-        <mxPoint x="300" y="230" as="targetPoint"/>
+        <mxPoint x="340" y="230" as="sourcePoint"/>
+        <mxPoint x="820" y="230" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m5" value="5. verify(base_dir)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="m5" value="5. cache: 2x lstat + realpath(base_dir)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="300" y="270" as="sourcePoint"/>
-        <mxPoint x="500" y="270" as="targetPoint"/>
+        <mxPoint x="820" y="270" as="sourcePoint"/>
+        <mxPoint x="1300" y="270" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m6" value="6. cache miss; on HIT also re-bind realpath(baseDir) == realBase (C6)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="m6" value="6. hit: reuse verdict (TTL 10s / 5s)" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="500" y="310" as="sourcePoint"/>
-        <mxPoint x="560" y="310" as="targetPoint"/>
+        <mxPoint x="1300" y="310" as="sourcePoint"/>
+        <mxPoint x="820" y="310" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m7" value="7. verifyWorktree()" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="m7" value="7. miss: verifyWorktree(base_dir)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="500" y="350" as="sourcePoint"/>
-        <mxPoint x="700" y="350" as="targetPoint"/>
+        <mxPoint x="820" y="350" as="sourcePoint"/>
+        <mxPoint x="1060" y="350" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m8" value="8. lstat(.git).isFile; open (O_NONBLOCK/O_NOFOLLOW where available); fstat; read 4KB (C1)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="m8" value="8. realpath(base), lstat + read .git" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="700" y="390" as="sourcePoint"/>
-        <mxPoint x="900" y="390" as="targetPoint"/>
+        <mxPoint x="1060" y="390" as="sourcePoint"/>
+        <mxPoint x="1300" y="390" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m9" value="9. gitdir pointer" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=open;endFill=0;dashed=1;" edge="1" parent="1">
+    <mxCell id="n9" value="9. trusted-first lexical gate (0 fs calls)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="940" y="415" width="240" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="m10" value="10. admin: commondir, back-link, dev/ino" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="900" y="430" as="sourcePoint"/>
-        <mxPoint x="700" y="430" as="targetPoint"/>
+        <mxPoint x="1060" y="470" as="sourcePoint"/>
+        <mxPoint x="1300" y="470" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m10" value="10. TRUSTED-FIRST (no fs): dirname(pointer) must be [trusted repo]/.git/worktrees (C1)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="m11" value="11. evidence (bounded, lstat-first)" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="700" y="470" as="sourcePoint"/>
-        <mxPoint x="760" y="470" as="targetPoint"/>
+        <mxPoint x="1300" y="510" as="sourcePoint"/>
+        <mxPoint x="1060" y="510" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m11" value="11. only now: realpath admin; lstat+read gitdir, commondir (inside trusted repo)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="n12" value="12. parent trusted? placement ok?" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="940" y="535" width="240" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="m13" value="13. verdict: trusted | reason" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="700" y="510" as="sourcePoint"/>
-        <mxPoint x="900" y="510" as="targetPoint"/>
+        <mxPoint x="1060" y="590" as="sourcePoint"/>
+        <mxPoint x="820" y="590" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m12" value="12. back-link, common dir; dev/ino identity vs .git (C4)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=open;endFill=0;dashed=1;" edge="1" parent="1">
+    <mxCell id="m14" value="14. verdict (cache put, warn log)" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="900" y="550" as="sourcePoint"/>
-        <mxPoint x="700" y="550" as="targetPoint"/>
+        <mxPoint x="820" y="630" as="sourcePoint"/>
+        <mxPoint x="340" y="630" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m13" value="13. parent in allowlist/open folder? + overlap, root, home guard (C5)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
+    <mxCell id="m15" value="15. containment: symlinkEscapeCheck(root, path)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="700" y="590" as="sourcePoint"/>
-        <mxPoint x="1100" y="590" as="targetPoint"/>
+        <mxPoint x="340" y="670" as="sourcePoint"/>
+        <mxPoint x="1540" y="670" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m14" value="14. yes" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=open;endFill=0;dashed=1;" edge="1" parent="1">
+    <mxCell id="m16" value="16. lstat, readlink, realpath(root)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="1100" y="630" as="sourcePoint"/>
-        <mxPoint x="700" y="630" as="targetPoint"/>
+        <mxPoint x="1540" y="710" as="sourcePoint"/>
+        <mxPoint x="1300" y="710" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m15" value="15. Verdict(trusted)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=open;endFill=0;dashed=1;" edge="1" parent="1">
+    <mxCell id="m17" value="17. escape or fs_error (SEC-WT-25): reject" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;strokeColor=#b85450;fontColor=#b85450;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="700" y="670" as="sourcePoint"/>
-        <mxPoint x="500" y="670" as="targetPoint"/>
+        <mxPoint x="1540" y="750" as="sourcePoint"/>
+        <mxPoint x="340" y="750" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m16" value="16. verdict + cache 10s (positive 128 / negative 64 buckets)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=open;endFill=0;dashed=1;" edge="1" parent="1">
+    <mxCell id="m18" value="18. root = base_dir | PATH_REJECTED + hint" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
-        <mxPoint x="500" y="710" as="sourcePoint"/>
-        <mxPoint x="300" y="710" as="targetPoint"/>
+        <mxPoint x="340" y="790" as="sourcePoint"/>
+        <mxPoint x="100" y="790" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="m17" value="17. isDirectory, containment, symlinkEscape via lstat/readlink, fail-closed (C3)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=block;endFill=1;" edge="1" parent="1">
-      <mxGeometry relative="1" as="geometry">
-        <mxPoint x="300" y="750" as="sourcePoint"/>
-        <mxPoint x="900" y="750" as="targetPoint"/>
-      </mxGeometry>
-    </mxCell>
-    <mxCell id="m18" value="18. ok" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=open;endFill=0;dashed=1;" edge="1" parent="1">
-      <mxGeometry relative="1" as="geometry">
-        <mxPoint x="900" y="790" as="sourcePoint"/>
-        <mxPoint x="300" y="790" as="targetPoint"/>
-      </mxGeometry>
-    </mxCell>
-    <mxCell id="m19" value="19. ok, trustSource=worktree" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=open;endFill=0;dashed=1;" edge="1" parent="1">
-      <mxGeometry relative="1" as="geometry">
-        <mxPoint x="300" y="830" as="sourcePoint"/>
-        <mxPoint x="100" y="830" as="targetPoint"/>
-      </mxGeometry>
-    </mxCell>
-    <mxCell id="m20" value="20. ALT fail: PATH_REJECTED + hint (client text: only the base_dir echo, no reason)" style="html=1;verticalAlign=bottom;fontSize=9;endArrow=open;endFill=0;dashed=1;strokeColor=#b85450;fontColor=#b85450;" edge="1" parent="1">
-      <mxGeometry relative="1" as="geometry">
-        <mxPoint x="300" y="870" as="sourcePoint"/>
-        <mxPoint x="100" y="870" as="targetPoint"/>
-      </mxGeometry>
-    </mxCell>
-    <mxCell id="note1" value="ALT (steps 8-13): any check fails or 250 ms budget exceeded - Verdict(untrusted, reason). Reason is logged server-side only; client sees PATH_REJECTED_OUTSIDE_ALLOWLIST with LEGACY/generic/parent text, never an extra absolute path. Negative verdict cached 5 s. Pointers outside a trusted repo are rejected at step 10 with zero fs calls on them (FIFO / network path unreachable)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
-      <mxGeometry x="230" y="1020" width="740" height="70" as="geometry"/>
+    <mxCell id="legend" value="Extension only. Green = new, blue = modified, yellow = external / note, red dashed = rejection. Kill switch: setting worktreeAutoTrust AND env MCP_WORKTREE_AUTOTRUST." style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="20" y="860" width="1100" height="30" as="geometry"/>
     </mxCell>
   </root>
 </mxGraphModel>
-

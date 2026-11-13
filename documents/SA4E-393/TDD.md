@@ -40,6 +40,7 @@
 | 1.5 | 2026-11-13 | SA Agent | Addendum 5 (batch 1/2, design only): resolution of SECURITY-REVIEW-addendum5 section 7 (re-review round 2). E11.3 rewritten: component-wise realpath resolution (no `path.resolve` over link text), `realRoot` defined, scenarios `symlinkDotDotCollapse` / `symlinkDotDotInside` / `symlinkedAncestorViaAbsoluteLink` (SEC-WT-16/17, R2-2/R2-3). SUPERSEDED markers on stale E2.1/E2.5/E3/E4.2/E4.3/E5 text and a banner (R2-1). E11.4 8.3 rule anchored and scoped to the trust path only (SEC-WT-18, R2-4). E11.1/E11.4/E11.5: `O_NONBLOCK ?? 0`, either-side `0n` fallback + debug log, ancestor-of-home rejected (SEC-WT-19, R2-5). DEV file list corrected: extension equivalent is `extension/src/backend-local-tools/fs-guards.ts` (`checkSymlinkGuard`), not a `symlinkEscape`. Diagram `sequence-worktree-trust` fixed (step 2 scope, step 8 flags, step 16 TTL 10 s) and re-exported. |
 | 1.6 | 2026-11-14 | SA Agent | Addendum 5 (batch 2/2): new section "As-built (Dot 2b)" - actual file names, sync/drift guard, admit order, fs-guards, SEC-WT-20/21/22/24 and deviations (backlog SA4E-438). Minor bump; E2-E11 design text unchanged. No diagram changes. |
 | 1.7 | 2026-11-14 | SA Agent | Addendum 5 CORRECTIVE (USER-APPROVED): scope is the EXTENSION ONLY. New "Correction note (v1.7)"; As-built AB1-AB7 rewritten (no backend copy, no sync script/drift guard, no `MCP_OPEN_WORKSPACE_FOLDERS`, autotrust env read by extension only, tests under `extension/src/__tests__/worktree-trust/`, SEC-WT-25 known gap). Component/sequence diagram and checklist annotated. |
+| 1.8 | 2026-11-13 | SM / main agent | Addendum 5 close-out: SEC-WT-25 extension test (`d638e03d`, mutation-verified) → CLOSED; diagrams A5-1/A5-2 redrawn extension-only and re-exported; comments "generated" removed (`8510df56`); new AB9 with real e2e evidence (worktree auto-trust 4/4 PASS, design gate D6 PASS). Backlog items 5/6 of AB7 removed. |
 
 ---
 
@@ -1609,8 +1610,8 @@ Regression gates: all existing tests listed under "Must remain unmodified and gr
 
 | # | Diagram | Image | Source (editable) |
 |---|---------|-------|-------------------|
-| A5-1 | Sequence - worktree trust verification | [sequence-worktree-trust.png](diagrams/sequence-worktree-trust.png) | [sequence-worktree-trust.drawio](diagrams/sequence-worktree-trust.drawio) |
-| A5-2 (v1.7: backend + parity tooling boxes are NOT built; extension only) | Component - worktree trust library, surfaces, parity tooling | [component-worktree-trust.png](diagrams/component-worktree-trust.png) | [component-worktree-trust.drawio](diagrams/component-worktree-trust.drawio) |
+| A5-1 | Sequence - worktree trust verification (extension only, redrawn v1.8) | [sequence-worktree-trust.png](diagrams/sequence-worktree-trust.png) | [sequence-worktree-trust.drawio](diagrams/sequence-worktree-trust.drawio) |
+| A5-2 | Component - worktree trust library and extension surfaces (extension only, redrawn v1.8) | [component-worktree-trust.png](diagrams/component-worktree-trust.png) | [component-worktree-trust.drawio](diagrams/component-worktree-trust.drawio) |
 
 ### Traceability (Addendum 5)
 
@@ -1839,9 +1840,9 @@ RTM additions: BR-WT3/NFR-WT5 (security) -> WT-UT-19..24, WT-IT-25, 28, 29, 30; 
 - `MCP_WORKTREE_AUTOTRUST` chỉ còn do **extension** đọc; launcher/`mcp-config-builder.ts` KHÔNG ghi nó vào env backend.
 - Test thư viện đặt tại `extension/src/__tests__/worktree-trust/`.
 
-**Known gap:** SEC-WT-25 (hồi quy legacy gate khi root không realpath được, fail-closed) **mất test** vì test đó thuộc `backend/` (đã revert) và `legacy-path-gate.ts` không còn nằm trong phạm vi. Hành vi extension (`symlinkEscape`/`fs-guards` fail-closed) vẫn có test riêng; gap ghi vào backlog SA4E-438 để viết lại test phía extension.
+**SEC-WT-25 (v1.8, đã đóng):** test cũ thuộc `backend/` mất khi revert. Đã viết lại phía extension: `extension/src/__tests__/worktree-trust/worktree-missing-root.test.ts` (commit `d638e03d`, 3 test) — root không tồn tại và `realpathSync` ném lỗi đều cho `fs_error`, guard trả `PATH_REJECTED` không throw và không lộ error text. Mutation: thay `catch { return { reason: 'fs_error' } }` trong `symlink-containment.ts` bằng `catch { realRoot = root; }` → 3/3 test đỏ; đã hoàn tác.
 
-**Ảnh hưởng diagram:** A5-1 (sequence) và A5-2 (component) vẫn vẽ bề mặt backend và khối "parity tooling/sync"; các khối đó **không tồn tại**. Chỉ phần extension (`base-dir-resolution.ts` → `worktree-trust` library → `allowlist-mirror.ts`/`fs-guards.ts`) còn hiệu lực. Diagram chưa được vẽ lại trong lượt này (hạng mục theo dõi: SA4E-438).
+**Diagram (v1.8, đã vẽ lại):** A5-1 (sequence) và A5-2 (component) chỉ còn bề mặt extension (`base-dir-resolution.ts` → `allowlist-mirror.ts` → `worktree-trust` library → `fs-guards.ts`/`symlink-containment.ts` → filesystem). Không còn khối backend, sync script hay `MCP_OPEN_WORKSPACE_FOLDERS`. PNG export bằng draw.io CLI và đã kiểm tra bằng mắt.
 
 ### As-built (Đợt 2b) — Addendum 5, TDD v1.6 (đã hiệu chỉnh v1.7)
 
@@ -1892,7 +1893,7 @@ Không còn `scripts/sync-worktree-trust.mjs`, không còn npm script `sync:work
 | SEC-WT-21 | Setting `sdlcAgents.workspace.worktreeAutoTrust` (`boolean`, `scope: machine`, default `true`) và env `MCP_WORKTREE_AUTOTRUST=0` đều do **extension** đọc (disable-wins: env `0` luôn thắng). Launcher/`mcp-config-builder.ts` KHÔNG ghi biến này vào env backend (v1.7). **Hiệu lực sau reload window** (SEC-WT-28), không live-reload. |
 | SEC-WT-22 | Xem AB4. |
 | SEC-WT-24 | `ctxSig` của trust-service gồm **hash allowlist**; đổi allowlist làm vô hiệu cache cũ (commit `7532ec8b`). Cửa sổ check-then-use còn lại là rủi ro dư đã chấp nhận (tái-bind SEC-WT-6 trong TTL). |
-| SEC-WT-25 | **KNOWN GAP (v1.7):** test hồi quy legacy gate (backend) bị mất do revert `backend/`; hiện không có test cho SEC-WT-25. Backlog SA4E-438. |
+| SEC-WT-25 | **Đóng (v1.8):** fail-closed khi root không tồn tại / không realpath được; test extension `worktree-missing-root.test.ts` (`d638e03d`), mutation-verified. |
 | SEC-WT-29 | Guard-before-ensureDir chỉ áp cho root kiểu `workspace`; xem AB7. |
 
 `MCP_OPEN_WORKSPACE_FOLDERS`: **đã bỏ (v1.7)**. Folder đang mở (multi-root) lấy trực tiếp từ `vscode.workspace.workspaceFolders` qua `worktree-open-folders.ts`; không ghi env, không cần reload MCP. OI-WT10 (env writable) không còn áp dụng.
@@ -1913,8 +1914,7 @@ Không còn `scripts/sync-worktree-trust.mjs`, không còn npm script `sync:work
 | 2 | **WT-IT-34** (win32 junction / 8.3 `proj~2`) chưa chạy trên Windows CI | Chỉ có UT (WT-UT-24); backlog SA4E-438: bật job Windows CI. SEC-WT-18/26 vẫn dựa trên precheck + fail-closed. |
 | 3 | Kill-switch **không live-reload** (SEC-WT-28) | Cần reload window / restart MCP sau khi đổi setting. Ghi trong UG/Release Notes. |
 | 4 | Guard-before-ensureDir chỉ cho root kiểu `workspace` (SEC-WT-29) | Root kiểu khác (vd. allowlist-only) vẫn theo luồng cũ; backlog SA4E-438 mở rộng. |
-| 5 | SEC-WT-25 không còn test (v1.7) | Known gap, backlog SA4E-438. |
-| 6 | Diagram A5-1/A5-2 chưa vẽ lại sau corrective (v1.7) | Còn khối backend/sync không tồn tại; xem Correction note. Backlog SA4E-438. |
+
 
 Bổ sung v1.7: WT-IT/WT-UT liên quan backend (`multi-worktree-path-resolver.worktree.test.ts`, `per-tool-base-dir.worktree.test.ts`, `worktree-parity.backend`, `worktree-trust.sync.test.ts`) không còn; RTM chỉ còn các test phía extension.
 
@@ -1933,6 +1933,32 @@ Các mục trên là nợ có chủ đích, được ghi nhận minh bạch; kh�
 | 7 | Backend (`backend/` == `ff753553`) không đổi; revert `760316a5`, `1ac80e4b` | Done |
 | 8 | Xoá `scripts/sync-worktree-trust.mjs`, npm scripts sync/check, drift-guard test | Done |
 | 9 | Bỏ ghi `MCP_OPEN_WORKSPACE_FOLDERS` và ghi `MCP_WORKTREE_AUTOTRUST` vào backend env | Done |
-| 10 | Test SEC-WT-25 | **Gap** (SA4E-438) |
-| 11 | Vẽ lại diagram A5-1/A5-2 theo phạm vi extension | Open (SA4E-438) |
+| 10 | Test SEC-WT-25 (`worktree-missing-root.test.ts`, `d638e03d`) | Done (v1.8) |
+| 11 | Vẽ lại diagram A5-1/A5-2 theo phạm vi extension | Done (v1.8) |
 | 12 | `PathResolver.ts` ≤ 200 dòng; job Windows CI cho WT-IT-34 | Open (SA4E-438) |
+| 13 | E2E thật trên instance (worktree auto-trust + design gate D6) | Done (v1.8, xem AB9) |
+
+#### AB9. E2E evidence (v1.8, chạy thật trên instance)
+
+Môi trường: VSIX `dist-sa4e-393-worktree-ext.vsix` cài `--force` lúc 2026-11-13 12:07 (bundle có `MCP_WORKTREE_AUTOTRUST`, không có `MCP_OPEN_WORKSPACE_FOLDERS`), user đã reload window. MCP `http://127.0.0.1:9183/mcp`, instance workspace `C:\projects\kiro\SDLC-Agents-4-Enterprise`. Gọi qua `execute_dynamic_tool`.
+
+**Worktree auto-trust (`embed_image`)**
+
+| # | Case | Kết quả thật | Verdict |
+|---|------|--------------|---------|
+| 1 | `base_dir` = worktree `SA4E-393-2`, `file_path` = `tmp-wt-e2e/doc.md` | `Embedded 0 image(s), skipped 0 → ...\SA4E-393-2\tmp-wt-e2e\doc-embedded.md`; file tồn tại. Trước v1.7 case này bị `PATH_REJECTED_OUTSIDE_ALLOWLIST`. | PASS |
+| 2 | `file_path` = `../outside.md`, `base_dir` = worktree | `PATH_REJECTED_OUTSIDE_ALLOWLIST: Resolved path ... is outside workspace root ...` | PASS |
+| 3 | `base_dir` = thư mục thường (không git) | Message legacy: `... is not registered in the allowlist. Configure MCP_WORKSPACE_ROOTS to include this path.` (D-WT1) | PASS |
+| 4 | `base_dir` có file `.git` giả mạo `gitdir: C:/projects/kiro/SDLC-Agents-4-Enterprise/.git/worktrees/SA4E-393-2` | `... It is not a verified git worktree of a trusted repository. ...`; không tạo file output (back-link check chặn) | PASS |
+
+**Design gate D6** (fixture 3 file `tmp-dg-d6/` ở root instance; 2 file có `<img>` thiếu alt; đã xoá sau test)
+
+| Run | runId | score | pass | fileCount | totalIssues |
+|-----|-------|-------|------|-----------|-------------|
+| static | `run_1794547862160_tuold3k6` | 0.3333 | false | 3 | 2 |
+| both #1 | `run_1794547862715_08ppzhmm` | 0.3333 | false | 3 | 2 |
+| both #2 | `run_1794547863247_o7mb0uw8` | 0.3333 | false | 3 | 2 |
+
+- Score khớp công thức 1 − 2/3; static == both (không false PASS). Findings workspace-relative (`tmp-dg-d6\bad.html`, `tmp-dg-d6\bad2.html`).
+- `source_path=no-such-dir` → `PATH_NOT_FOUND: source_path does not exist: no-such-dir`; `source_path=../..` → `PATH_REJECTED_OUTSIDE_WORKSPACE: source_path resolves outside the workspace`; `design_gate_list_rules` → `ruleCount=30`.
+- Giới hạn: payload không có field `cacheHit`; cache-hit của lần `both #2` chỉ suy luận gián tiếp (cùng kết quả), chưa xác nhận trực tiếp.

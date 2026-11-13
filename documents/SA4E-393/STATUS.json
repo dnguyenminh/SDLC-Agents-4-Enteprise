@@ -182,7 +182,7 @@
     "mcpWrapper9183": "up (stream_write_file, embed_image, jira tools via execute_dynamic_tool)",
     "jiraAccess": "OK - jira_get_issue working via execute_dynamic_tool (discovered after restart)"
   },
-  "lastUpdated": "2026-11-13T02:14:00.3566911Z",
+  "lastUpdated": "2026-11-13T15:45:45.6828191+07:00",
   "scopeExtension": {
     "requestedAt": "2026-11-12",
     "requestedBy": "user (product owner)",
@@ -200,12 +200,20 @@
         "status": "done",
         "scope": "extension-only (USER-APPROVED)",
         "note": "Đề xuất sửa backend do main agent đưa ra là sai phạm vi; embed_image/base_dir là extension-local, backend chạy máy khác. Block 'backend' bên dưới là lịch sử, đã revert.",
-        "commits": ["477b6b2a", "d4c8e675", "9a5a2482", "3aebf293", "f54a83be", "8c260a86", "0d0ac5e1"],
+        "commits": [
+          "477b6b2a",
+          "d4c8e675",
+          "9a5a2482",
+          "3aebf293",
+          "f54a83be",
+          "8c260a86",
+          "0d0ac5e1"
+        ],
         "backendDiffVsFf753553": "empty",
         "taReview": "APPROVED",
-        "securityReview": "PASS (SEC-WT-25 Low: thiếu test extension; SEC-WT-30/31 Info)",
-        "docs": "FSD v1.3, TDD v1.7 (diagram A5-1/A5-2 chưa vẽ lại, backlog SA4E-438)",
-        "vsix": "dist-sa4e-393-worktree-ext.vsix (chưa cài)",
+        "securityReview": "PASS; SEC-WT-25 closed by extension test d638e03d (mutation-verified); SEC-WT-30/31 Info",
+        "docs": "FSD v1.3, TDD v1.8 (diagram A5-1/A5-2 redrawn extension-only)",
+        "vsix": "dist-sa4e-393-worktree-ext.vsix (installed --force 2026-11-13 12:07)",
         "pushed": false
       },
       "design": {
@@ -258,8 +266,26 @@
         "security": "PASS round 2 (SEC-WT-16 closed; SEC-WT-20/21/22/24/25 fixed; SEC-WT-28 Low, 29 Info open)",
         "qa": "PASS with condition: 9 backend failures pre-existing at baseline ff753553 (zod 3.25.76 installed vs 4.6.6); mutations M1/M2/M3 all red then reverted"
       },
-      "e2e": "pending",
-      "vsix": "dist-sa4e-393-worktree.vsix (not installed, untracked)"
+      "e2e": {
+        "status": "PASS",
+        "date": "2026-11-13",
+        "by": "main agent (verified on fresh instance, VSIX dist-sa4e-393-worktree-ext.vsix installed 12:07, user reloaded)",
+        "worktreeAutoTrust": "4/4 PASS: worktree base_dir accepted; ../ escape rejected; plain dir legacy message; spoofed .git rejected, no file written",
+        "designGateD6": "PASS: static run_1794547862160_tuold3k6, both run_1794547862715_08ppzhmm, both run_1794547863247_o7mb0uw8; score 0.3333, pass=false, fileCount=3, totalIssues=2; PATH_NOT_FOUND / PATH_REJECTED_OUTSIDE_WORKSPACE; ruleCount=30",
+        "limitation": "cacheHit not in payload; cache hit inferred only",
+        "tdd": "TDD v1.8 AB9"
+      },
+      "vsix": "dist-sa4e-393-worktree.vsix (not installed, untracked)",
+      "closeOut": {
+        "commits": [
+          "d638e03d",
+          "8510df56"
+        ],
+        "secWt25": "closed: worktree-missing-root.test.ts 3 tests; mutation catch->realRoot=root turns 3/3 red, reverted",
+        "comments": "generated removed from worktree-open-folders.ts and worktree-trust headers",
+        "diagrams": "A5-1/A5-2 redrawn extension-only, PNG re-exported and visually checked",
+        "note": "sm-agent timed out (60 min) after d638e03d/8510df56 and drawio edits; main agent finished export, verification, docs"
+      }
     }
   },
   "implementation": {

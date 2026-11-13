@@ -1,116 +1,122 @@
-<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1250" pageHeight="800" math="0" shadow="0">
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="900" math="0" shadow="0">
   <root>
     <mxCell id="0"/>
     <mxCell id="1" parent="0"/>
-    <mxCell id="lane1" value="Backend (source of truth) - backend/src/shared/worktree-trust/" style="swimlane;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="40" y="40" width="700" height="450" as="geometry"/>
+    <mxCell id="vsc" value="VS Code host / config&lt;br&gt;workspace.workspaceFolders, setting worktreeAutoTrust,&lt;br&gt;env MCP_WORKTREE_AUTOTRUST" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="940" y="20" width="300" height="60" as="geometry"/>
     </mxCell>
-    <mxCell id="walAllow" value="WorkspaceAllowlist&lt;br&gt;(existing, unchanged)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="lane1">
-      <mxGeometry x="20" y="50" width="180" height="50" as="geometry"/>
+    <mxCell id="lane" value="Extension only - extension/src/ (no backend surface)" style="swimlane;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="100" width="1200" height="600" as="geometry"/>
     </mxCell>
-    <mxCell id="resolver" value="MultiWorktreePathResolver&lt;br&gt;(modified: calls trust service)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane1">
-      <mxGeometry x="250" y="50" width="200" height="50" as="geometry"/>
+    <mxCell id="tool" value="backend-local-tools/registry.ts&lt;br&gt;embed_image, stream_write (existing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="20" y="50" width="220" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="cache" value="worktree-cache.ts&lt;br&gt;TTL 30s/5s, 256, signature" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane1">
-      <mxGeometry x="20" y="150" width="180" height="50" as="geometry"/>
+    <mxCell id="bdr" value="services/base-dir-resolution.ts&lt;br&gt;(modified) allowlist, UNC guard, trust" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="300" y="50" width="260" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="service" value="worktree-trust-service.ts&lt;br&gt;facade: switch, cache, log" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane1">
-      <mxGeometry x="250" y="150" width="200" height="50" as="geometry"/>
+    <mxCell id="alm" value="services/allowlist-mirror.ts&lt;br&gt;(modified) realpath roots, cached" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="620" y="50" width="240" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="config" value="worktree-config.ts&lt;br&gt;env switch, open folders" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane1">
-      <mxGeometry x="500" y="150" width="180" height="50" as="geometry"/>
+    <mxCell id="fsg" value="backend-local-tools/fs-guards.ts&lt;br&gt;(modified) guard before ensureDir,&lt;br&gt;fail-closed (SEC-WT-25)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="20" y="160" width="220" height="60" as="geometry"/>
     </mxCell>
-    <mxCell id="types" value="worktree-types.ts&lt;br&gt;zod schema, Verdict, Reason" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane1">
-      <mxGeometry x="20" y="250" width="180" height="50" as="geometry"/>
+    <mxCell id="ofl" value="services/worktree-open-folders.ts&lt;br&gt;createExtensionTrust, getDefaultTrust,&lt;br&gt;open folders per call" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="300" y="160" width="260" height="60" as="geometry"/>
     </mxCell>
-    <mxCell id="verifier" value="worktree-verifier.ts&lt;br&gt;verifyWorktree()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane1">
-      <mxGeometry x="250" y="250" width="200" height="50" as="geometry"/>
+    <mxCell id="svc" value="worktree-trust/trust-service.ts&lt;br&gt;switch, cache, verifier, log" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="620" y="160" width="240" height="60" as="geometry"/>
     </mxCell>
-    <mxCell id="messages" value="worktree-messages.ts&lt;br&gt;reason to client hint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane1">
-      <mxGeometry x="500" y="250" width="180" height="50" as="geometry"/>
+    <mxCell id="cch" value="worktree-trust/cache.ts&lt;br&gt;TTL, positive and negative buckets" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="920" y="160" width="260" height="60" as="geometry"/>
     </mxCell>
-    <mxCell id="gitfiles" value="worktree-git-files.ts&lt;br&gt;bounded read, parse" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane1">
-      <mxGeometry x="150" y="350" width="190" height="50" as="geometry"/>
+    <mxCell id="sym" value="worktree-trust/symlink-containment.ts&lt;br&gt;realResolve, symlinkEscapeCheck" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="20" y="270" width="220" height="60" as="geometry"/>
     </mxCell>
-    <mxCell id="pathfold" value="worktree-path-fold.ts&lt;br&gt;realpath, case-fold, layout" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane1">
-      <mxGeometry x="360" y="350" width="190" height="50" as="geometry"/>
+    <mxCell id="cfg" value="worktree-trust/config.ts&lt;br&gt;disable-wins flag, open folder filter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="300" y="270" width="260" height="60" as="geometry"/>
     </mxCell>
-    <mxCell id="e1" value="allowlist" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane1" source="walAllow" target="resolver">
+    <mxCell id="ver" value="worktree-trust/verifier.ts&lt;br&gt;verifyWorktree, step order" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="620" y="270" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="msg" value="worktree-trust/messages.ts&lt;br&gt;client hint, only base_dir shown" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="920" y="270" width="260" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="stp" value="trust-steps.ts, admin-steps.ts, bare-layout.ts&lt;br&gt;trusted-first, admin, back-link, placement" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="620" y="380" width="240" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="gfl" value="git-files.ts&lt;br&gt;lstat-first bounded read" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="470" y="500" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="pfd" value="path-fold.ts&lt;br&gt;realpath, case fold, 8.3, UNC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="740" y="500" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="tests" value="__tests__/worktree-trust/ (library tests)&lt;br&gt;worktree-missing-root.test.ts = SEC-WT-25:&lt;br&gt;root missing or realpath throws =&gt; fs_error, reject" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane">
+      <mxGeometry x="20" y="480" width="400" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="fs" value="Filesystem (fs sync, no git process): .git file, worktrees/NAME/gitdir, commondir, HEAD" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="740" width="1200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="resolveWithBaseDir" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane" source="tool" target="bdr">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e2" value="verify()" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane1" source="resolver" target="service">
+    <mxCell id="e2" value="isRootAllowlisted" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane" source="bdr" target="alm">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e3" value="get/put" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane1" source="service" target="cache">
+    <mxCell id="e3" value="containment guard" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane" source="tool" target="fsg">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e4" value="settings" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane1" source="service" target="config">
+    <mxCell id="e4" value="getDefaultTrust()" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane" source="bdr" target="ofl">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e5" value="cache miss" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane1" source="service" target="verifier">
+    <mxCell id="e5" value="new service" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane" source="ofl" target="svc">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e6" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;dashed=1;fontSize=9;" edge="1" parent="lane1" source="verifier" target="types">
+    <mxCell id="e6" value="get / put" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane" source="svc" target="cch">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e7" value="reason" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane1" source="verifier" target="messages">
+    <mxCell id="e7" value="allowlistRoots" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;dashed=1;fontSize=9;" edge="1" parent="lane" source="alm" target="svc">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="lane1" source="verifier" target="gitfiles">
+    <mxCell id="e8" value="loadTrustConfig" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane" source="ofl" target="cfg">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="lane1" source="verifier" target="pathfold">
+    <mxCell id="e9" value="cache miss: verify" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane" source="svc" target="ver">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="lane2" value="Extension (generated mirror) - extension/src/services/" style="swimlane;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="800" y="40" width="340" height="450" as="geometry"/>
-    </mxCell>
-    <mxCell id="adapter" value="worktree-open-folders.ts (hand-written)&lt;br&gt;vscode workspaceFolders, setting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane2">
-      <mxGeometry x="20" y="50" width="300" height="50" as="geometry"/>
-    </mxCell>
-    <mxCell id="baseres" value="base-dir-resolution.ts (modified)&lt;br&gt;resolveWithBaseDir calls trust&lt;br&gt;isRootAllowlisted gains realpath" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane2">
-      <mxGeometry x="20" y="150" width="300" height="60" as="geometry"/>
-    </mxCell>
-    <mxCell id="mirror" value="worktree-trust/*.ts (GENERATED mirror)&lt;br&gt;same files as backend, no hand edits" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="lane2">
-      <mxGeometry x="20" y="270" width="300" height="60" as="geometry"/>
-    </mxCell>
-    <mxCell id="e10" value="open folders" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane2" source="adapter" target="baseres">
+    <mxCell id="e10" value="reason text" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;dashed=1;fontSize=9;" edge="1" parent="lane" source="ver" target="msg">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e11" value="verify()" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane2" source="baseres" target="mirror">
+    <mxCell id="e11" value="steps" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane" source="ver" target="stp">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="fs" value="Filesystem (fs sync, no git process)&lt;br&gt;.git file, worktrees/NAME/gitdir, commondir, HEAD" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
-      <mxGeometry x="180" y="540" width="520" height="50" as="geometry"/>
-    </mxCell>
-    <mxCell id="e12" value="lstat, read" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=0.5;exitY=1;entryX=0.2;entryY=0;" edge="1" parent="1" source="gitfiles" target="fs">
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="lane" source="stp" target="gfl">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e13" value="realpath" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=0.5;exitY=1;entryX=0.6;entryY=0;" edge="1" parent="1" source="pathfold" target="fs">
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="lane" source="stp" target="pfd">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="script" value="scripts/sync-worktree-trust.mjs&lt;br&gt;generate mirror (.js specifiers to CJS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
-      <mxGeometry x="830" y="560" width="280" height="50" as="geometry"/>
-    </mxCell>
-    <mxCell id="tests" value="Parity tests: shared scenario matrix runs on&lt;br&gt;backend AND extension + sync drift guard&lt;br&gt;(extends TC-702)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
-      <mxGeometry x="830" y="670" width="280" height="70" as="geometry"/>
-    </mxCell>
-    <mxCell id="e14" value="generates" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="script" target="mirror">
+    <mxCell id="e14" value="symlinkEscapeCheck" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="lane" source="fsg" target="sym">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e15" value="source" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;dashed=1;fontSize=9;exitX=1;exitY=0.9;entryX=0;entryY=0.5;" edge="1" parent="1" source="lane1" target="script">
+    <mxCell id="e15" value="setting, env, folders" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=0.5;exitY=1;entryX=0.8;entryY=0;" edge="1" parent="1" source="vsc" target="lane">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e16" value="lstat, read" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=0.5;exitY=1;entryX=0.4;entryY=0;" edge="1" parent="1" source="gfl" target="fs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e17" value="realpath" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=0.5;exitY=1;entryX=0.6;entryY=0;" edge="1" parent="1" source="pfd" target="fs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e18" value="lstat, readlink, realpath(root)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="sym" target="fs">
       <mxGeometry relative="1" as="geometry">
         <Array as="points">
-          <mxPoint x="770" y="445"/>
-          <mxPoint x="770" y="585"/>
+          <mxPoint x="20" y="400"/>
+          <mxPoint x="20" y="765"/>
         </Array>
       </mxGeometry>
     </mxCell>
-    <mxCell id="e16" value="verify" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="tests" target="script">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="legend" value="Legend: green = new, blue = modified, gray = unchanged, purple = generated / tooling, yellow = external" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
-      <mxGeometry x="40" y="660" width="700" height="30" as="geometry"/>
+    <mxCell id="legend" value="Legend: green = new, blue = modified, gray = unchanged, light blue = VS Code host, yellow = external" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="810" width="900" height="30" as="geometry"/>
     </mxCell>
   </root>
 </mxGraphModel>
