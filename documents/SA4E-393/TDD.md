@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-393 |
 | Title | Integrate Impeccable design detection into SDLC Agents 4 Enterprise extension |
 | Author | SA Agent |
-| Version | 1.1 |
-| Date | 2026-11-12 |
+| Version | 1.6 |
+| Date | 2026-11-14 |
 | Status | Draft |
 | Related BRD | documents/SA4E-393/BRD.md |
 | Related FSD | documents/SA4E-393/FSD.md |
@@ -38,6 +38,7 @@
 | 1.3 | 2026-11-13 | SA Agent | Addendum 5 (batch 1/2, design only): auto-trust git worktree for `base_dir` — module design, decisions OI-WT1..6, pseudocode, security analysis, test plan + RTM. New diagrams `sequence-worktree-trust`, `component-worktree-trust`. Earlier sections unchanged. |
 | 1.4 | 2026-11-13 | SA Agent | Addendum 5 (batch 1/2, design only): resolution of SECURITY-REVIEW-addendum5 (APPROVED-WITH-CONDITIONS, 3 High). New section E11 (Gate A: C1 trusted-first + lstat-before-open, C2 UNC/device guard both surfaces with OI-WT8 in scope, C3 fail-closed `symlinkEscape`; Gate B: C4..C9; SEC-WT -> TDD mapping). E11 supersedes conflicting text in E2.5, E3, E4, E5, E8, E10. Sequence diagram `sequence-worktree-trust` redrawn (guard, trusted-first, identity, overlap); component diagram unchanged. |
 | 1.5 | 2026-11-13 | SA Agent | Addendum 5 (batch 1/2, design only): resolution of SECURITY-REVIEW-addendum5 section 7 (re-review round 2). E11.3 rewritten: component-wise realpath resolution (no `path.resolve` over link text), `realRoot` defined, scenarios `symlinkDotDotCollapse` / `symlinkDotDotInside` / `symlinkedAncestorViaAbsoluteLink` (SEC-WT-16/17, R2-2/R2-3). SUPERSEDED markers on stale E2.1/E2.5/E3/E4.2/E4.3/E5 text and a banner (R2-1). E11.4 8.3 rule anchored and scoped to the trust path only (SEC-WT-18, R2-4). E11.1/E11.4/E11.5: `O_NONBLOCK ?? 0`, either-side `0n` fallback + debug log, ancestor-of-home rejected (SEC-WT-19, R2-5). DEV file list corrected: extension equivalent is `extension/src/backend-local-tools/fs-guards.ts` (`checkSymlinkGuard`), not a `symlinkEscape`. Diagram `sequence-worktree-trust` fixed (step 2 scope, step 8 flags, step 16 TTL 10 s) and re-exported. |
+| 1.6 | 2026-11-14 | SA Agent | Addendum 5 (batch 2/2): new section "As-built (Dot 2b)" - actual file names, sync/drift guard, admit order, fs-guards, SEC-WT-20/21/22/24 and deviations (backlog SA4E-438). Minor bump; E2-E11 design text unchanged. No diagram changes. |
 
 ---
 
@@ -1817,3 +1818,84 @@ On every hit `TrustCache.get` also compares `realpath(baseDir)` with the stored 
 | WT-IT-34 | IT | win32: real `proj~2` directory accepted, alias spelling rejected; allowlisted 8.3 root unaffected | SEC-WT-18 |
 
 RTM additions: BR-WT3/NFR-WT5 (security) -> WT-UT-19..24, WT-IT-25, 28, 29, 30; BR-WT8 (containment) -> WT-IT-26, 27, WT-UT-22, 32, 33; NFR-WT5 (8.3 / path forms) -> WT-UT-24, WT-IT-34; FR-WT15 -> WT-UT-25, 26; BR-WT10 -> WT-UT-27, 28; NFR-WT3 / AC-WT13 -> WT-IT-19 (updated), WT-UT-30; FR-WT14 -> WT-UT-29. QA assigns final STC numbers; this TDD does not edit STC.md. The sequence diagram (A5-1) was redrawn to show the C2 guard, the C1 trusted-first step, the C4 identity check, the C5 placement guard and the C6 re-bind. The component diagram (A5-2) is unchanged: no new component or dependency was added (`workspace-allowlist.ts` and the `symlinkEscape` helpers are existing boxes whose behavior changed).
+
+### As-built (Đợt 2b) — Addendum 5, TDD v1.6
+
+**Phạm vi:** ghi nhận thực tế triển khai (git log `ff753553..HEAD`, `SECURITY-ASSESSMENT-addendum5.md`, code). Khi lệch với E2-E11, **mục này là chuẩn as-built**; không đổi thiết kế E2-E11, không đổi diagram (A5-1, A5-2). Phiên bản tài liệu 1.5 → 1.6 (minor).
+
+#### AB1. Tên file thực tế (bỏ tiền tố `worktree-`)
+
+Thư viện nằm ở `backend/src/shared/worktree-trust/` (nguồn chuẩn). Extension nhận bản **sinh tự động** tại `extension/src/services/worktree-trust/` (header `GENERATED ... DO NOT EDIT`).
+
+| File (cả 2 thư mục) | Vai trò as-built | Tên thiết kế cũ (E2) |
+|---------------------|------------------|----------------------|
+| `index.ts` | Public barrel | — |
+| `types.ts` | Kiểu dùng chung (kết quả verify, `trustSource`, reason) | `worktree-types.ts` |
+| `config.ts` | Parse cờ `MCP_WORKTREE_AUTOTRUST` (disable-wins), hằng số TTL/size | `worktree-config.ts` |
+| `messages.ts` | Thông điệp client (chỉ `<b>`, không lộ reason token) | `worktree-messages.ts` |
+| `verifier.ts` | `verifyWorktree` — điều phối các bước | `worktree-verifier.ts` |
+| `trust-steps.ts` | Bước trusted-first: đọc `.git` pointer, back-link, placement (SEC-WT-5/20) | một phần `verifier` |
+| `admin-steps.ts` | Bước admin dir: `gitdir`/`commondir`, identity `dev`/`ino` (SEC-WT-4, 23) | một phần `verifier` |
+| `bare-layout.ts` | Nhận diện layout bare repo hợp lệ (SEC-WT-20) | mới |
+| `git-files.ts` | `readSmall` lstat-first, bounded read, không mở FIFO/device/symlink (SEC-WT-1) | `worktree-git-files.ts` |
+| `path-fold.ts` | Fold đường dẫn (win32 case/Kelvin, dot/space, 8.3 precheck) (SEC-WT-4, 18) | mới |
+| `symlink-containment.ts` | `realResolve` component-wise, `symlinkEscape` fail-closed (SEC-WT-16/25) | `worktree-symlink-containment.ts` |
+| `cache.ts` | Cache kết quả theo bucket (positive/negative), TTL, rate-limit warn (SEC-WT-9) | `worktree-cache.ts` |
+| `trust-service.ts` | Facade: `ctxSig`, cache + verify (SEC-WT-24) | `worktree-trust-service.ts` |
+| `__tests__/` (backend) | Test thư viện; bản sao sinh ra ở `extension/src/__tests__/worktree-trust/` | — |
+
+File chỉ có ở extension (không sinh): `extension/src/services/allowlist-mirror.ts` — `getExtensionWorkspaceRoots`, `getExtensionAllowlistRoots`, `isRootAllowlisted` (mirror allowlist dạng realpath, cache theo entry; SEC-WT-8, 12). Glue tích hợp: `extension/src/services/PathResolver.ts` (235 dòng, xem AB7), `extension/src/backend-local-tools/fs-guards.ts`, `extension/src/mcp-config-builder.ts`.
+
+#### AB2. Sync script và drift guard
+
+- `scripts/sync-worktree-trust.mjs` copy `backend/src/shared/worktree-trust` → `extension/src/services/worktree-trust` và `__tests__` → `extension/src/__tests__/worktree-trust`, thêm header `GENERATED from <src> by <script> - DO NOT EDIT`.
+- npm scripts (root `package.json`): `sync:worktree-trust` (ghi file), `check:worktree-trust` (`--check`, drift guard: lệch nội dung, thiếu file, hoặc file sinh cũ không còn ở backend đều là drift → exit ≠ 0).
+- Drift guard chuẩn hóa CRLF/LF để checkout `autocrlf` không báo lệch giả (commit `e3e9aff9`).
+- Quy tắc: chỉ sửa ở `backend/src/shared/worktree-trust`, rồi chạy `sync:worktree-trust`; CI chạy `check:worktree-trust`.
+
+#### AB3. Thứ tự admit giữa hai bề mặt
+
+| Bề mặt | Thứ tự |
+|--------|--------|
+| Backend (`multi-worktree-path-resolver.ts`) | UNC/device guard → allowlist → worktree trust |
+| Extension (`PathResolver.ts`) | allowlist → UNC/device guard → worktree trust |
+
+Hai thứ tự **tương đương về an toàn**: UNC/device guard luôn chạy trước mọi `realpath`/fs call lên đường dẫn người dùng cấp, và chỉ allowlist literal khớp chuỗi (kể cả UNC được liệt kê tường minh, WT-UT-21) mới được nhận mà không qua verify; nhánh worktree trust luôn nằm sau cả hai. Khác biệt chỉ nằm ở việc extension kiểm allowlist (so sánh chuỗi/realpath-mirror, không fs call lên `base_dir`) trước UNC. Test parity: WT-UT-21, WT-UT-29.
+
+#### AB4. fs-guards (extension)
+
+`extension/src/backend-local-tools/fs-guards.ts`:
+- `checkFullPathEscape` — dùng `realResolve` component-wise (không `path.resolve`/`normalize` trên text của link); đóng SEC-WT-16 (`..` sau symlink, final-component là link). Thông điệp hiện có không đổi (WT-UT-33).
+- `checkSymlinkGuardBeforeEnsureDir` — chạy guard **trước** `ensureDir` trong `stream_write`, `embed_image` và output proxy; đóng SEC-WT-22 (thư mục bị tạo ngoài root qua link do repo tác giả).
+
+#### AB5. Bảo mật bổ sung (SEC-WT-20..29)
+
+| ID | As-built |
+|----|----------|
+| SEC-WT-20 | `bare-layout.ts`: chỉ chấp nhận layout bare khi repo là bare thật; `<repo>/worktrees/<n>/` trong repo thường **không** được coi là bare registration (commit `050cd40b`). |
+| SEC-WT-21 | Setting `sdlcAgents.workspace.worktreeAutoTrust` (`boolean`, `scope: machine`, default `true`) được `mcp-config-builder.ts` đẩy xuống env `MCP_WORKTREE_AUTOTRUST=0` khi tắt. `MCP_WORKTREE_AUTOTRUST=0` luôn thắng (disable-wins). **Hiệu lực sau reload window / restart MCP server** (SEC-WT-28), không live-reload. |
+| SEC-WT-22 | Xem AB4. |
+| SEC-WT-24 | `ctxSig` của trust-service gồm **hash allowlist**; đổi allowlist làm vô hiệu cache cũ (commit `7532ec8b`). Cửa sổ check-then-use còn lại là rủi ro dư đã chấp nhận (tái-bind SEC-WT-6 trong TTL). |
+| SEC-WT-25 | Test hồi quy legacy gate khi root không realpath được: fail-closed (commit `83960f98`). |
+| SEC-WT-29 | Guard-before-ensureDir chỉ áp cho root kiểu `workspace`; xem AB7. |
+
+`MCP_OPEN_WORKSPACE_FOLDERS`: `mcp-config-builder.ts` ghi danh sách folder đang mở trong window vào env khi ghi MCP config, để multi-root xác định "repo cha đang mở" (single-root không cần cấu hình). Có hiệu lực ở lần ghi MCP config kế tiếp.
+
+#### AB6. Cấu hình as-built
+
+| Khóa | Nơi | Giá trị |
+|------|-----|---------|
+| `sdlcAgents.workspace.worktreeAutoTrust` | `extension/package.json` | boolean, machine, default `true` |
+| `MCP_WORKTREE_AUTOTRUST` | env backend | `0` = tắt (thắng setting) |
+| `MCP_OPEN_WORKSPACE_FOLDERS` | env backend, do `mcp-config-builder.ts` ghi | danh sách folder mở |
+
+#### AB7. Deviations và backlog (SA4E-438)
+
+| # | Deviation | Tác động / xử lý |
+|---|-----------|------------------|
+| 1 | `extension/src/services/PathResolver.ts` dài **235 dòng** (> 200, code-standards) | Backlog SA4E-438: tách (vd. phần admit worktree/allowlist ra module riêng). Chưa vi phạm chức năng. |
+| 2 | **WT-IT-34** (win32 junction / 8.3 `proj~2`) chưa chạy trên Windows CI | Chỉ có UT (WT-UT-24); backlog SA4E-438: bật job Windows CI. SEC-WT-18/26 vẫn dựa trên precheck + fail-closed. |
+| 3 | Kill-switch **không live-reload** (SEC-WT-28) | Cần reload window / restart MCP sau khi đổi setting. Ghi trong UG/Release Notes. |
+| 4 | Guard-before-ensureDir chỉ cho root kiểu `workspace` (SEC-WT-29) | Root kiểu khác (vd. allowlist-only) vẫn theo luồng cũ; backlog SA4E-438 mở rộng. |
+
+Các mục trên là nợ có chủ đích, được ghi nhận minh bạch; không che giấu trong báo cáo gate. Nguồn bằng chứng: `SECURITY-ASSESSMENT-addendum5.md` (PASS-WITH-CONDITIONS; SEC-WT-20/21 đã sửa trước release, SEC-WT-22/24/25 đã đóng bằng các commit nêu trên).

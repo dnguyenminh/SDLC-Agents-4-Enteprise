@@ -82,3 +82,14 @@
 | 82 | 2026-11-13 | security-agent | Re-review vòng 2 | Re-review: SEC-WT-1/2 đóng; phát hiện mới SEC-WT-16 (High, symlinkEscape gộp '..' sai), SEC-WT-17/18 Medium, SEC-WT-19 Low | ⚠️ còn 1 High | - | - |
 | 83 | 2026-11-13 | sa-agent | TDD fix vòng 2 | TDD v1.5: erratum E11.3 realResolve từng component, SUPERSEDED markers, regex 8.3 siết, ino=0 fallback, sửa danh sách file (fs-guards.ts checkSymlinkGuard) | ✅ commit 0cb59de0 | - | - |
 | 84 | 2026-11-13 | SM | verify/status | Hết 2 vòng sửa theo yêu cầu. Chưa có vòng security re-review thứ 3 xác nhận SEC-WT-16 đã đóng (SA tự xác nhận); để Phase 5.7 kiểm lại. STATUS.json: scopeExtension.addendum5 design done / implementation not_started. Không push | ⚠️ | - | - |
+| 85 | 2026-11-13 | SM | user decision A5 | User (PO) đã DUYỆT: auto-trust mặc định bật, 4KB/250ms/TTL 10s+5s/bucket 128+64, và chấp nhận deviation D-WT1..4 (thay BA) | ✅ | - | - |
+| 86 | 2026-11-13 | dev-agent | Addendum 5 đợt 2a backend | Test-first (đỏ: Cannot find module → xanh: src/shared 168 pass/2 skip). Tạo backend/src/shared/worktree-trust/*, path-containment.ts, worktree-trust-factory.ts; sửa resolver, types, workspace-allowlist. tsc 0, eslint 0 lỗi, full suite 9 fail có sẵn (3 file không liên quan) | ✅ commits 1ac80e4b, 760316a5 | - | - |
+| 87 | 2026-11-13 | SM | verify/status | Cập nhật STATUS.json addendum5: backend done / extension not_started. Chưa push. mcp-config-builder (extension) chuyển sang đợt 2b | ✅ | - | - |
+| 88 | 2026-11-13 | dev-agent | Addendum 5 đợt 2b extension | Test-first: sync script + drift guard, base-dir-resolution/PathResolver/fs-guards (SEC-WT-16 đỏ→xanh)/mcp-config-builder/setting. Extension vitest 3514 pass/0 skip, tsc 0, eslint 0 lỗi | ✅ b0c8d9ad..46a001c0 | - | - |
+| 89 | 2026-11-13 | ta-agent | Review conformance backend+extension | Verdict APPROVED (D1 PathResolver 235 dòng; D2 ensureDir-before-guard; D3/D4 doc) | ✅ | - | - |
+| 90 | 2026-11-13 | security-agent | Security Code Review addendum5 vòng 1 | SEC-WT-16 closed; 3 Medium (20 bare forged PoC, 21 kill switch, 22 ensureDir) | ⚠ | - | - |
+| 91 | 2026-11-13 | dev-agent | Fix SEC-WT-20/21/22/24/25 | Test-first đỏ→xanh; extension 3519 pass/0 skip | ✅ 050cd40b,9ccbb5ec,826a5a19,7532ec8b,83960f98 | - | - |
+| 92 | 2026-11-13 | security-agent | Re-review vòng 2 | PASS; PoC SEC-WT-20 trusted:false; mới SEC-WT-28 Low, 29 Info | ✅ | - | - |
+| 93 | 2026-11-13 | qa-agent | Full suites + mutation | Ext 3519/0 skip; backend 9 fail trùng baseline ff753553; M1 3 đỏ, M2 16 đỏ, M3 4 đỏ, đã hoàn tác | ✅ | - | - |
+| 94 | 2026-11-13 | sa-agent | TDD as-built | TDD v1.6 AB1-AB7 | ✅ | - | - |
+| 95 | 2026-11-13 | SM | verify/package | esbuild-production lại (bundle cũ thiếu code mới) rồi vsce package -> dist-sa4e-393-worktree.vsix 9.28MB, không cài. STATUS addendum5 implementation done / e2e pending. Không push | ✅ | - | - |
