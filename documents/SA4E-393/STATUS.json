@@ -182,7 +182,7 @@
     "mcpWrapper9183": "up (stream_write_file, embed_image, jira tools via execute_dynamic_tool)",
     "jiraAccess": "OK - jira_get_issue working via execute_dynamic_tool (discovered after restart)"
   },
-  "lastUpdated": "2026-11-13T15:45:45.6828191+07:00",
+  "lastUpdated": "2026-11-13T16:22:19.9475934+07:00",
   "scopeExtension": {
     "requestedAt": "2026-11-12",
     "requestedBy": "user (product owner)",
@@ -367,5 +367,31 @@
     "fix": "workspaceRoot required, no cwd/env fallback",
     "taReview": "approved",
     "vsix": "dist-sa4e-393-nocwd-fix.vsix"
+  },
+  "release": {
+    "version": "1.55.19",
+    "bumpedAt": "2026-11-13T16:22:19.8490296+07:00",
+    "versionSources": [
+      "package.json",
+      "backend/package.json",
+      "extension/package.json",
+      "package-lock.json",
+      "backend/package-lock.json",
+      "README.md (install cmd + changelog)",
+      "backend/README.md badge",
+      "extension/README.md badge",
+      "extension/CHANGELOG.md",
+      "extension/resources/.sdlc-checksums.json (gen-checksums)"
+    ],
+    "vsix": "sdlc-agents-4-enterprise-1.55.19.vsix (not committed)",
+    "tag": "not created (tag on master at merge, Phase 7)",
+    "pushed": "pending"
+  },
+  "backendBaselineFix": {
+    "failingBefore": 9,
+    "failingAfter": 0,
+    "zod": "node_modules had zod 3.25.76 (stale install vs lockfile 4.6.6) -> npm ci; fixed 6 tests (zod-version-guard 4, ToolValidator 1, EntraConfig T-10)",
+    "entra": "regression df1a4f12: authority/issuer/jwksUri z.string().url().default('') -> restored httpsUrl.optional(); fixed EntraConfig T-02/T-05/T-09 (https-only check had been bypassed)",
+    "results": "backend 3676 pass/19 skip/0 fail; extension 3566 pass/2 skip/0 fail; tsc clean both"
   }
 }
