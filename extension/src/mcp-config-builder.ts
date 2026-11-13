@@ -20,10 +20,22 @@ export function resolveConfig(variant: McpVariant, root: string): Record<string,
   if (variant.config.cwd) {
     config.cwd = variant.config.cwd.replace("${mcpServersDir}", serversDir).replace("${workspaceFolder}", root);
   }
-  config.env = { CODE_INTEL_WORKSPACE: root, CODE_INTEL_VIEWER_PORT: "3200", FORCE_RESTART: "15" };
+  config.env = {
+    CODE_INTEL_WORKSPACE: root, CODE_INTEL_VIEWER_PORT: "3200", FORCE_RESTART: "15", ...openFoldersEnv(),
+  };
   return config;
 }
 
+/**
+ * SA4E-393 A5: ALL folders open in this instance for the backend's worktree auto-trust
+ * (multi-root: the backend only learns folder[0] via CODE_INTEL_WORKSPACE). Server-side
+ * launcher config, never request input. Entries containing the list delimiter are skipped.
+ */
+function openFoldersEnv(): Record<string, string> {
+  const folders = vscode.workspace.workspaceFolders ?? [];
+  const paths = folders.map((f) => f.uri.fsPath).filter((p) => p !== "" && !p.includes(path.delimiter));
+  return paths.length > 0 ? { MCP_OPEN_WORKSPACE_FOLDERS: paths.join(path.delimiter) } : {};
+}
 export function writeDefaultOrchestrationConfig(root: string): void {
   const orchPath = path.join(root, ".code-intel", "orchestration.json");
   if (fs.existsSync(orchPath)) { return; }

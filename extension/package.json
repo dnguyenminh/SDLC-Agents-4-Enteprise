@@ -345,6 +345,12 @@
           "default": [],
           "description": "SA4E-394 allowlist mirror: workspace roots permitted as per-call base_dir for file_path tools. MUST mirror the backend MCP_WORKSPACE_ROOTS (backend remains source of truth). Falls back to the MCP_WORKSPACE_ROOTS env var when empty."
         },
+        "sdlcAgents.workspace.worktreeAutoTrust": {
+          "type": "boolean",
+          "default": true,
+          "scope": "machine",
+          "description": "SA4E-393: automatically accept a verified git worktree (its .git pointer, back-link and parent repository all check out) as a per-call base_dir when its parent repository is allowlisted or open in this window. Disable to require every base_dir to be listed in workspaceRoots / MCP_WORKSPACE_ROOTS. The env var MCP_WORKTREE_AUTOTRUST=0 also disables it."
+        },
         "sdlcAgents.llm.profiles": {
           "type": "array",
           "default": [],
