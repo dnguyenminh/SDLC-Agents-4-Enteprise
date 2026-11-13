@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/types.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — worktree-trust shared types (TDD E2.2 / E11).
  * The library imports only `fs` and `path`; collaborators arrive through these

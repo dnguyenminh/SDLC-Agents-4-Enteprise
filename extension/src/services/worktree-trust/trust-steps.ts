@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/trust-steps.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — verifier steps that decide WHO trusts the repository:
  * trusted-first lexical gate (E11.1), parent trust (BR-WT4/12) and placement (E11.5).

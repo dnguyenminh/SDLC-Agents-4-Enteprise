@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/symlink-containment.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — fail-closed symlink containment (SEC-WT-3 / 16 / 17, TDD E11.3).
  *

@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/__tests__/worktree-fixture.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — real-git fixture helper (TDD E8). Production code never
  * spawns git; tests do, so verdicts are checked against genuine `git worktree add`

@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/cache.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — verdict cache (TDD E4.4 as amended by E11.6/E11.8).
  * Positive TTL 10 s / negative 5 s; separate FIFO buckets 128 / 64 so a flood of

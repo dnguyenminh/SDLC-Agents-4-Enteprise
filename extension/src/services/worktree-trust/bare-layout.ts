@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/bare-layout.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /** SA4E-393 Addendum 5 (SEC-WT-20) — recognises a genuine bare repository root. */
 import { flavour } from './path-fold';
 import type { TrustDeps } from './types';

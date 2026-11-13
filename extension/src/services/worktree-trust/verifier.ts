@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/verifier.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — `verifyWorktree`: decides from DISK EVIDENCE ONLY whether
  * `base_dir` is a genuine linked worktree of a trusted repository (TDD E4/E11).

@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/path-fold.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — pure path helpers: case folding, UNC/device detection,
  * win32 component rules, containment. No fs access except {@link realpathOrNull}

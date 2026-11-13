@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/messages.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — single source of client-visible rejection text (TDD E6).
  * The detail echoes ONLY the sanitized base_dir the caller sent: never the admin

@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/git-files.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — reading git evidence files safely (TDD E11.1).
  * `readSmall` is lstat-first: FIFOs, devices, directories and symlinks are never
@@ -11,7 +10,6 @@ import { isUncOrDevice } from './path-fold';
 import { MAX_POINTER_CHARS, type FsLike, type PointerResult, type ReadResult, type StatLike } from './types';
 
 const GITDIR_LINE = /^gitdir: ([^\r\n]+)\r?\n?$/;
-// eslint-disable-next-line no-control-regex -- intentional: reject every control character
 const CONTROL = /[\u0000-\u001f\u007f]/;
 
 /** Typed lstat-first bounded read; never throws. */

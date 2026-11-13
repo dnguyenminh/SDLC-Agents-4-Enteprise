@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/trust-service.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — `WorktreeTrustService`: switch → cache → verifier → log (TDD E4.4).
  * Implements TrustPort. Logging: one `warn` per real verification, rate-limited to one

@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/config.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — trust configuration (TDD E3 OI-WT1/3, E11.7, E11.8).
  * Pure over an injected env. Switch semantics: effective = env AND setting;

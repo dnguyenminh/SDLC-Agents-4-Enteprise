@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/admin-steps.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /**
  * SA4E-393 Addendum 5 — verifier steps that read the admin directory inside the
  * (already prefix-checked) trusted repository: admin, commondir, back-link (TDD E4.2/E11.4).

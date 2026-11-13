@@ -1,4 +1,3 @@
-/* GENERATED from backend/src/shared/worktree-trust/index.ts by scripts/sync-worktree-trust.mjs - DO NOT EDIT */
 /** SA4E-393 Addendum 5 — public surface of the worktree-trust library. */
 export { verifyWorktree } from './verifier';
 export { WorktreeTrustService, type TrustServiceOptions } from './trust-service';
