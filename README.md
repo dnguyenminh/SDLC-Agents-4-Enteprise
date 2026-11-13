@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.21.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.20.vsix
 ```
 
 ### 3. Use
@@ -94,10 +94,6 @@ MIT
 - 📦 **VSIX**: 1.55.20 build via `publish.yml`; regenerate 23 diagram via fixed `drawio_auto_layout` tool.
 - 🔖 **Version sync** — root/`backend`/`extension` → `1.55.20`
 
-### v1.55.21 (2026-11-13)
-
-**SA4E-406 / SA4E-335 — CI Trivy gate red → green: soupsieve hardening + version sync**
-
 - 🛡 **Trivy SEC-04 gate fix** — soupsieve 2.10 (CVE-2026-126190, HIGH) was present in BOTH MCP venvs of the production image
   (/opt/markitdown-venv and /opt/markdown-exporter-venv), failing the CI Trivy gate on run 43436002707.
 - 🐳 **Dockerfile mcp-python stage**:
@@ -114,7 +110,7 @@ MIT
   it from the image.
 - 📄 **.trivyignore** — header updated: soupsieve CVE-2026-126190 is fixed by upgrade, not exemption; existing SA4E-385
   accepted-risk entries (body-parser, undici, zod, GHSA aliases) retained. No `backend/.trivyignore` (single source of truth).
-- 🔖 **Version sync** — root/`backend`/`extension` package.json + package-lock.json → `1.55.21`.
+- 🔖 **Version sync** — root/`backend`/`extension` package.json + package-lock.json → `1.55.20`.
 
 ### v1.55.16 (2026-11-04)
 

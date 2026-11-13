@@ -9,7 +9,7 @@
 | Jira Ticket | SA4E-406 |
 | Title | drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration |
 | Author | DevOps Agent |
-| Version | 1.55.21 |
+| Version | 1.55.20 |
 | Date | 2026-11-12 |
 | Status | Draft |
 | Related TDD | documents/SA4E-406/TDD.md (if exists) |
@@ -22,7 +22,7 @@
 |---------|------|--------|---------|
 | 1.0 | 2026-11-08 | DevOps Agent | Initiate document — based on merge commit 3061986b |
 | 1.1 | 2026-11-12 | DevOps Agent | Re-pointed stale backend test-fixture references to surviving diagram corpus (deployment.drawio, sequence-verify-loop.drawio) |
-| 1.55.21 | 2026-11-13 | DevOps Agent | SA4E-335/SA4E-406: CI Trivy gate red → green — soupsieve 2.10 → 4.0.1 in both MCP venvs (CVE-2026-126190 fixed by upgrade, not exemption); restored `trivyignores: .trivyignore` wiring; MARKITDOWN_MCP_VERSION back to 0.0.1a8; version sync → 1.55.21 |
+| 1.55.20 | 2026-11-13 | DevOps Agent | SA4E-335/SA4E-406: CI Trivy gate red → green — soupsieve 2.10 → 4.0.1 in both MCP venvs (CVE-2026-126190 fixed by upgrade, not exemption); restored `trivyignores: .trivyignore` wiring; MARKITDOWN_MCP_VERSION back to 0.0.1a8; version sync → 1.55.20 |
 
 ---
 

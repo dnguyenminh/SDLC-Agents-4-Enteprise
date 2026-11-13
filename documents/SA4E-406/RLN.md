@@ -6,7 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| Version | v1.55.21 |
+| Version | v1.55.20 |
 | Release Date | 2026-11-13 |
 | Jira Ticket | SA4E-406 |
 | Author | DevOps Agent |
@@ -16,7 +16,7 @@
 
 ## Header
 
-### v1.55.21 — 2026-11-13
+### v1.55.20 — 2026-11-13
 
 **Release Notes for:** SDLC Agents 4 Enterprise — Backend MCP Server  
 **Ticket:** SA4E-406 — drawio_auto_layout: Detector Precision + Verify Loop + ELK Compound + Extension Migration
