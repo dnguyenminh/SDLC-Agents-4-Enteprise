@@ -74,3 +74,11 @@
 | 74 | 2026-11-13 | ta-agent | review | APPROVED. Ghi chú không chặn: enum EnvConfig.WORKSPACE_ROOT dead; ListOptions.workspaceRoot còn optional + comment cũ file-lister.ts:27; test mới dùng {} không type-check (tsconfig exclude __tests__); TA chỉ chạy subset design-gate (85 test), full suite do dev-agent chạy | ✅ | - | - |
 | 75 | 2026-11-13 | sa-agent | tdd update | TDD Open Issues A9 (root cause fallback cwd) + sửa as-built note D1/D6/A5 | ✅ | - | - |
 | 76 | 2026-11-13 | SM | verify/commit | Verified git status; commit chỉ source/test/.gitignore/TDD/STATUS/RUN-LOG (loại .kiro/*, .sdlc-checksums.json, .vsix). Chưa push | ✅ | - | - |
+| 77 | 2026-11-13 | ba-agent | Addendum 5 FSD | Authored FSD Addendum 5 (auto-trust git worktree): FR-WT1..15, BR-WT1..13, UC-WT1..7, NFR-WT, AC-WT, OI-WT1..6. Số liệu 4KB/250ms/TTL tự đề xuất | ✅ commit f334ab36 | - | - |
+| 78 | 2026-11-13 | SM | verify/commit | Verified FSD A5 có đủ FR/BR/UC/error handling; commit f334ab36 | ✅ | - | - |
+| 79 | 2026-11-13 | sa-agent | Addendum 5 TDD | Authored TDD Addendum 5 (E1-E10): worktree-trust library, generated extension mirror, pseudocode, test plan WT-*, RTM, 2 diagrams draw.io + PNG | ✅ commit 5ed6befa | - | - |
+| 80 | 2026-11-13 | security-agent | Security design review A5 | SECURITY-REVIEW-addendum5.md: APPROVED-WITH-CONDITIONS, 0 Critical, 3 High (SEC-WT-1/2/3), 4 Medium, 5 Low, 3 Info | ✅ commit 76fc3a1f | - | - |
+| 81 | 2026-11-13 | sa-agent | TDD fix vòng 1 | TDD v1.4: E11 xử lý Gate A (C1-C3) + Gate B (C4-C9); sequence diagram vẽ lại | ✅ commit 2c71ebba | - | - |
+| 82 | 2026-11-13 | security-agent | Re-review vòng 2 | Re-review: SEC-WT-1/2 đóng; phát hiện mới SEC-WT-16 (High, symlinkEscape gộp '..' sai), SEC-WT-17/18 Medium, SEC-WT-19 Low | ⚠️ còn 1 High | - | - |
+| 83 | 2026-11-13 | sa-agent | TDD fix vòng 2 | TDD v1.5: erratum E11.3 realResolve từng component, SUPERSEDED markers, regex 8.3 siết, ino=0 fallback, sửa danh sách file (fs-guards.ts checkSymlinkGuard) | ✅ commit 0cb59de0 | - | - |
+| 84 | 2026-11-13 | SM | verify/status | Hết 2 vòng sửa theo yêu cầu. Chưa có vòng security re-review thứ 3 xác nhận SEC-WT-16 đã đóng (SA tự xác nhận); để Phase 5.7 kiểm lại. STATUS.json: scopeExtension.addendum5 design done / implementation not_started. Không push | ⚠️ | - | - |
