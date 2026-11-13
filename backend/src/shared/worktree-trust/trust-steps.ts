@@ -3,6 +3,7 @@
  * trusted-first lexical gate (E11.1), parent trust (BR-WT4/12) and placement (E11.5).
  */
 import { fail, pass } from './admin-steps.js';
+import { isBareRepoRoot } from './bare-layout.js';
 import { flavour, foldKey, hasBadWinComponent, isInsideFolded, isUncOrDevice, isUnderGitModules, lexKey, realpathOrNull, samePath } from './path-fold.js';
 import type { StepResult, TrustDeps, VerifyState } from './types.js';
 
@@ -13,14 +14,16 @@ function realList(d: TrustDeps, roots: readonly string[]): string[] {
 }
 
 /** `<S>/.git/worktrees` and `<S>/worktrees` for both spellings of every trusted root. */
-function parentSet(d: TrustDeps, roots: readonly string[], reals: readonly string[]): Set<string> {
+function parentSet(d: TrustDeps, roots: readonly string[], reals: readonly string[]): { ok: Set<string>; notBare: Set<string> } {
   const P = flavour(d.platform);
-  const out = new Set<string>();
+  const ok = new Set<string>();
+  const notBare = new Set<string>();
   for (const s of [...roots.map((r) => P.resolve(r)), ...reals]) {
-    out.add(lexKey(P.join(s, '.git', 'worktrees'), d.platform));
-    out.add(lexKey(P.join(s, 'worktrees'), d.platform)); // bare layout; stepParent/stepPlacement still decide on realpaths
+    ok.add(lexKey(P.join(s, '.git', 'worktrees'), d.platform));
+    // SEC-WT-20: `<S>/worktrees` is a registration folder only when S is a genuine bare repo.
+    (isBareRepoRoot(d, s) ? ok : notBare).add(lexKey(P.join(s, 'worktrees'), d.platform));
   }
-  return out;
+  return { ok, notBare };
 }
 
 /**
@@ -37,7 +40,9 @@ export function stepTrustedPrefix(s: VerifyState): StepResult {
   const allowReal = realList(d, allow);
   const openReal = realList(d, open);
   const parents = parentSet(d, [...allow, ...open], [...allowReal, ...openReal]);
-  if (parents.has(lexKey(P.dirname(lex), d.platform))) return pass({ admin0: lex, allowReal, openReal, parents });
+  const key = lexKey(P.dirname(lex), d.platform);
+  if (parents.ok.has(key)) return pass({ admin0: lex, allowReal, openReal, parents: parents.ok });
+  if (parents.notBare.has(key)) return fail('submodule_or_unknown_layout');
   return fail(isUnderGitModules(lex) ? 'submodule_or_unknown_layout' : 'parent_not_trusted');
 }
 

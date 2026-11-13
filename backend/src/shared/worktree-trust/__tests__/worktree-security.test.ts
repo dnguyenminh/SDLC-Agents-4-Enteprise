@@ -136,6 +136,31 @@ describe('WorktreeTrustService', () => {
   });
 });
 
+describe('SEC-WT-20 bare layout', () => {
+  it('forgedBareInOrdinaryRepo: S/worktrees/x inside an allowlisted ordinary repo is not a registration', () => {
+    const tmp = makeTmp();
+    const S = path.join(tmp, 'S'); const B = path.join(tmp, 'B');
+    fs.mkdirSync(path.join(S, '.git'), { recursive: true });
+    fs.writeFileSync(path.join(S, 'HEAD'), 'ref: refs/heads/main\n');
+    fs.mkdirSync(path.join(S, 'worktrees', 'x'), { recursive: true });
+    fs.writeFileSync(path.join(S, 'worktrees', 'x', 'gitdir'), `${path.join(B, '.git')}\n`);
+    fs.mkdirSync(B);
+    fs.writeFileSync(path.join(B, '.git'), `gitdir: ${path.join(S, 'worktrees', 'x')}\n`);
+    const v = verifyWorktree(fs.realpathSync(B), realDeps({ allowlist: [S] }));
+    expect(v).toEqual({ trusted: false, reason: 'submodule_or_unknown_layout' });
+  });
+  it('forged bare without objects/refs (no .git) is rejected even when allowlisted', () => {
+    const tmp = makeTmp();
+    const S = path.join(tmp, 'S'); const B = path.join(tmp, 'B');
+    fs.mkdirSync(path.join(S, 'worktrees', 'x'), { recursive: true });
+    fs.writeFileSync(path.join(S, 'HEAD'), 'ref: refs/heads/main\n');
+    fs.writeFileSync(path.join(S, 'worktrees', 'x', 'gitdir'), `${path.join(B, '.git')}\n`);
+    fs.mkdirSync(B);
+    fs.writeFileSync(path.join(B, '.git'), `gitdir: ${path.join(S, 'worktrees', 'x')}\n`);
+    expect(verifyWorktree(fs.realpathSync(B), realDeps({ allowlist: [S] }))).toMatchObject({ trusted: false });
+  });
+});
+
 describe('PBT', () => {
   it('WT-PBT-01 arbitrary .git content is never trusted and never throws', () => {
     const tmp = makeTmp(); const repo = makeRepo(tmp, 'repo');

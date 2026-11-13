@@ -3,6 +3,7 @@
  * SA4E-393 Addendum 5 — verifier steps that read the admin directory inside the
  * (already prefix-checked) trusted repository: admin, commondir, back-link (TDD E4.2/E11.4).
  */
+import { isBareRepoRoot } from './bare-layout';
 import { parseBacklink, statSig } from './git-files';
 import { flavour, foldKey, isUnderGitModules, realpathOrNull, samePath } from './path-fold';
 import type { ReadResult, StepResult, VerifyState, WorktreeReason } from './types';
@@ -38,6 +39,7 @@ export function stepCommon(s: VerifyState): StepResult {
   if (!samePath(common, s.common0!, platform)) return fail('commondir_mismatch');
   if (isUnderGitModules(common) || !isHeadFile(s, P.join(common, 'HEAD'))) return fail('submodule_or_unknown_layout');
   const main = foldKey(P.basename(common), platform) === '.git';
+  if (!main && !isBareRepoRoot(s.d, common)) return fail('submodule_or_unknown_layout'); // SEC-WT-20
   return pass({ common, kind: main ? 'main' : 'bare', trustRoot: main ? P.dirname(common) : common });
 }
 
