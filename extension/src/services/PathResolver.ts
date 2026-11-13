@@ -10,6 +10,7 @@ import {
   pickBaseDir,
   resolveWithBaseDir,
 } from "./base-dir-resolution";
+import type { TrustPort } from "./worktree-trust/types";
 
 // ── Types (TDD §3.2) ────────────────────────────────────────────────────
 
@@ -36,6 +37,8 @@ export interface PathResolutionOk {
   rootSource: PathRootSource;
   /** Workspace root OR process.cwd() — in failure messages (BR-08). */
   rootPath: string;
+  /** SA4E-393 A5 — origin of base_dir authority (additive; `rootSource` unchanged). */
+  trustSource?: "allowlist" | "worktree";
 }
 
 export interface PathResolutionErr {
@@ -104,6 +107,8 @@ opts?: {
     workspaceRoot?: unknown,
     /** SA4E-394 — extension allowlist mirror (default: settings/env). */
     allowlist?: ReadonlySet<string>,
+    /** SA4E-393 A5 — worktree auto-trust port (test seam; default: extension singleton). */
+    worktreeTrust?: TrustPort,
   },
 ): PathResolutionResult {
   // SA4E-394 — a per-call base_dir/workspace_root becomes the EFFECTIVE root:
@@ -121,7 +126,7 @@ opts?: {
     };
   }
   if (baseDir !== undefined) {
-    return resolveWithBaseDir(rawPath, baseDir, { allowlist: opts?.allowlist });
+    return resolveWithBaseDir(rawPath, baseDir, { allowlist: opts?.allowlist, worktreeTrust: opts?.worktreeTrust });
   }
   // Step 1 — validate (UC-01 EF-3): fail-loud BEFORE resolving.
   if (typeof rawPath !== "string" || rawPath.trim() === "") {
