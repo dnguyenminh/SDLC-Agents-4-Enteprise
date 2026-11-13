@@ -5,6 +5,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { isPathWithinRoot, sanitizeLogText, type PathResolutionOk } from "../services/PathResolver";
+import { symlinkEscapeCheck } from "../services/worktree-trust/symlink-containment";
 
 /**
  * I-7 parent-dir realpath guard (TDD §3.7 step 3.5, SEC-03/AD-17).
@@ -28,14 +29,27 @@ export function checkSymlinkGuard(
     return `FS_ERROR: Failed to resolve parent dir ${sanitizeLogText(parentDir)}: ${sanitizeLogText(err?.message ?? String(err))}`;
   }
   const realCandidate = path.join(realParent, path.basename(resolution.resolvedPath));
-  if (!isPathWithinRoot(resolution.rootPath, realCandidate)) {
-    return (
-      `PATH_REJECTED_OUTSIDE_WORKSPACE: Path rejected: ${sanitizeLogText(rawDisplay)} resolves to ` +
-      `${sanitizeLogText(resolution.resolvedPath)} — outside workspace root ` +
-      `${sanitizeLogText(resolution.rootPath)} via symlink/junction.`
-    );
-  }
-  return null;
+  if (!isPathWithinRoot(resolution.rootPath, realCandidate)) return outsideMessage(resolution, rawDisplay);
+  return checkFullPathEscape(resolution, rawDisplay);
+}
+
+/**
+ * SEC-WT-16/17: the parent realpath above collapses `..` textually and never follows a
+ * symlink in the FINAL component. Resolve the whole path component-wise (fail-closed,
+ * realpath-vs-realpath) so a link/junction anywhere on the path cannot escape the root.
+ */
+function checkFullPathEscape(resolution: PathResolutionOk, rawDisplay: string): string | null {
+  return symlinkEscapeCheck(resolution.rootPath, resolution.resolvedPath) === null
+    ? null
+    : outsideMessage(resolution, rawDisplay);
+}
+
+function outsideMessage(resolution: PathResolutionOk, rawDisplay: string): string {
+  return (
+    `PATH_REJECTED_OUTSIDE_WORKSPACE: Path rejected: ${sanitizeLogText(rawDisplay)} resolves to ` +
+    `${sanitizeLogText(resolution.resolvedPath)} — outside workspace root ` +
+    `${sanitizeLogText(resolution.rootPath)} via symlink/junction.`
+  );
 }
 
 export function ensureDir(dir: string): void {
