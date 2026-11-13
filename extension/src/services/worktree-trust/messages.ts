@@ -20,7 +20,7 @@ export function reasonGroup(reason: WorktreeReason): ReasonGroup {
   return PARENT_REASONS.has(reason) ? 'parent' : 'generic';
 }
 
-/** Anti log-forging: same replacement as sanitizePathText in the backend. */
+/** Anti log-forging: same replacement the backend uses in sanitizePathText (kept in sync by hand; the extension is the source of truth). */
 function clean(value: string): string {
   return String(value ?? '').replace(/[\r\n\0]/g, '?');
 }

@@ -1,5 +1,5 @@
 /**
- * SA4E-393 Addendum 5 — extension wiring of the generated worktree-trust library
+ * SA4E-393 Addendum 5 — extension wiring of the worktree-trust library (the extension is the source of truth)
  * (hand-written glue, TDD E2.3). Supplies the trust service with the folders open in
  * THIS VS Code instance (`vscode.workspace.workspaceFolders`, all of them, read per
  * call — never from a request) and the `sdlcAgents.workspace.worktreeAutoTrust`

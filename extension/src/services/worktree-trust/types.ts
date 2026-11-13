@@ -55,7 +55,7 @@ export interface TrustDeps {
   platform: NodeJS.Platform;
   /** Monotonic ms clock. */
   now(): number;
-  /** Backend: WorkspaceAllowlist.contains on a real path. */
+  /** Allowlist membership of a real path (semantics mirror the backend's WorkspaceAllowlist.contains; the extension owns this code). */
   isAllowlisted(realPath: string): boolean;
   /** Configured allowlist roots (enumeration for the trusted-first prefix gate, E11.1). */
   allowlistRoots(): readonly string[];
