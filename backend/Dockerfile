@@ -96,7 +96,7 @@ RUN mkdir -p /app/models-cache \
 # pandoc needed) match the runtime ABI. `git` exists only here (SEC-05).
 # -----------------------------------------------------------------------------
 FROM base AS mcp-python
-ARG MARKITDOWN_MCP_VERSION=0.0.1a7
+ARG MARKITDOWN_MCP_VERSION=0.0.1a8
 # markdown-exporter-mcp-local has no PyPI release — pin the exact upstream
 # commit (main @ 2026-04-07) for a hermetic build (git-source analogue of SEC-02).
 ARG MARKDOWN_EXPORTER_MCP_REF=1429b6a94767a709f7f5119219ca5951042d9d3c
@@ -238,8 +238,6 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 COPY --from=mcp-python /opt/markitdown-venv /opt/markitdown-venv
 COPY --from=mcp-python /opt/markdown-exporter-venv /opt/markdown-exporter-venv
-# Copy .trivyignore to WORKDIR for Trivy vulnerability scan exceptions (e.g., CVE-2026-126190 in soupsieve)
-COPY .trivyignore .trivyignore
 # Console scripts resolve on the PATH inherited by the backend process and its
 # stdio children; PYTHONUNBUFFERED keeps stderr logs streaming (no MCP breakage).
 ENV PATH="/opt/markitdown-venv/bin:/opt/markdown-exporter-venv/bin:${PATH}"
