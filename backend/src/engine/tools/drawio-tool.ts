@@ -101,7 +101,7 @@ async function layoutOn(filePath: string, args: Record<string, unknown>): Promis
     // No issues → already_good, don't modify file
     if (issues.length === 0) return alreadyGood();
     // Issues found → always fix (no mode parameter)
-    return await handleApply(raw, graph, fixable, nodeCount, args, filePath);
+    return await handleApply(raw, graph, issues, nodeCount, args, filePath);
   } catch (e: any) {
     return error(`Analysis failed: ${e.message ?? e}`);
   }
