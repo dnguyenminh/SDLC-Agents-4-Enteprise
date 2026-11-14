@@ -18,25 +18,19 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { DetectionError, DetectionErrorException, createDetectionError, Finding, QualityReport, DetectionConfig, EnvConfig } from "./types";
+import { DetectionError, DetectionErrorException, createDetectionError, Finding, DetectionResult, QualityReport, DetectionConfig, EnvConfig, DEFAULT_THRESHOLD, LoadInstance, SkillAPI, WasmDetectorRuntime } from "./types";
 import { loadWasmDetector, readWasmBinary, validateWasmConstraints } from "./wasm.loader";
 import { listSourceFiles, readSourceFile, getWorkspaceRoot, isPathSafe } from "./fs.adapter";
-import { fetchLocalhostPage, shouldSkipRendered, resetCircuitBreaker } from "./localhost-fetcher";
-import { generateQualityReport, determinePassFail, createDetectionRun } from "./report.generator";
+import { fetchLocalhostPage, shouldSkipRendered, resetCircuitBreaker, isLocalhostUrl } from "./localhost-fetcher";
+import { generateQualityReport } from "./report.generator";
 import { cacheResult, getCachedResult, invalidateCache, clearAllCache, listCachedRuns } from "./detection.cache";
 
-// Import SkillAPI - in production this would come from the impeccable-skill npm package
-// For this integration, we define a local mock that matches the interface
-type SkillAPI = {
-  loadWasm: (buffer: Buffer) => Promise<WasmDetectorRuntime>;
-  isLoaded: () => boolean;
-  getInstanceId: () => string;
-};
+/** Cache directory relative to workspace root (mirrors detection.cache.ts). */
+const CACHE_DIR = ".code-intel/design-gate";
 
-type WasmDetectorRuntime = {
-  analyze: (content: string | Uint8Array, mode: "static" | "rendered") => Promise<{ findings: Finding[]; score: number }>;
-  getScore: () => number;
-};
+// SkillAPI + WasmDetectorRuntime come from ./types (SA4E-438: analyze gained
+// an optional filePath so rules are extension-aware; local duplicate types
+// that shadowed the import and pinned the 2-arg signature were removed).
 
 /** Singleton instance */
 let serviceInstance: ImpeccableIntegrationService | null = null;
@@ -99,7 +93,7 @@ export class ImpeccableIntegrationService {
       await this.loadWasmBinary();
 
       // Step 3: Validate WASM constraints (C2)
-      const wasmBuffer = readWasmBinary(getWasmPath());
+      const wasmBuffer = readWasmBinary(this.getWasmPath());
       if (!validateWasmConstraints(wasmBuffer)) {
         throw createDetectionError(DetectionError.WASM_INCOMPATIBLE,
           "WASM binary does not satisfy memory-only sandbox constraints"
@@ -141,8 +135,8 @@ export class ImpeccableIntegrationService {
     sourcePath: string,
     config: { threshold?: number; cacheReuse?: boolean } = {}
   ): Promise<{ result: DetectionResult; report: QualityReport }> {
+    const threshold = config.threshold ?? DEFAULT_THRESHOLD;
     try {
-      const threshold = config.threshold ?? DEFAULT_THRESHOLD;
       const cacheReuse = config.cacheReuse ?? true;
 
       // Check cache if enabled (AF-2: cached findings return within 5 min)
@@ -162,7 +156,8 @@ export class ImpeccableIntegrationService {
             cached.findings,
             "static",
             threshold,
-            cached.runId
+            undefined,
+            cached.fileCount ?? 0
           );
           return { result, report };
         }
@@ -202,10 +197,12 @@ export class ImpeccableIntegrationService {
           try {
             const fileContent = readSourceFile(file, getWorkspaceRoot());
 
-            // Analyze content with WASM detector
+            // Analyze content with WASM detector (SA4E-438: pass file path —
+            // rules are extension-aware, e.g. CSS rules don't run on TSX)
             const analysisResult = await this.wasmRuntime!.analyze(
               fileContent,
-              "static"
+              "static",
+              file
             );
 
             // Map findings to standard format
@@ -245,7 +242,7 @@ export class ImpeccableIntegrationService {
       }
 
       // Generate quality report
-      const report = generateQualityReport(result.findings, "static", threshold, result.runId);
+      const report = generateQualityReport(result.findings, "static", threshold, undefined, result.fileCount);
 
       return { result, report };
     } catch (error: any) {
@@ -285,7 +282,9 @@ export class ImpeccableIntegrationService {
     localhostUrl: string,
     urls: string[] = [],
     config: { threshold?: number } = {}
-  ): Promise<{ result: { findings: Finding[]; score: number; fetchStatus: string; pagesFetched: number }; report: QualityReport }> {
+  ): Promise<{ result: RenderedDetectionResult; report: QualityReport }> {
+    const threshold = config.threshold ?? DEFAULT_THRESHOLD;
+    const fetchStartTime = Date.now();
     try {
       // Check circuit breaker (C4: skip after 2 consecutive failures)
       if (shouldSkipRendered()) {
@@ -293,11 +292,15 @@ export class ImpeccableIntegrationService {
         return {
           result: {
             findings: [],
+            fileCount: 0,
+            durationMs: 0,
+            cacheHit: false,
+            partial: false,
             score: 0,
             fetchStatus: "skipped",
             pagesFetched: 0,
           },
-          report: generateQualityReport([], "rendered", config.threshold, undefined),
+          report: generateQualityReport([], "rendered", threshold, undefined, 0),
         };
       }
 
@@ -315,23 +318,35 @@ export class ImpeccableIntegrationService {
       const fetchResult = await fetchLocalhostPage(localhostUrl);
 
       if (!fetchResult.success) {
-        // Check if it's a known fetch error
-        const fetchStatus = "failed";
-        const pagesFetched = 0;
-        const score = 0;
-
         return {
-          result: { findings: [], score, fetchStatus, pagesFetched },
-          report: generateQualityReport([], "rendered", config.threshold, undefined),
+          result: {
+            findings: [],
+            fileCount: 0,
+            durationMs: 0,
+            cacheHit: false,
+            partial: false,
+            score: 0,
+            fetchStatus: "failed",
+            pagesFetched: 0,
+          },
+          report: generateQualityReport([], "rendered", threshold, undefined, 0),
         };
       }
 
-      const htmlContent = fetchResult.html;
+      const htmlContent = fetchResult.html ?? "";
 
-      // Analyze rendered content with WASM detector
-      const analysisResult = await this.wasmRuntime!.analyze(
+      // Guard: WASM runtime must be loaded before analysis (C2 lifecycle)
+      if (!this.wasmRuntime) {
+        throw createDetectionError(DetectionError.WASM_INCOMPATIBLE,
+          "Detector runtime not loaded — call loadDetector() first"
+        );
+      }
+
+      // Analyze rendered content with WASM detector (HTML rule set)
+      const analysisResult = await this.wasmRuntime.analyze(
         htmlContent,
-        "rendered"
+        "rendered",
+        "rendered-page.html"
       );
 
       // Build findings with relative file paths
@@ -350,13 +365,22 @@ export class ImpeccableIntegrationService {
       const pagesFetched = 1;
       const fetchStatus = "success";
 
-      // Cache rendered results (with shorter TTL or no cache for rendered)
-      // Per TDD: Cache static detection results < 5 min, rendered may be different
+      // Generate quality report (rendered = 1 page in scope)
+      const report = generateQualityReport(findings, "rendered", threshold, undefined, 1);
 
-      // Generate quality report
-      const report = generateQualityReport(findings, "rendered", config.threshold, undefined);
-
-      return { result: { findings, score, fetchStatus, pagesFetched }, report };
+      return {
+        result: {
+          findings,
+          fileCount: 0,
+          durationMs: Date.now() - fetchStartTime,
+          cacheHit: false,
+          partial: false,
+          score,
+          fetchStatus,
+          pagesFetched,
+        },
+        report,
+      };
     } catch (error: any) {
       // C6: Error wrapping - SSRF or fetch errors
       const errorMessage = this.getUserFriendlyError(error);
@@ -369,11 +393,15 @@ export class ImpeccableIntegrationService {
       return {
         result: {
           findings: [],
+          fileCount: 0,
+          durationMs: 0,
+          cacheHit: false,
+          partial: false,
           score: 0,
           fetchStatus,
           pagesFetched: 0,
         },
-        report: generateQualityReport([], "rendered", config.threshold, undefined),
+        report: generateQualityReport([], "rendered", threshold, undefined, 0),
       };
     }
   }
@@ -394,10 +422,9 @@ export class ImpeccableIntegrationService {
     urls: string[] = [],
     config: DetectionConfig = {}
   ): Promise<{ result: CombinedResult; report: QualityReport }> {
+    const mode = config.detectionMode ?? "both";
+    const threshold = config.threshold ?? DEFAULT_THRESHOLD;
     try {
-      const mode = config.detectionMode ?? "both";
-      const threshold = config.threshold ?? DEFAULT_THRESHOLD;
-
       // Handle different detection modes
       switch (mode) {
         case "static": {
@@ -421,7 +448,8 @@ export class ImpeccableIntegrationService {
               staticResult.result.findings,
               "static",
               threshold,
-              staticResult.result.runId
+              undefined,
+              staticResult.result.fileCount
             );
             return { result: staticResult.result, report };
           }
@@ -435,29 +463,21 @@ export class ImpeccableIntegrationService {
             ...renderedResult.result.findings,
           ];
 
-          // Calculate combined score - take the worse (lower) score
-          const combinedScore = Math.min(
-            staticResult.result.score,
-            renderedResult.result.score
-          );
-
-          // Aggregate severity breakdown
+          // Aggregate severity breakdown (triage info — score is computed
+          // by the unified normalized formula in generateQualityReport)
           const severityBreakdown = {
             low: 0,
             medium: 0,
             high: 0,
           };
           // Count from static findings
-          staticResult.result.findings.forEach((f) => {
+          staticResult.result.findings.forEach((f: Finding) => {
             severityBreakdown[f.severity] = (severityBreakdown[f.severity] || 0) + 1;
           });
           // Count from rendered findings
-          renderedResult.result.findings.forEach((f) => {
+          renderedResult.result.findings.forEach((f: Finding) => {
             severityBreakdown[f.severity] = (severityBreakdown[f.severity] || 0) + 1;
           });
-
-          // Determine pass/fail
-          const pass = determinePassFail(combinedScore, threshold);
 
           // Build combined result
           const combinedResult = {
@@ -468,10 +488,13 @@ export class ImpeccableIntegrationService {
             partial: staticResult.result.partial || renderedResult.result.partial,
           };
 
-          // Generate quality report
-          const report = generateQualityReport(allFindings, "both", threshold, undefined);
-          report.score = combinedScore;
-          report.pass = pass;
+          // Generate quality report — unified normalized formula over the full scope
+          // (static design files + rendered page when fetched). No min()/override:
+          // one cleanliness ratio across all findings keeps the score consistent.
+          const scopeFiles =
+            staticResult.result.fileCount +
+            (renderedResult.result.pagesFetched > 0 ? 1 : 0);
+          const report = generateQualityReport(allFindings, "both", threshold, undefined, scopeFiles);
 
           return { result: combinedResult, report };
         }
@@ -487,7 +510,7 @@ export class ImpeccableIntegrationService {
       console.error(`Full detection error: ${errorMessage}`);
 
       // Return fail-open inconclusive report
-      const report = generateQualityReport([], "static", threshold, undefined);
+      const report = generateQualityReport([], "static", threshold, undefined, 0);
       report.score = 0;
       report.pass = true; // fail-open
       report.message = errorMessage;
@@ -505,23 +528,17 @@ export class ImpeccableIntegrationService {
    */
   getReport(runId: string): QualityReport | undefined {
     try {
+      // Cache files store { runId, timestamp, result: DetectionResult } —
+      // rebuild the QualityReport from cached findings (BR-12 audit trail).
       const workspaceRoot = getWorkspaceRoot();
       const cacheDir = path.join(workspaceRoot, CACHE_DIR);
       const filePath = path.join(cacheDir, `${runId}.json`);
 
       if (fs.existsSync(filePath)) {
         const content = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-        return {
-          runId: content.runId,
-          detectionMode: content.detectionMode,
-          threshold: content.threshold,
-          score: content.score,
-          pass: content.pass,
-          timestamp: content.timestamp,
-          findings: content.findings || [],
-          totalIssues: content.totalIssues || 0,
-          severityBreakdown: content.severityBreakdown || { low: 0, medium: 0, high: 0 },
-        };
+        if (content?.result?.findings) {
+          return generateQualityReport(content.result.findings, "static", undefined, content.runId, content.result.fileCount ?? 0);
+        }
       }
     } catch (error: any) {
       console.error(`Failed to get report for runId ${runId}: ${error.message}`);
@@ -605,7 +622,7 @@ export class ImpeccableIntegrationService {
    */
   private async loadWasmBinary(): Promise<void> {
     try {
-      const wasmPath = getWasmPath();
+      const wasmPath = this.getWasmPath();
       const wasmBuffer = readWasmBinary(wasmPath);
 
       // Validate constraints before loading
@@ -645,7 +662,7 @@ export class ImpeccableIntegrationService {
 
     // C6: Never include raw stack traces or internal details
     // Return sanitized message based on error type
-    if (error instanceof DetectionError) {
+    if (error instanceof DetectionErrorException) {
       return errorMessage || "An unexpected error occurred during detection";
     }
 
@@ -680,6 +697,19 @@ export interface CombinedResult {
   durationMs: number;
   cacheHit: boolean;
   partial: boolean;
+}
+
+/**
+ * Rendered-mode result — CombinedResult fields plus rendered-specific metadata.
+ * (CombinedResult-compatible so runFullDetection can aggregate uniformly.)
+ */
+export interface RenderedDetectionResult extends CombinedResult {
+  /** Aggregated score from the rendered analysis (0-1). */
+  score: number;
+  /** "success" | "failed" | "skipped" (circuit breaker / SSRF / unreachable). */
+  fetchStatus: string;
+  /** Number of pages actually fetched. */
+  pagesFetched: number;
 }
 
 // Export the enum for use in tests

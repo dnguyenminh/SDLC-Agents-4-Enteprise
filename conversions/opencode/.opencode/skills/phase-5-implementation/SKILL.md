@@ -89,7 +89,7 @@ transition_issue(issue_key: "{TICKET}", transition_name: "Review code")
 ```
 invokeSubAgent(
   name: "dev-agent",
-  prompt: "Write User Guide for {TICKET}. Read BRD, FSD, TDD from KB. Read source code. Template: documents/templates/UG-TEMPLATE.md. Output: documents/{TICKET}/UG.md. Content: Installation, Configuration Reference, Usage, Administration, Troubleshooting, Error Codes, FAQ."
+  prompt: "Write User Guide for {TICKET}. Read BRD, FSD, TDD from KB. MUST read the UG Writing Standard first: .opencode/rules/sdlc/ug-writing-standard.md (exemplar: documents/SA4E-393/UG.md). The UG is for END USERS — NEVER include Configuration Reference/API schemas/architecture diagrams (they belong to TDD). Every step = User Actions table (Step·Action·Expected result) + real screenshot from the running build (orca computer) + Key Elements table. Real data only. Template: documents/templates/UG-TEMPLATE.md. Output: documents/{TICKET}/UG.md."
 )
 ```
 
@@ -142,7 +142,7 @@ invokeSubAgent(
 |---|-------|------------|
 | 1 | UG.md exists | Re-invoke DEV |
 | 2 | Installation/Quick Start section | Ask DEV to add |
-| 3 | Configuration Reference with tables | Ask DEV to add |
+| 3 | Real screenshots + User Actions tables (UG Writing Standard) | Ask DEV to add |
 | 4 | Usage section with examples | Ask DEV to add |
 | 5 | Troubleshooting section | Ask DEV to add |
 | 6 | Error Codes table | Ask DEV to add |

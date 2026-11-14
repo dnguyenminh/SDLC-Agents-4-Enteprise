@@ -47,7 +47,7 @@
 | IT | IT-01..12 | 12 | 12 | 0 | 9 existing-backed, 3 planned (registry gap, STP §2.2.3 note) |
 | E2E-API | E2E-API-01..16 | 16 | 16 | 0 | 16 planned (real backend + real child) |
 | E2E-UI | — | 0 | 0 | 0 | **N/A — no browser surface** (STP §2.2.5; decision recorded in §5) |
-| SIT | SIT-01..11 | 11 | 0 | 11 | 6 harness-assisted (`LIVE_BACKEND=1`), 5 manual/staged |
+| SIT | SIT-01..11 | 11 | 0 | 11 | 6 harness-assisted (`npm run test:e2e`), 5 manual/staged |
 | SIT — addendum | SIT-12..13 | 2 | 0 | 2 | **Pending implementation (OI-14/OI-15)** |
 | **Total** | | **95** | **82 (86%)** | **13 (14%)** | STP baseline 88 + 7 addendum cases |
 
@@ -1641,7 +1641,7 @@ Environment: in-process fake MCP `Client` (`listTools` + `callTool`) injected in
 
 ## 4. End-to-End API Tests (E2E-API)
 
-Environment: real backend at `http://127.0.0.1:3000` + real child `markdown-exporter-mcp-local` (stdio/local); writable temp workspace; `LIVE_BACKEND` not required. Entry (STP G4): server started with current code; child tools discovered; **baseline `tools/list` snapshot captured before the first export**. Exit (STP G4): zero new tool names; six export calls write six valid files; direct-call shape unchanged; both negative payload cases return the exact documented error.
+Environment: real backend at `http://127.0.0.1:3000` + real child `markdown-exporter-mcp-local` (stdio/local); writable temp workspace; live e2e suite (`npm run test:e2e`) not required. Entry (STP G4): server started with current code; child tools discovered; **baseline `tools/list` snapshot captured before the first export**. Exit (STP G4): zero new tool names; six export calls write six valid files; direct-call shape unchanged; both negative payload cases return the exact documented error.
 
 > These 16 cases are the only place where the contract is observable **from outside the process**; E2E-API-01..07 also substitute for the missing UI surface (STP §2.5).
 
@@ -1813,7 +1813,7 @@ Environment: real backend at `http://127.0.0.1:3000` + real child `markdown-expo
 
 Environment: backend running locally; `markdown-exporter-mcp-local` as a stdio child; extension wrapper on port **9183** inside the Kiro window; harness `WrapperServer` on ephemeral port (live harness uses 48721); evidence in `documents/SA4E-380/evidence/`. Entry (STP G6): **SIT-11 runs first** as the wrapper-build freshness smoke check (STP TR-3 / §12.1); fixture `documents/SA4E-375/UG-embedded.md` present. Exit (STP G6): SIT-01..10 pass; SIT-11 PASS or BLOCKED with the reload action stated; **no unexplained file; every failure path leaves zero files behind**.
 
-Automation: 0% in CI. SIT-01..06 are driven by the on-demand harness `extension/src/__tests__/live-content-proxy.test.ts` (`LIVE_BACKEND=1`, excluded from CI by design); the tester runs it and records the artifacts. Reference sizes from the recorded live run (E-6): xlsx **4,849 B**; docx **14,599 B**; pptx **29,296 B**; pdf **1,967 B**; html **199 B**; json **31 B** — used for comparison, never overwritten (STP §10.3 rule 5).
+Automation: 0% in CI. SIT-01..06 are driven by the on-demand harness `extension/src/__tests__/live-content-proxy.e2e.test.ts` (e2e suite, `npm run test:e2e`; excluded from the unit suite by design); the tester runs it and records the artifacts. Reference sizes from the recorded live run (E-6): xlsx **4,849 B**; docx **14,599 B**; pptx **29,296 B**; pdf **1,967 B**; html **199 B**; json **31 B** — used for comparison, never overwritten (STP §10.3 rule 5).
 
 ### SIT-01..06: Six exporters through the real wrapper (harness-assisted)
 
@@ -1827,11 +1827,11 @@ Automation: 0% in CI. SIT-01..06 are driven by the on-demand harness `extension/
 
 | Field (common) | Value |
 |-------|-------|
-| **Level / Type** | SIT — live end-to-end (harness `LIVE_BACKEND=1`) |
+| **Level / Type** | SIT — live end-to-end (harness `npm run test:e2e`) |
 | **Requirement** | STORY 1 (AC-1.1, AC-1.2, AC-1.6) · UC-01 full flow · BR-01, BR-15, BR-16 · TD-01/TD-08 |
 | **Preconditions** | SIT-11 PASS (wrapper build current); backend started; harness temp dir writable |
-| **Test data** | MARKDOWN fixture in the harness (live-content-proxy.test.ts): `# Live E2E\n\nNội dung kiểm thử **content proxy**.\n\n| Cột A | Cột B |\n---\n| 1 | 2 |\n\n- một\n- hai\n` — Unicode + table + list; source `<TMP_DIR>/live/<tool>-source.md`, output `<tool>-output.<ext>` |
-| **Automation** | `extension/src/__tests__/live-content-proxy.test.ts` › `it.each(EXPORTERS)` — **existing, on demand** |
+| **Test data** | MARKDOWN fixture in the harness (live-content-proxy.e2e.test.ts): `# Live E2E\n\nNội dung kiểm thử **content proxy**.\n\n| Cột A | Cột B |\n---\n| 1 | 2 |\n\n- một\n- hai\n` — Unicode + table + list; source `<TMP_DIR>/live/<tool>-source.md`, output `<tool>-output.<ext>` |
+| **Automation** | `extension/src/__tests__/live-content-proxy.e2e.test.ts` › `it.each(EXPORTERS)` — **existing, on demand** |
 | **Evidence** | `documents/SA4E-380/evidence/SIT-01..06-<tool>.png` + file listing + sizes recorded into `live-evidence.csv` (STP §10.2) |
 
 **Steps (per exporter):**
@@ -2195,7 +2195,7 @@ Modifying the `markdown-exporter` child; adding any tool to `tools/list`; UI/Pla
 | `backend/src/modules/orchestration/__tests__/McpClientManager.content-proxy.test.ts` | 5 | IT-01, IT-02, IT-03, IT-04, IT-05 | E-1 |
 | `extension/src/__tests__/base64-proxy.dynamic-catalog.test.ts` | 4 | UT-41, UT-43 (×2 tests: detect-from-catalog + registerTools-additive), UT-37 | E-3 |
 | `extension/src/__tests__/wrapper-server.dynamic-export.test.ts` | 4 | IT-09, IT-10, IT-11, IT-12 | E-3 |
-| `extension/src/__tests__/live-content-proxy.test.ts` (`LIVE_BACKEND=1`) | 6 (1 `it.each` × 6 exporters) | SIT-01..06 | E-4 |
+| `extension/src/__tests__/live-content-proxy.e2e.test.ts` (`npm run test:e2e`) | 6 (1 `it.each` × 6 exporters) | SIT-01..06 | E-4 |
 | `extension/src/__tests__/backend-local-tools.base64-proxy.test.ts` (supplementary) | input/output proxy basics | Supports UT-36, SIT-10 variants C/D (FSD §10.4 mapping: proxyInput missing file, proxyOutput write, schema rewrite) | E-3 |
 | **Subtotal** | **35** | **31 case IDs** | |
 
@@ -2213,7 +2213,7 @@ Modifying the `markdown-exporter` child; adding any tool to `tools/list`; UI/Pla
 | E2E-API | Start backend (`npm run dev`) + child; `npm run test:e2e-api` (or the planned e2e-api specs) | G4 |
 | UT/IT (extension) | `cd extension && npx vitest run src/__tests__/wrapper-server.dynamic-export.test.ts src/__tests__/base64-proxy.dynamic-catalog.test.ts` | G3 |
 | Full extension regression | `cd extension && npm test` — expect 3,255 pass / 6 skipped | G5 |
-| SIT-01..06 (live harness) | `cd extension; $env:LIVE_BACKEND='1'; npx vitest run src/__tests__/live-content-proxy.test.ts` — **only after SIT-11 passes** | G6 |
+| SIT-01..06 (live harness) | `cd extension; npx vitest run --config vitest.e2e.config.ts src/__tests__/live-content-proxy.e2e.test.ts` — **only after SIT-11 passes** | G6 |
 | SIT-07..13 | Manual — steps above; evidence into `documents/SA4E-380/evidence/` | G6 |
 | Cleanup addendum | Blocked until OI-14/OI-15 are implemented; re-check TDD §9 test list before authoring UT-44..48 | — |
 

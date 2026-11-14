@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-"version": "1.55.18",
+  "version": "1.55.19",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -181,17 +181,17 @@
       },
       {
         "command": "sdlcAgents.runDesignGateStatic",
-        "title": "SDLC: Run Design Quality Gate (Static)",
+        "title": "SDLC Agents: Run Design Quality Gate (Static)",
         "icon": "$(check)"
       },
       {
         "command": "sdlcAgents.runDesignGateRendered",
-        "title": "SDLC: Run Design Quality Gate (Rendered)",
+        "title": "SDLC Agents: Run Design Quality Gate (Rendered)",
         "icon": "$(preview)"
       },
       {
         "command": "sdlcAgents.runDesignGateBoth",
-        "title": "SDLC: Run Design Quality Gate (Both)",
+        "title": "SDLC Agents: Run Design Quality Gate (Both)",
         "icon": "$(check-all)"
       }
     ],
@@ -344,6 +344,12 @@
           },
           "default": [],
           "description": "SA4E-394 allowlist mirror: workspace roots permitted as per-call base_dir for file_path tools. MUST mirror the backend MCP_WORKSPACE_ROOTS (backend remains source of truth). Falls back to the MCP_WORKSPACE_ROOTS env var when empty."
+        },
+        "sdlcAgents.workspace.worktreeAutoTrust": {
+          "type": "boolean",
+          "default": true,
+          "scope": "machine",
+          "description": "SA4E-393: automatically accept a verified git worktree (its .git pointer, back-link and parent repository all check out) as a per-call base_dir when its parent repository is allowlisted or open in this window. Disable to require every base_dir to be listed in workspaceRoots / MCP_WORKSPACE_ROOTS. The env var MCP_WORKTREE_AUTOTRUST=0 also disables it."
         },
         "sdlcAgents.llm.profiles": {
           "type": "array",
@@ -627,8 +633,8 @@
     "core-js": "^3.49.0",
     "debug": "^4.4.3",
     "diff": "^5.2.2",
-    "eslint": "9.39.5",
-    "pi-subagents": "^0.87.0",
+    "elkjs": "^0.9.3",
+    "pi-subagents": "^0.76.1",
     "pi-web-access": "0.41.0",
     "puppeteer-core": "^25.16.0",
     "semver": "^7.7.4",

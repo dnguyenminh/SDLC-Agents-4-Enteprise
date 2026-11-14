@@ -986,7 +986,7 @@ jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/STC-v1-{T
    ```
    invokeSubAgent(
      name: "dev-agent",
-     prompt: "Viết User Guide cho {TICKET}. Đọc BRD, FSD, TDD từ KB. Đọc source code (.env, config, API schemas). Template: documents/templates/UG-TEMPLATE.md. Output: documents/{TICKET}/UG.md. Nội dung cần có: Installation, Configuration Reference (tất cả properties), Usage (mỗi tool/API), Administration, Troubleshooting, Error Codes, FAQ."
+     prompt: "Viết User Guide cho {TICKET}. Đọc BRD, FSD, TDD từ KB. BẮT BUỘC đọc chuẩn UG Writing Standard trước: .opencode/rules/sdlc/ug-writing-standard.md (exemplar: documents/SA4E-393/UG.md). UG dành cho END USER — CẤM đưa Configuration Reference/API schemas/diagram kiến trúc vào UG (chúng thuộc TDD). Mỗi bước = User Actions table (Bước·Thao tác·Kết quả mong đợi) + screenshot thật từ build đang chạy (orca computer) + Key Elements table. Real data only. Template: documents/templates/UG-TEMPLATE.md. Output: documents/{TICKET}/UG.md."
    )
    ```
 3. Verify `documents/{TICKET}/UG.md` exists
@@ -1459,7 +1459,7 @@ jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/{DOC}-v{v
 |---|-------|---------------|------------|
 | 1 | UG.md exists | `readFile("documents/{TICKET}/UG.md")` | Re-invoke DEV agent |
 | 2 | Has Installation section | Scan for "Installation" or "Quick Start" header | Ask DEV to add |
-| 3 | Has Configuration Reference | Scan for "Configuration" header with property tables | Ask DEV to add |
+| 3 | Real screenshots + User Actions tables | Scan for embedded screenshot images and "Kết quả mong đợi"/Expected-result tables per UG Writing Standard | Ask DEV to add |
 | 4 | Has Usage section with examples | Scan for "Usage" header with code blocks | Ask DEV to add |
 | 5 | Has Troubleshooting section | Scan for "Troubleshooting" header | Ask DEV to add |
 | 6 | Has Error Codes table | Scan for "Error Codes" header | Ask DEV to add |
@@ -1535,6 +1535,11 @@ After each sub-agent completes:
 **SM PHẢI chạy verification checklist SAU MỖI sub-agent call.** Không được skip verification khi chạy "tạo tài liệu đầy đủ" (pipeline mode). Pipeline mode = Phase 1 verify → Phase 2 verify → Phase 3 verify. Mỗi phase PHẢI pass verification trước khi chuyển sang phase tiếp theo.
 
 ---
+
+<!-- UI-DESIGN-GATE -->
+## ⛔ UI Design Gate — Phase 5/6 Blocker (MUST)
+
+Verify Phase 5/6 completion reports contain gate evidence (tool="design_gate_run", runId, score, pass/fail) for every design artifact touched; missing/incomplete → BLOCK completion and dispatch the owning agent to run `design_gate_run` (fix or justify). NEVER write gate evidence yourself — the owning agent must produce it (role boundary). Full rule: `.opencode/rules/sdlc/ui-design-gate.md`
 
 <!-- UG-EVIDENCE-POLICY -->
 ## UG Evidence & Running-App Policy (MANDATORY)

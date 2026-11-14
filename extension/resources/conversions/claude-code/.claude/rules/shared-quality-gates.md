@@ -74,7 +74,7 @@ After each sub-agent completes:
 |---|---|---|
 | 1 | UG.md exists | Critical |
 | 2 | Installation/Quick Start | Critical |
-| 3 | Configuration Reference with tables | Critical |
+| 3 | Real screenshots + User Actions tables (UG Writing Standard) | Critical |
 | 4 | Usage section with examples | Critical |
 | 5 | Troubleshooting section | Minor |
 | 6 | Error Codes table | Minor |

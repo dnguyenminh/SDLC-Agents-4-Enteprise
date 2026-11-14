@@ -2146,12 +2146,12 @@ The table below traces every recorded test (backend 21/21, extension 3,255/6 ski
 | UT-32 | `backend-local-tools.base64-proxy.test.ts` | TC-45: proxyOutput resolves relative output_path against workspace root | UC-01, BR-15 | PASS |
 | UT-33 | `backend-local-tools.base64-proxy.test.ts` | TC-46: proxyOutput honours backend-suggested file_name next to source | UC-01 AF-1, BR-15 | PASS |
 | UT-34 | `backend-local-tools.base64-proxy.test.ts` | TC-47: proxyOutput strips path fragments from suggested file_name | UC-01, BR-08, NFR-11 | PASS |
-| LIVE-1 | `live-content-proxy.test.ts` | export_docx: file_path -> output_path, valid OOXML, size>0 | STORY 1 AC-1, UC-01 | PASS (6/6) |
-| LIVE-2 | `live-content-proxy.test.ts` | export_xlsx: workbook + sheet1.xml present | STORY 1 AC-3 | PASS |
-| LIVE-3 | `live-content-proxy.test.ts` | export_pptx: valid OOXML package | STORY 1 | PASS |
-| LIVE-4 | `live-content-proxy.test.ts` | export_pdf: %PDF header | STORY 1 AC-2 | PASS |
-| LIVE-5 | `live-content-proxy.test.ts` | export_html: HTML document | STORY 1 AC-2 | PASS |
-| LIVE-6 | `live-content-proxy.test.ts` | export_json: valid JSON | STORY 1 AC-2 | PASS |
+| LIVE-1 | `live-content-proxy.e2e.test.ts` | export_docx: file_path -> output_path, valid OOXML, size>0 | STORY 1 AC-1, UC-01 | PASS (6/6) |
+| LIVE-2 | `live-content-proxy.e2e.test.ts` | export_xlsx: workbook + sheet1.xml present | STORY 1 AC-3 | PASS |
+| LIVE-3 | `live-content-proxy.e2e.test.ts` | export_pptx: valid OOXML package | STORY 1 | PASS |
+| LIVE-4 | `live-content-proxy.e2e.test.ts` | export_pdf: %PDF header | STORY 1 AC-2 | PASS |
+| LIVE-5 | `live-content-proxy.e2e.test.ts` | export_html: HTML document | STORY 1 AC-2 | PASS |
+| LIVE-6 | `live-content-proxy.e2e.test.ts` | export_json: valid JSON | STORY 1 AC-2 | PASS |
 
 **Summary:**
 - Backend content-proxy suites: **21/21 passing** (UT-1..16 + client-manager integration)

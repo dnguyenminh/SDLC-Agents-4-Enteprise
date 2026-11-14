@@ -20,7 +20,9 @@ export function resolveConfig(variant: McpVariant, root: string): Record<string,
   if (variant.config.cwd) {
     config.cwd = variant.config.cwd.replace("${mcpServersDir}", serversDir).replace("${workspaceFolder}", root);
   }
-  config.env = { CODE_INTEL_WORKSPACE: root, CODE_INTEL_VIEWER_PORT: "3200", FORCE_RESTART: "15" };
+  config.env = {
+    CODE_INTEL_WORKSPACE: root, CODE_INTEL_VIEWER_PORT: "3200", FORCE_RESTART: "15",
+  };
   return config;
 }
 

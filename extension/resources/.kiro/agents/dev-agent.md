@@ -101,6 +101,11 @@ Use the correct design pattern for the problem at hand. Do NOT write procedural/
 
 ---
 
+<!-- UI-DESIGN-GATE -->
+## ⛔ UI Design Gate (MUST)
+
+Editing design artifacts (`.html` `.htm` `.css` `.scss` `.sass` `.less` `.vue` `.svelte` `.tsx` `.jsx`) → run `design_gate_run` BEFORE reporting done (`find_tools("design gate")` → `execute_dynamic_tool(toolName: "design_gate_run", arguments: { "mode": "both", "source_path": "..." })` — arguments is an OBJECT, not a JSON string). Include gate evidence (tool, runId, score, pass/fail) in your completion report; FAIL → fix in the same change or justify + follow-up ticket SA4E-438. SM blocks Phase 5/6 without gate evidence. Full procedure: `.opencode/rules/sdlc/ui-design-gate.md`
+
 <!-- UG-EVIDENCE-POLICY -->
 ## UG Evidence & Running-App Policy (MANDATORY)
 

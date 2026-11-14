@@ -46,12 +46,12 @@ describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
 
     const res = await postMcp(port, {
       jsonrpc: '2.0', id: 1, method: 'tools/call',
-      params: { name: 'drawio_export_png', arguments: { file_path: inputFile } },
+      params: { name: 'export_diagram_backend', arguments: { file_path: inputFile } },
     });
 
     expect(res.status).toBe(200);
     const call = deps.restCallToolMock.calls[0];
-    expect(call.name).toBe('drawio_export_png');
+    expect(call.name).toBe('export_diagram_backend');
     expect(call.args.content_base64).toBeDefined();
     const resultText = JSON.parse(res.body.result.content[0].text);
     expect(resultText.file_path).toBeDefined();
@@ -66,7 +66,7 @@ describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
 
     expect(res.status).toBe(200);
     const tools = res.body.result.tools;
-    const drawioTool = tools.find((t: any) => t.name === 'drawio_export_png');
+    const drawioTool = tools.find((t: any) => t.name === 'export_diagram_backend');
     expect(drawioTool).toBeDefined();
     const props = drawioTool.inputSchema.properties;
     expect(props.content_base64).toBeUndefined();
@@ -86,7 +86,7 @@ describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
       jsonrpc: '2.0', id: 3, method: 'tools/call',
       params: {
         name: 'execute_dynamic_tool',
-        arguments: { toolName: 'drawio_export_png', arguments: { file_path: inputFile } },
+        arguments: { toolName: 'export_diagram_backend', arguments: { file_path: inputFile } },
       },
     });
 
@@ -109,7 +109,7 @@ describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
 
     expect(res.status).toBe(200);
     const parsed = JSON.parse(res.body.result.content[0].text);
-    const drawio = parsed.tools.find((t: any) => t.name === 'drawio_export_png');
+    const drawio = parsed.tools.find((t: any) => t.name === 'export_diagram_backend');
     expect(drawio.inputSchema.properties.content_base64).toBeUndefined();
     expect(drawio.inputSchema.properties.output_path).toBeDefined();
   });

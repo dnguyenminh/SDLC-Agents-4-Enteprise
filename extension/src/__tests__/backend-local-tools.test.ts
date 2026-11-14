@@ -181,8 +181,12 @@ describe('Backend Local Tools (E2E Tests)', () => {
   describe('getLocalToolDefinitions', () => {
     it('TC-10: Should return schemas for local tools', () => {
       const defs = getLocalToolDefinitions();
-      expect(defs.length).toBe(2);
-      expect(defs.map(d => d.name)).toEqual(['stream_write_file', 'embed_image']);
+      // SA4E-406 Extension Migration: drawio_auto_layout + drawio_export_png
+      // registered as local tools → 4 total.
+      expect(defs.length).toBe(4);
+      expect(defs.map(d => d.name)).toEqual([
+        'stream_write_file', 'embed_image', 'drawio_auto_layout', 'drawio_export_png',
+      ]);
     });
   });
 

@@ -94,7 +94,7 @@ After each sub-agent completes:
 |---|-------|----------|------------|
 | 1 | UG.md exists | Critical | Re-invoke DEV |
 | 2 | Installation/Quick Start | Critical | Ask DEV to add |
-| 3 | Configuration Reference with tables | Critical | Ask DEV to add |
+| 3 | Real screenshots + User Actions tables (UG Writing Standard) | Critical | Ask DEV to add |
 | 4 | Usage section with examples | Critical | Ask DEV to add |
 | 5 | Troubleshooting section | Minor | Ask DEV to add |
 | 6 | Error Codes table | Minor | Ask DEV to add |

@@ -14,8 +14,9 @@
  */
 
 import { CommandContext } from "./context";
-import { ImpeccableIntegrationService, CombinedResult, QualityReport } from "./integration.service";
-import { DetectionError, EnvConfig } from "./types";
+import { ImpeccableIntegrationService, CombinedResult } from "./integration.service";
+import { DetectionError, DetectionConfig, EnvConfig, Finding, QualityReport, DEFAULT_THRESHOLD } from "./types";
+import { slashMenu } from "./controller";
 
 // Singleton service instance
 let impeccableService: ImpeccableIntegrationService | null = null;
@@ -78,12 +79,6 @@ export async function runDetection(config: DetectionConfig = {}): Promise<{
 }> {
   const service = getService();
 
-  // Set workspace root from environment if available
-  const workspaceRoot = process.env[EnvConfig.WORKSPACE_ROOT];
-  if (workspaceRoot) {
-    // The service will pick this up via getWorkspaceRoot()
-  }
-
   // Default configuration
   const detectionConfig: DetectionConfig = {
     detectionMode: config.detectionMode ?? "both",
@@ -92,10 +87,17 @@ export async function runDetection(config: DetectionConfig = {}): Promise<{
     sourceRoot: config.sourceRoot,
   };
 
+  // Load detector (skill + WASM runtime) before any analysis — the pipeline
+  // requires a loaded runtime (C2 lifecycle); idempotent when already loaded.
+  const loadResult = await service.loadDetector(detectionConfig);
+  if (loadResult.loadStatus === "error") {
+    throw new Error(`Detector load failed: ${loadResult.message}`);
+  }
+
   // Run the full detection pipeline
   const result = await service.runFullDetection(
     config.sourceRoot ?? process.cwd(),
-    config.localhostUrl ?? process.env[EnvConfig.LOCALHOST_DEV_SERVER_URL] || "http://localhost:5173",
+    config.localhostUrl ?? (process.env[EnvConfig.LOCALHOST_DEV_SERVER_URL] || "http://localhost:5173"),
     config.urls ?? [],
     detectionConfig,
   );
@@ -111,14 +113,14 @@ export async function runDetection(config: DetectionConfig = {}): Promise<{
  * Exported types for the slash command module.
  * Re-exported from types.ts for consumer access.
  */
-export type { Finding, QualityReport, DetectionConfig, DetectionError, EnvConfig };
+export type { Finding, QualityReport, DetectionConfig, DetectionRun } from "./types";
+export { DetectionError, EnvConfig, DEFAULT_THRESHOLD } from "./types";
 
 // Export the service class for direct use
 export { ImpeccableIntegrationService };
 
 // Reference to slashMenu for command registration
-// This would be imported from the controller in the actual extension
-// export const slashMenu = require("../controller").slashMenu;
+export { slashMenu } from "./controller";
 
 // Default export for module system compatibility
 export default {

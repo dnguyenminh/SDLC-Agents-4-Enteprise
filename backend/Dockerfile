@@ -21,11 +21,11 @@
 #            SERVER_WORKSPACES_ROOT) are guarded behind build args and DEFAULT OFF
 #            (SEC-08) — a bare `docker build --target production .` must succeed.
 #   - MCP-1 : two stdio MCP child servers (markitdown-mcp, markdown-exporter-
-#             mcp-local) are built into isolated /opt venvs in `mcp-python` and
-#             shipped read-only on PATH, so the orchestration module spawns them
-#             by bare command name. The runtime gains ONLY the python3
-#             interpreter — no pip, no git, no pandoc (SEC-05; pypandoc-binary
-#             bundles its own pandoc, onnxruntime ships as a manylinux wheel).
+#            mcp-local) are built into isolated /opt venvs in `mcp-python` and
+#            shipped read-only on PATH, so the orchestration module spawns them
+#            by bare command name. The runtime gains ONLY the python3
+#            interpreter — no pip, no git, no pandoc (SEC-05; pypandoc-binary
+#            bundles its own pandoc, onnxruntime ships as a manylinux wheel).
 # =============================================================================
 
 # --- Build-time arguments (NO secrets — build args must never carry credentials, BR-17) ---
@@ -96,7 +96,7 @@ RUN mkdir -p /app/models-cache \
 # pandoc needed) match the runtime ABI. `git` exists only here (SEC-05).
 # -----------------------------------------------------------------------------
 FROM base AS mcp-python
-ARG MARKITDOWN_MCP_VERSION=0.0.1a7
+ARG MARKITDOWN_MCP_VERSION=0.0.1a8
 # markdown-exporter-mcp-local has no PyPI release — pin the exact upstream
 # commit (main @ 2026-04-07) for a hermetic build (git-source analogue of SEC-02).
 ARG MARKDOWN_EXPORTER_MCP_REF=1429b6a94767a709f7f5119219ca5951042d9d3c
@@ -136,6 +136,7 @@ RUN apt-get update \
 RUN python3 -m venv /opt/markitdown-venv \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir \
       "markitdown-mcp==${MARKITDOWN_MCP_VERSION}" \
+      
  && test -x /opt/markitdown-venv/bin/markitdown-mcp \
  && /opt/markitdown-venv/bin/python -c "import markitdown_mcp" \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
@@ -206,8 +207,7 @@ RUN npm install -g npm@${NPM_VERSION} --no-audit --no-fund --loglevel=error \
   && npm --version \
   # SEC-04: upgrade Debian packages to fix CVE-2026-103111 (libpcre2-8-0 HIGH)
   # and the perl CVE set found by Trivy on 2026-10-10 (CVE-2026-13221 CRITICAL,
-  # CVE-2026-42497 HIGH, CVE-2026-42496, CVE-2026-8376, CVE-2026-48962,
-  # CVE-2026-57432, CVE-2026-57433 — perl-base/perl-modules in node:22.23.4-slim)
+  # CVE-2026-42497 HIGH, CVE-2026-42496, CVE-2026-48962, CVE-2026-57432, CVE-2026-57433 — perl-base/perl-modules in node:22.23.4-slim)
   && apt-get update \
   && apt-get upgrade -y --no-install-recommends libpcre2-8-0 perl-base perl-modules-5.36 \
   && apt-get clean \
@@ -251,7 +251,7 @@ RUN groupadd -g 1001 sa4e \
  && chown -R sa4e:sa4e /app \
  && mkdir -p /home/sa4e \
  && chmod -R 777 /home/sa4e
- 
+
 USER sa4e
 
 ENV NODE_ENV=production
@@ -269,7 +269,7 @@ EXPOSE 48721
 # Dependency-free health probe (SEC-12): node:22.23.4-slim does not ship `wget`, so a
 # wget-based probe would silently fail. Use node's built-in http client instead.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:'+(process.env.PORT||48721)+'/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+ CMD node -e "require('http').get('http://localhost:'+(process.env.PORT||48721)+'/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
 
 CMD ["node", "dist/index.js"]
 

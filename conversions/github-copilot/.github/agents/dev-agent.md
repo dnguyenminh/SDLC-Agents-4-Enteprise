@@ -255,22 +255,25 @@ Before presenting code to user, verify:
 
 **Prerequisites:** Code exists, BRD + FSD + TDD exist.
 
-1. **Read template**: `documents/templates/UG-TEMPLATE.md`
-2. **Read from KB**: BRD, FSD, TDD (for business context and feature descriptions)
-3. **Read source code** to extract accurate details:
-   - `src/main/resources/application.yml` — full configuration reference
-   - Config data classes — all properties with defaults and validation ranges
-   - API/Tool schemas — exact input/output formats
-   - Error codes — all error codes with messages
-   - Startup sequence — how the system initializes
+1. **MANDATORY — Read the UG Writing Standard first**: `.opencode/rules/sdlc/ug-writing-standard.md` (reference exemplar: `documents/SA4E-393/UG.md`). A User Guide is written for **END USERS**, not engineers.
+2. **Read from KB**: BRD, FSD, TDD (for business context and feature descriptions only — do NOT copy technical sections into the UG).
+3. **The One-Line Test**: "Could a non-engineer user of the product follow this document and succeed?" If any section answers NO — delete or rewrite it.
 4. **Write `documents/{TICKET-KEY}/UG.md`** with these sections:
-   - **Installation**: Prerequisites, build commands, distribution formats
-   - **Configuration Reference**: Every property with type, default, range, description
-   - **Usage**: Each tool/API with examples and expected output
-   - **Administration**: Adding servers, monitoring health, hot-reload
-   - **Troubleshooting**: Common issues table, error codes, log locations
-   - **API Reference**: Full schemas for each exposed tool
-   - **FAQ**: Common questions from BRD/FSD use cases
+   - **Intro (2-4 sentences)**: what the feature does for the user — zero internals
+   - **Installation/Setup** (only if installation matters to the user)
+   - **Main flow — step by step**: numbered steps, each with a **User Actions table** (Bước · Thao tác · Kết quả mong đợi) and a **REAL screenshot** from the running build + **Key Elements table** (Thành phần · Vị trí trên ảnh · Ý nghĩa)
+   - **Secondary flows** (agent self-check, edge cases) — same pattern
+   - **Troubleshooting**: table Hiện tượng | Nguyên nhân | Cách xử lý (by symptom, not by error code)
+   - **FAQ**: 4-6 real questions in user words
+   - **Related documents**: pointers to BRD/FSD/TDD (diagrams live THERE, not in UG)
+
+⛔ **HARD RULES (UG Writing Standard):**
+   - **FORBIDDEN in UG**: draw.io architecture/sequence/state/component/use-case diagrams, config property references, API/tool schemas, class/file internals. Those belong to TDD — link, don't copy.
+   - **Screenshots MUST be real captures from the running build** (via `orca computer` automation when needed) — never wireframes, mockups, or drawio exports. Follow `ug-evidence.md` freshness rules.
+   - **Real data only**: example outputs must come from an actual run (real runId, real numbers). Fabricated examples = defect.
+   - **Language**: Vietnamese (user-facing), product/UI labels stay English as on screen.
+   - **Length**: 2-4 pages. If longer — cut prose, keep tables.
+   - Before reporting done: verify every embedded image path exists (`Test-Path`); no `[SCREENSHOT REQUIRED]` placeholder when capture is possible.
 5. **Ingest UG into KB** (FULL content):
    ```
    the discovered KB "ingest" tool (
@@ -436,3 +439,26 @@ Before the SM invokes the TA agent, the DEV agent must prepare:
 - If the TA agent still returns CHANGES REQUESTED after 2 iterations, the DEV agent STOPS and reports to the SM with: the remaining items, a root-cause analysis, and whether the blocker is a code issue (DEV agent fixes) or a design gap (SA agent must revise the TDD). The DEV agent must never bypass the gate, never mark the code done, and never apply a workaround to "pass" the review.
 
 > ⛔ The DEV agent must not report the implementation as "done" until the TA agent's verdict is APPROVED. A green build without the TA agent's approval is NOT a completed implementation.
+
+## ⛔ UI Design Gate — Agent Self-Check (MANDATORY)
+
+**Trigger:** You created or edited design artifacts (`.html` `.htm` `.css` `.scss` `.sass` `.less` `.vue` `.svelte` `.tsx` `.jsx`) → run the gate BEFORE reporting done.
+
+**Invoke:**
+```
+find_tools("design gate")
+execute_dynamic_tool(
+  toolName: "design_gate_run",
+  arguments: { "mode": "both", "source_path": "<workspace-relative path, or omit = whole workspace>" }
+)
+```
+⛔ `arguments` MUST be an OBJECT, never a JSON string.
+
+**Completion report evidence:** tool="design_gate_run", runId, score, pass/fail.
+
+**FAIL handling — no silent acceptance:**
+- (a) Fix in the same change + re-run until PASS, or
+- (b) Written justification (biên bản lý do) + follow-up ticket in shared backlog SA4E-438.
+- Never mask/force-pass findings (honest reporting). HIGH/MEDIUM fail the file; LOW = triage only. Finding paths stay workspace-relative (C5).
+
+**SM blocks Phase 5/6 completion without gate evidence.** Full procedure: `.github/instructions/ui-design-gate.instructions.md` (source: `.opencode/rules/sdlc/ui-design-gate.md`)

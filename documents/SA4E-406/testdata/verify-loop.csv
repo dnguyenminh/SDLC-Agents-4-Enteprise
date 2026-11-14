@@ -1,0 +1,10 @@
+test_case_id,description,initial_issues,expected_iterations,expected_status,strategy,spacing_increment,notes
+TC-012,"3 overlaps - fixed in 1 iteration",3,1,fixed,elk,20,"Simple overlaps resolved quickly"
+TC-013,"Complex overlaps - 2 iterations",5,2,fixed,elk,20,"Requires spacing increase"
+TC-014,"Persistent issues after 3 iterations",3,3,partial,elk,20,"Max iterations reached"
+TC-015,"Fix makes worse - rollback",3,3,partial,elk,20,"Original restored"
+TC-016,"Ports-only fix for edge routing",2,1,fixed,ports,20,"Only edge routing issues"
+TC-017,"Local repair for few violations",2,1,fixed,local,20,"Few node violations"
+TC-018,"ELK relayout for >40% cells",8,1,fixed,elk,20,"Major layout issues"
+TC-019,"Canvas overflow - capped at 500px",4,2,fixed,elk,50,"Spacing increment capped"
+TC-020,"Total layout failure",5,1,error,elk,20,"All strategies exhausted"

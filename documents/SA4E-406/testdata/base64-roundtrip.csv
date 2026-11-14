@@ -1,0 +1,6 @@
+test_case_id,description,content_base64,output_base64,mode,expected_output,notes
+TC-028,"Layout via base64",valid_xml_base64,true,apply,layouted_xml_base64,"No file I/O, roundtrip"
+TC-029,"Review via base64",valid_xml_base64,true,review,issues_json_base64,"Detection only, base64 response"
+TC-030,"Export via base64",layouted_xml_base64,true,,png_base64,"drawio_export_png"
+TC-031,"Large diagram base64",large_xml_base64,true,apply,layouted_large_base64,"500 nodes"
+TC-032,"Base64 with base_dir",valid_xml_base64,true,apply,layouted_base64,"base_dir for reference only"

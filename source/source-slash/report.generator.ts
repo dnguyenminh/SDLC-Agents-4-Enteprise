@@ -12,7 +12,7 @@
  */
 
 import * as path from "path";
-import { DetectionError, Finding, QualityReport, DetectionConfig, EnvConfig } from "./types";
+import { DetectionError, Finding, QualityReport, DetectionConfig, EnvConfig, DetectionRun } from "./types";
 import { generateId } from "./utils";
 
 // Import env config for threshold
@@ -23,57 +23,72 @@ const DEFAULT_THRESHOLD = parseFloat(
 /**
  * Aggregate findings from static and rendered detection runs
  * and produce a quality gate report.
- * 
+ *
  * Per BR-10, BR-11, BR-12 (FSD §3.4):
  * - Report includes total issues, severity breakdown, score
  * - Pass/fail determined by threshold (BR-11)
  * - Report persisted for audit (BR-12)
- * 
+ *
+ * SA4E-393 Addendum (user-approved 2026-11-09) — NORMALIZED SCORING:
+ * the previous absolute per-finding deduction (−0.15/medium etc.) made any
+ * real repository clamp to score 0 regardless of size. New formula:
+ *   score = 1 − (unique files with findings / total files in scan scope)
+ * Scale-independent: a 10-file project and a 10,000-file project with the
+ * same clean-file ratio get the same score. severityBreakdown is kept in the
+ * report for triage but no longer drives the score.
+ *
+ * SA4E-438 amendment (user-approved 2026-11-10): with real design-quality
+ * rules, only HIGH/MEDIUM findings fail a file (a11y, layout, component
+ * correctness). LOW findings (tokens, !important, magic spacing, markers)
+ * are triage info and do not lower the score.
+ *
  * Per SECURITY-REVIEW.md C5:
  * - File paths in findings are sanitized to relative paths within workspace only
- * - Add redaction notice: "Report contains relative paths only."
- * 
+ *
  * Per SECURITY-REVIEW.md C6:
- * - All detector calls wrapped in try/catch
- * - On error, report score: 0, mode: "error", errorType: "DETECTION_FAILED"
- * - Never include raw error message in public report
- * 
+ * - On error, report score: 0, mode: "error" semantics, sanitized message
+ *
  * @param findings - Array of all findings (static + rendered)
  * @param mode - Detection mode: "static" | "rendered" | "both"
  * @param threshold - Quality score threshold (0-1), defaults to ENV config
  * @param runId - Unique identifier for this detection run
+ * @param totalFiles - Number of files in the scan scope (denominator of the cleanliness ratio)
  * @returns QualityReport with score and pass/fail
  */
 export function generateQualityReport(
   findings: Finding[],
   mode: "static" | "rendered" | "both",
   threshold?: number,
-  runId?: string
+  runId?: string,
+  totalFiles: number = 0
 ): QualityReport {
   try {
     // Use provided threshold or default from ENV
     const qualityThreshold = threshold ?? DEFAULT_THRESHOLD;
 
-    // Calculate severity breakdown
+    // Calculate severity breakdown (triage info — not part of the score)
     const severityBreakdown = {
       low: findings.filter((f) => f.severity === "low").length,
       medium: findings.filter((f) => f.severity === "medium").length,
       high: findings.filter((f) => f.severity === "high").length,
     };
 
-    // Calculate quality score (0-1)
-    // Score is inverse of issue density: fewer issues = higher score
-    // Formula: score = 1 - (weighted sum of issues / max possible)
-    // Simple implementation: deduct based on severity counts
-    let score = 1.0;
-
-    const highWeight = 0.3;
-    const mediumWeight = 0.15;
-    const lowWeight = 0.05;
-
-    score -= severityBreakdown.high * highWeight;
-    score -= severityBreakdown.medium * mediumWeight;
-    score -= severityBreakdown.low * lowWeight;
+    // Normalized cleanliness score (SA4E-393 Addendum + SA4E-438 amendment):
+    // ratio of scan-scope files FREE OF SIGNIFICANT findings. HIGH/MEDIUM
+    // findings fail a file; LOW findings are triage info that do not fail it.
+    const significantFindings = findings.filter(
+      (f) => f.severity === "high" || f.severity === "medium"
+    );
+    const flaggedFiles = new Set(significantFindings.map((f) => f.file)).size;
+    let score: number;
+    let message: string | undefined;
+    if (totalFiles > 0) {
+      score = 1 - flaggedFiles / totalFiles;
+    } else {
+      // Empty scan scope — vacuous pass, surfaced in the report message
+      score = 1.0;
+      message = "No design artifacts found in scan scope (0 files)";
+    }
 
     // Clamp score to [0, 1]
     score = Math.max(0, Math.min(1, score));
@@ -102,6 +117,9 @@ export function generateQualityReport(
       totalIssues: findings.length,
       severityBreakdown,
     };
+    if (message) {
+      report.message = message;
+    }
 
     return report;
   } catch (error: any) {

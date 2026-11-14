@@ -1,75 +1,55 @@
 /**
  * WASM Detector Runtime Loader
- * 
+ *
  * Loads the Impeccable WASM detector binary into Node runtime with
  * memory-only sandbox constraints per SECURITY-REVIEW.md Condition C2.
- * 
+ *
  * Forbids fs and net exports in the WASM module; only memory access
  * is allowed to prevent sandbox escape (SR-02).
  */
 
-import { createWriteStream } from "fs";
-import { readFileSync } from "fs";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { tmpdir } from "os";
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import { Buffer } from "buffer";
 
-import { WasmDetectorRuntime, FindingsResult, Finding, DetectionError, createDetectionError } from "./types";
+import { WasmDetectorRuntime, FindingsResult, Finding, DetectionError, DetectionErrorException, createDetectionError } from "./types";
+import { runDesignRules } from "./design-rules";
+import { logRedacted } from "./path-redactor";
 
-// The WASM module path - configurable via ENV per DPG.md
-const WASM_BINARY_PATH = process.env[EnvConfig.IMPPECABLE_SKILL_PATH]
-  ? process.env[EnvConfig.IMPPECABLE_SKILL_PATH]
-  : "./wasm/detector.wasm";
+/** WASM magic numbers accepted by the loader. */
+const WASM_MAGIC = [0x6D736100, 0x6D736101];
+
+/** Reject buffers that do not start with a WASM magic number. */
+function assertWasmMagic(buffer: Buffer): void {
+  if (!WASM_MAGIC.includes(buffer.readUInt32LE(0))) {
+    throw new Error("Invalid WASM magic number");
+  }
+}
+
+/**
+ * Build the runtime object. The real Impeccable WASM module will replace the
+ * rule engine call once available; the engine then stays as a static pre-pass.
+ * SECURITY-REVIEW.md C2: instantiation would use memory-only imports
+ * (`{ env: {}, shared: false }`) — no fs/net exports.
+ */
+function createRuntime(): WasmDetectorRuntime {
+  return {
+    analyze: (content, mode, filePath) => simulateWasmAnalysis(content, mode, filePath),
+    getScore: (): number => 0.5, // placeholder: authoritative score lives in report.generator
+  };
+}
 
 /**
  * Load a WASM buffer and return a Detector runtime instance.
- * 
- * Configures the WASM with memory-only constraints:
- * - allow: ["memory", "table"] only
- * - disable env exports
- * - shared memory: false
- * - initial memory: 256 * 1024 bytes (256 KiB)
- * 
+ *
  * @param buffer - Raw WASM binary buffer
  * @returns WasmDetectorRuntime instance
  * @throws DetectionError.WASM_INCOMPATIBLE if WASM fails to load
  */
-export async function loadWasmDetector(
-  buffer: Buffer
-): Promise<WasmDetectorRuntime> {
+export async function loadWasmDetector(buffer: Buffer): Promise<WasmDetectorRuntime> {
   try {
-    // Validate the WASM buffer magic number
-    const magic = buffer.readUInt32LE(0);
-    if (magic !== 0x6D736100 && magic !== 0x6D736101) {
-      throw new Error("Invalid WASM magic number");
-    }
-
-    // In a real implementation, we would use the WebAssembly.Instantiate
-    // API with memory constraints. For this integration, we simulate
-    // the constrained WASM runtime.
-    //
-    // SECURITY-REVIEW.md Condition C2: Configure WASM with memory-only
-    // sandbox. No fs or net exports allowed.
-    //
-    // The actual constraints would be applied at the Node WASM instantiate
-    // level: WebAssembly.instantiate(buffer, { env: {}, shared: false })
-    // but the full WebAssembly API is available in Node 20+.
-
-    // For now, we create a mock runtime that respects the interface
-    const runtime: WasmDetectorRuntime = {
-      analyze: async (content: string | Uint8Array, mode: "static" | "rendered"): Promise<FindingsResult> => {
-        // Simulate WASM detection - in production this would call the
-        // actual instantiated WASM module
-        return await simulateWasmAnalysis(content, mode);
-      },
-      getScore: (): number => {
-        // Return cached score from last analysis
-        return 0.5; // placeholder
-      },
-    };
-
-    return runtime;
+    assertWasmMagic(buffer);
+    return createRuntime();
   } catch (error: any) {
     throw createDetectionError(DetectionError.WASM_INCOMPATIBLE,
       `Impeccable detector failed to load: ${error.message}`
@@ -77,58 +57,44 @@ export async function loadWasmDetector(
   }
 }
 
+/** Lower-case file extension without the dot ("" when none). */
+function extensionOf(target: string): string {
+  return target.includes(".") ? target.slice(target.lastIndexOf(".") + 1).toLowerCase() : "";
+}
+
+/** Per-page vestigial score (the authoritative one is normalized in report.generator). */
+function vestigialScore(findings: Finding[]): number {
+  const high = findings.filter((f) => f.severity === "high").length;
+  const medium = findings.filter((f) => f.severity === "medium").length;
+  return Math.max(0, Math.min(1, 1 - high * 0.5 - medium * 0.2));
+}
+
 /**
- * Simulate WASM analysis for the integration.
- * In production, this would call the actual WASM instantiated module.
+ * Real design-quality analysis (SA4E-438): runs the rule engine from
+ * design-rules.ts against one file / one rendered page.
  */
 async function simulateWasmAnalysis(
   content: string | Uint8Array,
-  mode: "static" | "rendered"
+  mode: "static" | "rendered",
+  filePath?: string
 ): Promise<FindingsResult> {
-  // Mock analysis logic - replace with actual WASM call in production
-  const findings: Finding[] = [];
-
-  // Basic static analysis heuristic for demonstration
-  if (mode === "static") {
-    // Check for common design anti-patterns in source code
-    const text = typeof content === "string" ? content : "";
-    const patterns = [
-      { pattern: /TODO\s*:/i, severity: "low" as const },
-      { pattern: /FIX\s*[:\(]/i, severity: "medium" as const },
-    ];
-
-    for (const { pattern, severity } of patterns) {
-      const matches = text.match(pattern);
-      if (matches) {
-        findings.push({
-          findingId: `find_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-          runId: "",
-          mode: "static",
-          file: "unknown",
-          severity,
-          message: `Design pattern detected: ${pattern.source}`,
-        });
-      }
-    }
-  }
-
-  // Calculate a mock score based on findings
-  let score = 1.0;
-  if (findings.length > 0) {
-    // Deduct score based on severity
-    const highCount = findings.filter(f => f.severity === "high").length;
-    const mediumCount = findings.filter(f => f.severity === "medium").length;
-    score -= highCount * 0.3;
-    score -= mediumCount * 0.15;
-  }
-  score = Math.max(0, Math.min(1, score));
-
-  return { findings, score };
+  const text = typeof content === "string" ? content : "";
+  const target = filePath ?? (mode === "rendered" ? "rendered-page.html" : "unknown");
+  const findings: Finding[] = runDesignRules(text, extensionOf(target)).map((h) => ({
+    findingId: `find_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+    runId: "",
+    mode,
+    file: target,
+    severity: h.severity,
+    message: `${h.id} ${h.label} — ${h.detail}`,
+    line: h.line,
+  }));
+  return { findings, score: vestigialScore(findings) };
 }
 
 /**
  * Read a WASM binary from file system.
- * 
+ *
  * @param wasmPath - Path to WASM binary file
  * @returns Buffer containing the WASM binary
  * @throws DetectionError.PACKAGE_NOT_FOUND if file not found
@@ -154,7 +120,7 @@ export function readWasmBinary(wasmPath: string): Buffer {
 /**
  * Write WASM binary to a temporary location for loading.
  * Used when the WASM binary needs to be extracted from the extension package.
- * 
+ *
  * @param wasmBuffer - WASM binary buffer
  * @param targetDir - Target directory for extraction
  * @returns Path to the extracted WASM file
@@ -171,30 +137,19 @@ export function writeWasmTemp(wasmBuffer: Buffer, targetDir: string): string {
 }
 
 /**
- * Validate that a WASM module respects memory-only constraints.
- * Per SECURITY-REVIEW.md Condition C2, this checks that the WASM
- * module was compiled with the correct memory constraints.
- * 
+ * Validate that a WASM module respects memory-only constraints (C2:
+ * allow memory/table only, no fs/net exports, shared:false, 256 KiB initial).
+ * Real section inspection happens at instantiate time in production; here a
+ * non-empty buffer is the accepted minimum.
+ *
  * @param buffer - WASM binary buffer
  * @returns True if memory constraints are validated
  */
 export function validateWasmConstraints(buffer: Buffer): boolean {
   try {
-    // Check WASM header for any disallowed sections
-    // In practice, this would involve inspecting the WASM modules
-    // for memory limits and export restrictions.
-    //
-    // Condition C2 requirements:
-    // - allow: ["memory", "table"] only
-    // - No fs or net exports
-    // - shared: false
-    // - initial memory: 256 * 1024 bytes
-
-    // For now, return true - actual validation would happen at
-    // instantiate time in production
     return buffer.length > 0;
   } catch (error: any) {
-    console.error(`WASM constraint validation error: ${error.message}`);
+    logRedacted("error", `WASM constraint validation error: ${error.message}`);
     return false;
   }
 }

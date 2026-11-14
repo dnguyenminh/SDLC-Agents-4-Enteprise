@@ -1,0 +1,85 @@
+<mxfile host="app.diagrams.net" modified="2026-11-09T00:00:00.000Z" agent="5.0 (Windows)" etag="security-diagram" version="24.7.6" type="device">
+  <diagram name="Security Flow" id="security">
+    <mxGraphModel dx="1422" dy="784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="input" value="Malicious Input&#xa;file_path, base_dir" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#c62828;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="182" width="140" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="pipeline" value="" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1">
+          <mxGeometry x="979" y="459" width="900" height="500" as="geometry"/>
+        </mxCell>
+        <mxCell id="step1" value="1. Input Validation&#xa;extractBaseDir()&#xa;- Reject non-string&#xa;- Reject empty/whitespace&#xa;- Reject NUL bytes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="pipeline">
+          <mxGeometry x="41" y="40" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="step2" value="2. Canonicalization&#xa;path.resolve()&#xa;- Eliminates .. sequences&#xa;- Normalizes path separators&#xa;- Absolute path resolution" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d6a7;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="pipeline">
+          <mxGeometry x="41" y="352" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="step3" value="3. Allowlist Check&#xa;WorkspaceAllowlist.contains()&#xa;- O(1) Set membership&#xa;- Win32 case-fold parity&#xa;- Realpath for existing dirs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#81c784;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="pipeline">
+          <mxGeometry x="41" y="664" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="step4" value="4. Existence Check&#xa;fs.statSync().isDirectory()&#xa;- Verify workspace root exists&#xa;- Returns FS_ERROR if missing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#66bb6a;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="pipeline">
+          <mxGeometry x="51" y="976" width="180" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="step5" value="5. Resolve file_path&#xa;containAndResolve()&#xa;- Absolute: passthrough&#xa;- Relative: against base_dir&#xa;- NUL byte check" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4caf50;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="pipeline">
+          <mxGeometry x="41" y="1288" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="step6" value="6. Containment Check&#xa;containsFolded() + symlinkEscape()&#xa;- Separator-boundary check&#xa;- Win32 case-fold&#xa;- Realpath deepest ancestor&#xa;- Symlink escape detection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#43a047;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="pipeline">
+          <mxGeometry x="31" y="1600" width="220" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="step7" value="7. Generic Error Response&#xa;error() / jsonError()&#xa;- No filesystem details leaked&#xa;- Standard error codes&#xa;- PATH_REJECTED_OUTSIDE_ALLOWLIST" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#f57f17;fontSize=11;" vertex="1" parent="pipeline">
+          <mxGeometry x="77.7" y="1912" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="step8" value="8. Security Audit Log&#xa;pino warn&#xa;- attempted_path (sanitized)&#xa;- effective_root&#xa;- client_info&#xa;- error_code&#xa;- workspace_root" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=11;" vertex="1" parent="pipeline">
+          <mxGeometry x="31" y="2224" width="170" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="pass" value="File Operation&#xa;(read/write/execute)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="834" y="3020" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="fail" value="Generic Error + Audit Log&#xa;\"File path not allowed: path traversal detected\"" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#c62828;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="3020" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c62828;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="input" target="step1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;" edge="1" parent="pipeline" source="step1" target="step2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;" edge="1" parent="pipeline" source="step2" target="step3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;" edge="1" parent="pipeline" source="step3" target="step4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;" edge="1" parent="pipeline" source="step4" target="step5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;" edge="1" parent="pipeline" source="step5" target="step6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2e7d32;strokeWidth=2;endArrow=block;exitX=1;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="pipeline" source="step6" target="pass">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1083.3" y="2199"/><mxPoint x="999" y="2199"/><mxPoint x="999" y="2848"/><mxPoint x="914" y="2848"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c62828;strokeWidth=2;endArrow=block;" edge="1" parent="pipeline" source="step6" target="step7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c62828;strokeWidth=2;endArrow=block;exitX=0.33;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="pipeline" source="step7" target="step8">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="144.3" y="2052"/><mxPoint x="116" y="2052"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="edge10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c62828;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step7" target="fail">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="note1" value="Test Cases That Must Pass:&#xa;✓ file_path=\"..\\..\\etc\\passwd\" → rejected&#xa;✓ file_path=\"C:\\Windows\\System32\" → rejected&#xa;✓ file_path=\"diagrams\\0secret.txt\" → rejected&#xa;✓ Symlink pointing outside workspace → rejected&#xa;✓ Win32: C:\\Project vs c:\\project → match&#xa;✓ Valid relative path within base_dir → accepted&#xa;✓ Generic error: no path details in response" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8eaf6;strokeColor=#3f51b5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="358" y="12" width="250" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="note2" value="Defense Layers:&#xa;1. Input Validation (extractBaseDir)&#xa;2. Canonicalization (path.resolve)&#xa;3. Allowlist Check (WorkspaceAllowlist)&#xa;4. Existence Check (fs.statSync)&#xa;5. Containment (containsFolded)&#xa;6. Symlink Resolution (symlinkEscape)&#xa;7. Generic Errors (error/jsonError)&#xa;8. Audit Logging (pino warn)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#6a1b9a;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="12" y="12" width="250" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="note3" value="Error Codes:&#xa;• PATH_REJECTED_OUTSIDE_ALLOWLIST&#xa;  - base_dir not in allowlist&#xa;  - Resolved path escapes&#xa;  - NUL byte in file_path&#xa;  - Non-string base_dir&#xa;• PATH_REJECTED_OUTSIDE_WORKSPACE&#xa;  - Legacy mode: outside pinned root&#xa;• FS_ERROR&#xa;  - Workspace root doesn't exist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#f57f17;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="704" y="37" width="250" height="200" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

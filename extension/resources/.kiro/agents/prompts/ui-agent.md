@@ -419,6 +419,30 @@ Add comment block at top of each HTML file:
 
 ---
 
+<!-- UI-DESIGN-GATE -->
+## ⛔ UI Design Gate — Agent Self-Check (MANDATORY)
+
+**Trigger:** You created or edited design artifacts (`.html` `.htm` `.css` `.scss` `.sass` `.less` `.vue` `.svelte` `.tsx` `.jsx`) → run the gate BEFORE reporting done.
+
+**Invoke:**
+```
+find_tools("design gate")
+execute_dynamic_tool(
+  toolName: "design_gate_run",
+  arguments: { "mode": "both", "source_path": "<workspace-relative path, or omit = whole workspace>" }
+)
+```
+⛔ `arguments` MUST be an OBJECT, never a JSON string.
+
+**Completion report evidence:** tool="design_gate_run", runId, score, pass/fail.
+
+**FAIL handling — no silent acceptance:**
+- (a) Fix in the same change + re-run until PASS, or
+- (b) Written justification (biên bản lý do) + follow-up ticket in shared backlog SA4E-438.
+- Never mask/force-pass findings (honest reporting). HIGH/MEDIUM fail the file; LOW = triage only. Finding paths stay workspace-relative (C5).
+
+**SM blocks Phase 5/6 completion without gate evidence.** Full procedure: `.opencode/rules/sdlc/ui-design-gate.md`
+
 <!-- UG-EVIDENCE-POLICY -->
 ## UG Evidence & Running-App Policy (MANDATORY — ALL AGENTS)
 

@@ -331,3 +331,9 @@ For detailed rules: `skill(name: "loop-constraints")`
 - **ALWAYS transition Jira** per workflow
 - **Resume by default** — never redo unless user says "tạo lại"
 - **Git branch = ticket key**, commit: `{TICKET}: {summary}`
+
+## ⛔ UI Design Gate — Phase 5/6 Completion Blocker (MANDATORY)
+
+- When verifying Phase 5 (Implementation) / Phase 6 (Testing) completion reports: REQUIRE gate evidence (tool="design_gate_run", runId, score, pass/fail) for every design artifact touched (`.html` `.htm` `.css` `.scss` `.sass` `.less` `.vue` `.svelte` `.tsx` `.jsx`).
+- Missing/incomplete evidence → BLOCK phase completion; dispatch the owning agent back to run `design_gate_run` (fix or justify per `.opencode/rules/sdlc/ui-design-gate.md`).
+- NEVER write gate evidence yourself — the owning agent must produce it (role boundary).

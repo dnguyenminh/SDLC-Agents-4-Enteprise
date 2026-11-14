@@ -33,10 +33,13 @@ export interface DetectionResult {
 
 /** Configuration for a detection run */
 export interface DetectionConfig {
-  detectionMode: "static" | "rendered" | "both";
-  threshold: number; // 0-1 quality score threshold
-  cacheReuse: boolean;
-  sourceRoot?: string; // workspace root for path validation
+  detectionMode?: "static" | "rendered" | "both";
+  threshold?: number; // 0-1 quality score threshold
+  cacheReuse?: boolean;
+  sourceRoot?: string; // directory to scan (inside the workspace)
+  workspaceRoot?: string; // SEC-F08: explicit workspace root (containment, cache, reports)
+  localhostUrl?: string; // dev server URL for rendered detection
+  urls?: string[]; // additional pages for rendered detection
 }
 
 /** Aggregated quality gate report */
@@ -54,6 +57,30 @@ export interface QualityReport {
     medium: number;
     high: number;
   };
+  /** Number of files in the scan scope (denominator of the score). */
+  fileCount?: number;
+  /** C6: sanitized error/fallback notice (never raw stack traces) */
+  message?: string;
+}
+
+/** Detection run entity per FSD §4.2 (in-memory / JSON file store) */
+export interface DetectionRun {
+  runId: string;
+  detectionMode: "static" | "rendered" | "both";
+  threshold: number;
+  score: number;
+  pass: boolean;
+  createdAt: string;
+  userId: string;
+  findings: Array<{
+    findingId: string;
+    runId: string;
+    mode: "static" | "rendered";
+    file: string;
+    severity: "low" | "medium" | "high";
+    message: string;
+    line?: number;
+  }>;
 }
 
 /** Instance identifier for a loaded detector */
@@ -72,7 +99,7 @@ export interface SkillAPI {
 
 /** WASM detector runtime interface */
 export interface WasmDetectorRuntime {
-  analyze: (content: string | Uint8Array, mode: "static" | "rendered") => Promise<FindingsResult>;
+  analyze: (content: string | Uint8Array, mode: "static" | "rendered", filePath?: string) => Promise<FindingsResult>;
   getScore: () => number;
 }
 
@@ -98,6 +125,8 @@ export enum DetectionError {
   FETCH_FAILED = "FETCH_FAILED",
   DEV_SERVER_UNREACHABLE = "DEV_SERVER_UNREACHABLE",
   ERROR_LEAK = "ERROR_LEAK",
+  /** The caller did not supply a workspace root (no cwd/env fallback exists). */
+  WORKSPACE_ROOT_REQUIRED = "WORKSPACE_ROOT_REQUIRED",
 }
 
 /** Custom error class for detection errors */
@@ -122,5 +151,9 @@ export enum EnvConfig {
   QUALITY_GATE_THRESHOLD = "QUALITY_GATE_THRESHOLD",
   DESIGN_DETECTION_MODE = "DESIGN_DETECTION_MODE",
   LOCALHOST_DEV_SERVER_URL = "LOCALHOST_DEV_SERVER_URL",
-  WORKSPACE_ROOT = "WORKSPACE_ROOT",
 }
+
+/** Default quality gate threshold — configurable via QUALITY_GATE_THRESHOLD env (DPG.md) */
+export const DEFAULT_THRESHOLD = parseFloat(
+  process.env[EnvConfig.QUALITY_GATE_THRESHOLD] || "0.8"
+);
