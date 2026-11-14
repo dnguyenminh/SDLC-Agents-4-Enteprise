@@ -2,6 +2,17 @@
 
 ## {SYSTEM_NAME} — {TICKET_KEY}: {TICKET_SUMMARY}
 
+> ⛔ **WRITING STANDARD (MUST READ BEFORE FILLING):** `.opencode/rules/sdlc/ug-writing-standard.md`
+> Reference exemplar: `documents/SA4E-393/UG.md`
+>
+> This template produces a guide for **END USERS** — people who USE the product.
+>
+> **The One-Line Test:** "Could a non-engineer user of the product follow this document and succeed?" If any section answers NO — delete or rewrite it.
+>
+> **FORBIDDEN here:** draw.io architecture/sequence/state diagrams, Configuration Reference tables, API/tool schemas, class/file internals → they belong to BRD/FSD/TDD. Link to them in Section "Related documents" instead.
+>
+> **REQUIRED:** real screenshots from the RUNNING build (via `orca computer` automation) embedded inline at the step they illustrate; every step has a User Actions table; every screenshot has a Key Elements table; all example data is real (actual runIds/numbers), never fabricated.
+
 ---
 
 ## Document Information
@@ -15,330 +26,104 @@
 | Version | 1.0 |
 | Date | {CURRENT_DATE} |
 | Status | Draft |
-| Related BRD | BRD-v{VERSION}-{TICKET-KEY}.docx |
-| Related FSD | FSD-v{VERSION}-{TICKET-KEY}.docx |
-| Related TDD | TDD-v{VERSION}-{TICKET-KEY}.docx |
 
 ---
 
-## Revision History
+## 1. {Feature} là gì?
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | {CURRENT_DATE} | DEV Agent | Initial document |
+{2–4 sentences: what this feature does for the user. Zero internals — no class names, no config keys, no API routes.}
 
----
+{IF the product has a UI: embed the "entry point" screenshot here and add a Key Elements table.}
 
-## 1. Introduction
+![{entry-point mô tả}](diagrams/screenshot-{entry-point}.png)
 
-### 1.1 Purpose
-
-{Brief description of what the system does and who this guide is for.}
-
-### 1.2 Audience
-
-| Audience | What They Need |
-|----------|---------------|
-| {End User / AI Agent} | {How to use the system} |
-| {System Administrator} | {How to configure and maintain} |
-| {Developer} | {How to extend or integrate} |
-
-### 1.3 Prerequisites
-
-| Prerequisite | Version | Required |
-|-------------|---------|----------|
-| {Runtime — JDK/Node.js} | {version} | Yes |
-| {External service} | {version} | Yes/Optional |
+| Thành phần | Vị trí trên ảnh | Ý nghĩa |
+|-----------|-----------------|---------|
+| {element} | {where in the image} | {what it is for} |
 
 ---
 
-## 2. Getting Started
+## 2. Cài đặt & kiểm tra phiên bản
 
-> **IMPORTANT:** This section is for users who **download the release** and run it. Do NOT include "clone repo" or "build from source" instructions here — those belong in a Developer Guide.
+{ONLY if installation matters to the end user. Otherwise delete this section.}
 
-### 2.1 Quick Start
+**Bước 1 — {install action}:**
 
 ```bash
-# Step 1: Download the release
-{Download command or URL}
-
-# Step 2: Configure
-{Create/edit config file}
-
-# Step 3: Run
-{Run command}
-
-# Step 4: Verify
-{Verification command or expected log output}
+{single copy-paste command}
 ```
 
-### 2.2 System Requirements
-
-| Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| {Runtime} | {version} | {version} |
-| {Memory} | {spec} | {spec} |
-| {Disk} | {spec} | {spec} |
-| {OS} | {spec} | {spec} |
-
-### 2.3 Distribution Formats
-
-| Format | How to Get | Use Case |
-|--------|-----------|----------|
-| {Fat JAR / Docker / Binary} | {Download URL or command} | {When to use} |
-
-### 2.4 Configuration Methods
-
-{List all ways to configure the system (config file, env vars, CLI args, etc.) with priority/override order.}
-
-| Method | Priority | Best For |
-|--------|----------|----------|
-| {Config file} | {priority} | {use case} |
-| {Environment variables} | {priority} | {use case} |
-
-{Include a minimal working example for each method.}
-
-### 2.5 Verify Configuration
-
-{Step-by-step verification that the system is running correctly:}
-- Check 1: {Server started — expected log output}
-- Check 2: {Dependencies connected — expected log output}
-- Check 3: {Basic functionality test — command + expected result}
-- Common issues table: symptom → cause → fix
+**Bước 2 — {verify action}:** {what the user sees when it worked}
 
 ---
 
-## 3. Configuration
+## 3. {Main flow} — từng bước
 
-### 3.1 Configuration File
+### Bước 1: {Action name}
 
-{Path to config file relative to the application (NOT source code path). Describe format (YAML/JSON/TOML) and how to override with environment variables.}
+| Bước | Thao tác | Kết quả mong đợi |
+|------|----------|------------------|
+| 1 | {exact action: keys, clicks, command} | {what appears/changes} |
+| 2 | {next action} | {what appears/changes} |
 
-### 3.2 Configuration Reference
+![{bước 1 mô tả}](diagrams/screenshot-{step-1}.png)
 
-#### {Section 1 — e.g., Server Settings}
+| Thành phần | Vị trí trên ảnh | Ý nghĩa |
+|-----------|-----------------|---------|
+| {element} | {where} | {meaning} |
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| {property.name} | {type} | {default} | {description} |
+{⚠️ one-line caveat if a common mistake exists at this step.}
 
-#### {Section 2 — e.g., Feature Settings}
+### Bước 2: {Action name}
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| {property.name} | {type} | {default} | {description} |
-
-### 3.3 Environment Variables
-
-| Variable | Description | Required | Example |
-|----------|-------------|----------|---------|
-| {VAR_NAME} | {description} | {Yes/No} | {example value} |
-
-### 3.4 Configuration Examples
-
-#### Minimal Configuration
-
-```yaml
-# {Minimal working config}
-```
-
-#### Full Configuration
-
-```yaml
-# {Complete config with all options}
-```
+{same pattern: User Actions table + screenshot + Key Elements table}
 
 ---
 
-## 4. Usage
+## 4. {Secondary flow} — {edge case / self-check / advanced usage}
 
-### 4.1 {Primary Use Case — e.g., Tool Discovery}
-
-**Description:** {What this feature does.}
-
-**How to use:**
-
-```
-{Command or API call example}
-```
-
-**Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| {param} | {type} | {Yes/No} | {description} |
-
-**Example:**
-
-```
-{Concrete example with real values}
-```
-
-**Expected Output:**
-
-```json
-{Example response}
-```
-
-### 4.2 {Secondary Use Case — e.g., Tool Execution}
-
-{Same structure as 4.1}
-
-### 4.3 {Additional Use Cases}
-
-{Repeat for each major feature}
+{same pattern as Section 3. Delete if the feature has no secondary flow.}
 
 ---
 
-## 5. User Interface Guide (if applicable)
+## 5. Xử lý sự cố
 
-> **Note:** Include this section only if the system has a web UI, desktop UI, or mobile UI. For server-only / CLI-only systems, remove this section entirely.
->
-> ⛔ **Evidence rule:** Screenshots MUST be captured from the actual running build. Wireframes, draw.io mockups, Stitch screens, and placeholder images are NOT valid UG evidence. Use the real app after the ticket feature has been verified in the running instance.
+| Hiện tượng | Nguyên nhân | Cách xử lý |
+|-----------|-------------|-----------|
+| {symptom the user SEES} | {likely cause, in user terms} | {concrete fix steps} |
+| {symptom} | {cause} | {fix} |
 
-### 5.1 Screen Overview
-
-| # | Screen | URL / Path | Purpose |
-|---|--------|-----------|---------|
-| 1 | {Dashboard} | {/dashboard} | {Main overview screen} |
-| 2 | {Settings} | {/settings} | {Configuration management} |
-
-### 5.2 {Screen 1 — e.g., Dashboard}
-
-<!-- Replace with a screenshot from the actual running build. Do NOT use a wireframe or mockup. -->
-![{Screen Name}](diagrams/ui-{screen-name}.png)
-
-**Evidence source:** {build/commit/version + URL or route captured}
-
-**Key Elements:**
-
-| # | Element | Type | Description |
-|---|---------|------|-------------|
-| 1 | {Element name} | {Button/Input/Table/Card} | {What it does} |
-| 2 | {Element name} | {Type} | {Description} |
-
-**User Actions:**
-
-| Action | Steps | Expected Result |
-|--------|-------|-----------------|
-| {Action name} | 1. {Step} 2. {Step} | {What happens} |
-
-### 5.3 {Screen 2 — e.g., Settings}
-
-{Same structure as 5.2 — screenshot + elements table + actions table}
-
-### 5.4 Navigation Flow
-
-```mermaid
-flowchart LR
-    A[Login] --> B[Dashboard]
-    B --> C[Feature Page]
-    B --> D[Settings]
-    C --> E[Detail View]
-```
+> Rules: order by how often users hit it; describe by SYMPTOM (what they see), not by error code; keep fixes to 1–3 steps each.
 
 ---
 
-## 6. Administration
+## 6. Câu hỏi thường gặp (FAQ)
 
-### 6.1 {Admin Task 1 — e.g., Adding a New Server}
+**Hỏi: {question in the user's own words}?**  
+Đáp: {answer in 1–3 sentences, no jargon}.
 
-**Steps:**
+**Hỏi: {question}?**  
+Đáp: {answer}.
 
-1. {Step 1}
-2. {Step 2}
-3. {Verify}
-
-### 6.2 {Admin Task 2 — e.g., Monitoring Health}
-
-{Steps and commands}
-
-### 6.3 {Admin Task 3 — e.g., Hot-Reload Configuration}
-
-{Steps and commands}
+{4–6 questions total.}
 
 ---
 
-## 7. Troubleshooting
+## 7. Tài liệu liên quan
 
-### 7.1 Common Issues
-
-| # | Symptom | Cause | Solution |
-|---|---------|-------|----------|
-| 1 | {Error message or behavior} | {Root cause} | {How to fix} |
-| 2 | {Error message or behavior} | {Root cause} | {How to fix} |
-
-### 7.2 Error Codes
-
-| Code | Message | Description | Action |
-|------|---------|-------------|--------|
-| {ERROR_CODE} | {message} | {what happened} | {what to do} |
-
-### 7.3 Logs
-
-| Log Location | Content | Useful For |
-|-------------|---------|------------|
-| {path/stdout} | {what's logged} | {debugging scenario} |
-
-### 7.4 FAQ
-
-**Q: {Common question}**
-A: {Answer}
-
----
-
-## 8. API Reference (if applicable)
-
-### 8.1 {API/Tool 1}
-
-| Attribute | Value |
-|-----------|-------|
-| Name | {name} |
-| Description | {description} |
-
-**Input Schema:**
-
-```json
-{JSON Schema}
-```
-
-**Example Request:**
-
-```json
-{Example}
-```
-
-**Example Response:**
-
-```json
-{Example}
-```
-
-### 8.2 {API/Tool 2}
-
-{Same structure}
-
----
-
-## 9. Appendix
-
-### 9.1 Glossary
-
-| Term | Definition |
-|------|------------|
-| {term} | {definition} |
-
-### 9.2 Related Documents
-
-| Document | Location |
+| Tài liệu | Nội dung |
 |----------|----------|
-| BRD | BRD-v{VERSION}-{TICKET-KEY}.docx |
-| FSD | FSD-v{VERSION}-{TICKET-KEY}.docx |
-| TDD | TDD-v{VERSION}-{TICKET-KEY}.docx |
-| DPG | DPG-v{VERSION}-{TICKET-KEY}.docx |
+| `documents/{TICKET-KEY}/BRD.md` | Yêu cầu nghiệp vụ |
+| `documents/{TICKET-KEY}/FSD.md` | Đặc tả chức năng |
+| `documents/{TICKET-KEY}/TDD.md` | Thiết kế kỹ thuật + kiến trúc (diagrams) |
+| `documents/{TICKET-KEY}/RUN-LOG.md` | Lịch sử chạy + evidence |
 
-### 9.3 Version Compatibility
+---
 
-| System Version | Config Version | Breaking Changes |
-|---------------|---------------|-----------------|
-| {1.0.0} | {v1} | {Initial release} |
+## Self-Check Before Reporting Done (DEV agent)
+
+1. Every embedded image path exists on disk (`Test-Path`) — broken links are a defect.
+2. Zero draw.io architecture images in the document.
+3. Every step has an expected result; every screenshot has a Key Elements table.
+4. All example data traceable to a real run.
+5. Read your own doc as a first-time user: could you complete the main flow using ONLY this document?

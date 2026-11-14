@@ -75,15 +75,17 @@ export { GUID_REGEX };
 
 /** Apply tenant-derived defaults (authority/issuer/jwksUri/scopes). */
 export function applyDerivedDefaults(cfg: z.infer<typeof EntraConfigSchema>): EntraConfig {
-  const authority = cfg.authority ?? `https://login.microsoftonline.com/${cfg.tenantId}`;
+  // NOTE: `||` (not `??`) — the schema defaults these to '' when the env var is
+  // absent, and `'' ?? fallback` keeps the empty string (SA4E-411 regression).
+  const authority = cfg.authority || `https://login.microsoftonline.com/${cfg.tenantId}`;
   return {
     tenantId: cfg.tenantId,
     clientId: cfg.clientId,
     clientSecret: cfg.clientSecret,
     redirectUri: cfg.redirectUri,
     authority,
-    issuer: cfg.issuer ?? `https://login.microsoftonline.com/${cfg.tenantId}/v2.0`,
-    jwksUri: cfg.jwksUri ?? `${authority}/discovery/v2.0/keys`,
-    scopes: cfg.scopes ?? DEFAULT_SCOPES,
+    issuer: cfg.issuer || `https://login.microsoftonline.com/${cfg.tenantId}/v2.0`,
+    jwksUri: cfg.jwksUri || `${authority}/discovery/v2.0/keys`,
+    scopes: cfg.scopes || DEFAULT_SCOPES,
   };
 }

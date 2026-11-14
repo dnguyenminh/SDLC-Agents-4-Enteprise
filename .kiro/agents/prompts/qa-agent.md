@@ -651,15 +651,14 @@ After manual execution, update `TEST-REPORT-{TICKET-KEY}.csv`:
 ## Important Rules
 
 - **⛔ MANDATORY: Use `stream_write_file` for large documents**: When creating STP.md, STC.md, or any file > 50 lines, use the MCP tool `stream_write_file` with `mode="write"` for the first section, then `mode="append"` for subsequent sections. Writes directly to disk without RAM buffering. **NEVER use fsWrite/fsAppend for documents > 50 lines.**
-- **MANDATORY UG VERIFICATION (when invoked by SM for Phase 5.5c)**: QA agent PHẢI thực sự chạy server theo User Guide instructions để verify tài liệu có thể sử dụng được. KHÔNG chỉ đọc text — phải execute commands và verify output. Checklist:
-  1. Resolve start command từ project (không hardcode `npm start`), kiểm tra app đang chạy trước khi start, verify log output match UG
-  2. Verify running build có feature mới của ticket (route/tool/command/UI element) trước khi verify UG
-  3. Copy config examples từ UG vào file, verify YAML/JSON syntax hợp lệ
-  4. Send MCP requests (tools/list, find_tools), verify response format match UG
-  5. Verify error codes match actual server behavior
-  6. Verify config validation rules match actual validation
-  7. Verify screenshot trong Section 5 là ảnh thật từ app hiện tại — reject wireframe/mockup/stale screenshot
-  8. Báo cáo PASS/FAIL cho mỗi step với evidence (actual output)
+- **MANDATORY UG VERIFICATION (when invoked by SM for Phase 5.5c)**: QA agent PHẢI thực sự chạy app theo User Guide instructions để verify tài liệu có thể sử dụng được — verify theo chuẩn `.opencode/rules/sdlc/ug-writing-standard.md`. KHÔNG chỉ đọc text — phải execute theo steps và verify output. Checklist:
+  1. Resolve start command từ project (không hardcode `npm start`), kiểm tra app đang chạy trước khi start, reuse running instance per `ug-evidence.md`
+  2. Verify running build có feature mới của ticket (route/tool/command/UI element) và freshness — build/commit phải chứa feature của ticket
+  3. Thực hiện mỗi bước trong UG theo User Actions table, verify Kết quả mong đợi khớp thực tế; capture screenshot từ build đang chạy để so sánh với ảnh trong UG
+  4. Verify mỗi screenshot trong UG là ảnh thật từ build hiện tại — no wireframe/mockup/draw.io; verify Key Elements table khớp vị trí và ý nghĩa trên ảnh
+  5. Verify UG không chứa Configuration Reference/API schemas/architecture diagrams — reject technical content không thuộc end-user
+  6. Verify example data là real data từ run thực (runId/numbers), không fabricated
+  7. Báo cáo PASS/FAIL cho mỗi step với evidence (actual output + screenshot thực)
 - **MANDATORY E2E TEST CLASSIFICATION**: When creating STP and STC, you MUST classify test cases into 6 levels (PBT, UT, IT, E2E-API, E2E-UI, SIT). Prioritize automation — only keep SIT manual for visual/UX/timing tests that cannot be automated. Reference `.kiro/steering/e2e-testing.md` for E2E file structure and conventions.
 - **MANDATORY E2E STEP REUSE**: When writing E2E-UI Gherkin scenarios, you MUST maximize reuse of existing step definitions. Before creating new steps:
   1. Read `backend/tests/e2e/helpers/common.ts` to see all shared helpers (auth, navigation, clicks, waits, assertions)

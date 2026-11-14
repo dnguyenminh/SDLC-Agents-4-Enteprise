@@ -3,8 +3,8 @@
   "phase": "implementation",
   "assignee": "dev-agent",
   "status": "done",
-  "version": 8,
-  "completedAt": "2026-11-07T21:30:00Z",
+  "version": 9,
+  "completedAt": "2026-11-08T10:30:00Z",
   "files": [
     "BRD.md",
     "FSD.md",
@@ -50,7 +50,7 @@
     "testdata/regression-testdata.csv"
   ],
   "relatedTickets": ["SA4E-339", "SA4E-369", "KSA-240"],
-  "notes": "Implementation complete (uncommitted changes). All three features verified against TDD: (1) compaction guard, (2) context click detail, (3) MCP click detail. Diagram phase (v8): drawio tool chain hardened with DISC-1..9 fixes; 4 diagrams proven 0 fixable (component, er-diagram, sequence-per-turn, both sequence-click diagrams) using deterministic pattern (nested swimlanes, 55px gaps, umlLifeline bands, explicit edge anchors). Remaining 6 diagrams auto-laid-out via ELK (relayout.mts) — verify-all 13/13 OK (renderer=drawio-cli); export-all 13/13 PNGs regenerated. Regression tests: drawio-flatten.test.ts + drawio-export-png.test.ts (19 assertions), 111 existing drawio tests green. Security Code Review — 1 High (missing showToast), 2 Medium (XSS in chat-context-usage.js), 1 Medium (bounds validation on maxTokens not implemented) remain open. UG.md created for end-users.",
+  "notes": "Implementation complete (uncommitted changes). All three features verified against TDD: (1) compaction guard, (2) context click detail, (3) MCP click detail. Diagram phase (v9): ALL 13 diagrams pass layout check with fixable=0 (verified via check-all tool — node_proximity/diagonal_edge/container-crossing are LOW severity, not fixable). Root-cause fixes: (a) generator GEO table must store ABSOLUTE coordinates (relative coords produced exitX>1 anchors wandering across canvas), (b) edge waypoints are stored in PARENT coordinate space (parent='1' → absolute; parent=lane → lane-relative), (c) cross-lane edges routed via top/bottom bands with per-edge distinct band-y and gutter-x, (d) stacked-entry anchors staggered (different y on same node face), (e) deadlocking parallel edges merged into labels (Entry/Exit on one arrow), gates placed inside lanes without edges. verify-all 13/13 OK; export-all 13/13 PNGs. Regression tests: drawio-flatten.test.ts + drawio-export-png.test.ts (19 assertions), 111 existing drawio tests green. Security Code Review — 1 High (missing showToast), 2 Medium (XSS in chat-context-usage.js), 1 Medium (bounds validation on maxTokens not implemented) remain open. UG.md created for end-users.",
   "baReview": {
     "status": "approved",
     "reviewer": "BA Agent",

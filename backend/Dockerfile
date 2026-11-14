@@ -39,6 +39,10 @@ ARG NODE_BASE_DIGEST=sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec
 # -----------------------------------------------------------------------------
 FROM node:${NODE_VERSION}-slim@${NODE_BASE_DIGEST} AS base
 WORKDIR /app
+# Upgrade npm to latest for compatibility with lockfile format
+RUN npm install -g npm@latest
+# Allow git dependencies for packages like tree-sitter-jsp
+RUN npm config set allow-git true
 # Native-module build toolchain (python3/make/g++) + git for build-time fetches.
 # Single layer with apt cleanup to keep intermediate layers lean. These packages
 # are discarded from the runtime image (they exist only in base/build).
@@ -95,8 +99,8 @@ RUN mkdir -p /app/models-cache \
 # magika, PyMuPDF, pillow, pandas; pypandoc-binary bundles pandoc → no apt
 # pandoc needed) match the runtime ABI. `git` exists only here (SEC-05).
 # -----------------------------------------------------------------------------
-FROM base AS mcp-python
-ARG MARKITDOWN_MCP_VERSION=0.0.1a7
+FROM python:3.12-slim AS mcp-python
+ARG MARKITDOWN_MCP_VERSION=0.0.1a8
 # markdown-exporter-mcp-local has no PyPI release — pin the exact upstream
 # commit (main @ 2026-04-07) for a hermetic build (git-source analogue of SEC-02).
 ARG MARKDOWN_EXPORTER_MCP_REF=1429b6a94767a709f7f5119219ca5951042d9d3c
@@ -131,7 +135,7 @@ ARG PILLOW_VERSION=13.0.0
 # support is missing. One venv per server: independent dependency trees that
 # are pinned, upgraded and Trivy-scanned separately.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends python3-venv \
+ && apt-get install -y --no-install-recommends python3-venv git \
  && rm -rf /var/lib/apt/lists/*
 RUN python3 -m venv /opt/markitdown-venv \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir \
@@ -238,8 +242,6 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 COPY --from=mcp-python /opt/markitdown-venv /opt/markitdown-venv
 COPY --from=mcp-python /opt/markdown-exporter-venv /opt/markdown-exporter-venv
-# Copy .trivyignore to WORKDIR for Trivy vulnerability scan exceptions (e.g., CVE-2026-126190 in soupsieve)
-COPY .trivyignore .trivyignore
 # Console scripts resolve on the PATH inherited by the backend process and its
 # stdio children; PYTHONUNBUFFERED keeps stderr logs streaming (no MCP breakage).
 ENV PATH="/opt/markitdown-venv/bin:/opt/markdown-exporter-venv/bin:${PATH}"

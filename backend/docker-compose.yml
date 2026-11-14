@@ -1,33 +1,52 @@
-# docker-compose.yml for SA4E-387
+# docker-compose.yml for SA4E-387 / SA4E-394
+# Production deployment configuration
 
 version: '3.8'
 
 services:
   sdlc-agent-4-enterprise:
     build: .
-    container_name: sdlc-agent-4-enterprise-sa4e-387
+    container_name: sdlc-agent-4-enterprise
     ports:
       - "48721:48721"
     environment:
       - NODE_ENV=production
       - LLM_CONTEXT_WINDOW=24000
+      # SDR-03: Use environment variables for DB credentials (no hardcoded defaults in production)
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      # Multi-worktree allowlist (SDR-03 fix: env-driven, no hardcoded paths)
+      - MCP_WORKSPACE_ROOTS=${MCP_WORKSPACE_ROOTS}
     volumes:
-      - ./dist:/usr/src/app/dist
-      - ./node_modules:/usr/src/app/node_modules
+      # Workspace mounts (read-write as needed for MCP operations)
+      # These must be configured per deployment host
+      - ${PRIMARY_WORKSPACE}:/workspaces/main:rw
+      - ${ORCA_WORKSPACE_1}:/workspaces/wt-1:rw
+    # SDR-02: Read-only root filesystem with tmpfs for writable directories
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /usr/src/app/.code-intel
     restart: unless-stopped
 
-  # Database service
+  # Database service - production uses external managed PostgreSQL
+  # This compose service is a fallback for local-prod-consistent testing only
   postgres:
     image: postgres:15-alpine
-    container_name: postgres-sa4e-387
+    container_name: postgres-sa4e
     environment:
-      - POSTGRES_USER=sdlc
-      - POSTGRES_PASSWORD=sdlc
-      - POSTGRES_DB=sdlc
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
 
 volumes:
   postgres_data:
