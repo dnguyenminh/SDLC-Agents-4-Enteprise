@@ -39,6 +39,8 @@ ARG NODE_BASE_DIGEST=sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec
 # -----------------------------------------------------------------------------
 FROM node:${NODE_VERSION}-slim@${NODE_BASE_DIGEST} AS base
 WORKDIR /app
+# Upgrade npm to latest for compatibility with lockfile format
+RUN npm install -g npm@latest
 # Native-module build toolchain (python3/make/g++) + git for build-time fetches.
 # Single layer with apt cleanup to keep intermediate layers lean. These packages
 # are discarded from the runtime image (they exist only in base/build).

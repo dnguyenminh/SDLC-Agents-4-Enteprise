@@ -17,6 +17,9 @@ jobs:
         with:
           node-version: '22.23.4'
 
+      - name: Upgrade npm to latest
+        run: npm install -g npm@latest
+
       - name: Clean install (root workspace + rolldown binding)
         run: |
           rm -rf node_modules backend/node_modules extension/node_modules
@@ -49,6 +52,9 @@ jobs:
         with:
           node-version: '22.23.4'
 
+      - name: Upgrade npm to latest
+        run: npm install -g npm@latest
+
       - name: Clean install (root workspace + rolldown binding)
         run: |
           rm -rf node_modules backend/node_modules extension/node_modules
@@ -78,6 +84,9 @@ jobs:
         with:
           node-version: '22.23.4'
 
+      - name: Upgrade npm to latest
+        run: npm install -g npm@latest
+
       - name: Clean install (root workspace + rolldown binding)
         run: |
           rm -rf node_modules backend/node_modules extension/node_modules
@@ -102,6 +111,9 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '22.23.4'
+
+      - name: Upgrade npm to latest
+        run: npm install -g npm@latest
 
       - name: Clean install (root workspace + rolldown binding)
         run: |
