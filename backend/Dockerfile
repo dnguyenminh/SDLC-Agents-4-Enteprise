@@ -85,13 +85,13 @@ RUN mkdir -p /app/models-cache \
     fi
 
 # -----------------------------------------------------------------------------
-# mcp-python — builds the two stdio MCP child servers into isolated /opt venvs.
+# mcp-python — builds the two stdio MCP child servers into a shared /opt/mcp-venv.
 # The orchestration module (McpClientManager → TransportFactory) spawns stdio
 # children by bare `command` name resolved on the PATH inherited by the backend
 # process (documents/MCP-DB-CONFIG-REQUEST.md §9), so each server ships as a
-# venv console script that production/development put on PATH:
-#   /opt/markitdown-venv/bin/markitdown-mcp                (Microsoft MarkItDown)
-#   /opt/markdown-exporter-venv/bin/markdown-exporter-mcp-local
+# venv console script that production/development put on PATH via symlinks:
+#   /opt/mcp-venv/bin/markitdown-mcp                (Microsoft MarkItDown)
+#   /opt/mcp-venv/bin/markdown-exporter-mcp-local
 # Both servers are Python — markdown-exporter-mcp-local is NOT published to
 # npm or PyPI (GitHub source only), so npm packaging is impossible by design.
 # This stage derives from the SAME pinned node base as the runtime, so venv
@@ -132,22 +132,26 @@ ARG SETUPTOOLS_VERSION=84.0.0
 ARG CERTIFI_VERSION=2026.10.19
 ARG PILLOW_VERSION=13.0.0
 # `python3` already exists in base (build toolchain); only the venv/ensurepip
-# support is missing. One venv per server: independent dependency trees that
-# are pinned, upgraded and Trivy-scanned separately.
+# support is missing. Shared venv /opt/mcp-venv: both MCP servers installed into a
+# single dependency tree to deduplicate Python interpreter, setuptools, certifi,
+# pillow and transitive deps, reducing image size and Trivy surface.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends python3-venv git \
  && rm -rf /var/lib/apt/lists/*
-RUN python3 -m venv /opt/markitdown-venv \
- && /opt/markitdown-venv/bin/pip install --no-cache-dir \
-      "markitdown-mcp==${MARKITDOWN_MCP_VERSION}" \
-      
- && test -x /opt/markitdown-venv/bin/markitdown-mcp \
- && /opt/markitdown-venv/bin/python -c "import markitdown_mcp" \
- && /opt/markitdown-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
- && /opt/markitdown-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'" \
- && /opt/markitdown-venv/bin/pip install --no-cache-dir "certifi==${CERTIFI_VERSION}" "pillow==${PILLOW_VERSION}" \
- && /opt/markitdown-venv/bin/python -c "from importlib.metadata import version; assert version('certifi') == '${CERTIFI_VERSION}' and version('pillow') == '${PILLOW_VERSION}'" \
- && /opt/markitdown-venv/bin/python -m pip uninstall -y pip
+RUN python3 -m venv /opt/mcp-venv \
+  && /opt/mcp-venv/bin/pip install --no-cache-dir \
+       "markitdown-mcp==${MARKITDOWN_MCP_VERSION}" \
+       "markdown-exporter-mcp-local @ git+https://github.com/Zac-Chen-2001/markdown-exporter-mcp-local@${MARKDOWN_EXPORTER_MCP_REF}" \
+       "mcp>=1.27.0,<2.0.0" \
+  && test -x /opt/mcp-venv/bin/markitdown-mcp \
+  && test -x /opt/mcp-venv/bin/markdown-exporter-mcp-local \
+  && /opt/mcp-venv/bin/python -c "import markitdown_mcp" \
+  && /opt/mcp-venv/bin/python -c "import markdown_exporter_mcp.server, md_exporter" \
+  && /opt/mcp-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
+  && /opt/mcp-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'" \
+  && /opt/mcp-venv/bin/pip install --no-cache-dir "certifi==${CERTIFI_VERSION}" "pillow==${PILLOW_VERSION}" \
+  && /opt/mcp-venv/bin/python -c "from importlib.metadata import version; assert version('certifi') == '${CERTIFI_VERSION}' and version('pillow') == '${PILLOW_VERSION}'" \
+  && /opt/mcp-venv/bin/python -m pip uninstall -y pip
 # `mcp<2` constraint: upstream declares `mcp>=1.27.0` (unbounded) but its code
 # imports `mcp.server.fastmcp` — an API REMOVED in mcp 2.x (FastMCP → MCPServer).
 # The import probe below fails the build on exactly this class of drift
@@ -162,17 +166,7 @@ RUN python3 -m venv /opt/markitdown-venv \
 # version's metadata, clearing the CVEs. The importlib.metadata probe fails the
 # build if resolution ever regresses. Remove this override once upstream
 # releases an officially fixed pin (e.g. pillow~=13).
-RUN python3 -m venv /opt/markdown-exporter-venv \
- && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir \
-      "markdown-exporter-mcp-local @ git+https://github.com/Zac-Chen-2001/markdown-exporter-mcp-local@${MARKDOWN_EXPORTER_MCP_REF}" \
-      "mcp>=1.27.0,<2.0.0" \
- && test -x /opt/markdown-exporter-venv/bin/markdown-exporter-mcp-local \
- && /opt/markdown-exporter-venv/bin/python -c "import markdown_exporter_mcp.server, md_exporter" \
- && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "pillow==${PILLOW_VERSION}" "certifi==${CERTIFI_VERSION}" \
- && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('pillow') == '${PILLOW_VERSION}' and version('certifi') == '${CERTIFI_VERSION}'" \
- && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
- && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'" \
- && /opt/markdown-exporter-venv/bin/python -m pip uninstall -y pip
+# Shared venv /opt/mcp-venv contains both MCP servers; symlinks in runtime provide backward-compatible paths.
 # Both venvs are copied root-owned READ-ONLY; stripping their bundled pip keeps
 # the runtime image free of ANY package manager (SEC-05) and out of Trivy scans.
 
@@ -231,17 +225,18 @@ ENV TRANSFORMERS_CACHE=/app/models-cache
 
 # --- Stdio MCP child servers (spawned by orchestration via bare command) ----
 # Python runtime only — pip/venv tooling and git stay out of the image (SEC-05).
-# The venv trees built in `mcp-python` are copied root-owned read-only
+# The shared venv tree built in `mcp-python` is copied root-owned read-only
 # (world-executable: the non-root backend can execute but not modify its own
-# child servers). In-container `mcp_servers` DB rows can use bare commands:
+# child servers). Symlinks provide backward-compatible paths.
+# In-container `mcp_servers` DB rows can use bare commands:
 #   { "command": "markitdown-mcp", "args": [] }
 #   { "command": "markdown-exporter-mcp-local", "args": [] }
 RUN apt-get update \
  && apt-get install -y --no-install-recommends python3 \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
-COPY --from=mcp-python /opt/markitdown-venv /opt/markitdown-venv
-COPY --from=mcp-python /opt/markdown-exporter-venv /opt/markdown-exporter-venv
+COPY --from=mcp-python /opt/mcp-venv /opt/mcp-venv
+RUN ln -sfn /opt/mcp-venv /opt/markitdown-venv && ln -sfn /opt/mcp-venv /opt/markdown-exporter-venv
 # Console scripts resolve on the PATH inherited by the backend process and its
 # stdio children; PYTHONUNBUFFERED keeps stderr logs streaming (no MCP breakage).
 ENV PATH="/opt/markitdown-venv/bin:/opt/markdown-exporter-venv/bin:${PATH}"
@@ -294,8 +289,8 @@ COPY --from=build /app/models-cache ./models-cache
 ENV TRANSFORMERS_CACHE=/app/models-cache
 # Stdio MCP child servers — same venvs as production (see mcp-python stage);
 # `base` already carries python3, so only the venv copies + PATH are needed.
-COPY --from=mcp-python /opt/markitdown-venv /opt/markitdown-venv
-COPY --from=mcp-python /opt/markdown-exporter-venv /opt/markdown-exporter-venv
+COPY --from=mcp-python /opt/mcp-venv /opt/mcp-venv
+RUN ln -sfn /opt/mcp-venv /opt/markitdown-venv && ln -sfn /opt/mcp-venv /opt/markdown-exporter-venv
 ENV PATH="/opt/markitdown-venv/bin:/opt/markdown-exporter-venv/bin:${PATH}"
 ENV PYTHONUNBUFFERED=1
 RUN groupadd -g 1001 sa4e \
