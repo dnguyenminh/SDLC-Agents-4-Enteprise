@@ -13,6 +13,26 @@ import { DEFAULT_DETECT_THRESHOLDS, detectAllIssues, type DetectThresholds, type
 import { enforceFinalGate } from './drawio-apply-validate';
 import { blockingCount, emptyOutcome, outcomeJson, type RootInfo } from './drawio-result';
 
+/** Full A2 outcome when no blocking issue remains; cosmetic issues stay visible. */
+export function alreadyGoodOutcome(
+  filePath: string, root: RootInfo, thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
+): string {
+  enforceFinalGate(filePath);
+  const finalGraph = parseDrawioXml(fs.readFileSync(filePath, 'utf-8'));
+  const finalIssues = detectAllIssues(finalGraph, thresholds);
+  const remaining = blockingCount(finalIssues);
+  const outcome = emptyOutcome();
+  outcome.status = remaining === 0 ? 'already_good' : 'partial';
+  outcome.message = remaining === 0
+    ? 'Diagram has no blocking layout issues.'
+    : `${remaining} blocking issue(s) remain.`;
+  outcome.remaining_issues = remaining;
+  outcome.issues = finalIssues;
+  outcome.nodes = finalGraph.nodes.length + finalGraph.containers.length;
+  outcome.edges = finalGraph.edges.length;
+  return outcomeJson(outcome, root);
+}
+
 /**
  * Report-only exit of the layout tool.
  * @returns the full A2 contract as JSON text.

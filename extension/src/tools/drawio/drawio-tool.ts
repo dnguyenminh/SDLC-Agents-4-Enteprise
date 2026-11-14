@@ -15,10 +15,10 @@ import { preflight } from './drawio-preflight';
 import { adoptVisualChildren } from './drawio-adopt-children';
 import { normalizeLayoutArgs, parseThresholdArgs, resolveDetectThresholds } from './drawio-apply-args';
 import type { DetectThresholds } from './drawio-detect';
-import { enforceFinalGate, validateReparse } from './drawio-apply-validate';
+import { validateReparse } from './drawio-apply-validate';
 import { atomicWriteFileSync } from './drawio-atomic-write';
 import { REPORT_ONLY_ISSUE_TYPES } from './drawio-detect-structure';
-import { reportOnlyOutcome } from './drawio-report-only';
+import { alreadyGoodOutcome, reportOnlyOutcome } from './drawio-report-only';
 import type { RootInfo } from './drawio-result';
 import { baseDirSchemaProperties } from '../../services/tool-descriptions';
 import type { ToolCallContext } from '../../backend-local-tools/registry';
@@ -148,12 +148,7 @@ async function layoutOn(
     const forced = args.relayout === true;
     const blocking = issues.filter(i => i.severity !== 'low');
     if (!forced && scope === 'auto' && blocking.length === 0) {
-      // Preflight/adopt may already have rewritten the file: leave it on-grid.
-      enforceFinalGate(filePath);
-      return toolText(JSON.stringify({
-        status: 'already_good',
-        message: 'Diagram looks good — no overlapping nodes or edge crossings detected.',
-      }));
+      return toolText(alreadyGoodOutcome(filePath, root, thresholds));
     }
     // Content decisions the tool cannot make: never a destructive relayout —
     // label the unambiguous branches, surface the rest (SA4E-406 g/h/a).

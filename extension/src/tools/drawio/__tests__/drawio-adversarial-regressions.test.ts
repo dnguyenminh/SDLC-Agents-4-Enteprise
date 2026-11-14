@@ -102,6 +102,23 @@ describe('SA4E-406 detector thresholds and proximity contract', () => {
     expect(fs.readFileSync(file, 'utf-8')).toBe(xml);
     expect(fs.readdirSync(dir)).toEqual(beforeEntries);
   });
+
+  it('exposes low-severity proximity issues in the already_good A2 payload', async () => {
+    const xml = wrap(node('a', 100, 100) + node('b', 230, 100));
+    const { out } = await runTool('proximity-payload.drawio', xml);
+    expect(out.status).toBe('already_good');
+    expect(out.remaining_issues).toBe(0);
+    const proximity = out.issues.filter((i: { type: string; severity: string }) => i.type === 'node_proximity');
+    expect(proximity.length).toBeGreaterThan(0);
+    expect(proximity.every((i: { severity: string }) => i.severity === 'low')).toBe(true);
+    expect(out.iteration_history).toEqual([]);
+    expect(out.repositioned_nodes).toEqual([]);
+    expect(out.strategy_used).toBe('none');
+    expect(out.nodes).toBe(2);
+    expect(out.edges).toBe(0);
+    expect(out).toHaveProperty('effective_root');
+    expect(out).toHaveProperty('root_source');
+  });
 });
 
 describe('SA4E-406 transactional writes', () => {

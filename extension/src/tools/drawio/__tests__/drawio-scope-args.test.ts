@@ -103,7 +103,11 @@ describe("SA4E-406 scope='positions' — forces the full humanized relayout", ()
     expect(withScope.strategy_used).toBe('humanized_layered');
     const auto = await runTool('bunched-auto.drawio', BUNCHED());
     expect(auto.status).toBe('already_good');
-    expect(auto.strategy_used).toBeUndefined();
+    // Fast path still returns the FULL A2 payload (A2 contract), with the
+    // cosmetic proximity issue visible and no layout change.
+    expect(auto.strategy_used).toBe('none');
+    expect(auto.remaining_issues).toBe(0);
+    expect(auto.issues.some((i: any) => i.type === 'node_proximity' && i.severity === 'low')).toBe(true);
     expect(fs.readFileSync(path.join(dir, 'bunched-auto.drawio'), 'utf-8')).toBe(BUNCHED());
   }, 60_000);
 });
