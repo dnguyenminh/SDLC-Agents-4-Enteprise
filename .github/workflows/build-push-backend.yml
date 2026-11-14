@@ -108,7 +108,7 @@ jobs:
       - name: Sync package-lock.json for backend Docker context
         run: |
           if [ ! -f backend/package-lock.json ]; then
-            cp package-lock.json backend/package-lock.json
+            npm install --workspace=backend --package-lock-only
           fi
 
       # 5. Build the `production` target (no push) so the image can be scanned before distribution (AD-9).
