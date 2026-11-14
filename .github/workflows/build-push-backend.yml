@@ -138,8 +138,10 @@ jobs:
           severity: CRITICAL,HIGH
           trivyignores: .trivyignore
 
-      # 6b. Push the scanned image to registries (only on non-PR events).
-      - name: Push image to registries
+      # 6b. Push the scanned image to registries with multi-arch support (amd64/arm64)
+      # Build multi-arch images so ONNX runtime is only included for the target architecture,
+      # reducing image size per platform. Pushes manifest list to both GHCR and Docker Hub.
+      - name: Push image to registries (multi-arch)
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
         with:
@@ -147,6 +149,7 @@ jobs:
           file: ${{ env.BUILD_CONTEXT }}/Dockerfile
           target: ${{ env.BUILD_TARGET }}
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
