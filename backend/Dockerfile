@@ -99,7 +99,7 @@ RUN mkdir -p /app/models-cache \
 # magika, PyMuPDF, pillow, pandas; pypandoc-binary bundles pandoc → no apt
 # pandoc needed) match the runtime ABI. `git` exists only here (SEC-05).
 # -----------------------------------------------------------------------------
-FROM base AS mcp-python
+FROM python:3.12-slim AS mcp-python
 ARG MARKITDOWN_MCP_VERSION=0.0.1a8
 # markdown-exporter-mcp-local has no PyPI release — pin the exact upstream
 # commit (main @ 2026-04-07) for a hermetic build (git-source analogue of SEC-02).
@@ -135,7 +135,7 @@ ARG PILLOW_VERSION=13.0.0
 # support is missing. One venv per server: independent dependency trees that
 # are pinned, upgraded and Trivy-scanned separately.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends python3-venv \
+ && apt-get install -y --no-install-recommends python3-venv git \
  && rm -rf /var/lib/apt/lists/*
 RUN python3 -m venv /opt/markitdown-venv \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir \
