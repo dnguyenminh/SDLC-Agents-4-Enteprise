@@ -4,29 +4,29 @@
         <mxCell id="1" parent="0"/>
         <!-- Overlapping nodes - node2 overlaps with node1 -->
         <mxCell id="node1" value="Node A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="12" y="12" width="150" height="80" as="geometry"/>
+          <mxGeometry x="10" y="10" width="150" height="80" as="geometry"/>
         </mxCell>
         <mxCell id="node2" value="Node B (Overlaps A)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#bf360c;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="242" y="12" width="150" height="80" as="geometry"/>
+          <mxGeometry x="240" y="10" width="150" height="80" as="geometry"/>
         </mxCell>
         <!-- Node with gap issue - edge passes too close -->
         <mxCell id="node3" value="Node C" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="27" y="252" width="120" height="80" as="geometry"/>
+          <mxGeometry x="30" y="250" width="120" height="80" as="geometry"/>
         </mxCell>
         <mxCell id="node4" value="Node D" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="257" y="252" width="120" height="80" as="geometry"/>
+          <mxGeometry x="260" y="250" width="120" height="80" as="geometry"/>
         </mxCell>
         <!-- Diagonal edge -->
-        <mxCell id="edge1" style="edgeStyle=none;html=1;strokeColor=#1565c0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="node1" target="node3">
+        <mxCell id="edge1" style="html=1;strokeColor=#1565c0;strokeWidth=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="node1" target="node3">
           <mxGeometry relative="1" as="geometry">
             
-          </mxGeometry>
+          <Array as="points"><mxPoint x="85" y="182"/><mxPoint x="90" y="182"/></Array></mxGeometry>
         </mxCell>
         <!-- Edge crossing through node -->
-        <mxCell id="edge2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e65100;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="node2" target="node4">
+        <mxCell id="edge2" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e65100;strokeWidth=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;curved=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="node2" target="node4">
           <mxGeometry relative="1" as="geometry">
             
-          </mxGeometry>
+          <Array as="points"><mxPoint x="315" y="182"/><mxPoint x="320" y="182"/></Array></mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
