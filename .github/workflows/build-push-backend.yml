@@ -104,6 +104,13 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
+      # 4c. Ensure backend/package-lock.json exists for Docker build (per-workspace lockfiles removed)
+      - name: Sync package-lock.json for backend Docker context
+        run: |
+          if [ ! -f backend/package-lock.json ]; then
+            cp package-lock.json backend/package-lock.json
+          fi
+
       # 5. Build the `production` target (no push) so the image can be scanned before distribution (AD-9).
       - name: Build (no push)
         id: build
