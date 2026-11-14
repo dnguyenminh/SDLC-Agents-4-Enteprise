@@ -68,8 +68,9 @@ export function applyUseCasePlan(
   for (const r of plan.relations) {
     const ends = relationEnds.get(r.id)!;
     const keys = relationKeys(r, rank.get(ends.source)! < rank.get(ends.target)!);
-    // detour waypoints are absolute, so the edge must live at the root
-    out = setCellParent(setStyle(out, r.id, s => rewriteStyle(s, ROUTING_KEYS, keys)), r.id, '1');
+    // The relation belongs to the lowest common container of its endpoints;
+    // detour waypoints are expressed in that parent's coordinate space.
+    out = setCellParent(setStyle(out, r.id, s => rewriteStyle(s, ROUTING_KEYS, keys)), r.id, r.parentId);
     out = setEdgeGeometry(out, r.id, r.points);
   }
   return out;

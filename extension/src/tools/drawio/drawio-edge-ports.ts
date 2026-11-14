@@ -15,6 +15,7 @@ import type { Dir } from './drawio-grid-router';
 
 export interface PortAssignment { side: Dir; frac: number; }
 export interface EdgePorts { exit: PortAssignment; entry: PortAssignment; }
+export type PortSideOverrides = ReadonlyMap<string, Partial<Record<'exit' | 'entry', Dir>>>;
 
 interface End {
   edge: DiagramEdge;
@@ -34,9 +35,9 @@ const SINGLE_PORT = /\b(rhombus|ellipse|triangle|hexagon|cloud)\b/;
 /** Assign side + fraction to both ends of every edge. */
 export function assignPorts(
   edges: DiagramEdge[], cells: Map<string, DiagramNode>, rects: Map<string, Rect>,
-  hints?: Map<string, number>,
+  hints?: Map<string, number>, overrides?: PortSideOverrides,
 ): Map<string, EdgePorts> {
-  const ends = edges.flatMap(e => makeEnds(e, rects, hints));
+  const ends = edges.flatMap(e => makeEnds(e, rects, hints, overrides));
   relocateSinglePortShapes(ends, cells);
   const fracs = spreadAlongSides(ends, cells);
   const out = new Map<string, EdgePorts>();
@@ -51,12 +52,15 @@ export function assignPorts(
   return out;
 }
 
-function makeEnds(edge: DiagramEdge, rects: Map<string, Rect>, hints?: Map<string, number>): End[] {
+function makeEnds(
+  edge: DiagramEdge, rects: Map<string, Rect>, hints?: Map<string, number>, overrides?: PortSideOverrides,
+): End[] {
   const s = rects.get(edge.sourceId)!, t = rects.get(edge.targetId)!;
-  const [exitSide, entrySide] = facingSides(s, t);
+  const [facingExit, facingEntry] = facingSides(s, t);
+  const override = overrides?.get(edge.id);
   return [
-    { edge, role: 'exit', nodeId: edge.sourceId, self: s, far: t, side: exitSide, hint: hints?.get(`${edge.id}|exit`) },
-    { edge, role: 'entry', nodeId: edge.targetId, self: t, far: s, side: entrySide, hint: hints?.get(`${edge.id}|entry`) },
+    { edge, role: 'exit', nodeId: edge.sourceId, self: s, far: t, side: override?.exit ?? facingExit, hint: hints?.get(`${edge.id}|exit`) },
+    { edge, role: 'entry', nodeId: edge.targetId, self: t, far: s, side: override?.entry ?? facingEntry, hint: hints?.get(`${edge.id}|entry`) },
   ];
 }
 

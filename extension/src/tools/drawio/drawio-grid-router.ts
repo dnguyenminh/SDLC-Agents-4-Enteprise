@@ -14,6 +14,7 @@ import type { Point, Rect } from './drawio-geometry';
 import { MinHeap } from './drawio-min-heap';
 import { ZoneIndex, type RouteZone } from './drawio-zone-index';
 import { buildAxis, r2 } from './drawio-grid-axis';
+import { RouteLedger } from './drawio-route-ledger';
 
 /** Travel direction: 0=right(+x) 1=down(+y) 2=left(-x) 3=up(-y). */
 export type Dir = 0 | 1 | 2 | 3;
@@ -21,11 +22,9 @@ const DX = [1, 0, -1, 0];
 const DY = [0, 1, 0, -1];
 
 const BEND_COST = 60;
-const OVERLAP_COST = 500; // per grid interval already carrying another edge
-const CROSS_COST = 80; // passing straight through another edge's pass-through
-// Visiting another edge's corner: the two routes touch and read as one line
-// (a T or a "kink" continuing the other edge). Worse than a clean crossing.
-const TOUCH_COST = 200;
+const OVERLAP_COST = 10_000; // sharing a segment with another edge
+const CROSS_COST = 10_000; // touching another edge away from a shared endpoint
+const TOUCH_COST = 10_000; // touching another edge's internal corner
 export const OBSTACLE_MARGIN = 10;
 const MAX_AXIS_LINES = 700;
 const MAX_EXPANSIONS = 400_000;
@@ -44,11 +43,7 @@ export class GridRouter {
   private readonly yi = new Map<number, number>();
   private readonly walls: Rect[];
   private readonly blocked = new Map<number, boolean>();
-  private readonly usedH = new Set<number>();
-  private readonly usedV = new Set<number>();
-  private readonly passH = new Set<number>();
-  private readonly passV = new Set<number>();
-  private readonly bends = new Set<number>();
+  private readonly ledger = new RouteLedger();
 
   private readonly zones: ZoneIndex;
 
@@ -76,6 +71,11 @@ export class GridRouter {
     if (!states) return null;
     this.commit(states);
     return this.corners(states);
+  }
+
+  /** Reserve an already planned route (for example a self-loop) before routing other edges. */
+  reserve(points: Point[]): void {
+    this.ledger.addPolyline(points);
   }
 
   private get nx(): number { return this.xs.length; }
@@ -109,7 +109,7 @@ export class GridRouter {
       closed[s] = 1;
       if (Math.floor(s / 4) === to) return this.chain(prev, s);
       for (let nd = 0; nd < 4; nd++) {
-        const step = this.step(s, nd as Dir, to, wantDir, job.related);
+        const step = this.step(s, nd as Dir, to, wantDir, job.related, Math.floor(s / 4) === from);
         if (!step || g[s] + step.cost >= g[step.state]) continue;
         g[step.state] = g[s] + step.cost;
         prev[step.state] = s;
@@ -121,7 +121,10 @@ export class GridRouter {
   }
 
   /** Cost and next state of moving one grid interval in `nd`; null when blocked. */
-  private step(s: number, nd: Dir, to: number, wantDir: Dir, related?: ReadonlySet<string>): { state: number; cost: number } | null {
+  private step(
+    s: number, nd: Dir, to: number, wantDir: Dir, related: ReadonlySet<string> | undefined,
+    atRouteStart: boolean,
+  ): { state: number; cost: number } | null {
     const d = s % 4, id = Math.floor(s / 4);
     if (nd === ((d + 2) % 4)) return null; // no U-turns
     const ix = id % this.nx, iy = Math.floor(id / this.nx);
@@ -134,18 +137,15 @@ export class GridRouter {
     let cost = len + this.zones.penalty(a, b, related);
     if (nd !== d) cost += BEND_COST;
     if (next === to && nd !== wantDir) cost += BEND_COST;
-    cost += this.occupancyCost(ix, iy, jx, jy, next === to);
+    cost += this.occupancyCost(a, b, !atRouteStart && nd === d);
     return { state: next * 4 + nd, cost };
   }
 
-  private occupancyCost(ix: number, iy: number, jx: number, jy: number, atTarget: boolean): number {
-    const horizontal = iy === jy;
-    const key = horizontal ? iy * this.nx + Math.min(ix, jx) : ix * this.ny + Math.min(iy, jy);
-    let cost = (horizontal ? this.usedH : this.usedV).has(key) ? OVERLAP_COST : 0;
-    const at = jy * this.nx + jx;
-    if (!atTarget && (horizontal ? this.passV : this.passH).has(at)) cost += CROSS_COST;
-    if (!atTarget && this.bends.has(at)) cost += TOUCH_COST;
-    return cost;
+  private occupancyCost(a: Point, b: Point, throughStart: boolean): number {
+    const conflicts = this.ledger.conflicts(a, b, throughStart);
+    return conflicts.overlaps * OVERLAP_COST
+      + conflicts.crossings * CROSS_COST
+      + conflicts.touches * TOUCH_COST;
   }
 
   /** True when the grid interval (i→j) cuts through any inflated obstacle. */
@@ -167,20 +167,9 @@ export class GridRouter {
     return out.reverse();
   }
 
-  /** Record the route's intervals and straight pass-through points as occupied. */
+  /** Record the route as occupied; the ledger merges its grid intervals. */
   private commit(states: number[]): void {
-    for (let i = 1; i < states.length; i++) {
-      const a = Math.floor(states[i - 1] / 4), b = Math.floor(states[i] / 4);
-      const ax = a % this.nx, ay = Math.floor(a / this.nx), bx = b % this.nx, by = Math.floor(b / this.nx);
-      if (ay === by) this.usedH.add(ay * this.nx + Math.min(ax, bx));
-      else this.usedV.add(ax * this.ny + Math.min(ay, by));
-      // Straight pass-through: direction into this point == direction out of it
-      if (i < states.length - 1 && states[i] % 4 === states[i + 1] % 4) {
-        (states[i] % 2 === 0 ? this.passH : this.passV).add(b);
-      } else if (i < states.length - 1) {
-        this.bends.add(b);
-      }
-    }
+    this.ledger.addPolyline(states.map(s => this.coord(Math.floor(s / 4))));
   }
 
   /** Corner points of the route (collinear intermediate points removed). */

@@ -4,14 +4,13 @@
  * Idempotent: on grid-clean input nothing moves. Edge cells never touched.
  * PD-QA1: ports-only path skips debunch/separateContainers (node positions kept).
  */
-import { parseDrawioXml } from './drawio-parser';
-import type { DiagramGraph, DiagramNode } from './drawio-parser';
-import { GRID_STEP, absoluteRects, cellIndex, rectGap, snapToGrid } from './drawio-geometry';
-import type { Rect } from './drawio-geometry';
+import { parseDrawioXml, type DiagramGraph, type DiagramNode } from './drawio-parser';
+import { GRID_STEP, absoluteRects, cellIndex, rectGap, snapToGrid, type Rect } from './drawio-geometry';
 import { isTextRow } from './drawio-style';
 import { containerInsets } from './drawio-container-insets';
 import { patchGeometryTag, hasAttr, replaceAttr, insertAttrs, round } from './drawio-xml-utils';
 import { rewriteCells, type CellPatch } from './drawio-xml-rewrite';
+import { stackTextRows } from './drawio-grid-rows';
 import { detectThresholds } from './drawio-detect';
 /** Working state: byId index + the target (snapped/de-bunched) absolute rects. */
 interface SnapCtx {
@@ -25,6 +24,7 @@ export function snapDiagramToGrid(xml: string, opts?: { portsOnly?: boolean }): 
   const ctx = buildCtx(graph);
   // PD-QA1: ports-only path skips debunch/separateContainers — node positions kept.
   if (!opts?.portsOnly) {
+    stackTextRows(ctx, graph);
     debunch(ctx, graph);
     separateContainers(ctx, graph);
   }

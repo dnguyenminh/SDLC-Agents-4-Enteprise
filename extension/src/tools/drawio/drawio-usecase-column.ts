@@ -9,7 +9,7 @@ import type { DiagramEdge } from './drawio-parser';
 /** Model + edges shared by the use-case planning steps. */
 export interface Ctx { model: UseCaseModel; edges: DiagramEdge[]; caseIds: Set<string>; actorIds: Set<string>; }
 
-const ROW_GAP = 30;
+const ROW_GAP = 40;
 /** Space between two system boundaries (or a boundary and loose use cases). */
 const GROUP_GAP = 40;
 /** Steepest fan angle from the horizontal; flatter fans need a wider diagram. */

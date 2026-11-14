@@ -21,7 +21,14 @@ import { placeActors } from './drawio-usecase-actors';
 import { caseRows, fanOffsets, primaryCentre, type Ctx, type GroupSpan } from './drawio-usecase-column';
 
 /** Include/extend arrow between two use cases. */
-export interface RelationPlan { id: string; straight: boolean; points: Point[]; side: 'left' | 'right'; }
+export interface RelationPlan {
+  id: string;
+  /** Lowest common container of the two use cases. Waypoints use this space. */
+  parentId: string;
+  straight: boolean;
+  points: Point[];
+  side: 'left' | 'right';
+}
 /** A system boundary with its final rect and (possibly re-oriented) style. */
 export interface BoundaryPlan { id: string; rect: Rect; style: string; }
 export interface UseCasePlan {
@@ -64,16 +71,32 @@ function detourCount(ctx: Ctx): number {
 }
 
 /** Relations between use cases; neighbours straight, others on detour lanes. */
-function planRelations(ctx: Ctx, abs: (id: string) => Rect, side: 'left' | 'right', colEdge: number): RelationPlan[] {
+function planRelations(
+  ctx: Ctx, abs: (id: string) => Rect, side: 'left' | 'right', colEdge: number, boundaries: BoundaryPlan[],
+): RelationPlan[] {
   const order = new Map(ctx.model.cases.map((c, i) => [c.id, i]));
   const rel = ctx.edges.filter(e => ctx.caseIds.has(e.sourceId) && ctx.caseIds.has(e.targetId));
+  const parentByCase = new Map<string, string>();
+  for (const group of ctx.model.groups) {
+    if (!group.boundary || !group.nested) continue;
+    group.cases.forEach(c => parentByCase.set(c.id, group.boundary!.id));
+  }
   let lane = 0;
   return rel.map(e => {
-    if (Math.abs(order.get(e.sourceId)! - order.get(e.targetId)!) === 1) return { id: e.id, straight: true, points: [], side };
+    const sourceParent = parentByCase.get(e.sourceId);
+    const parentId = sourceParent && sourceParent === parentByCase.get(e.targetId) ? sourceParent : '1';
+    if (Math.abs(order.get(e.sourceId)! - order.get(e.targetId)!) === 1) {
+      return { id: e.id, parentId, straight: true, points: [], side };
+    }
     const x = side === 'right' ? colEdge + DETOUR_GAP + lane * DETOUR_STEP : colEdge - DETOUR_GAP - lane * DETOUR_STEP;
     lane++;
     const [a, b] = [abs(e.sourceId), abs(e.targetId)];
-    return { id: e.id, straight: false, side, points: [{ x, y: a.y + a.h / 2 }, { x, y: b.y + b.h / 2 }] };
+    const origin = parentId === '1' ? { x: 0, y: 0 } : boundaries.find(b => b.id === parentId)!.rect;
+    const points = [{ x, y: a.y + a.h / 2 }, { x, y: b.y + b.h / 2 }];
+    return {
+      id: e.id, parentId, straight: false, side,
+      points: points.map(p => ({ x: p.x - origin.x, y: p.y - origin.y })),
+    };
   });
 }
 
@@ -107,7 +130,7 @@ export function planUseCase(model: UseCaseModel, edges: DiagramEdge[]): UseCaseP
   const boundaries = planBoundaries(model, spans, origin, width, styleOf);
   const byId = new Map(model.cases.map(c => [c.id, c]));
   const abs = (id: string): Rect => ({ x: origin.x + local.get(id)!.x, y: origin.y + local.get(id)!.y, w: byId.get(id)!.width, h: byId.get(id)!.height });
-  const relations = planRelations(ctx, abs, side, origin.x + (side === 'right' ? colRight : colLeft));
+  const relations = planRelations(ctx, abs, side, origin.x + (side === 'right' ? colRight : colLeft), boundaries);
   const extent: Rect = { x: origin.x, y: origin.y, w: width, h: bottom };
   const fixed = primary && actorCy !== null
     ? { node: primary, at: { x: MARGIN, y: origin.y + actorCy - primary.height / 2 } } : undefined;

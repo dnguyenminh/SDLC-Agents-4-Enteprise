@@ -59,10 +59,22 @@ export function error(msg: string): string {
 export function commitLayout(xml: string, filePath: string, opts?: { portsOnly?: boolean }): { graph: DiagramGraph } {
   // SA4E-406 (h): label unambiguous decision branches on the final geometry —
   // before the grid snap, so a second run sees settled, labeled edges.
-  const finalXml = snapDiagramToGrid(applyDecisionLabels(xml, parseDrawioXml(xml)), opts);
+  const labeled = applyDecisionLabels(xml, parseDrawioXml(xml));
+  const snapped = snapDiagramToGrid(labeled, opts);
+  // Routes were planned before the final grid snap. When the snap moved a
+  // vertex, those routes are stale: re-plan them on the geometry that is
+  // actually written. Sequence/use-case layouts keep their dedicated routes;
+  // the ports-only path changes anchors, not the full route.
+  const finalXml = replanMovedEdges(labeled, snapped, opts);
   validateReparse(finalXml);
   fs.writeFileSync(filePath, finalXml, 'utf-8');
   return { graph: parseDrawioXml(finalXml) };
+}
+
+/** Re-plan edge routes when the final grid snap moved the geometry. */
+function replanMovedEdges(before: string, after: string, opts?: { portsOnly?: boolean }): string {
+  if (before === after || opts?.portsOnly || hasSpecialLayout(after)) return after;
+  return placeLabels(applyEdgePlans(after, planEdges(parseDrawioXml(after))));
 }
 
 /**
