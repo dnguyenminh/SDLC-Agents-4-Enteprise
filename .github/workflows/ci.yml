@@ -20,6 +20,9 @@ jobs:
       - name: Upgrade npm to latest
         run: npm install -g npm@latest
 
+      - name: Allow git dependencies
+        run: npm config set allow-git true
+
       - name: Clean install (root workspace + rolldown binding)
         run: |
           rm -rf node_modules backend/node_modules extension/node_modules
@@ -55,6 +58,9 @@ jobs:
       - name: Upgrade npm to latest
         run: npm install -g npm@latest
 
+      - name: Allow git dependencies
+        run: npm config set allow-git true
+
       - name: Clean install (root workspace + rolldown binding)
         run: |
           rm -rf node_modules backend/node_modules extension/node_modules
@@ -87,6 +93,9 @@ jobs:
       - name: Upgrade npm to latest
         run: npm install -g npm@latest
 
+      - name: Allow git dependencies
+        run: npm config set allow-git true
+
       - name: Clean install (root workspace + rolldown binding)
         run: |
           rm -rf node_modules backend/node_modules extension/node_modules
@@ -114,6 +123,9 @@ jobs:
 
       - name: Upgrade npm to latest
         run: npm install -g npm@latest
+
+      - name: Allow git dependencies
+        run: npm config set allow-git true
 
       - name: Clean install (root workspace + rolldown binding)
         run: |

@@ -41,6 +41,8 @@ FROM node:${NODE_VERSION}-slim@${NODE_BASE_DIGEST} AS base
 WORKDIR /app
 # Upgrade npm to latest for compatibility with lockfile format
 RUN npm install -g npm@latest
+# Allow git dependencies for packages like tree-sitter-jsp
+RUN npm config set allow-git true
 # Native-module build toolchain (python3/make/g++) + git for build-time fetches.
 # Single layer with apt cleanup to keep intermediate layers lean. These packages
 # are discarded from the runtime image (they exist only in base/build).
