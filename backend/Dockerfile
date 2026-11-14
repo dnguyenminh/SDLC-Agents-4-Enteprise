@@ -142,7 +142,7 @@ RUN python3 -m venv /opt/mcp-venv \
   && /opt/mcp-venv/bin/pip install --no-cache-dir \
        "markitdown-mcp==${MARKITDOWN_MCP_VERSION}" \
        "markdown-exporter-mcp-local @ git+https://github.com/Zac-Chen-2001/markdown-exporter-mcp-local@${MARKDOWN_EXPORTER_MCP_REF}" \
-       "mcp>=1.27.0,<2.0.0" \
+       "mcp>=2.1.1,<3.0.0" \
   && test -x /opt/mcp-venv/bin/markitdown-mcp \
   && test -x /opt/mcp-venv/bin/markdown-exporter-mcp-local \
   && /opt/mcp-venv/bin/python -c "import markitdown_mcp" \
@@ -152,10 +152,8 @@ RUN python3 -m venv /opt/mcp-venv \
   && /opt/mcp-venv/bin/pip install --no-cache-dir "certifi==${CERTIFI_VERSION}" "pillow==${PILLOW_VERSION}" \
   && /opt/mcp-venv/bin/python -c "from importlib.metadata import version; assert version('certifi') == '${CERTIFI_VERSION}' and version('pillow') == '${PILLOW_VERSION}'" \
   && /opt/mcp-venv/bin/python -m pip uninstall -y pip
-# `mcp<2` constraint: upstream declares `mcp>=1.27.0` (unbounded) but its code
-# imports `mcp.server.fastmcp` — an API REMOVED in mcp 2.x (FastMCP → MCPServer).
-# The import probe below fails the build on exactly this class of drift
-# (verified: unconstrained pip resolved mcp 2.3.0 → ModuleNotFoundError).
+# `mcp` constraint: markitdown-mcp 0.0.1a8 requires `mcp>=2.1.1,<3.0.0`; markdown-exporter-mcp-local requires `mcp>=1.27.0` (unbounded).
+# Pin to `mcp>=2.1.1,<3.0.0` to satisfy both and match markitdown-mcp's current dependency.
 # `pillow` override (SA4E-360, bumped v1.55.3 to 13.0.0): upstream pins
 # `pillow~=12.1.1`, which resolves to 12.1.1 — carrying HIGH CVEs that fail the
 # production Trivy gate. PEP 440 `~=12.1.1` means >=12.1.1,<12.2, so it does
