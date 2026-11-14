@@ -82,17 +82,17 @@
     "zod": "4.6.6"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.60.0",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^22.0.0",
-    "eslint": "^9.39.5",
+    "eslint": "^10.8.1",
     "fast-check": "^4.9.0",
     "globals": "^17.7.0",
     "tree-sitter-jsp": "github:karlvr/tree-sitter-jsp",
     "tsx": "^4.0.0",
     "typescript": "^5.5.0",
-    "typescript-eslint": "^8.36.0",
+    "typescript-eslint": "^8.67.0",
     "vitest": "^4.1.9",
     "vitest-mock-extended": "^5.1.1"
   },
