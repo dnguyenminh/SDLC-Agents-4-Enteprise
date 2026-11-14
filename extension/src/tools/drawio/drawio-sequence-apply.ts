@@ -5,7 +5,7 @@
  */
 
 import type { LayoutIssue } from './drawio-detect';
-import { detectAllIssues } from './drawio-detect';
+import { DEFAULT_DETECT_THRESHOLDS, detectAllIssues, type DetectThresholds } from './drawio-detect';
 import { planSequence } from './drawio-sequence-plan';
 import { applySequencePlan } from './drawio-sequence-xml';
 import { readCells } from './drawio-table-cells';
@@ -33,6 +33,7 @@ const significant = (list: LayoutIssue[]): number => list.filter(i => i.severity
  */
 export function sequenceRelayout(
   rawXml: string, issues: LayoutIssue[], filePath: string, validate: (xml: string) => void,
+  thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
 ): string {
   try {
     const plan = planSequence(rawXml);
@@ -42,12 +43,12 @@ export function sequenceRelayout(
     if (xml === rawXml) {
       return JSON.stringify({ status: 'already_good', message: 'Sequence diagram already in canonical lifeline layout.', remaining_issues: significant(issues) });
     }
-    const { graph: afterGraph } = commitLayout(xml, filePath);
+    const { graph: afterGraph } = commitLayout(xml, filePath, { debunch: true, gap: thresholds.gap });
     const removed = plan.redundant.length ? ` Removed ${plan.redundant.length} unlabelled duplicate edges.` : '';
     return JSON.stringify({
       status: 'fixed',
       message: `Sequence layout: ${plan.participants.length} lifelines, ${plan.messages.length} messages in authoring order, ${plan.fragments.length} fragment(s).${removed}${unmatched(plan.unmatchedFrames)}${guessed(plan.guessedDividers)}`,
-      remaining_issues: significant(detectAllIssues(afterGraph)),
+      remaining_issues: significant(detectAllIssues(afterGraph, thresholds)),
     });
   } catch (e: unknown) {
     console.error('[drawio-sequence-apply] sequence layout error:', e);

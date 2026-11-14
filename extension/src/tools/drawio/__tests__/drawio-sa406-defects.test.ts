@@ -1,10 +1,6 @@
 /**
- * SA4E-406 — regression tests named after the UAT defects they close:
- *   (f) 10px grid — 2.1          (i) <mxfile> unwrap — 2.2
- *   (g) empty lane titles — 2.3  (h) decision edges — 2.4
- *   (a) band size budget — 2.5   (b) bunched children — 2.6
- *   relayout=true forces the full path — 2.7
- *   cross-lane edge with wrong parent — 2.8
+ * SA4E-406 — regressions for UAT defects 2.1–2.8: grid, unwrap, lane
+ * titles, decision labels, bands, bunched children, relayout and edge parents.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import * as fs from 'fs';
@@ -17,7 +13,7 @@ import { detectBandOversize, detectEdgeWrongParent, detectOffGrid } from '../dra
 import { handleApply } from '../drawio-apply';
 import { parseThresholdArgs, normalizeLayoutArgs } from '../drawio-apply-args';
 import { mapAlgorithm } from '../elk-layout';
-import { absoluteRects, GRID_STEP, rectGap } from '../drawio-geometry';
+import { absoluteRects, GRID_STEP } from '../drawio-geometry';
 
 const wrap = (cells: string): string =>
   `<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>${cells}</root></mxGraphModel>`;
@@ -125,12 +121,14 @@ describe('SA4E-406 (a) band size budget — 2.5', () => {
 });
 
 describe('SA4E-406 (b) bunched children — 2.6', () => {
-  it('treats tight siblings as a medium issue and spreads them apart', async () => {
-    const bunched = wrap(node('a', '1', 100, 100) + node('b', '1', 230, 105)); // gap 10px
-    expect(detectNodeProximity(parseDrawioXml(bunched)).every(i => i.severity === 'medium')).toBe(true);
-    const { file } = await runTool('bunched.drawio', bunched);
-    const rects = absoluteRects(parseDrawio(file).graph);
-    expect(rectGap(rects.get('a')!, rects.get('b')!)).toBeGreaterThanOrEqual(40);
+  it('reports tight siblings as low severity without moving them', async () => {
+    const bunched = wrap(node('a', '1', 100, 100) + node('b', '1', 230, 100)); // gap 10px
+    const proximity = detectNodeProximity(parseDrawioXml(bunched));
+    expect(proximity).toHaveLength(1);
+    expect(proximity.every(i => i.severity === 'low')).toBe(true);
+    const { file, out } = await runTool('bunched.drawio', bunched);
+    expect(out.status).toBe('already_good');
+    expect(fs.readFileSync(file, 'utf-8')).toBe(bunched);
   });
 });
 

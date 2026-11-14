@@ -12,8 +12,8 @@
 import type { DiagramGraph } from './drawio-parser';
 import { parseDrawioXml } from './drawio-parser';
 import type { NormalizedArgs } from './drawio-layout-models';
-import type { LayoutIssue } from './drawio-detect';
-import { detectAllIssues } from './drawio-detect';
+import type { DetectThresholds, LayoutIssue } from './drawio-detect';
+import { DEFAULT_DETECT_THRESHOLDS, detectAllIssues } from './drawio-detect';
 import { sanitizeDrawioXml } from './drawio-xml-sanitize';
 import { normalizePointSequence } from './drawio-sequence-points';
 import { sequenceRelayout } from './drawio-sequence-apply';
@@ -44,9 +44,12 @@ export interface StrategySignal {
 export async function runStrategy(
   rawXml: string, issues: LayoutIssue[], nodeCount: number,
   args: Record<string, unknown>, filePath: string, forceRelayout: boolean,
+  thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
 ): Promise<StrategySignal> {
   const graph = parseDrawioXml(rawXml);
-  const { json, strategy } = await dispatch(rawXml, graph, issues, nodeCount, args, filePath, forceRelayout);
+  const { json, strategy } = await dispatch(
+    rawXml, graph, issues, nodeCount, args, filePath, forceRelayout, thresholds,
+  );
   return toSignal(json, strategy);
 }
 
@@ -66,25 +69,26 @@ type Dispatch = { json: string; strategy: string };
 async function dispatch(
   rawXml: string, graph: DiagramGraph, issues: LayoutIssue[], nodeCount: number,
   args: Record<string, unknown>, filePath: string, forceRelayout: boolean,
+  thresholds: DetectThresholds,
 ): Promise<Dispatch> {
   // Free-floating sequence diagram (lifelines/messages without terminals): connect it first
   const drawn = normalizePointSequence(sanitizeDrawioXml(rawXml).xml);
-  if (drawn) return { strategy: 'sequence', json: sequenceRelayout(drawn.xml, issues, filePath, validateReparse) };
+  if (drawn) return { strategy: 'sequence', json: sequenceRelayout(drawn.xml, issues, filePath, validateReparse, thresholds) };
   const sequence = detectSequenceDiagram(graph);
   if (sequence.isSequence) {
-    return { strategy: 'sequence', json: sequenceRelayout(sanitizeDrawioXml(rawXml).xml, issues, filePath, validateReparse) };
+    return { strategy: 'sequence', json: sequenceRelayout(sanitizeDrawioXml(rawXml).xml, issues, filePath, validateReparse, thresholds) };
   }
   const useCase = detectUseCaseDiagram(graph);
-  if (useCase) return { strategy: 'use_case', json: useCaseRelayout(rawXml, graph, useCase, issues, filePath, validateReparse) };
+  if (useCase) return { strategy: 'use_case', json: useCaseRelayout(rawXml, graph, useCase, issues, filePath, validateReparse, thresholds) };
   const normalized = normalizeLayoutArgs(args);
   if (normalized.scope === 'ports') {
-    return { strategy: 'ports_only', json: handlePortsOnlyFix(rawXml, graph, issues, filePath) };
+    return { strategy: 'ports_only', json: handlePortsOnlyFix(rawXml, graph, issues, filePath, thresholds) };
   }
   if (needsFullRelayout(graph, issues, normalized, forceRelayout)) {
     const name = normalized.algorithm === 'layered' ? 'humanized_layered' : `elk_${normalized.algorithm}`;
-    return { strategy: name, json: await elkRelayout(rawXml, graph, issues, normalized, filePath) };
+    return { strategy: name, json: await elkRelayout(rawXml, graph, issues, normalized, filePath, thresholds) };
   }
-  return { strategy: 'local_repair', json: await localRepairPath(rawXml, graph, issues, normalized, filePath) };
+  return { strategy: 'local_repair', json: await localRepairPath(rawXml, graph, issues, normalized, filePath, thresholds) };
 }
 
 /** Full relayout when forced, or when the damage is structural/widespread. */
@@ -103,31 +107,31 @@ function needsFullRelayout(
 /** Minimal path: move only violating nodes and reroute affected edges. */
 async function localRepairPath(
   rawXml: string, graph: DiagramGraph, issues: LayoutIssue[],
-  normalized: NormalizedArgs, filePath: string,
+  normalized: NormalizedArgs, filePath: string, thresholds: DetectThresholds,
 ): Promise<string> {
   try {
-    const plan = planLocalRepair(graph, issues, normalized.spacing);
+    const plan = planLocalRepair(graph, issues, normalized.spacing, thresholds);
     // Node moves/resizes come from the repair plan. Edges are ALWAYS re-planned by the grid
     // router on the repaired geometry: the legacy single-obstacle detours in plan.routes
     // routinely cut through other nodes or run diagonally.
     const moved = applyRepairPlan(rawXml, { ...plan, routes: new Map() });
     const edgePlans = planEdges(parseDrawioXml(moved));
     const xml = placeLabels(applyEdgePlans(moved, edgePlans));
-    if (xml === rawXml || !improvesDiagram(issues, xml)) {
+    if (xml === rawXml || !improvesDiagram(issues, xml, thresholds)) {
       // Repair could not act, or would not help. A full relayout only pays off
       // for issues it demonstrably fixes — edge-cosmetic leftovers (stacked
       // parallel edges survive every re-route) and gate-fixable ones (off-grid)
       // stay flagged instead of triggering a destructive rewrite (SA4E-406).
       if (relayoutWouldHelp(issues)) {
-        return await elkRelayout(rawXml, graph, issues, normalized, filePath);
+        return await elkRelayout(rawXml, graph, issues, normalized, filePath, thresholds);
       }
       return JSON.stringify({
         status: 'already_good',
         message: 'Local repair found no further improvement — the remaining issue(s) are reported.',
       });
     }
-    const { graph: afterGraph } = commitLayout(xml, filePath);
-    const remaining = detectAllIssues(afterGraph).filter(i => i.severity !== 'low').length;
+    const { graph: afterGraph } = commitLayout(xml, filePath, { debunch: false });
+    const remaining = detectAllIssues(afterGraph, thresholds).filter(i => i.severity !== 'low').length;
     return JSON.stringify({
       status: 'fixed',
       message: `Local repair: moved ${plan.moves.size} nodes, re-routed ${edgePlans.length} edges.`,
@@ -141,8 +145,8 @@ async function localRepairPath(
 
 /** Issue types a full relayout + edge re-plan demonstrably resolves. */
 const RELAYOUT_RELEVANT: ReadonlySet<string> = new Set([
-  'node_overlap', 'node_proximity', 'child_outside_container', 'extreme_aspect_ratio',
-  'edge_node_crossing', 'edge_edge_crossing', 'edge_container_crossing',
+  'node_overlap', 'child_outside_container', 'extreme_aspect_ratio',
+  'edge_crossing', 'edge_edge_crossing', 'stacked_edges',
 ]);
 
 /** True when at least one blocking issue is of a type a relayout fixes. */
@@ -156,15 +160,20 @@ function relayoutWouldHelp(issues: LayoutIssue[]): boolean {
  * is not enough — trading 8 stacked edges for 8 new overlaps looks like progress
  * by count but is worse.
  */
-function improvesDiagram(before: LayoutIssue[], candidateXml: string): boolean {
+function improvesDiagram(
+  before: LayoutIssue[], candidateXml: string, thresholds: DetectThresholds,
+): boolean {
   const count = (list: LayoutIssue[], sev: string): number => list.filter(i => i.severity === sev).length;
-  const after = detectAllIssues(parseDrawioXml(candidateXml));
+  const after = detectAllIssues(parseDrawioXml(candidateXml), thresholds);
   const [hb, ha] = [count(before, 'high'), count(after, 'high')];
   return ha !== hb ? ha < hb : count(after, 'medium') < count(before, 'medium');
 }
 
 /** Ports-only path (scope='ports'): spread anchors, keep all node positions. */
-function handlePortsOnlyFix(rawXml: string, graph: DiagramGraph, issues: LayoutIssue[], filePath: string): string {
+function handlePortsOnlyFix(
+  rawXml: string, graph: DiagramGraph, issues: LayoutIssue[], filePath: string,
+  thresholds: DetectThresholds,
+): string {
   try {
     const xml = applyPortDistribution(rawXml, graph);
     if (xml === rawXml) {
@@ -172,8 +181,8 @@ function handlePortsOnlyFix(rawXml: string, graph: DiagramGraph, issues: LayoutI
     }
     // PD-QA1: ports-only path — grid snap only, no debunch, so node positions
     // are preserved (FSD §3.1 L374).
-    const { graph: afterGraph } = commitLayout(xml, filePath, { portsOnly: true });
-    const remaining = detectAllIssues(afterGraph).filter(i => i.severity !== 'low').length;
+    const { graph: afterGraph } = commitLayout(xml, filePath, { portsOnly: true, debunch: false });
+    const remaining = detectAllIssues(afterGraph, thresholds).filter(i => i.severity !== 'low').length;
     return JSON.stringify({
       status: 'fixed',
       message: `Fixed edge routing. ${issues.length} issues detected, ports distributed.`,

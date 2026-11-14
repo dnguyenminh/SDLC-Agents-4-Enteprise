@@ -41,6 +41,22 @@ export function blockingCount(issues: LayoutIssue[]): number {
   return issues.filter(i => i.severity !== 'low').length;
 }
 
+/** Blocking issue profile: high severity dominates medium severity. */
+export interface BlockingScore { high: number; medium: number; }
+
+/** Compare two blocking profiles; negative means the first candidate is better. */
+export function compareBlocking(left: BlockingScore, right: BlockingScore): number {
+  return left.high - right.high || left.medium - right.medium;
+}
+
+/** Build the blocking profile used by best-pass selection and rollback. */
+export function blockingScore(issues: LayoutIssue[]): BlockingScore {
+  return {
+    high: issues.filter(i => i.severity === 'high').length,
+    medium: issues.filter(i => i.severity === 'medium').length,
+  };
+}
+
 /** Serialize the full contract with a fixed key order. */
 export function outcomeJson(outcome: LayoutOutcome, root: RootInfo): string {
   return JSON.stringify({

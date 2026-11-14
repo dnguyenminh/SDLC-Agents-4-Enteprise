@@ -1,14 +1,14 @@
 /**
  * Local repair planner — minimal, targeted fixes for detected layout issues:
- * push apart overlapping/too-close nodes, clamp children back into containers,
- * reroute edges that cut through shapes. Preserves the overall layout.
+ * push apart overlapping nodes, clamp children back into containers, reroute
+ * edges that cut through shapes. Preserves the overall layout.
  */
 
 import type { DiagramGraph } from './drawio-parser';
 import { absoluteRects, cellIndex } from './drawio-geometry';
 import type { Point, Rect } from './drawio-geometry';
 import { computeRoute } from './drawio-router';
-import { detectThresholds, type LayoutIssue } from './drawio-detect';
+import { DEFAULT_DETECT_THRESHOLDS, type DetectThresholds, type LayoutIssue } from './drawio-detect';
 import { addShift, curRect, type Ctx } from './drawio-repair-ctx';
 import { rerouteEdges } from './drawio-repair-routes';
 
@@ -26,13 +26,17 @@ const CONTAIN_MARGIN = 10; // padding kept between a child and its container
 const STACK_OFFSET = 24;   // perpendicular offset for stacked parallel edges
 
 /** Plan minimal repairs for the given issues. Returns an empty plan when nothing is actionable. */
-export function planLocalRepair(graph: DiagramGraph, issues: LayoutIssue[], spacing: number): RepairPlan {
+export function planLocalRepair(
+  graph: DiagramGraph, issues: LayoutIssue[], spacing: number,
+  thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
+): RepairPlan {
   const ctx: Ctx = {
     byId: cellIndex(graph),
     rects: absoluteRects(graph),
     shift: new Map(),
     resizes: new Map(),
     spacing,
+    thresholds,
   };
   pushApart(ctx, collectPairs(issues));
   containChildren(ctx, issues);
@@ -40,31 +44,27 @@ export function planLocalRepair(graph: DiagramGraph, issues: LayoutIssue[], spac
   return buildPlan(ctx, routes);
 }
 
-/** Unique node pairs to separate, tagged with the issue kind. */
-function collectPairs(issues: LayoutIssue[]): Array<{ a: string; b: string; kind: 'overlap' | 'proximity' }> {
+/** Unique overlapping node pairs to separate. Proximity is cosmetic only. */
+function collectPairs(issues: LayoutIssue[]): Array<{ a: string; b: string }> {
   const seen = new Set<string>();
-  const pairs: Array<{ a: string; b: string; kind: 'overlap' | 'proximity' }> = [];
+  const pairs: Array<{ a: string; b: string }> = [];
   for (const issue of issues) {
-    const kind = issue.type === 'node_overlap' ? 'overlap'
-      : issue.type === 'node_proximity' ? 'proximity' : null;
-    if (!kind) continue;
+    if (issue.type !== 'node_overlap') continue;
     const a = String(issue.node_a), b = String(issue.node_b);
-    const key = kind + [a, b].sort().join('|');
+    const key = [a, b].sort().join('|');
     if (seen.has(key)) continue;
     seen.add(key);
-    pairs.push({ a, b, kind });
+    pairs.push({ a, b });
   }
   return pairs;
 }
 
-/** Iteratively push violating pairs apart until the required gap is met. */
-function pushApart(ctx: Ctx, pairs: Array<{ a: string; b: string; kind: 'overlap' | 'proximity' }>): void {
+/** Iteratively push overlapping pairs apart until the required gap is met. */
+function pushApart(ctx: Ctx, pairs: Array<{ a: string; b: string }>): void {
   for (let pass = 0; pass < PUSH_PASSES; pass++) {
     for (const pair of pairs) {
       const ra = curRect(ctx, pair.a), rb = curRect(ctx, pair.b);
-      const required = pair.kind === 'overlap'
-        ? Math.max(ctx.spacing * 0.5, detectThresholds().gap)
-        : detectThresholds().gap;
+      const required = Math.max(ctx.spacing * 0.5, ctx.thresholds.gap);
       const { da, db } = separationDelta(ra, rb, required);
       if (da.x === 0 && da.y === 0) continue;
       addShift(ctx.shift, pair.a, da);

@@ -12,6 +12,8 @@ import { checkSymlinkGuardForPath } from '../../backend-local-tools/fs-guards';
 import { MAX_INPUT_BYTES, MAX_INPUT_CELLS } from './drawio-apply-args';
 import { findMalformedTags, sanitizeDrawioXml } from './drawio-xml-sanitize';
 import { unwrapMxfileXml } from './drawio-xml-utils';
+import { validateReparse } from './drawio-apply-validate';
+import { atomicWriteFileSync } from './drawio-atomic-write';
 
 /** Gate outcome: the XML to parse, or an actionable error for the caller. */
 export type Preflight = { xml: string } | { error: string };
@@ -35,16 +37,17 @@ export function preflight(filePath: string, workspaceRoot: string | null, displa
   if (cellCount > MAX_INPUT_CELLS) return { error: tooManyCells(cellCount) };
   const { xml: cleaned, fixes } = sanitizeDrawioXml(original);
   const xml = unwrapMxfileXml(cleaned);
-  if (xml !== original) {
-    fs.writeFileSync(filePath, xml, 'utf-8');
-    if (fixes.length > 0) console.warn(`[drawio-auto-layout] sanitized '${displayPath}' before layout — ${fixes.join('; ')}`);
-  }
   const malformed = findMalformedTags(xml);
   if (malformed.length > 0) {
     const first = malformed[0];
     return { error:
       `draw.io syntax error: ${malformed.length} malformed <${first.tag}> tag(s); first at line ${first.line}: ` +
       `"${first.sample}". Fix the quoting in this file (it cannot be repaired automatically) and run again.` };
+  }
+  if (xml !== original) {
+    validateReparse(xml);
+    atomicWriteFileSync(filePath, xml);
+    if (fixes.length > 0) console.warn(`[drawio-auto-layout] sanitized '${displayPath}' before layout — ${fixes.join('; ')}`);
   }
   return { xml };
 }

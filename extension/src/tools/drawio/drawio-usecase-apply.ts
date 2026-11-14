@@ -5,7 +5,7 @@
  */
 
 import type { LayoutIssue } from './drawio-detect';
-import { detectAllIssues } from './drawio-detect';
+import { DEFAULT_DETECT_THRESHOLDS, detectAllIssues, type DetectThresholds } from './drawio-detect';
 import type { UseCaseModel } from './drawio-detect-usecase';
 import type { DiagramGraph } from './drawio-parser';
 import { planUseCase } from './drawio-usecase-plan';
@@ -27,6 +27,7 @@ const significant = (list: LayoutIssue[]): number => list.filter(i => i.severity
 export function useCaseRelayout(
   rawXml: string, graph: DiagramGraph, model: UseCaseModel, issues: LayoutIssue[],
   filePath: string, validate: (xml: string) => void,
+  thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
 ): string {
   try {
     const plan = planUseCase(model, graph.edges);
@@ -35,11 +36,11 @@ export function useCaseRelayout(
     if (xml === rawXml) {
       return JSON.stringify({ status: 'already_good', message: 'Use-case diagram already in canonical layout.', remaining_issues: significant(issues) });
     }
-    const { graph: afterGraph } = commitLayout(xml, filePath);
+    const { graph: afterGraph } = commitLayout(xml, filePath, { debunch: true, gap: thresholds.gap });
     return JSON.stringify({
       status: 'fixed',
       message: `Use-case layout: ${model.cases.length} use cases in ${model.groups.length} group(s), ${model.actors.length} actors, ${plan.associations.length} associations.`,
-      remaining_issues: significant(detectAllIssues(afterGraph)),
+      remaining_issues: significant(detectAllIssues(afterGraph, thresholds)),
     });
   } catch (e: unknown) {
     console.error('[drawio-usecase-apply] use-case layout error:', e);

@@ -6,7 +6,7 @@
 import type { DiagramGraph } from './drawio-parser';
 import type { NormalizedArgs } from './drawio-layout-models';
 import type { LayoutIssue, DetectThresholds } from './drawio-detect';
-import { MIN_GAP, OVERLAP_EPS } from './drawio-detect';
+import { DEFAULT_DETECT_THRESHOLDS, MIN_GAP, OVERLAP_EPS } from './drawio-detect';
 
 /**
  * Parse an integer from environment variable with bounds validation (SEC-02).
@@ -60,17 +60,51 @@ export function parseThresholdArgs(args: Record<string, unknown>): DetectThresho
   };
 }
 
+/** Resolve the effective thresholds for one immutable tool run. */
+export function resolveDetectThresholds(t?: DetectThresholds): DetectThresholds {
+  return t ? { ...t } : { ...DEFAULT_DETECT_THRESHOLDS };
+}
+
 /** Fraction of cells involved in at least one blocking issue. */
 export function violationRatio(graph: DiagramGraph, issues: LayoutIssue[]): number {
   const total = graph.nodes.length + graph.containers.length;
   if (total === 0) return 1;
+  const cells = new Set([...graph.nodes, ...graph.containers].map(cell => cell.id));
+  const edges = new Map(graph.edges.map(edge => [edge.id, edge]));
   const involved = new Set<string>();
   for (const issue of issues) {
-    for (const key of ['node_a', 'node_b', 'child']) {
-      if (typeof issue[key] === 'string') involved.add(issue[key] as string);
-    }
+    if (issue.severity === 'low') continue;
+    addDirectCells(issue, cells, involved);
+    addEdgeEndpoints(issue, edges, cells, involved);
   }
   return involved.size / total;
+}
+
+/** Add issue fields that already identify a graph cell. */
+function addDirectCells(issue: LayoutIssue, cells: Set<string>, involved: Set<string>): void {
+  const keys = [
+    'node_a', 'node_b', 'child', 'container', 'node', 'crosses_node',
+    'crosses_container', 'parent', 'expected', 'edge_source', 'edge_target',
+  ];
+  for (const key of keys) {
+    const id = issue[key];
+    if (typeof id === 'string' && cells.has(id)) involved.add(id);
+  }
+}
+
+/** Resolve edge ids to their endpoint cells; edge ids are not cell ids. */
+function addEdgeEndpoints(
+  issue: LayoutIssue, edges: Map<string, DiagramGraph['edges'][number]>,
+  cells: Set<string>, involved: Set<string>,
+): void {
+  for (const key of ['edge_id', 'edge_a', 'edge_b']) {
+    const edgeId = issue[key];
+    if (typeof edgeId !== 'string') continue;
+    const edge = edges.get(edgeId);
+    if (!edge) continue;
+    if (cells.has(edge.sourceId)) involved.add(edge.sourceId);
+    if (cells.has(edge.targetId)) involved.add(edge.targetId);
+  }
 }
 
 /** Normalize layout args with safe defaults and upper bounds (SEC-03). */

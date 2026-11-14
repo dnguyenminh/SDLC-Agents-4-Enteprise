@@ -11,15 +11,16 @@ import type { DiagramGraph } from './drawio-parser';
 import { parseDrawioXml } from './drawio-parser';
 import type { RepositionedNode } from './drawio-layout-models';
 import { absoluteRects } from './drawio-geometry';
-import { detectAllIssues, type LayoutIssue } from './drawio-detect';
+import { DEFAULT_DETECT_THRESHOLDS, detectAllIssues, type DetectThresholds, type LayoutIssue } from './drawio-detect';
 import { MAX_NODES, normalizeLayoutArgs } from './drawio-apply-args';
-import { enforceFinalGate, error } from './drawio-apply-validate';
+import { enforceFinalGate, error, validateReparse } from './drawio-apply-validate';
+import { atomicWriteFileSync } from './drawio-atomic-write';
 import { checkSymlinkGuardForPath } from '../../backend-local-tools/fs-guards';
 import { REPORT_ONLY_ISSUE_TYPES } from './drawio-detect-structure';
 import { runStrategy, type StrategySignal } from './drawio-apply-strategy';
 import {
-  blockingCount, emptyOutcome, outcomeJson,
-  type IterationRecord, type LayoutStatus, type RootInfo,
+  blockingCount, blockingScore, compareBlocking, emptyOutcome, outcomeJson,
+  type BlockingScore, type IterationRecord, type LayoutStatus, type RootInfo,
 } from './drawio-result';
 
 /** Spacing added between verify-loop passes (grid multiples keep the snap). */
@@ -27,7 +28,7 @@ const SPACING_STEP = 40;
 /** Verify-loop budget (BRD STORY 2: up to 3 iterations). */
 const MAX_ITERATIONS = 3;
 
-interface Best { xml: string; blocking: number; }
+interface Best { xml: string; blocking: number; score: BlockingScore; }
 
 /**
  * Orchestrate the fix passes, then write the best result back and return the
@@ -36,6 +37,7 @@ interface Best { xml: string; blocking: number; }
 export async function handleApply(
   rawXml: string, graph: DiagramGraph, issues: LayoutIssue[], nodeCount: number,
   args: Record<string, unknown>, filePath: string, root?: RootInfo,
+  thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
 ): Promise<string> {
   const rootInfo: RootInfo = root ?? {
     effective_root: path.dirname(filePath), root_source: 'cwd_fallback',
@@ -56,18 +58,29 @@ export async function handleApply(
   let currentRaw = rawXml;
   let currentIssues = issues;
   let step = spacing;
-  let best: Best | null = null;
+  let best: Best = {
+    xml: rawXml,
+    blocking: blockingCount(issues),
+    score: blockingScore(issues),
+  };
   let last: StrategySignal | null = null;
   for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
-    const signal = await runStrategy(currentRaw, currentIssues, nodeCount, { ...args, spacing: step }, filePath, iteration > 1);
-    if (signal.error) return error(signal.error);
+    const signal = await runStrategy(
+      currentRaw, currentIssues, nodeCount, { ...args, spacing: step }, filePath,
+      iteration > 1, thresholds,
+    );
+    if (signal.error) {
+      restoreCandidate(rawXml, filePath);
+      return error(signal.error);
+    }
     last = signal;
     const afterXml = signal.wrote ? fs.readFileSync(filePath, 'utf-8') : currentRaw;
-    const afterIssues = detectAllIssues(parseDrawioXml(afterXml));
+    const afterIssues = detectAllIssues(parseDrawioXml(afterXml), thresholds);
     const blocking = blockingCount(afterIssues);
+    const score = blockingScore(afterIssues);
     history.push({ iteration, action: signal.strategy, issues_before: blockingCount(currentIssues), issues_after: blocking, spacing: step });
-    if (blocking === 0) { best = { xml: afterXml, blocking: 0 }; break; }
-    if (!best || blocking < best.blocking) best = { xml: afterXml, blocking };
+    if (blocking === 0) { best = { xml: afterXml, blocking: 0, score }; break; }
+    if (compareBlocking(score, best.score) < 0) best = { xml: afterXml, blocking, score };
     if (signal.status === 'already_good' || iteration === MAX_ITERATIONS) break;
     // Only report-only content issues (lane names, branch wording) remain:
     // further passes cannot fix them — stop instead of rewriting 3 times.
@@ -76,23 +89,30 @@ export async function handleApply(
     currentIssues = afterIssues;
     step += SPACING_STEP;
   }
-  return finalize(best!, last!, history, rawXml, issues, graph, filePath, rootInfo, portsOnly);
+  return finalize(best, last!, history, rawXml, issues, graph, filePath, rootInfo, portsOnly, thresholds);
 }
 
 /** Keep the best pass, roll back a worse last one, assemble the contract. */
 function finalize(
   best: Best, last: StrategySignal, history: IterationRecord[],
   initialRaw: string, initialIssues: LayoutIssue[], initialGraph: DiagramGraph,
-  filePath: string, root: RootInfo, portsOnly: boolean,
+  filePath: string, root: RootInfo, portsOnly: boolean, thresholds: DetectThresholds,
 ): string {
-  const rolledBack = restoreBest(best, filePath);
+  let rolledBack = restoreBest(best, filePath, thresholds);
   // Final gate before the contract is assembled: the reported issues must
   // describe the bytes that actually land on disk (SA4E-406 f/i honesty).
   // Forward portsOnly so the gate's snap skips debunch on the ports path.
   enforceFinalGate(filePath, { portsOnly });
-  const finalXml = fs.readFileSync(filePath, 'utf-8');
-  const finalGraph = parseDrawioXml(finalXml);
-  const finalIssues = detectAllIssues(finalGraph);
+  let finalXml = fs.readFileSync(filePath, 'utf-8');
+  let finalGraph = parseDrawioXml(finalXml);
+  let finalIssues = detectAllIssues(finalGraph, thresholds);
+  if (compareBlocking(blockingScore(finalIssues), best.score) > 0) {
+    restoreCandidate(best.xml, filePath);
+    rolledBack = true;
+    finalXml = fs.readFileSync(filePath, 'utf-8');
+    finalGraph = parseDrawioXml(finalXml);
+    finalIssues = detectAllIssues(finalGraph, thresholds);
+  }
   const finalBlocking = blockingCount(finalIssues);
   const wrote = finalXml !== initialRaw;
   const status: LayoutStatus = !wrote && blockingCount(initialIssues) === 0
@@ -112,15 +132,21 @@ function finalize(
 }
 
 /** Rollback-if-worse: rewrite the best pass when the file holds a worse one. */
-function restoreBest(best: Best, filePath: string): boolean {
+function restoreBest(best: Best, filePath: string, thresholds: DetectThresholds): boolean {
   const fileXml = fs.readFileSync(filePath, 'utf-8');
   if (best.xml === fileXml) return false;
-  const fileBlocking = blockingCount(detectAllIssues(parseDrawioXml(fileXml)));
-  if (best.blocking < fileBlocking) {
-    fs.writeFileSync(filePath, best.xml, 'utf-8');
+  const fileScore = blockingScore(detectAllIssues(parseDrawioXml(fileXml), thresholds));
+  if (compareBlocking(best.score, fileScore) < 0) {
+    restoreCandidate(best.xml, filePath);
     return true;
   }
   return false;
+}
+
+/** Validate and atomically restore a known-good candidate. */
+function restoreCandidate(xml: string, filePath: string): void {
+  validateReparse(xml);
+  atomicWriteFileSync(filePath, xml);
 }
 
 /** Moved nodes = absolute-rect delta between the initial and final graphs. */

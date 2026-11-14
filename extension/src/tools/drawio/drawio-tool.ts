@@ -1,33 +1,22 @@
 /**
  * SA4E-406 — drawio_auto_layout LOCAL tool (extension-side execution).
- *
- * Extension Migration (BRD STORY 4 / FSD 3.4): the tool implementation moves
- * from the backend server INTO the extension so it runs in the IDE process —
- * no backend dependency, path resolution against the LIVE VS Code workspace
- * (not a backend allowlist).
- *
- * Engine modules (parser/detect/apply/ELK) are ported verbatim from
- * backend/src/engine/tools/* — same behavior, byte-for-byte outputs.
- *
- * Handler contract: LocalToolHandler shape from backend-local-tools/registry
- * (args in → MCP tool-result shape out).
+ * Runs in the IDE process against the live workspace; engine modules are
+ * ported from backend/src/engine/tools/* with byte-for-byte behavior.
+ * Handler contract: LocalToolHandler (args in → MCP tool-result shape out).
  */
 
 import * as fs from 'fs';
 import { parseDrawio } from './drawio-parser';
 import { handleApply } from './drawio-apply';
 import { detectAllIssues } from './drawio-detection';
-import {
-  resolveWorkspacePath,
-  sanitizeLogText,
-  FILE_PATH_SCHEMA_DESCRIPTION,
-} from '../../services/PathResolver';
+import { resolveWorkspacePath, sanitizeLogText, FILE_PATH_SCHEMA_DESCRIPTION } from '../../services/PathResolver';
 import { extractBaseDirArg } from '../../services/base-dir-resolution';
 import { preflight } from './drawio-preflight';
 import { adoptVisualChildren } from './drawio-adopt-children';
-import { parseThresholdArgs } from './drawio-apply-args';
-import { configureDetectThresholds } from './drawio-detect';
-import { enforceFinalGate } from './drawio-apply-validate';
+import { normalizeLayoutArgs, parseThresholdArgs, resolveDetectThresholds } from './drawio-apply-args';
+import type { DetectThresholds } from './drawio-detect';
+import { enforceFinalGate, validateReparse } from './drawio-apply-validate';
+import { atomicWriteFileSync } from './drawio-atomic-write';
 import { REPORT_ONLY_ISSUE_TYPES } from './drawio-detect-structure';
 import { reportOnlyOutcome } from './drawio-report-only';
 import type { RootInfo } from './drawio-result';
@@ -129,9 +118,13 @@ async function layoutOn(
   filePath: string, args: Record<string, unknown>, displayPath: string, root: RootInfo,
 ): Promise<unknown> {
   if (!fs.existsSync(filePath)) return toolError('File not found or not accessible');
+  const originalBytes = fs.readFileSync(filePath);
+  let thresholds: DetectThresholds;
+  let scope: string;
   try {
     // A1: optional per-run detector thresholds — rejected values are tool errors.
-    configureDetectThresholds(parseThresholdArgs(args));
+    thresholds = resolveDetectThresholds(parseThresholdArgs(args));
+    scope = normalizeLayoutArgs(args).scope;
   } catch (e: any) {
     return toolError(e.message ?? String(e));
   }
@@ -141,16 +134,20 @@ async function layoutOn(
     // Boxes drawn OVER an empty band belong to it: make that structural before analysing
     const adoption = adoptVisualChildren(fs.readFileSync(filePath, 'utf-8'));
     if (adoption.adopted.size > 0) {
-      fs.writeFileSync(filePath, adoption.xml, 'utf-8');
+      validateReparse(adoption.xml);
+      atomicWriteFileSync(filePath, adoption.xml);
       console.warn(`[drawio-auto-layout] '${displayPath}': ${[...adoption.adopted.values()].flat().length} box(es) moved into the band that visually holds them`);
     }
     const { raw, graph } = parseDrawio(filePath);
     const nodeCount = graph.nodes.length + graph.containers.length;
-    if (nodeCount === 0) return toolError('No nodes found in diagram');
-    const issues = detectAllIssues(graph);
+    if (nodeCount === 0) {
+      restoreOriginal(filePath, originalBytes);
+      return toolError('No nodes found in diagram');
+    }
+    const issues = detectAllIssues(graph, thresholds);
     const forced = args.relayout === true;
     const blocking = issues.filter(i => i.severity !== 'low');
-    if (!forced && blocking.length === 0) {
+    if (!forced && scope === 'auto' && blocking.length === 0) {
       // Preflight/adopt may already have rewritten the file: leave it on-grid.
       enforceFinalGate(filePath);
       return toolText(JSON.stringify({
@@ -160,15 +157,36 @@ async function layoutOn(
     }
     // Content decisions the tool cannot make: never a destructive relayout —
     // label the unambiguous branches, surface the rest (SA4E-406 g/h/a).
-    if (!forced && blocking.every(i => REPORT_ONLY_ISSUE_TYPES.has(i.type))) {
-      return toolText(reportOnlyOutcome(filePath, raw, graph, issues, root));
+    if (!forced && blocking.length > 0 && blocking.every(i => REPORT_ONLY_ISSUE_TYPES.has(i.type))) {
+      return toolText(reportOnlyOutcome(filePath, raw, graph, issues, root, thresholds));
     }
     // Issues found → always fix (no mode parameter)
-    const resultJson = await handleApply(raw, graph, issues, nodeCount, args, filePath, root);
+    const resultJson = await handleApply(raw, graph, issues, nodeCount, args, filePath, root, thresholds);
+    if (isErrorPayload(resultJson)) restoreOriginal(filePath, originalBytes);
     return toolText(resultJson);
   } catch (e: any) {
+    restoreOriginal(filePath, originalBytes);
     console.error(`[drawio-auto-layout] analysis failed for '${displayPath}':`, e?.message ?? e);
     return toolError(`Analysis failed: ${e.message ?? e}`);
+  }
+}
+
+/** Detect the strategy error payload without treating ordinary output as failure. */
+function isErrorPayload(json: string): boolean {
+  try {
+    const parsed = JSON.parse(json) as { error?: unknown };
+    return typeof parsed.error === 'string';
+  } catch {
+    return false;
+  }
+}
+
+/** Restore the exact pre-call bytes after a failed transactional run. */
+function restoreOriginal(filePath: string, bytes: Buffer): void {
+  try {
+    atomicWriteFileSync(filePath, bytes);
+  } catch (restoreError: unknown) {
+    console.error('[drawio-auto-layout] Failed to restore original file:', restoreError);
   }
 }
 

@@ -9,7 +9,7 @@ import type { NormalizedArgs } from './drawio-layout-models';
 import { buildElkGraph, runElkLayout } from './elk-layout';
 import { humanizeLayout } from './drawio-humanize';
 import { applyLayoutToXml } from './drawio-writer';
-import { detectAllIssues, type LayoutIssue } from './drawio-detect';
+import { DEFAULT_DETECT_THRESHOLDS, detectAllIssues, type DetectThresholds, type LayoutIssue } from './drawio-detect';
 import { sanitizeDrawioXml } from './drawio-xml-sanitize';
 import { applyEdgePlans, planEdges } from './drawio-edge-plan';
 import { optimizeSlots } from './drawio-slot-swap';
@@ -21,6 +21,7 @@ import { commitLayout, error } from './drawio-apply-validate';
 export async function elkRelayout(
   rawXml: string, graph: DiagramGraph, issues: LayoutIssue[],
   normalized: NormalizedArgs, filePath: string,
+  thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
 ): Promise<string> {
   // SA4E-406 UAT feedback: plain ELK layered + DOWN stacks EVERYTHING vertically
   // (tall narrow bands, zigzag root) — nothing like a human arrangement. The
@@ -28,15 +29,15 @@ export async function elkRelayout(
   // interior out left-to-right (wide bands) and packs the bands in a clean
   // aligned grid; force/mrtree/radial keep the classic nested ELK run.
   if (normalized.algorithm === 'layered') {
-    return humanizeRelayout(rawXml, graph, issues, normalized, filePath);
+    return humanizeRelayout(rawXml, graph, issues, normalized, filePath, thresholds);
   }
-  return nestedElkRelayout(rawXml, graph, issues, normalized, filePath);
+  return nestedElkRelayout(rawXml, graph, issues, normalized, filePath, thresholds);
 }
 
 /** Humanized relayout: per-band horizontal interiors + root grid pack. */
 async function humanizeRelayout(
   rawXml: string, graph: DiagramGraph, issues: LayoutIssue[],
-  normalized: NormalizedArgs, filePath: string,
+  normalized: NormalizedArgs, filePath: string, thresholds: DetectThresholds,
 ): Promise<string> {
   try {
     // Relayout re-places every cell, so container auto-layout styles (which
@@ -48,7 +49,7 @@ async function humanizeRelayout(
     // every edge from the geometry that was actually written.
     const plans = planEdges(parseDrawioXml(placed));
     // Interchangeable grid slots may still leave a label on a title or a crossing: try swaps
-    const xml = optimizeSlots(placeLabels(applyEdgePlans(placed, plans)));
+    const xml = optimizeSlots(placeLabels(applyEdgePlans(placed, plans)), thresholds);
     if (repositionedNodes.length === 0 && xml === rawXml) {
       return JSON.stringify({
         status: 'already_good',
@@ -56,8 +57,8 @@ async function humanizeRelayout(
         remaining_issues: issues.filter(i => i.severity !== 'low').length,
       });
     }
-    const { graph: afterGraph } = commitLayout(xml, filePath);
-    const remainingIssues = detectAllIssues(afterGraph).filter(i => i.severity !== 'low').length;
+    const { graph: afterGraph } = commitLayout(xml, filePath, { debunch: true, gap: thresholds.gap });
+    const remainingIssues = detectAllIssues(afterGraph, thresholds).filter(i => i.severity !== 'low').length;
     return JSON.stringify({
       status: 'fixed',
       message: `Fixed ${issues.length} issues with humanized ${normalized.algorithm} layout. ${repositionedNodes.length} nodes repositioned, ${plans.length} edges re-routed.`,
@@ -72,7 +73,7 @@ async function humanizeRelayout(
 /** Classic nested ELK relayout (compound-safe) — non-layered algorithms. */
 async function nestedElkRelayout(
   rawXml: string, graph: DiagramGraph, issues: LayoutIssue[],
-  normalized: NormalizedArgs, filePath: string,
+  normalized: NormalizedArgs, filePath: string, thresholds: DetectThresholds,
 ): Promise<string> {
   try {
     const elkGraph = buildElkGraph(graph, normalized);
@@ -89,8 +90,8 @@ async function nestedElkRelayout(
         remaining_issues: issues.filter(i => i.severity !== 'low').length,
       });
     }
-    const { graph: afterGraph } = commitLayout(xml, filePath);
-    const remainingIssues = detectAllIssues(afterGraph).filter(i => i.severity !== 'low').length;
+    const { graph: afterGraph } = commitLayout(xml, filePath, { debunch: true, gap: thresholds.gap });
+    const remainingIssues = detectAllIssues(afterGraph, thresholds).filter(i => i.severity !== 'low').length;
     return JSON.stringify({
       status: 'fixed',
       message: `Fixed ${issues.length} issues with ELK ${normalized.algorithm} layout. ${repositionedNodes.length} nodes repositioned.`,

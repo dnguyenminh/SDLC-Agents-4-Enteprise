@@ -5,6 +5,7 @@
 
 import type { DiagramNode } from './drawio-parser';
 import type { Point, Rect } from './drawio-geometry';
+import type { DetectThresholds } from './drawio-detect';
 
 export interface Ctx {
   byId: Map<string, DiagramNode>;
@@ -12,6 +13,7 @@ export interface Ctx {
   shift: Map<string, Point>;                 // accumulated absolute deltas
   resizes: Map<string, { w: number; h: number }>;
   spacing: number;
+  thresholds: DetectThresholds;
 }
 
 /** Current absolute rect of a cell, including accumulated shift and resize. */

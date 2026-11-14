@@ -9,7 +9,7 @@
 import * as fs from 'fs';
 import { parseDrawioXml } from './drawio-parser';
 import type { DiagramGraph } from './drawio-parser';
-import { detectAllIssues, type LayoutIssue } from './drawio-detect';
+import { DEFAULT_DETECT_THRESHOLDS, detectAllIssues, type DetectThresholds, type LayoutIssue } from './drawio-detect';
 import { enforceFinalGate } from './drawio-apply-validate';
 import { blockingCount, emptyOutcome, outcomeJson, type RootInfo } from './drawio-result';
 
@@ -19,13 +19,14 @@ import { blockingCount, emptyOutcome, outcomeJson, type RootInfo } from './drawi
  */
 export function reportOnlyOutcome(
   filePath: string, raw: string, graph: DiagramGraph, issues: LayoutIssue[], root: RootInfo,
+  thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
 ): string {
   const before = blockingCount(issues);
   // The gate labels unambiguous branches AND snaps — one write, only on change.
   enforceFinalGate(filePath);
   const finalXml = fs.readFileSync(filePath, 'utf-8');
   const wrote = finalXml !== raw;
-  const finalIssues = wrote ? detectAllIssues(parseDrawioXml(finalXml)) : issues;
+  const finalIssues = wrote ? detectAllIssues(parseDrawioXml(finalXml), thresholds) : issues;
   const after = blockingCount(finalIssues);
   const action = wrote ? 'decision_labels' : 'report_only';
   const outcome = emptyOutcome();

@@ -8,12 +8,13 @@ import * as os from 'os';
 import { parseDrawio, parseDrawioXml } from './drawio-parser';
 import type { DiagramGraph } from './drawio-parser';
 import { findMalformedTags, findXmlEscapingIssues } from './drawio-xml-sanitize';
-import { snapDiagramToGrid } from './drawio-grid-snap';
+import { snapDiagramToGrid, type SnapOptions } from './drawio-grid-snap';
 import { applyDecisionLabels } from './drawio-decision-labels';
 import { planEdges, applyEdgePlans } from './drawio-edge-plan';
 import { placeLabels } from './drawio-label-place';
 import { detectSequenceDiagram } from './drawio-detect-sequence';
 import { detectUseCaseDiagram } from './drawio-detect-usecase';
+import { atomicWriteFileSync } from './drawio-atomic-write';
 
 /** BR-7: Re-parse fixed XML to ensure it's valid before writing to file. */
 export function validateReparse(xml: string): void {
@@ -56,7 +57,7 @@ export function error(msg: string): string {
  * to the 10px grid, validate, write, and return the graph of what was written.
  * Every write path goes through HERE — no strategy writes the file directly.
  */
-export function commitLayout(xml: string, filePath: string, opts?: { portsOnly?: boolean }): { graph: DiagramGraph } {
+export function commitLayout(xml: string, filePath: string, opts?: SnapOptions): { graph: DiagramGraph } {
   // SA4E-406 (h): label unambiguous decision branches on the final geometry —
   // before the grid snap, so a second run sees settled, labeled edges.
   const labeled = applyDecisionLabels(xml, parseDrawioXml(xml));
@@ -67,7 +68,7 @@ export function commitLayout(xml: string, filePath: string, opts?: { portsOnly?:
   // the ports-only path changes anchors, not the full route.
   const finalXml = replanMovedEdges(labeled, snapped, opts);
   validateReparse(finalXml);
-  fs.writeFileSync(filePath, finalXml, 'utf-8');
+  atomicWriteFileSync(filePath, finalXml);
   return { graph: parseDrawioXml(finalXml) };
 }
 
@@ -88,7 +89,7 @@ function replanMovedEdges(before: string, after: string, opts?: { portsOnly?: bo
  * geometry — except in sequence/use-case layouts, whose anchored message edges
  * and actor/boundary structure must not be re-routed.
  */
-export function enforceFinalGate(filePath: string, opts?: { portsOnly?: boolean }): void {
+export function enforceFinalGate(filePath: string, opts?: SnapOptions): void {
   const before = fs.readFileSync(filePath, 'utf-8');
   // Forward the original request scope (portsOnly) so the final gate's grid snap
   // skips debunch/separateContainers on the ports path — node positions must be
@@ -101,7 +102,7 @@ export function enforceFinalGate(filePath: string, opts?: { portsOnly?: boolean 
   }
   if (after === before) return;
   validateReparse(after);
-  fs.writeFileSync(filePath, after, 'utf-8');
+  atomicWriteFileSync(filePath, after);
 }
 
 /** Sequence/use-case diagrams get dedicated layouts — never re-route their edges. */

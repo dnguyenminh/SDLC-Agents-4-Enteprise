@@ -9,7 +9,7 @@
 
 import type { DiagramGraph, DiagramNode } from './drawio-parser';
 import { parseDrawioXml } from './drawio-parser';
-import { detectAllIssues } from './drawio-detect';
+import { DEFAULT_DETECT_THRESHOLDS, detectAllIssues, type DetectThresholds } from './drawio-detect';
 import { applyEdgePlans, planEdges } from './drawio-edge-plan';
 import { replaceCellGeometryXy, replaceCellSize } from './drawio-xml-utils';
 import { absoluteRects } from './drawio-geometry';
@@ -33,10 +33,12 @@ const WEIGHT = { high: 1000, medium: 100 } as const;
  * @param xml Laid-out diagram XML with planned edges
  * @returns The improved XML (edges re-planned), or the input when nothing helps
  */
-export function optimizeSlots(xml: string): string {
-  let best = xml, bestCost = layoutCost(parseDrawioXml(xml));
+export function optimizeSlots(
+  xml: string, thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
+): string {
+  let best = xml, bestCost = layoutCost(parseDrawioXml(xml), thresholds);
   for (let round = 0; round < MAX_ROUNDS && bestCost > 0; round++) {
-    const pick = bestSwap(best);
+    const pick = bestSwap(best, thresholds);
     if (!pick || pick.cost >= bestCost) break;
     best = pick.xml;
     bestCost = pick.cost;
@@ -50,12 +52,12 @@ export function optimizeSlots(xml: string): string {
  * comparisons keep the incumbent on full ties, so the result is deterministic
  * (candidate order is fixed) — required for byte-identical reruns.
  */
-function bestSwap(xml: string): { xml: string; cost: number } | null {
+function bestSwap(xml: string, thresholds: DetectThresholds): { xml: string; cost: number } | null {
   let pick: { xml: string; cost: number; length: number } | null = null;
   for (const [a, b] of swapCandidates(parseDrawioXml(xml))) {
     const candidate = reroute(swapPositions(xml, a, b));
     const graph = parseDrawioXml(candidate);
-    const cost = layoutCost(graph);
+    const cost = layoutCost(graph, thresholds);
     if (pick && cost > pick.cost) continue;
     const length = totalEdgeLength(graph);
     if (!pick || cost < pick.cost || (cost === pick.cost && length < pick.length)) pick = { xml: candidate, cost, length };
@@ -73,8 +75,10 @@ function totalEdgeLength(graph: DiagramGraph): number {
 }
 
 /** Weighted count of blocking issues (low severity is cosmetic and ignored). */
-export function layoutCost(graph: DiagramGraph): number {
-  return detectAllIssues(graph).reduce((sum, i) => sum + (i.severity === 'low' ? 0 : WEIGHT[i.severity]), 0);
+export function layoutCost(
+  graph: DiagramGraph, thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
+): number {
+  return detectAllIssues(graph, thresholds).reduce((sum, i) => sum + (i.severity === 'low' ? 0 : WEIGHT[i.severity]), 0);
 }
 
 /**

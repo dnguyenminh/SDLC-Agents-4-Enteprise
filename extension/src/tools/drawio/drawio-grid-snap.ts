@@ -1,6 +1,6 @@
 /**
  * SA4E-406 (f)/(b) — final grid pass: snap every vertex to the 10px grid,
- * spread bunched siblings, grow containers, rewrite parent-relative.
+ * optionally spread bunched siblings, grow containers, rewrite parent-relative.
  * Idempotent: on grid-clean input nothing moves. Edge cells never touched.
  * PD-QA1: ports-only path skips debunch/separateContainers (node positions kept).
  */
@@ -11,23 +11,26 @@ import { containerInsets } from './drawio-container-insets';
 import { patchGeometryTag, hasAttr, replaceAttr, insertAttrs, round } from './drawio-xml-utils';
 import { rewriteCells, type CellPatch } from './drawio-xml-rewrite';
 import { stackTextRows } from './drawio-grid-rows';
-import { detectThresholds } from './drawio-detect';
+import { MIN_GAP } from './drawio-detect';
 /** Working state: byId index + the target (snapped/de-bunched) absolute rects. */
 interface SnapCtx {
   byId: Map<string, DiagramNode>;
   snapped: Map<string, Rect>;
   grown: Map<string, { w: number; h: number }>;
 }
-/** Snap all vertex coordinates to the grid and spread bunched siblings. */
-export function snapDiagramToGrid(xml: string, opts?: { portsOnly?: boolean }): string {
+/** Grid-snap options; debunch is opt-in for canonical/full layouts only. */
+export interface SnapOptions {
+  portsOnly?: boolean;
+  debunch?: boolean;
+  gap?: number;
+}
+/** Snap all vertex coordinates to the grid and optionally spread bunched siblings. */
+export function snapDiagramToGrid(xml: string, opts?: SnapOptions): string {
   const graph = parseDrawioXml(xml);
   const ctx = buildCtx(graph);
-  // PD-QA1: ports-only path skips debunch/separateContainers — node positions kept.
-  if (!opts?.portsOnly) {
-    stackTextRows(ctx, graph);
-    debunch(ctx, graph);
-    separateContainers(ctx, graph);
-  }
+  if (!opts?.portsOnly) stackTextRows(ctx, graph);
+  if (opts?.debunch) debunch(ctx, graph, opts.gap ?? MIN_GAP);
+  if (!opts?.portsOnly) separateContainers(ctx, graph);
   regrowContainers(ctx, graph);
   return writePositions(xml, ctx, graph);
 }
@@ -40,29 +43,25 @@ function buildCtx(graph: DiagramGraph): SnapCtx {
   }
   return { byId, snapped, grown: new Map() };
 }
-/** Sibling node pairs in one scope (same parent, or both top-level), stable order. */
+/** Sibling node pairs in one scope, excluding flush text rows. */
 function siblingPairs(graph: DiagramGraph): Array<[DiagramNode, DiagramNode]> {
-  const nodes = graph.nodes;
   const pairs: Array<[DiagramNode, DiagramNode]> = [];
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      const a = nodes[i], b = nodes[j];
+  for (let i = 0; i < graph.nodes.length; i++) {
+    for (let j = i + 1; j < graph.nodes.length; j++) {
+      const a = graph.nodes[i], b = graph.nodes[j];
       if (a.parentId !== b.parentId && !(a.parentId === '1' && b.parentId === '1')) continue;
-      if (isTextRow(a.style) && isTextRow(b.style)) continue; // rows stack flush by design
+      if (isTextRow(a.style) && isTextRow(b.style)) continue;
       pairs.push([a, b]);
     }
   }
   return pairs;
 }
 /** Push bunched siblings apart in grid steps until stable (bounded passes). */
-function debunch(ctx: SnapCtx, graph: DiagramGraph): void {
+function debunch(ctx: SnapCtx, graph: DiagramGraph, required: number): void {
   const pairs = siblingPairs(graph);
-  const required = detectThresholds().gap;
   for (let pass = 0; pass < 8; pass++) {
     let pushed = false;
-    for (const [a, b] of pairs) {
-      if (spreadPair(ctx, a.id, b.id, required)) pushed = true;
-    }
+    for (const [a, b] of pairs) pushed = spreadPair(ctx, a.id, b.id, required) || pushed;
     if (!pushed) return;
   }
 }
@@ -74,16 +73,16 @@ function spreadPair(ctx: SnapCtx, aId: string, bId: string, required: number): b
   const sepY = Math.max(ra.y - (rb.y + rb.h), rb.y - (ra.y + ra.h));
   const alongX = sepX >= sepY;
   const need = Math.ceil((required - Math.max(sepX, sepY)) / GRID_STEP) * GRID_STEP;
-  shiftCell(ctx, alongX
+  const mover = alongX
     ? (ra.x + ra.w / 2 <= rb.x + rb.w / 2 ? bId : aId)
-    : (ra.y + ra.h / 2 <= rb.y + rb.h / 2 ? bId : aId),
-    alongX ? { x: need, y: 0 } : { x: 0, y: need });
+    : (ra.y + ra.h / 2 <= rb.y + rb.h / 2 ? bId : aId);
+  shiftCell(ctx, mover, alongX ? { x: need, y: 0 } : { x: 0, y: need });
   return true;
 }
 /** Move one cell's target rect by a grid-aligned delta. */
-function shiftCell(ctx: SnapCtx, id: string, d: { x: number; y: number }): void {
-  const r = ctx.snapped.get(id)!;
-  ctx.snapped.set(id, { ...r, x: r.x + d.x, y: r.y + d.y });
+function shiftCell(ctx: SnapCtx, id: string, delta: { x: number; y: number }): void {
+  const rect = ctx.snapped.get(id)!;
+  ctx.snapped.set(id, { ...rect, x: rect.x + delta.x, y: rect.y + delta.y });
 }
 /** Push overlapping SIBLING containers apart, grid-aligned, until clear. */
 function separateContainers(ctx: SnapCtx, graph: DiagramGraph): void {

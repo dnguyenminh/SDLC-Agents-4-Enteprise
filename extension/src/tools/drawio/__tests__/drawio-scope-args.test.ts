@@ -2,10 +2,10 @@
  * SA4E-406 — `scope` parameter (FSD 3.1.4 data field, BRD STORY 1 reconciliation):
  *   - parsing: auto | positions | ports accepted, anything else → default 'auto'
  *     (defaults stay unchanged when the param is absent);
- *   - scope='ports' — spread edge anchors ONLY, never move a node (blocking
- *     geometry issues stay flagged honestly — status partial);
- *   - scope='positions' — force the full humanized relayout even when a local
- *     repair would have sufficed.
+ *   - scope='ports' — spread edge anchors ONLY, never move a node (cosmetic
+ *     proximity stays reported but does not make the run partial);
+ *   - scope='positions' — force the full humanized relayout; the default path
+ *     never rewrites a proximity-only diagram.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import * as fs from 'fs';
@@ -64,14 +64,8 @@ describe('SA4E-406 scope parsing — defaults stay unchanged (A1 family)', () =>
 });
 
 describe("SA4E-406 scope='ports' — anchors spread, node positions kept", () => {
-  // QA-11 — ACTIVE (re-enabled 2026-11-12, DEV round 4c fix landed).
-  // Fix references: drawio-verify-loop.ts:50-54 computes portsOnce from the original request
-  // scope; :79 passes {portsOnly} into finalize; :86,:89 forward {portsOnly} into
-  // enforceFinalGate; drawio-apply-validate.ts:79-86 enforceFinalGate(filePath, opts?) forwards
-  // opts to snapDiagramToGrid; drawio-grid-snap.ts:23-33 skips debunch/separateContainers when
-  // opts?.portsOnly. Contract (FSD §3.1 "keep all node positions"): every node position
-  // preserved (c stays 400,80), anchors spread, status='partial', node_proximity reported.
-  // Assertions unchanged — do not weaken.
+  // Contract: every node position is preserved (c stays 400,80), anchors are
+  // spread, and proximity remains visible as a LOW issue without blocking.
   it('writes one distinct exit anchor per fan edge and moves no node', async () => {
     // a fans out to b/c/d; c sits only 20px under b — a real blocking issue the
     // ports scope must NOT fix by moving nodes.
@@ -91,14 +85,14 @@ describe("SA4E-406 scope='ports' — anchors spread, node positions kept", () =>
     const exits = ['e1', 'e2', 'e3'].map(id => graph.edges.find(e => e.id === id)!.exit!);
     expect(new Set(exits.map(p => p.y)).size).toBe(3); // 0.25 / 0.5 / 0.75
     expect(graph.edges.every(e => e.exit && !e.entry)).toBe(true);
-    expect(out.status).toBe('partial'); // bunched nodes stay flagged — honesty over silent rewrite
-    expect(out.issues.some((i: any) => i.type === 'node_proximity')).toBe(true);
+    expect(out.status).toBe('fixed');
+    expect(out.issues.some((i: any) => i.type === 'node_proximity' && i.severity === 'low')).toBe(true);
   }, 60_000);
 });
 
 describe("SA4E-406 scope='positions' — forces the full humanized relayout", () => {
-  // 6 nodes, one bunched pair (b–c gap 10px): violation ratio 2/6 < 0.4, so the
-  // default path is a minimal local repair.
+  // 6 nodes, one bunched pair (b–c gap 10px). Proximity is cosmetic: the
+  // default path leaves it alone, while scope=positions explicitly relayouts.
   const BUNCHED = (): string => wrap(
     node('a', 100, 100) + node('b', 300, 100) + node('c', 430, 100)
     + node('d', 700, 100) + node('e', 100, 300) + node('f', 700, 300),
@@ -108,6 +102,8 @@ describe("SA4E-406 scope='positions' — forces the full humanized relayout", ()
     const withScope = await runTool('bunched-positions.drawio', BUNCHED(), { scope: 'positions' });
     expect(withScope.strategy_used).toBe('humanized_layered');
     const auto = await runTool('bunched-auto.drawio', BUNCHED());
-    expect(auto.strategy_used).toBe('local_repair'); // the default path for one bunched pair
+    expect(auto.status).toBe('already_good');
+    expect(auto.strategy_used).toBeUndefined();
+    expect(fs.readFileSync(path.join(dir, 'bunched-auto.drawio'), 'utf-8')).toBe(BUNCHED());
   }, 60_000);
 });

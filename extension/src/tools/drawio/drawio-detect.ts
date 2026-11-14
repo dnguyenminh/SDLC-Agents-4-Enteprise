@@ -1,7 +1,5 @@
 /**
- * Layout issue detectors for draw.io diagrams — node overlaps, proximity,
- * container containment. Edge-related detectors live in drawio-detect-edges.ts.
- * All comparisons use absolute rects (see drawio-geometry.ts).
+ * Layout issue detectors for draw.io diagrams; edge detectors live in drawio-detect-edges.ts.
  */
 
 import type { DiagramGraph, DiagramNode } from './drawio-parser';
@@ -31,29 +29,23 @@ export const OVERLAP_EPS = 0.05;
 /** Tolerance (px) when checking that children stay inside their container. */
 const CONTAINMENT_TOL = 5;
 
-/** Detector thresholds of the CURRENT run (tool params, defaults when unset — A1). */
+/** Detector thresholds of one tool run (tool params, defaults when unset — A1). */
 export interface DetectThresholds { gap: number; overlap: number; }
-let thresholds: DetectThresholds = { gap: MIN_GAP, overlap: OVERLAP_EPS };
 
-/** Configure the detector thresholds for this tool run; undefined restores defaults. */
-export function configureDetectThresholds(t: DetectThresholds | undefined): void {
-  thresholds = t ? { ...t } : { gap: MIN_GAP, overlap: OVERLAP_EPS };
-}
-
-/** Active detector thresholds (for messages and tests). */
-export function detectThresholds(): DetectThresholds {
-  return thresholds;
-}
+/** Compiled defaults used when a call supplies no per-run thresholds. */
+export const DEFAULT_DETECT_THRESHOLDS: DetectThresholds = { gap: MIN_GAP, overlap: OVERLAP_EPS };
 
 /**
  * Detect all layout issues. Low severity (diagonal edges, containment hints)
  * is cosmetic — callers gate auto-fix on high/medium only.
  */
-export function detectAllIssues(graph: DiagramGraph): LayoutIssue[] {
+export function detectAllIssues(
+  graph: DiagramGraph, thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
+): LayoutIssue[] {
   const abs = absoluteRects(graph);
   return [
-    ...detectNodeOverlaps(graph, abs),
-    ...detectNodeProximity(graph, abs),
+    ...detectNodeOverlaps(graph, abs, thresholds),
+    ...detectNodeProximity(graph, abs, thresholds),
     ...detectChildOutsideContainer(graph, abs),
     ...edgeNodeCrossings(graph, abs),
     ...edgeEdgeCrossings(graph, abs),
@@ -71,7 +63,9 @@ export function detectAllIssues(graph: DiagramGraph): LayoutIssue[] {
 }
 
 /** Any node/container pair covering more than OVERLAP_EPS of the smaller one. */
-export function detectNodeOverlaps(graph: DiagramGraph, abs?: Map<string, Rect>): LayoutIssue[] {
+export function detectNodeOverlaps(
+  graph: DiagramGraph, abs?: Map<string, Rect>, thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
+): LayoutIssue[] {
   const rects = abs ?? absoluteRects(graph);
   const byId = cellIndex(graph);
   const cells = [...graph.nodes, ...graph.containers];
@@ -81,7 +75,7 @@ export function detectNodeOverlaps(graph: DiagramGraph, abs?: Map<string, Rect>)
       const a = cells[i], b = cells[j];
       // Parent/child containment is legitimate — ancestorsOf covers it
       if (ancestorsOf(a.id, byId).has(b.id) || ancestorsOf(b.id, byId).has(a.id)) continue;
-      pushOverlapIssue(issues, rects, a, b);
+      pushOverlapIssue(issues, rects, a, b, thresholds);
     }
   }
   return issues;
@@ -94,6 +88,7 @@ export function detectNodeOverlaps(graph: DiagramGraph, abs?: Map<string, Rect>)
  */
 function pushOverlapIssue(
   issues: LayoutIssue[], rects: Map<string, Rect>, a: DiagramNode, b: DiagramNode,
+  thresholds: DetectThresholds,
 ): void {
   const ra = rects.get(a.id)!, rb = rects.get(b.id)!;
   const sequenceConstruct = isSequenceLifeline(a.style) || isSequenceLifeline(b.style)
@@ -118,10 +113,13 @@ function pushOverlapIssue(
 
 /**
  * Sibling or top-level nodes closer than the configured gap (overlaps reported
- * separately). Severity MEDIUM (SA4E-406 b): bunched children are a real
- * defect the tool spreads — tight spacing is no longer cosmetic-only.
+ * separately). Proximity is LOW severity and cosmetic: it is detected and
+ * reported, but never auto-fixed because moving hand-tuned positions is more
+ * harmful than the cosmetic spacing defect (BR-06).
  */
-export function detectNodeProximity(graph: DiagramGraph, abs?: Map<string, Rect>): LayoutIssue[] {
+export function detectNodeProximity(
+  graph: DiagramGraph, abs?: Map<string, Rect>, thresholds: DetectThresholds = DEFAULT_DETECT_THRESHOLDS,
+): LayoutIssue[] {
   const rects = abs ?? absoluteRects(graph);
   const nodes = graph.nodes;
   const issues: LayoutIssue[] = [];
@@ -138,7 +136,7 @@ export function detectNodeProximity(graph: DiagramGraph, abs?: Map<string, Rect>
       const gap = rectGap(ra, rb);
       if (gap >= 0 && gap < thresholds.gap) {
         issues.push({
-          type: 'node_proximity', severity: 'medium',
+          type: 'node_proximity', severity: 'low',
           node_a: a.id, node_b: b.id, gap: Math.round(gap),
           fix_hint: `'${a.id}' and '${b.id}' are ${Math.round(gap)}px apart (recommended ${thresholds.gap}px).`,
         });

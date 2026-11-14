@@ -15,8 +15,8 @@
  *   - edge anchors are still spread (ports-only is about anchors, not nodes);
  *   - the gate's OTHER invariants still hold on the ports path: on-grid,
  *     no <mxfile> root, re-parse-valid output;
- *   - status stays 'partial' and node_proximity stays reported (honesty over
- *     silent rewrite).
+ *   - status stays 'fixed' for the anchor-only change while node_proximity
+ *     remains visible as a LOW, non-blocking issue.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import * as fs from 'fs';
@@ -34,7 +34,7 @@ const edge = (id: string, s: string, t: string): string =>
   `<mxCell id="${id}" style="edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="${s}" target="${t}"><mxGeometry relative="1" as="geometry"/></mxCell>`;
 
 /** The QA-11 fan fixture: a fans out to b/c/d; c sits only 20px under b — a
- *  real blocking proximity issue the ports scope must NOT fix by moving nodes. */
+ *  cosmetic proximity issue the ports scope must NOT fix by moving nodes. */
 const fanXml = () => wrap(
   node('a', 0, 150) + node('b', 400, 0) + node('c', 400, 80) + node('d', 400, 300)
   + edge('e1', 'a', 'b') + edge('e2', 'a', 'c') + edge('e3', 'a', 'd'),
@@ -73,7 +73,7 @@ function expectOnGridAndMxfileFree(file: string): void {
 }
 
 describe('SA4E-406 scope=ports — positions preserved through apply+verify+final-gate', () => {
-  it('moves no node, spreads anchors, stays partial and honest', async () => {
+  it('moves no node, spreads anchors, and reports proximity honestly', async () => {
     const before = absoluteRects(parseDrawioXml(fanXml()));
     const out = await runTool('fan-ports.drawio', fanXml(), { scope: 'ports' });
     const file = path.join(dir, 'fan-ports.drawio');
@@ -91,10 +91,10 @@ describe('SA4E-406 scope=ports — positions preserved through apply+verify+fina
     expect(new Set(exits.map(p => p.y)).size).toBe(3);
     expect(graph.edges.every(e => e.exit && !e.entry)).toBe(true);
 
-    // Honesty: bunched nodes stay flagged — status partial, proximity reported.
-    expect(out.status).toBe('partial');
+    // Honesty: bunched nodes stay visible as a LOW, non-blocking issue.
+    expect(out.status).toBe('fixed');
     expect(out.strategy_used).toBe('ports_only');
-    expect(out.issues.some((i: any) => i.type === 'node_proximity')).toBe(true);
+    expect(out.issues.some((i: any) => i.type === 'node_proximity' && i.severity === 'low')).toBe(true);
   }, 60_000);
 
   it('still enforces the final-gate invariants on the ports path', async () => {
@@ -102,7 +102,7 @@ describe('SA4E-406 scope=ports — positions preserved through apply+verify+fina
     const file = path.join(dir, 'fan-ports-invariants.drawio');
     expectOnGridAndMxfileFree(file);
     // The gate must not silently "fix" proximity by moving nodes.
-    expect(out.status).toBe('partial');
+    expect(out.status).toBe('fixed');
     expect(out.repositioned_nodes).toEqual([]);
   }, 60_000);
 });
