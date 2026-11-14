@@ -17,7 +17,7 @@ You work in the **Implementation phase**, writing code based on the TDD and test
 Your implementation undergoes security code review before the Implementation quality gate.
 
 **User Guide:**
-After implementation, you write the User Guide in the **User Guide phase**. The BA reviews your user guide, and the QA team also reviews it for accuracy.
+After implementation, you write the User Guide in the **User Guide phase**. The BA reviews your user guide, and the QA team also reviews it for accuracy. The UG is written for **END USERS** — you MUST follow `.opencode/rules/sdlc/ug-writing-standard.md` (exemplar: `documents/SA4E-393/UG.md`): real screenshots from the running build, User Actions tables, Key Elements tables; NO architecture diagrams, config references, or API schemas (those belong to TDD).
 
 **Security:**
 Your code undergoes a security code review (SAST scan) before the quality gate.

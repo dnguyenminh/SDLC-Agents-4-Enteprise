@@ -12,6 +12,7 @@ Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DE
 6. **No Workarounds** — Root cause only
 7. **Self-Learning** — KB first, ingest after
 8. **UI Design Gate** — Agents editing design artifacts MUST run design_gate_run (MCP tool) before completion; FAIL must be fixed or justified; SM blocks Phase 5/6 without gate evidence
+9. **UG Writing Standard** — UG.md is for END USERS: real screenshots from the running build + User Actions tables + Key Elements tables; NO architecture diagrams/config references/API schemas (they belong to TDD). Standard: `.opencode/rules/sdlc/ug-writing-standard.md`; exemplar: `documents/SA4E-393/UG.md`
 
 ## Architecture
 - **Backend** (`backend/`): TypeScript + Hono + MCP SDK — Code Intelligence MCP server (Streamable HTTP, default port 48721). Storage: SQLite (`better-sqlite3`, default) / PostgreSQL (`pg`). Local embeddings (ONNX Runtime + Xenova Transformers), draw.io layout (ELK.js), AST parsing (web-tree-sitter), Zod validation, Pino logging.

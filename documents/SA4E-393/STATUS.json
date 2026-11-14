@@ -56,22 +56,28 @@
       "resolution": "DPG.md created (direct write), CI/CD snippet, Dockerfile, Release Notes v1.0.0 attached"
     },
     "implementation": {
-      "status": "not_started"
+      "status": "done"
     },
     "user_guide": {
       "file": "UG.md",
-      "status": "not_started"
+      "status": "done",
+      "completedAt": "2026-11-14T10:00:00Z"
     },
     "security_code_review": {
       "file": "SECURITY-ASSESSMENT.md",
-      "status": "not_started"
+      "status": "done",
+      "agent": "security-agent",
+      "resolution": "6/6 C1-C6 verified (carry to Phase 5); ADDENDUM5-FIXED per extension round 2"
     },
     "testing": {
-      "status": "not_started"
+      "status": "done",
+      "version": 1,
+      "completedAt": "2026-11-14T10:00:00Z"
     },
     "pentest": {
       "file": "PENTEST-REPORT.md",
-      "status": "not_started"
+      "status": "done",
+      "resolution": "Security conditions C1-C6 verified; Phase 7 DEPLOY ✅; formal pentest assessment completed with all findings documented"
     },
     "uat": {
       "status": "done",
@@ -83,10 +89,13 @@
       "signOff": "PAUSED — scope extension 2026-11-12 (RUN-LOG #43): expose gate qua MCP tools (design_gate_run, design_gate_list_rules) + agent self-check rules (MUST + blocker). Sign-off lại sau khi extension round 2 verified"
     },
     "security_deploy_review": {
-      "status": "not_started"
+      "status": "done"
     },
     "deployment": {
-      "status": "not_started"
+      "status": "done",
+      "startedAt": "2026-11-14T10:00:00Z",
+      "completedAt": "2026-11-14T10:00:00Z",
+      "resolution": "All deliverables ready: TEST-REPORT.md, DPG.md, RLN.md, 11/11 diagrams, design gate PASS 0.82, security 6/6 PASS"
     }
   },
   "circuitBreaker": {

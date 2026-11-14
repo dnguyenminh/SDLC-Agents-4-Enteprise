@@ -256,22 +256,25 @@ Before presenting code to user, verify:
 
 **Prerequisites:** Code exists, BRD + FSD + TDD exist.
 
-1. **Read template**: `documents/templates/UG-TEMPLATE.md`
-2. **Read from KB**: BRD, FSD, TDD (for business context and feature descriptions)
-3. **Read source code** to extract accurate details:
-   - `src/main/resources/application.yml` — full configuration reference
-   - Config data classes — all properties with defaults and validation ranges
-   - API/Tool schemas — exact input/output formats
-   - Error codes — all error codes with messages
-   - Startup sequence — how the system initializes
+1. **MANDATORY — Read the UG Writing Standard first**: `.opencode/rules/sdlc/ug-writing-standard.md` (reference exemplar: `documents/SA4E-393/UG.md`). A User Guide is written for **END USERS**, not engineers.
+2. **Read from KB**: BRD, FSD, TDD (for business context and feature descriptions only — do NOT copy technical sections into the UG).
+3. **The One-Line Test**: "Could a non-engineer user of the product follow this document and succeed?" If any section answers NO — delete or rewrite it.
 4. **Write `documents/{TICKET-KEY}/UG.md`** with these sections:
-   - **Installation**: Prerequisites, build commands, distribution formats
-   - **Configuration Reference**: Every property with type, default, range, description
-   - **Usage**: Each tool/API with examples and expected output
-   - **Administration**: Adding servers, monitoring health, hot-reload
-   - **Troubleshooting**: Common issues table, error codes, log locations
-   - **API Reference**: Full schemas for each exposed tool
-   - **FAQ**: Common questions from BRD/FSD use cases
+   - **Intro (2-4 sentences)**: what the feature does for the user — zero internals
+   - **Installation/Setup** (only if installation matters to the user)
+   - **Main flow — step by step**: numbered steps, each with a **User Actions table** (Bước · Thao tác · Kết quả mong đợi) and a **REAL screenshot** from the running build + **Key Elements table** (Thành phần · Vị trí trên ảnh · Ý nghĩa)
+   - **Secondary flows** (agent self-check, edge cases) — same pattern
+   - **Troubleshooting**: table Hiện tượng | Nguyên nhân | Cách xử lý (by symptom, not by error code)
+   - **FAQ**: 4-6 real questions in user words
+   - **Related documents**: pointers to BRD/FSD/TDD (diagrams live THERE, not in UG)
+
+⛔ **HARD RULES (UG Writing Standard):**
+   - **FORBIDDEN in UG**: draw.io architecture/sequence/state/component/use-case diagrams, config property references, API/tool schemas, class/file internals. Those belong to TDD — link, don't copy.
+   - **Screenshots MUST be real captures from the running build** (via `orca computer` automation when needed) — never wireframes, mockups, or drawio exports. Follow `ug-evidence.md` freshness rules.
+   - **Real data only**: example outputs must come from an actual run (real runId, real numbers). Fabricated examples = defect.
+   - **Language**: Vietnamese (user-facing), product/UI labels stay English as on screen.
+   - **Length**: 2-4 pages. If longer — cut prose, keep tables.
+   - Before reporting done: verify every embedded image path exists (`Test-Path`); no `[SCREENSHOT REQUIRED]` placeholder when capture is possible.
 5. **Ingest UG into KB** (FULL content):
    ```
    the discovered KB "ingest" tool (

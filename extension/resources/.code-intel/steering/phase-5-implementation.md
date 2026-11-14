@@ -67,7 +67,7 @@ transition_issue(issue_key: "{TICKET}", transition_name: "Review code")
 ```
 invokeSubAgent(
   name: "dev-agent",
-  prompt: "Viết User Guide cho {TICKET}. Đọc BRD, FSD, TDD từ KB. Đọc source code. Template: documents/templates/UG-TEMPLATE.md. Output: documents/{TICKET}/UG.md. Nội dung: Installation, Configuration Reference, Usage, Administration, Troubleshooting, Error Codes, FAQ."
+  prompt: "Viết User Guide cho {TICKET}. Đọc BRD, FSD, TDD từ KB. BẮT BUỘC đọc chuẩn UG Writing Standard trước: .opencode/rules/sdlc/ug-writing-standard.md (exemplar: documents/SA4E-393/UG.md). UG dành cho END USER — CẤM đưa Configuration Reference/API schemas/diagram kiến trúc vào UG (chúng thuộc TDD). Mỗi bước = User Actions table (Bước·Thao tác·Kết quả mong đợi) + screenshot thật từ build đang chạy (orca computer) + Key Elements table. Real data only. Template: documents/templates/UG-TEMPLATE.md. Output: documents/{TICKET}/UG.md."
 )
 ```
 
@@ -123,7 +123,7 @@ embed_image → export_docx → jira_update_issue
 |---|-------|------------|
 | 1 | UG.md exists | Re-invoke DEV |
 | 2 | Installation/Quick Start section | Ask DEV to add |
-| 3 | Configuration Reference with tables | Ask DEV to add |
+| 3 | Real screenshots + User Actions tables (UG Writing Standard) | Ask DEV to add |
 | 4 | Usage section with examples | Ask DEV to add |
 | 5 | Troubleshooting section | Ask DEV to add |
 | 6 | Error Codes table | Ask DEV to add |

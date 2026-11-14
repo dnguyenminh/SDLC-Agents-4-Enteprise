@@ -60,7 +60,7 @@ After each sub-agent completes, SM MUST verify output before marking phase = don
 |---|---|---|
 | 1 | UG.md exists | Critical |
 | 2 | Installation/Quick Start | Critical |
-| 3 | Configuration Reference with tables | Critical |
+| 3 | Real screenshots + User Actions tables (UG Writing Standard) | Critical |
 | 4 | BA review completed | Critical |
 | 5 | QA verification PASS | Critical |
 
