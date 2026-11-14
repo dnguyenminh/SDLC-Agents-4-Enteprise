@@ -1,6 +1,6 @@
 {
   "name": "sdlc-agent-4-enterprise-server",
-"version": "1.55.19",
+  "version": "1.55.19",
   "description": "Code Intelligence MCP Server — multi-agent SDLC pipeline with semantic memory, code graph, and draw.io integration",
   "main": "dist/index.js",
   "bin": {
@@ -109,8 +109,15 @@
     "zod": "4.6.6",
     "glob": "14.0.4",
     "serialize-javascript": "7.1.4",
-    "mocha": { "minimatch": "11.0.5", "diff": "8.0.3" },
-    "@vscode/vsce": { "minimatch": "11.0.5" },
-    "@typescript-eslint/typescript-estree": { "minimatch": "11.0.5" }
+    "mocha": {
+      "minimatch": "11.0.5",
+      "diff": "8.0.3"
+    },
+    "@vscode/vsce": {
+      "minimatch": "11.0.5"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.5"
+    }
   }
 }
