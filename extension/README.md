@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.19-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.21-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.55.11.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.21.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.55.11.vsix
+code --install-extension sdlc-agents-4-enterprise-1.55.21.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,14 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.21 (2026-11-15)
+**CI & Docs stabilization + SA4E-393 UG Writing Standard**
+- 🔧 CI dependency sync: npm install `--include=optional` removal, lockfile regeneration, ESLint 10 ↔ 9.39.5 sync, git deps allowed
+- 📚 UG Writing Standard rollout: BA/QA steering `ug-review`, template update with Prerequisites and flexible Key Elements
+- 📄 SA4E-393 UG rewrite to end-user format v1.2 with real screenshots from build 1.55.19
+- 🌳 SA4E-394 Multi-worktree base_dir support hardening
+- 🔖 Version sync root/backend/extension → 1.55.21
 
 ### v1.55.11 (2026-10-29)
 

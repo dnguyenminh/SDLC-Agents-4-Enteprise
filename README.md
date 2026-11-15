@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.19.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.21.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,14 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.21 (2026-11-15)
+**CI & Docs stabilization + SA4E-393 UG Writing Standard**
+- 🔧 **CI dependency sync** — remove `--include=optional` from npm install, regenerate `package-lock.json` for root/backend, remove per-workspace lockfile conflicts, upgrade npm, ESLint 10 ↔ 9.39.5 sync, allow git deps
+- 📚 **UG Writing Standard rollout** — agents retrained for end-user User Guides; BA/QA steering updated with `ug-review`; template `documents/templates/UG-TEMPLATE.md` updated with Prerequisites, flexible Key Elements, User Actions before screenshots
+- 📄 **SA4E-393 UG rewrite** — User Guide rewritten to end-user format v1.2 with real screenshots from running build 1.55.19 captured via `orca computer`; entry point, Command Palette, gate result evidence added
+- 🌳 **SA4E-394 Multi-worktree base_dir support** — path resolver hardening, workspace allowlist, traversal prevention
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.21`
 
 ### v1.55.19 (2026-11-13)
 **SA4E-393 — Agent-invocable design gate + worktree auto-trust**
