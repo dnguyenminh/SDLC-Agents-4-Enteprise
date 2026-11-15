@@ -12,7 +12,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import pino from 'pino';
 import { parseDrawio } from './drawio-parser.js';
-import { handleApply } from './drawio-apply.js';
+import { handleApply, normalizeLayoutArgs } from './drawio-apply.js';
 import { detectAllIssues, type LayoutIssue } from './drawio-detection.js';
 import {
   hasBaseDirArg,
@@ -98,11 +98,20 @@ async function layoutOn(filePath: string, args: Record<string, unknown>): Promis
     const nodeCount = graph.nodes.length + graph.containers.length;
     if (nodeCount === 0) return error('No nodes found in diagram');
     const issues = detectAllIssues(graph);
+    
+    // Normalize args to check scope
+    const normalized = normalizeLayoutArgs(args);
+    
     // SA4E-410 (DISC-7): auto-fix gates on high/medium severity only. Low
     // findings (proximity, containment hints, diagonal edges, edge-over-band)
     // are cosmetic by contract; fixing on them rewrote grid tables and other
     // dense but intentional layouts through ELK.
-    const fixable = issues.filter(i => i.severity === 'high' || i.severity === 'medium');
+    // EXCEPTION: scope='ports' should fix anchor/port issues regardless of severity.
+    const isPortsScope = normalized.scope === 'ports';
+    const fixable = isPortsScope
+      ? issues  // ports scope: fix all issues (including low-severity anchor issues)
+      : issues.filter(i => i.severity === 'high' || i.severity === 'medium');
+    
     if (fixable.length === 0) {
       if (issues.length === 0) return alreadyGood();
       return JSON.stringify({
