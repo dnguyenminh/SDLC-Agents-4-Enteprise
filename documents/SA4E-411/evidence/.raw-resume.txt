@@ -1,0 +1,35 @@
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794769659618,"pid":44424,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769659636,"pid":44424,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769659647,"pid":44424,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769659658,"pid":44424,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769659666,"pid":44424,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769659673,"pid":44424,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > FK ownership: every entity references agent_run (bad run id rejected) 48ms
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > restart resume: agent resumes from last completed step (AC #12) 11ms
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > approval workflow: create → user decision → decision_time persisted 10ms
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > durable event log BEFORE SSE: append → row committed, replay by Last-Event-ID 10ms
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > reference-only payloads: large content rejected with PAYLOAD_TOO_LARGE (§15) 6ms
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > state transitions recorded for the run 6ms
+{"level":30,"time":1794769659947,"pid":11024,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769659968,"pid":11024,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769659976,"pid":11024,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769659990,"pid":11024,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/agent/__tests__/agent-state-recovery.test.ts > SA4E-423 agent state recovery > restart simulation: FULL resume from persisted state, zero in-memory state (AC #12 hard) 51ms
+ ✓ src/engine/agent/__tests__/agent-state-recovery.test.ts > SA4E-423 agent state recovery > SSE replay (AC #16): no duplicate, no missing across reconnects 9ms
+ ✓ src/engine/agent/__tests__/agent-state-recovery.test.ts > SA4E-423 agent state recovery > approval lifecycle: create → notify (event) → decide → persist + contiguity holds 15ms
+ ✓ src/engine/agent/__tests__/agent-state-recovery.test.ts > SA4E-423 agent state recovery > unknown run → empty snapshot (no crash) 5ms
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)
+   Start at  02:07:39
+   Duration  821ms (transform 94ms, setup 29ms, import 320ms, tests 172ms, environment 0ms)
+
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx vitest run src/engine/agent/__tests__/agent-persistence.test.ts src/engine/agent/__tests__/agent-state-recovery.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

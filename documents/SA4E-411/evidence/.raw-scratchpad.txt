@@ -1,0 +1,34 @@
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"vitest^" run src/engine/scratchpad/__tests__/scratchpad.test.ts src/engine/scratchpad/__tests__/eviction.test.ts src/engine/scratchpad/__tests__/token-eviction.integration.test.ts --reporter=verbose
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+ ✓ src/engine/scratchpad/__tests__/scratchpad.test.ts > SA4E-421 scratchpad format > parses all 4 sections + structured DeadEnds/Facts items 3ms
+ ✓ src/engine/scratchpad/__tests__/scratchpad.test.ts > SA4E-421 scratchpad format > round-trips through render (parse → render → parse) 0ms
+ ✓ src/engine/scratchpad/__tests__/scratchpad.test.ts > SA4E-421 scratchpad format > validation: missing sections / multi-sentence goal / no block → invalid 0ms
+ ✓ src/engine/scratchpad/__tests__/scratchpad.test.ts > SA4E-421 scratchpad format > enforced before each tool call (AC): valid tail passes, missing block throws 1ms
+ ✓ src/engine/scratchpad/__tests__/scratchpad.test.ts > SA4E-421 scratchpad format > extracts scratchpad-referenced evidence IDs (eviction-exempt, AC) 0ms
+ ✓ src/engine/scratchpad/__tests__/token-eviction.integration.test.ts > SA4E-428 scratchpad + eviction under budget pressure > parses the scratchpad and derives the exemption set from evidence refs 2ms
+ ✓ src/engine/scratchpad/__tests__/token-eviction.integration.test.ts > SA4E-428 scratchpad + eviction under budget pressure > score formula is exact and protects referenced/in-use entries 0ms
+ ✓ src/engine/scratchpad/__tests__/token-eviction.integration.test.ts > SA4E-428 scratchpad + eviction under budget pressure > evicts the un-referenced oldest prefix, keeps scratchpad evidence, no overflow 1ms
+ ✓ src/engine/scratchpad/__tests__/token-eviction.integration.test.ts > SA4E-428 scratchpad + eviction under budget pressure > no pressure → no eviction even with a scratchpad exemption set 0ms
+ ✓ src/engine/scratchpad/__tests__/eviction.test.ts > SA4E-421 eviction score > S_evict = age×200 + tokens − referenced×1000 (exact formula) 2ms
+ ✓ src/engine/scratchpad/__tests__/eviction.test.ts > SA4E-421 batch eviction at 75% budget > below threshold → no eviction, batchTriggered=false 1ms
+ ✓ src/engine/scratchpad/__tests__/eviction.test.ts > SA4E-421 batch eviction at 75% budget > at 75% trigger → batch evicts highest-score first down to 70% target (AC) 0ms
+ ✓ src/engine/scratchpad/__tests__/eviction.test.ts > SA4E-421 batch eviction at 75% budget > tombstone preserves tool_call_id and clears content (AC) 0ms
+ ✓ src/engine/scratchpad/__tests__/eviction.test.ts > SA4E-421 batch eviction at 75% budget > exempts scratchpad-referenced evidence IDs (AC) 1ms
+ ✓ src/engine/scratchpad/__tests__/eviction.test.ts > SA4E-421 batch eviction at 75% budget > never evicts code currently in use (AC) 0ms
+ ✓ src/engine/scratchpad/__tests__/eviction.test.ts > SA4E-421 batch eviction at 75% budget > referenced-in-last-thought gets −1000 credit (evicted later than unreferenced peer) 0ms
+ ✓ src/engine/scratchpad/__tests__/eviction.test.ts > SA4E-421 batch eviction at 75% budget > all-exempt history: nothing evictable, tokens unchanged 0ms
+
+ Test Files  3 passed (3)
+      Tests  17 passed (17)
+   Start at  01:52:06
+   Duration  678ms (transform 68ms, setup 38ms, import 164ms, tests 17ms, environment 0ms)
+
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx vitest run src/engine/scratchpad/__tests__/scratchpad.test.ts src/engine/scratchpad/__tests__/eviction.test.ts src/engine/scratchpad/__tests__/token-eviction.integration.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

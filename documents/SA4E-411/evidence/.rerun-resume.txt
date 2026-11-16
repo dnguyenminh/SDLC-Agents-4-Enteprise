@@ -1,0 +1,57 @@
+=== SA4E-411 evidence re-run ===
+label      : resume
+cwd        : C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend
+command    : npx vitest run src/engine/agent/__tests__/agent-persistence.test.ts src/engine/agent/__tests__/agent-state-recovery.test.ts --reporter=verbose
+portable   : yes (unchanged)
+started_at : 2026-11-16T07:10:47.424Z
+finished_at: 2026-11-16T07:10:49.431Z
+duration_ms: 2007
+EXIT=0
+
+--- stdout ---
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794813048836,"pid":16372,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > FK ownership: every entity references agent_run (bad run id rejected) 51ms
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > restart resume: agent resumes from last completed step (AC #12) 20ms
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > approval workflow: create → user decision → decision_time persisted 8ms
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > durable event log BEFORE SSE: append → row committed, replay by Last-Event-ID 9ms
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > reference-only payloads: large content rejected with PAYLOAD_TOO_LARGE (§15) 8ms
+{"level":30,"time":1794813048861,"pid":16372,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813048876,"pid":16372,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813048886,"pid":16372,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813048893,"pid":16372,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813048901,"pid":16372,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > state transitions recorded for the run 7ms
+{"level":30,"time":1794813049316,"pid":7324,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/agent/__tests__/agent-state-recovery.test.ts > SA4E-423 agent state recovery > restart simulation: FULL resume from persisted state, zero in-memory state (AC #12 hard) 63ms
+ ✓ src/engine/agent/__tests__/agent-state-recovery.test.ts > SA4E-423 agent state recovery > SSE replay (AC #16): no duplicate, no missing across reconnects 13ms
+ ✓ src/engine/agent/__tests__/agent-state-recovery.test.ts > SA4E-423 agent state recovery > approval lifecycle: create → notify (event) → decide → persist + contiguity holds 18ms
+{"level":30,"time":1794813049338,"pid":7324,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813049352,"pid":7324,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813049371,"pid":7324,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/agent/__tests__/agent-state-recovery.test.ts > SA4E-423 agent state recovery > unknown run → empty snapshot (no crash) 9ms
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)
+   Start at  14:10:48
+   Duration  986ms (transform 101ms, setup 32ms, import 374ms, tests 209ms, environment 0ms)
+
+
+--- stderr ---
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"vitest^" run src/engine/agent/__tests__/agent-persistence.test.ts src/engine/agent/__tests__/agent-state-recovery.test.ts --reporter=verbose
+(node:16372) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/engine/agent/__tests__/agent-persistence.test.ts > SA4E-416 agent persistence > FK ownership: every entity references agent_run (bad run id rejected)
+sqlite3_step() rc= 787 SQLITE_CONSTRAINT_FOREIGNKEY SQL = INSERT INTO agent_step (id, project_id, agent_run_id, step_index, status) VALUES ('x', ?, 'nope', 9, 'PENDING')
+
+(node:7324) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+--- exit-code capture (re-run in worktree SA4E-411) ---
+captured_at: 2026-11-16T07:10:47.424Z
+command: npx vitest run src/engine/agent/__tests__/agent-persistence.test.ts src/engine/agent/__tests__/agent-state-recovery.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

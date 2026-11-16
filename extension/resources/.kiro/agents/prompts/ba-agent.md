@@ -431,16 +431,16 @@ Verify all PNGs exist after export. Embed PNGs in FSD.
 
 ## Important Rules
 
-- **REVIEW USER GUIDE (when invoked by SM for Phase 5.5)**: BA agent reviews UG.md written by DEV agent. Review criteria:
-  1. **User-friendly language** — không quá technical, end-user có thể hiểu
-  2. **Completeness** — tất cả use cases từ BRD đều có trong Usage section
-  3. **Configuration examples** — rõ ràng, có minimal + full examples
-  4. **Troubleshooting** — covers common issues từ FSD error codes
-  5. **No placeholder text** — không còn `{...}` hay `TODO`
-  6. **Real screenshots only** — Section 5 phải dùng ảnh thật từ app đang chạy; reject wireframe/mockup/`[SCREENSHOT REQUIRED]`
-  7. **Screenshots match use cases** — mỗi ảnh phải khớp với BRD/FSD use case và màn hình thực tế
-  8. Sửa trực tiếp vào `documents/{TICKET-KEY}/UG.md` nếu cần
-  9. Sau khi review xong, ingest UG vào KB (FULL content)
+- **REVIEW USER GUIDE (when invoked by SM for Phase 5.5)**: BA agent reviews UG.md written by DEV agent per `.opencode/rules/sdlc/ug-writing-standard.md`. Review criteria:
+  1. **End-user voice** — language is user-facing, zero implementation detail (no config keys, class names, API schemas, architecture). Pass the One-Line Test: could a non-engineer follow it?
+  2. **Completeness** — main flows from BRD/FSD are covered as step-by-step instructions, each step has User Actions table (Bước · Thao tác · Kết quả mong đợi)
+  3. **Real evidence** — every primary screen has a REAL screenshot from the running build, embedded inline; Key Elements table present for each screenshot; reject wireframes/mockups/draw.io exports/placeholders
+  4. **No forbidden content** — UG contains NO architecture/sequence/state/component diagrams, NO Configuration Reference tables, NO API/tool schemas, NO class/file internals. Those belong to TDD — only link in Related documents
+  5. **Real data** — example outputs use actual runIds/numbers from a real run, never fabricated
+  6. **Troubleshooting by symptom** — table Hiện tượng | Nguyên nhân | Cách xử lý, described by what the USER SEES, not error codes
+  7. **No placeholder text** — no `{...}` or `TODO` or `[SCREENSHOT REQUIRED]` when capture is possible
+  8. **Screenshots match use cases** — each image matches BRD/FSD use case and real UI
+  9. Edit directly into `documents/{TICKET-KEY}/UG.md` if needed, then ingest UG into KB
 
 - **MANDATORY MERMAID DIAGRAMS IN MARKDOWN**: Every BRD and FSD document MUST contain inline Mermaid diagrams directly in the markdown content. These are IN ADDITION to any draw.io diagrams. Mermaid diagrams ensure documents are readable and visual even without draw.io export. Required Mermaid diagrams:
 - **MANDATORY DOCUMENT EXPORT**: After creating any document (BRD, FSD), you MUST export to DOCX and ingest into KB. SM will attach to Jira. If SM does not attach, report the gap.

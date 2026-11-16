@@ -2,9 +2,75 @@
   "ticket": "SA4E-411",
   "title": "[EPIC] Code Agent 16K — Deterministic Code Intelligence + Agent UX",
   "version": 2,
-  "updated": "2026-11-10",
-  "status": "in-review",
-  "phase": "phase-4",
+  "updated": "2026-11-16",
+  "status": "in-progress",
+  "phase": "phase-5.5",
+  "user_guide": {
+    "status": "in_progress",
+    "file": "UG.md",
+    "version": 3,
+    "appendix": null,
+    "verification_log": "QA-VERIFICATION-SA4E-411.md",
+    "revision": "v3 — EMERGENCY REWRITE. v2 rejected by user review on 2026-11-16: (a) 4 Kiro screenshots came from repo main + stale backend 127.0.0.1:48721, not SA4E-411 build; (b) UG still leaked internal content (error codes, HTTP 400, internal states OPEN/PENDING/APPLIED/DISCARDED, Last-Event-ID, nextStepId, AC/ES/RTM matrix, transcript appendix); (c) documents/SA4E-411/evidence/ is UNTRACKED in git so branch/committed reviewers see broken links; (d) screenshot 03 self-contradictory, screenshot 05 cropped 45px. All prior PASS verdicts revoked.",
+    "updatedAt": "2026-11-16T13:10:00+07:00",
+    "gate": "FAIL — prior BA PASS and QA PASS invalidated by user review (2026-11-16). New gate sequence: DEV rewrite -> BA independent hard-gate review -> QA execution on fresh SA4E-411 build -> DOCX -> Jira.",
+    "prior_ba_review": {
+      "verdict": "INVALIDATED — superseded by emergency rewrite",
+      "prior_session": "ses_e1e0feec9ffe3TI8BEm7Vx3SkS",
+      "reason": "reviewed a UG whose screenshots were main-repo/stale and whose body still contained internal technical content"
+    },
+    "prior_qa_verification": {
+      "verdict": "INVALIDATED — superseded by emergency rewrite",
+      "prior_session": "ses_e1da91b28ffeyiDJkQfwlWqxOk",
+      "reason": "validated transcripts + main-repo screenshots, not ticket-specific UI evidence; link check could not detect untracked-in-git evidence"
+    },
+    "evidence_portability": {
+      "status": "BROKEN — documents/SA4E-411/evidence/ and the 4 PNG screenshots are untracked (git status ??); DOCX files are gitignored (.gitignore documents/**/*.docx)",
+      "required_action": "keep evidence out of the UG body, publish manifest + sha256 hashes, disclose untracked state explicitly; commit only when the user asks"
+    },
+    "removed_from_ug_set": [
+      "UG-evidence-appendix.md",
+      "UG-evidence-appendix-v2-SA4E-411.docx"
+    ],
+    "rewrite_hard_gates": {
+      "one_line_test": "a non-engineer must be able to follow the UG and succeed",
+      "forbidden_content": "internal code/API/error-code/state names, HTTP details, AC/ES/RTM tables, technical transcripts, build-stale/correction warnings",
+      "screenshots": "fresh + ticket-specific only; entry point + primary result + one error/edge state that changes user action",
+      "length": "120-180 lines / 2-4 pages",
+      "flows_without_fresh_evidence": "must be removed from UG and moved to QA/TEST-REPORT instead of placeholders"
+    }
+  },
+  "runtime_context": {
+    "verifiedAt": "2026-11-16T01:06:13+07:00",
+    "backend": "http://127.0.0.1:48721 healthy, 95 tools loaded, codeIntel ready — BUT runs from MAIN repo c:\\projects\\kiro\\SDLC-Agents-4-Enterprise (main @ cd14ece5), which lacks the 54 SA4E-411 files under backend/src/engine -> STALE for this ticket, owned by other sessions (do NOT kill/restart)",
+    "ide": "Kiro running, workspace = main repo; MCP-native IDE capture tools available on code-intel server: ide_current_screenshot, ide_current_executeCommand, ide_current_openFile, ide_current_getActiveTab, ide_current_getWorkspace, ide_launch/ide_attach/ide_screenshot/ide_evaluate",
+    "engine_store": ".code-intel/index.db (1.7 MB) — SQLite embedded per ADR-001",
+    "extension_version": "1.55.21",
+    "worktree_head": "ebd36f38 (dnguyenminh/SA4E-411)",
+    "code_index": ".analysis/code-intelligence/index-metadata.json absent in this worktree; the SA4E-411 engine index is .code-intel/index.db",
+    "ide_current_workspace_recheck_2026_11_16": "ide_current_getWorkspace -> [{name: SDLC-Agents-4-Enterprise, uri: c:\\projects\\kiro\\SDLC-Agents-4-Enterprise}] ; ide_list_sessions -> [] (no CDP IDE session attached). Kiro/VS Code is NOT running the SA4E-411 worktree, so any screenshot taken from it is main-repo evidence and cannot be used as SA4E-411 UI evidence."
+  },
+  "tooling_constraints": {
+    "mcp_server": "code-intel (session-bound). find_tools must use threshold ~0.1 / top_k ~50 — default threshold truncates the catalogue (144 tools) and produces false 'tool not found' conclusions",
+    "allowlist": "code-intel server is bound to c:\\projects\\kiro\\SDLC-Agents-4-Enterprise; worktree paths are rejected by mem_ingest_file / export_docx / jira_attach_file (PATH_REJECTED_OUTSIDE_WORKSPACE | PATH_REJECTED_OUTSIDE_ALLOWLIST)",
+    "kb_ingest_fallback": "mem_ingest(content=<full markdown string>) — verified working (entry 620937); use for UG ingest"
+  },
+  "jira": {
+    "key": "SA4E-411",
+    "type": "Epic",
+    "status": "In Progress",
+    "transitions": "SA4E simplified global workflow: 11 To Do / 21 In Progress / 31 In Review / 41 Done",
+    "comments": 1,
+    "attachments": 32,
+    "last_transition": "In Review -> In Progress (id 21) at 2026-11-16 — EMERGENCY REWRITE: user rejected UG v2 (stale/main screenshots, technical content leak, untracked evidence). Prior PASS verdicts revoked.",
+    "ug_v2_attachments": {
+      "state": "SUPERSEDED — do not treat as final deliverable",
+      "docx": ["UG-v2-SA4E-411.docx (id 11893)", "UG-evidence-appendix-v2-SA4E-411.docx (id 11894)"],
+      "screenshots": ["screenshot-sa411-01-command-palette-entry.png (11895)", "screenshot-sa411-02-show-status.png (11896)", "screenshot-sa411-03-enrichment-dashboard.png (11897)", "screenshot-sa411-05-sdlc-chat-panel.png (11898)"],
+      "drawio": "16 canonical epic diagram sources (11899-11914)",
+      "comment_id": 12326
+    }
+  },
   "epic_status": "all_18_child_stories_implemented + epic_docs_complete",
   "child_stories": [
     { "key": "SA4E-412", "title": "[Phase 0] Scope Decision: SQLite vs PostgreSQL, Language MVP", "phase": "phase-0", "status": "done", "commit": "f599de04", "evidence": "documents/SA4E-411/ADR-001-engine-storage-and-language-mvp.md" },
@@ -47,11 +113,11 @@
     "ac_18_sa4e_regression_build_test_green": "pass - SA4E-429: npm run build exit 0; npm test exit 0 (backend 500 files/3825 passed/19 skipped; extension 443 files/3469 passed/6 skipped)"
   },
   "verification": {
-    "build": "npm run build exit 0",
+    "build": "npm run build exit 0 (root workspace script -> backend + extension)",
     "full_test": "npm test exit 0 (backend 500f/3825p/19s; ext 443f/3469p/6s)",
-    "test_ac": "npm run test:ac exit 0 (backend 16 tests + ext 1 test)",
-    "test_token": "npm run test:token exit 0 (backend 13 + ext 9 integration tests)",
-    "test_regression": "npm run test:regression exit 0 (backend 11f/63t + ext 20f/155t)"
+    "acceptance_scripts_correction": "⚠️ CORRECTION 2026-11-16 (SM, verified against package.json): the npm scripts 'test:ac' / 'test:token' / 'test:regression' DO NOT EXIST in this repo — root, backend and extension package.json only define 'build' and 'test'. Acceptance suites must be invoked directly via vitest.",
+    "acceptance_commands": "20 direct vitest/driver commands listed in documents/SA4E-411/evidence/exit-codes.json (18 vitest + 2 tsx drivers); see also evidence/README.md",
+    "evidence_rerun_2026_11_16": "20/20 commands exit 0 (265 tests passed / 0 failed; 39 test files passed / 0 failed) — QA re-execution, report documents/SA4E-411/QA-VERIFICATION-SA4E-411.md"
   },
   "epic_docs": {
     "BRD": "documents/SA4E-411/BRD.md",

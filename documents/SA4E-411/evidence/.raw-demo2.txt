@@ -1,0 +1,78 @@
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"tsx^" C:\Users\ASUS\AppData\Local\Temp\opencode\sa4e-411-demo2.mts
+### A. STAGED PATCH: stage → approve → apply ###
+{"level":30,"time":1794769526201,"pid":51728,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769526212,"pid":51728,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794769526212,"pid":51728,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"a924dc6d-1d1f-4a65-af3d-c7532975ce59","file":"src/auth.ts","valid":true,"msg":"[staged-patch] staged"}
+-- runId: a924dc6d-1d1f-4a65-af3d-c7532975ce59
+-- changeSetId: 8f41ce97-2d8b-4e79-9141-469c3342d69f | approvalId: 01c6b82f-f855-40b4-b24a-e7916c35e3e5 | valid: true
+-- working tree changed by stage? false  (expected: false)
+-- change_set status: OPEN | approval decision: PENDING
+-- apply before approval → applied=false rejected=NOT_APPROVED
+-- after approval → applied=true newHash=a9de69a78c1f421e1f811e7a31fd12be7e6c6dcc5a9682fab9a8a2e247a896e1
+-- file content now: "const original = 2;\n"
+-- change_set status: APPLIED
+
+### A2. STALE BASE (file drifted while waiting for approval) ###
+-- applied=false rejected=STALE_BASE (expected: STALE_BASE)
+-- file content after rejected apply: "const original = 99;\n"
+
+### A3. PATH TRAVERSAL (target outside the workspace) ###
+-- valid=false (expected: false)
+-- file outside workspace created? false
+
+### B. SSE DURABLE LOG + RECONNECT REPLAY ###
+-- runId: 453800e4-9c2d-4bbe-9c1c-5a609ec0c863
+-- event ids in log: [1, 2, 3, 4, 5, 6, 7]
+-- reconnect with Last-Event-ID: 3 → received [4, 5, 6, 7]
+-- duplicates: 0 | missing: 0
+-- sample frame:
+id: 4
+event: STEP_STATUS
+data: {"step":1}
+
+
+
+### C. RESUME AFTER RESTART (zero in-memory state) ###
+-- runId: 725aca02-0c8a-4e43-adbc-bb77ae5c64ba
+-- objective: implement payment retry
+-- plan status: APPROVED
+-- steps done: 1/2 | next step index: 1
+-- resume point: lastCompletedStepIndex=0 nextStepId=3d5dfb83-6877-41d5-9675-502af20a7f74
+
+### D. PINNED SNAPSHOT ENFORCEMENT (chat pinned to a commit) ###
+-- branch head now points at: S2 (generation 2)
+-- missing index_snapshot_id: rejected with SNAPSHOT_ID_REQUIRED (HTTP 400)
+-- mismatched snapshot: rejected with SNAPSHOT_MISMATCH (HTTP 400)
+-- unknown session: rejected with SESSION_NOT_FOUND (HTTP 400)
+-- valid request → pinned snapshot S1, commit c1
+-- query against pinned S1 still returns: [AuthService]
+
+### E. SCRATCHPAD + CONTEXT EVICTION ###
+<scratchpad>
+* Goal: Locate the payment retry logic
+* DeadEnds: src/pay.ts:10-20 -> only DTO definitions
+* Facts: src/pay.ts:45-92 -> retry loop lives here (evidence:ch1)
+* Plan: Read src/pay.ts:45-92 to confirm the retry condition
+</scratchpad>
+-- referenced evidence ids: [ch1]
+-- eviction score old-big: 2000
+-- eviction score ch1 (referenced, exempt): -Infinity
+-- batchTriggered: true | evicted: [old-big, new-small] | exempted: [ch1]
+-- tokens after eviction: 516 (target ≤ 560)
+-- tombstone left in place: "[evicted tool_call_id=old-big]"
+(node:51728) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"level":30,"time":1794769526230,"pid":51728,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769526246,"pid":51728,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769526262,"pid":51728,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769526215,"pid":51728,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794769526219,"pid":51728,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"a924dc6d-1d1f-4a65-af3d-c7532975ce59","file":"src/auth.ts","valid":false,"rejected":"STALE_BASE","msg":"[staged-patch] staged"}
+{"level":40,"time":1794769526220,"pid":51728,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"a924dc6d-1d1f-4a65-af3d-c7532975ce59","rejected":"STALE_BASE","msg":"[staged-patch] apply rejected, tree untouched"}
+{"level":30,"time":1794769526220,"pid":51728,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"a924dc6d-1d1f-4a65-af3d-c7532975ce59","file":"../escape.ts","valid":false,"rejected":"PATH_INVALID","msg":"[staged-patch] staged"}
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx tsx C:\Users\ASUS\AppData\Local\Temp\opencode\sa4e-411-demo2.mts (cwd=backend)
+EXIT=0

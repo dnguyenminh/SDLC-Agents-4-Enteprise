@@ -1,0 +1,48 @@
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794769662933,"pid":43480,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/map/__tests__/repo-map-service.test.ts > SA4E-418 RepositoryMapService > DSL output matches spec format (header + path: + start-end: signature) 57ms
+ ✓ src/engine/map/__tests__/repo-map-service.test.ts > SA4E-418 RepositoryMapService > query personalization: query-matched file ranks first 8ms
+ ✓ src/engine/map/__tests__/repo-map-service.test.ts > SA4E-418 RepositoryMapService > snapshot pin: FAILED snapshot rejected; scoping keeps S2 symbols out of S1 map 8ms
+ ✓ src/engine/map/__tests__/repo-map-service.test.ts > SA4E-418 RepositoryMapService > token budget respected via binary-search packing (custom small budget) 11ms
+{"level":30,"time":1794769662959,"pid":43480,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769662965,"pid":43480,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769662976,"pid":43480,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769662986,"pid":43480,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/map/__tests__/repo-map-service.test.ts > SA4E-418 RepositoryMapService > performance: repo map generation < 500ms for 10k files (pure ranking path) 201ms
+{"level":30,"time":1794769663536,"pid":2748,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > all 4 tools enforce the session pin (FAILED snapshot + commit mismatch) 52ms
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > search_symbols: hybrid DSL format + metadata + cursor 20ms
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > search_symbols: kind + path_filter narrow results; cursor paginates 8ms
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > get_file_skeleton: signatures only, no bodies (AC) 7ms
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > read_code_block: enforces 120 lines max (AC) + cursor 5ms
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > query_call_graph: CALLERS/CALLEES/IMPLEMENTATIONS directions (AC) 8ms
+{"level":30,"time":1794769663561,"pid":2748,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769663577,"pid":2748,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769663584,"pid":2748,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769663591,"pid":2748,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769663597,"pid":2748,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769663603,"pid":2748,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > tool schemas total ~450 tokens (AC) 5ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 weight formula > tokenizes CamelCase / snake_case into lowercase terms 1ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 weight formula > multipliers: query ×10, test ×0.2, long identifier ×2 0ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 weight formula > W = m × √freq × ln(N/(df+1)) 0ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 personalized PageRank > ranks the central node highest; scores sum ≈ 1 (stochastic) 6ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 personalized PageRank > personalization vector boosts the favored file 0ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 personalized PageRank > query-matched terms weight edges ×10 inside buildFileGraph 0ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 token packing (binary search) > packs the largest prefix within the budget 1ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 token packing (binary search) > budget too small → empty; large budget → all; empty input → empty 0ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 token packing (binary search) > binary search does not overshoot (maximal prefix fits) 0ms
+
+ Test Files  3 passed (3)
+      Tests  21 passed (21)
+   Start at  02:07:42
+   Duration  1.39s (transform 146ms, setup 35ms, import 515ms, tests 402ms, environment 0ms)
+
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx vitest run src/engine/map/__tests__/repo-map-service.test.ts src/engine/agent-tools/__tests__/core-tools.test.ts src/engine/map/__tests__/repo-map-rank.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

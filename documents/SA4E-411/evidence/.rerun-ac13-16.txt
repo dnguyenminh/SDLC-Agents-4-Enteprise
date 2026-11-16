@@ -1,0 +1,43 @@
+=== SA4E-411 evidence re-run ===
+label      : ac13-16
+cwd        : C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend
+command    : npx vitest run src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts --reporter=verbose
+portable   : yes (unchanged)
+started_at : 2026-11-16T07:10:54.965Z
+finished_at: 2026-11-16T07:10:57.122Z
+duration_ms: 2157
+EXIT=0
+
+--- stdout ---
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794813056982,"pid":37912,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813057017,"pid":37912,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"e901f9967ee7","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794813057018,"pid":37912,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"77c008cb-e0f5-4403-8d02-00e44edc43b8","file":"src/auth.ts","valid":true,"msg":"[staged-patch] staged"}
+ ✓ src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts > SA4E-427 acceptance criteria 13–16 > AC-13 patch rejects stale base hash and path traversal 71ms
+{"level":30,"time":1794813057005,"pid":37912,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813057044,"pid":37912,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813057051,"pid":37912,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813057023,"pid":37912,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"e901f9967ee7","msg":"[patch-protocol] applied atomically"}
+ ✓ src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts > SA4E-427 acceptance criteria 13–16 > AC-14 original working tree unchanged before approval (AC #14) 41ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts > SA4E-427 acceptance criteria 13–16 > AC-15 sandbox: no workspace escape, no unrestricted network 8ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts > SA4E-427 acceptance criteria 13–16 > AC-16 SSE reconnect + replay → no duplicate, no missing 12ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  14:10:56
+   Duration  830ms (transform 168ms, setup 36ms, import 476ms, tests 133ms, environment 0ms)
+
+
+--- stderr ---
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"vitest^" run src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts --reporter=verbose
+(node:37912) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+--- exit-code capture (re-run in worktree SA4E-411) ---
+captured_at: 2026-11-16T07:10:54.965Z
+command: npx vitest run src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

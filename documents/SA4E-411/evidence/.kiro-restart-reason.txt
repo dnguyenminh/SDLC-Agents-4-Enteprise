@@ -1,0 +1,3 @@
+RESTART_REASON=isolated Kiro PID 45256 exited unexpectedly after a stale-index set-value on the go-to-line input; restarting the same isolated profile (no repo/shared-instance impact)
+RESTART_REASON=reset workspace-file override after the SDLC Agents Settings panel wrote the package.json default (48721) into it; restarting the same isolated profile
+RESTART_REASON=reset workspace-file override after the SDLC Agents Settings panel wrote the package.json default (48721) into it; restarting the same isolated profile

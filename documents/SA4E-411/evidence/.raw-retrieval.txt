@@ -1,0 +1,35 @@
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794769665201,"pid":29392,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > pinOrThrow: FAILED/unknown snapshot rejected; READY accepted 58ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > resolveActiveSnapshot: ref → active snapshot; re-point switches; FAILED active rejected 15ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > symbolByName: pinned to S1 returns ONLY S1 rows (same name exists in S2) 13ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > symbolByName ranks exact-definition > proven-reference > text-similarity 8ms
+{"level":30,"time":1794769665228,"pid":29392,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769665240,"pid":29392,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769665252,"pid":29392,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769665258,"pid":29392,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769665268,"pid":29392,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769665275,"pid":29392,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769665281,"pid":29392,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769665287,"pid":29392,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769665294,"pid":29392,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > lexicalSearch: MATCH hits both snapshots physically, pin returns only S1 chunk 10ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > vectorSearch: only embeddings of the pinned snapshot participate 6ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > relationshipsOf separates direct (PROVEN) from inferred (heuristic) 7ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > discoverCategory: build/config/test are first-class, snapshot-scoped 7ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > hybridSearch fuses lexical + vector (+ graph chunks) under the pin 7ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > all paths reject non-READY snapshots (unit per path) 6ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  02:07:44
+   Duration  573ms (transform 83ms, setup 24ms, import 268ms, tests 138ms, environment 0ms)
+
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx vitest run src/engine/retrieval/__tests__/snapshot-retrieval.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

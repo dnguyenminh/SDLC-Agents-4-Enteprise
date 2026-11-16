@@ -1,0 +1,31 @@
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794769658152,"pid":40000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769658203,"pid":40000,"hostname":"WIN-LK2TQOOAELR","name":"sse-stream","deleted":6,"msg":"[sse] retention pruned oldest prefix"}
+{"level":30,"time":1794769658168,"pid":40000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769658174,"pid":40000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769658183,"pid":40000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769658193,"pid":40000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769658199,"pid":40000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769658208,"pid":40000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769658204,"pid":40000,"hostname":"WIN-LK2TQOOAELR","name":"sse-stream","deleted":2,"msg":"[sse] retention pruned oldest prefix"}
+ ✓ src/engine/agent/__tests__/sse-stream.test.ts > SA4E-425 SSE durable event log & replay > durable BEFORE emission: frame returned only after the row exists 46ms
+ ✓ src/engine/agent/__tests__/sse-stream.test.ts > SA4E-425 SSE durable event log & replay > frame format + Last-Event-ID parsing 6ms
+ ✓ src/engine/agent/__tests__/sse-stream.test.ts > SA4E-425 SSE durable event log & replay > Last-Event-ID replay returns exactly the later sequence (AC) 8ms
+ ✓ src/engine/agent/__tests__/sse-stream.test.ts > SA4E-425 SSE durable event log & replay > reconnect: 0 duplicates, 0 missing across a disconnect 9ms
+ ✓ src/engine/agent/__tests__/sse-stream.test.ts > SA4E-425 SSE durable event log & replay > gap in the durable log → SseGapError (fail loud, never silent loss) 9ms
+ ✓ src/engine/agent/__tests__/sse-stream.test.ts > SA4E-425 SSE durable event log & replay > retention policy: env-configurable, prunes oldest prefix, replay stays gapless 9ms
+ ✓ src/engine/agent/__tests__/sse-stream.test.ts > SA4E-425 SSE durable event log & replay > integration: transitions/tools/evidence/approvals all replay in durable order 7ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  02:07:37
+   Duration  533ms (transform 88ms, setup 24ms, import 262ms, tests 95ms, environment 0ms)
+
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx vitest run src/engine/agent/__tests__/sse-stream.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

@@ -1,0 +1,62 @@
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794769655202,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769655214,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794769655215,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"034e5de3-56c1-4693-bb86-cbfff1c130c4","file":"src/auth.ts","valid":true,"msg":"[staged-patch] staged"}
+ ✓ src/engine/security/__tests__/staged-patch.test.ts > SA4E-424 staged patch workflow (AC #14 + approval gating) > pre-approval working-tree integrity (AC #14): stage never touches the tree 52ms
+ ✓ src/engine/security/__tests__/staged-patch.test.ts > SA4E-424 staged patch workflow (AC #14 + approval gating) > full lifecycle: stage → approve → apply → tree updated, change_set APPLIED 21ms
+ ✓ src/engine/security/__tests__/staged-patch.test.ts > SA4E-424 staged patch workflow (AC #14 + approval gating) > stale-base at APPLY time (drift during approval wait) → tree untouched, change_set stays OPEN 13ms
+ ✓ src/engine/security/__tests__/staged-patch.test.ts > SA4E-424 staged patch workflow (AC #14 + approval gating) > ALREADY_APPLIED: double-apply rejected 11ms
+{"level":30,"time":1794769655224,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769655244,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769655255,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769655266,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769655274,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769655283,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769655230,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794769655233,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794769655247,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794769655258,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794769655260,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794769655277,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794769655290,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794769655231,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"44c3c62a-5cab-4f3d-8978-dc1461db759d","file":"src/auth.ts","valid":true,"msg":"[staged-patch] staged"}
+{"level":30,"time":1794769655248,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"b9a0b244-96ae-453e-babc-49d03f3c6bb7","file":"src/auth.ts","valid":true,"msg":"[staged-patch] staged"}
+{"level":40,"time":1794769655250,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"b9a0b244-96ae-453e-babc-49d03f3c6bb7","rejected":"STALE_BASE","msg":"[staged-patch] apply rejected, tree untouched"}
+{"level":30,"time":1794769655259,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"6da56a3f-6b14-4834-89ef-e2adae19000b","file":"src/auth.ts","valid":true,"msg":"[staged-patch] staged"}
+{"level":30,"time":1794769655269,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"1c8802a4-5799-466c-a76d-66ae88d956d6","file":"../escape.ts","valid":false,"rejected":"PATH_INVALID","msg":"[staged-patch] staged"}
+{"level":40,"time":1794769655269,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"1c8802a4-5799-466c-a76d-66ae88d956d6","rejected":"PATH_INVALID","msg":"[staged-patch] apply rejected, tree untouched"}
+{"level":30,"time":1794769655278,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"9474acec-d050-4dc1-8ef1-e7386f64005a","file":"src/auth.ts","valid":true,"msg":"[staged-patch] staged"}
+{"level":30,"time":1794769655288,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"c3114bd7-866f-4a9f-9b65-d34b3b080db6","file":"src/auth.ts","valid":false,"rejected":"STALE_BASE","msg":"[staged-patch] staged"}
+{"level":30,"time":1794769655288,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"c3114bd7-866f-4a9f-9b65-d34b3b080db6","file":"../x.ts","valid":false,"rejected":"PATH_INVALID","msg":"[staged-patch] staged"}
+{"level":30,"time":1794769655289,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"c3114bd7-866f-4a9f-9b65-d34b3b080db6","file":"src/auth.ts","valid":false,"rejected":"PATCH_TOO_LARGE","msg":"[staged-patch] staged"}
+{"level":30,"time":1794769655289,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"c3114bd7-866f-4a9f-9b65-d34b3b080db6","file":"src/auth.ts","valid":false,"rejected":"WORKSPACE_MISMATCH","msg":"[staged-patch] staged"}
+{"level":30,"time":1794769655290,"pid":5588,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"c3114bd7-866f-4a9f-9b65-d34b3b080db6","file":"src/auth.ts","valid":true,"msg":"[staged-patch] staged"}
+ ✓ src/engine/security/__tests__/staged-patch.test.ts > SA4E-424 staged patch workflow (AC #14 + approval gating) > invalid patch still stages a record (audit trail) but valid=false; REJECTED decision blocks apply 8ms
+ ✓ src/engine/security/__tests__/staged-patch.test.ts > SA4E-424 staged patch workflow (AC #14 + approval gating) > discard() marks DISCARDED and blocks later apply even when approved 9ms
+ ✓ src/engine/security/__tests__/staged-patch.test.ts > SA4E-424 staged patch workflow (AC #14 + approval gating) > security audit checklist: all §12/§13 rules verified in one pass 11ms
+{"level":30,"time":1794769655493,"pid":46404,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794769655519,"pid":46404,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/new-file.ts","newHash":"586fbbba570e","msg":"[patch-protocol] applied atomically"}
+ ✓ src/engine/security/__tests__/patch-protocol.test.ts > SA4E-417 Patch Protocol > applies a valid patch atomically (hash chain verified) 5ms
+ ✓ src/engine/security/__tests__/patch-protocol.test.ts > SA4E-417 Patch Protocol > rejects STALE_BASE when the file drifted after base hash (AC) 4ms
+ ✓ src/engine/security/__tests__/patch-protocol.test.ts > SA4E-417 Patch Protocol > rejects path traversal attempts (AC) 2ms
+ ✓ src/engine/security/__tests__/patch-protocol.test.ts > SA4E-417 Patch Protocol > rejects symlink/second-path escape outside the workspace 5ms
+ ✓ src/engine/security/__tests__/patch-protocol.test.ts > SA4E-417 Patch Protocol > rejects oversized patches (PATCH_TOO_LARGE) 3ms
+ ✓ src/engine/security/__tests__/patch-protocol.test.ts > SA4E-417 Patch Protocol > rejects workspace mismatch 2ms
+ ✓ src/engine/security/__tests__/patch-protocol.test.ts > SA4E-417 Patch Protocol > rejects EXPECTED_HASH_MISMATCH without writing (atomicity) 3ms
+ ✓ src/engine/security/__tests__/patch-protocol.test.ts > SA4E-417 Patch Protocol > rejects patches claiming a non-empty base on a missing file (FILE_NOT_FOUND) 1ms
+ ✓ src/engine/security/__tests__/patch-protocol.test.ts > SA4E-417 Patch Protocol > supports CREATION patches: empty base hash + contained parent 13ms
+ ✓ src/engine/security/__tests__/patch-protocol.test.ts > SA4E-417 sandbox path guard > rejects traversal/absolute at the guard level 1ms
+
+ Test Files  2 passed (2)
+      Tests  17 passed (17)
+   Start at  02:07:34
+   Duration  882ms (transform 117ms, setup 30ms, import 395ms, tests 169ms, environment 0ms)
+
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx vitest run src/engine/security/__tests__/staged-patch.test.ts src/engine/security/__tests__/patch-protocol.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

@@ -15,7 +15,7 @@ You work in the **Implementation phase**, writing code based on the TDD and test
 After the dev-agent finishes implementing, the Technical Architect (ta-agent) reviews the dev-agent's code for design conformance against the FSD and TDD. In this review the ta-agent is the reviewer and the dev-agent is the author. The dev-agent's implementation is NOT complete until the ta-agent returns a verdict of **APPROVED**. If the ta-agent returns **CHANGES REQUESTED**, the dev-agent fixes every listed item and resubmits for re-review (max 2 iterations). The dev-agent's implementation also undergoes a security code review before the Implementation quality gate.
 
 **User Guide:**
-After implementation, you write the User Guide in the **User Guide phase**. The BA reviews your user guide, and the QA team also reviews it for accuracy.
+After implementation, you write the User Guide in the **User Guide phase**. The BA reviews your user guide, and the QA team also reviews it for accuracy. The UG is written for **END USERS** — you MUST follow `.opencode/rules/sdlc/ug-writing-standard.md` (exemplar: `documents/SA4E-393/UG.md`): real screenshots from the running build, User Actions tables, Key Elements tables; NO architecture diagrams, config references, or API schemas (those belong to TDD).
 
 **Security:**
 Your code undergoes a security code review (SAST scan) before the quality gate.

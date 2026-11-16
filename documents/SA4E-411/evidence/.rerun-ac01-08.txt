@@ -1,0 +1,54 @@
+=== SA4E-411 evidence re-run ===
+label      : ac01-08
+cwd        : C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend
+command    : npx vitest run src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts --reporter=verbose
+portable   : yes (unchanged)
+started_at : 2026-11-16T07:10:27.611Z
+finished_at: 2026-11-16T07:10:29.321Z
+duration_ms: 1710
+EXIT=0
+
+--- stdout ---
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794813029202,"pid":556,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-01 re-index same commit with a new adapter → old snapshot intact 55ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-02 two embedding models on the same snapshot → no vector mixing 10ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-03 chat pinned to old commit keeps querying it after branch head moves 9ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-04 rename: old path correct at old commit, new path at new commit 6ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-05 delete: queryable at the old commit, absent at the delete commit 8ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-06 merge commit with two parents is indexed correctly 8ms
+{"level":30,"time":1794813029222,"pid":556,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813029229,"pid":556,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813029238,"pid":556,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813029244,"pid":556,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813029252,"pid":556,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813029258,"pid":556,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813029266,"pid":556,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-07 every artifact belongs to its required snapshot (DB-enforced) 8ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-08 vector/lexical queries never leak across snapshot or repository 8ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  14:10:28
+   Duration  678ms (transform 120ms, setup 28ms, import 359ms, tests 112ms, environment 0ms)
+
+
+--- stderr ---
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"vitest^" run src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts --reporter=verbose
+(node:556) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-07 every artifact belongs to its required snapshot (DB-enforced)
+sqlite3_step() rc= 1811 SQLITE_CONSTRAINT_TRIGGER SQL = INSERT INTO code_symbol (id, project_id, snapshot_id, sfr_id, parent_id, name, kind, start_line, end_line)
+      VALUES ('bad-parent', 'proj1', 'S2', 'f2', 's-auth1', 'x', 'class', 1, 2)
+sqlite3_step() rc= 1811 SQLITE_CONSTRAINT_TRIGGER SQL = INSERT INTO chat_session (id, project_id, repository_id, commit_id, pinned_code_index_snapshot_id)
+      VALUES ('bad-pin', 'proj1', 'r1', 'c1', 'S5')
+
+
+
+--- exit-code capture (re-run in worktree SA4E-411) ---
+captured_at: 2026-11-16T07:10:27.611Z
+command: npx vitest run src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

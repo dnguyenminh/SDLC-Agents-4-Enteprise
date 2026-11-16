@@ -1,0 +1,43 @@
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794769666733,"pid":23296,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":40,"time":1794769666739,"pid":23296,"hostname":"WIN-LK2TQOOAELR","name":"index-pipeline","err":{"type":"Error","message":"no JDK toolchain","stack":"Error: no JDK toolchain\n    at java (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts:33:19)\n    at SnapshotIndexPipeline.runPerLanguage (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/index-pipeline.ts:122:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"},"stage":"E_DEPENDENCY_RESOLUTION","language":"java","msg":"[pipeline] language-scoped failure"}
+{"level":30,"time":1794769666752,"pid":23296,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769666759,"pid":23296,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769666766,"pid":23296,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769666772,"pid":23296,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":40,"time":1794769666759,"pid":23296,"hostname":"WIN-LK2TQOOAELR","name":"index-pipeline","err":{"type":"Error","message":"LSP unavailable","stack":"Error: LSP unavailable\n    at typescript (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts:92:19)\n    at SnapshotIndexPipeline.runPerLanguage (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/index-pipeline.ts:122:27)\n    at SnapshotIndexPipeline.runStage (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/index-pipeline.ts:91:17)\n    at SnapshotIndexPipeline.run (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/index-pipeline.ts:55:34)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts:97:20\n    at async file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"},"stage":"F_SEMANTIC_INDEX","language":"typescript","msg":"[pipeline] language-scoped failure"}
+{"level":40,"time":1794769666766,"pid":23296,"hostname":"WIN-LK2TQOOAELR","name":"index-pipeline","err":{"type":"Error","message":"invariant check failed","stack":"Error: invariant check failed\n    at handler (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts:107:17)\n    at SnapshotIndexPipeline.runSingle (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/index-pipeline.ts:96:20)\n    at SnapshotIndexPipeline.runStage (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/index-pipeline.ts:89:19)\n    at SnapshotIndexPipeline.run (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/index-pipeline.ts:55:34)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts:111:20\n    at async file:///C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"},"stage":"I_VALIDATION","msg":"[pipeline] single-stage failure"}
+ ✓ src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts > SA4E-414 pipeline isolation, coverage & atomic publication > E failure for java does not block E/F for typescript (non-blocking rule) 47ms
+ ✓ src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts > SA4E-414 pipeline isolation, coverage & atomic publication > publishes capability/coverage metadata per language onto the snapshot 9ms
+ ✓ src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts > SA4E-414 pipeline isolation, coverage & atomic publication > marks partial when semantic binding fails after dependency resolution 6ms
+ ✓ src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts > SA4E-414 pipeline isolation, coverage & atomic publication > atomic publication: hard failure at validation leaves snapshot FAILED, never READY 8ms
+ ✓ src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts > SA4E-414 pipeline isolation, coverage & atomic publication > happy path publishes READY with stage outcomes + coverage in diagnostics 6ms
+{"level":30,"time":1794769667033,"pid":37728,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769667047,"pid":37728,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769667055,"pid":37728,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769667062,"pid":37728,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/pipeline/__tests__/index-pipeline.order.test.ts > SA4E-414 pipeline order & gating > executes all stages in canonical order A→J 46ms
+ ✓ src/engine/pipeline/__tests__/index-pipeline.order.test.ts > SA4E-414 pipeline order & gating > stage D produces symbols without stage E; F gated off when E absent 9ms
+ ✓ src/engine/pipeline/__tests__/index-pipeline.order.test.ts > SA4E-414 pipeline order & gating > stage F waits for stage E: sees E outcome via languageOutcomes 6ms
+ ✓ src/engine/pipeline/__tests__/index-pipeline.order.test.ts > SA4E-414 pipeline order & gating > hard failure at a single stage aborts remaining stages (recorded as skipped-abort) 7ms
+ ✓ src/engine/chunking/__tests__/ast-chunker.test.ts > SA4E-419 AST chunker — skeleton/body separation > produces 1 skeleton (class) + 2 body (methods) chunks 2ms
+ ✓ src/engine/chunking/__tests__/ast-chunker.test.ts > SA4E-419 AST chunker — skeleton/body separation > body chunk carries the full method source slice + rng 1ms
+ ✓ src/engine/chunking/__tests__/ast-chunker.test.ts > SA4E-419 AST chunker — skeleton/body separation > dependency subgraph attached per chunk (imports/calls/refs_types) 0ms
+ ✓ src/engine/chunking/__tests__/ast-chunker.test.ts > SA4E-419 AST chunker — skeleton/body separation > token counts tracked per chunk (sig/skeleton/body) 0ms
+ ✓ src/engine/chunking/__tests__/ast-chunker.test.ts > SA4E-419 AST chunker — skeleton/body separation > external symbols: signature-only chunk, no body (AC) 0ms
+ ✓ src/engine/chunking/__tests__/ast-chunker.test.ts > SA4E-419 AST chunker — skeleton/body separation > embeddingText = [fp]+[sig]+[doc]+[deps.calls] — body NEVER included (AC) 0ms
+ ✓ src/engine/chunking/__tests__/ast-chunker.test.ts > SA4E-419 retrieved-context budget (~8,000 tokens, §4) > assembles skeleton + bodies within budget; overflow truncated 1ms
+
+ Test Files  3 passed (3)
+      Tests  16 passed (16)
+   Start at  02:07:46
+   Duration  1.01s (transform 99ms, setup 35ms, import 356ms, tests 150ms, environment 0ms)
+
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx vitest run src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts src/engine/pipeline/__tests__/index-pipeline.order.test.ts src/engine/chunking/__tests__/ast-chunker.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

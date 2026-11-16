@@ -1,0 +1,31 @@
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794769653596,"pid":30000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-01 re-index same commit with a new adapter → old snapshot intact 56ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-02 two embedding models on the same snapshot → no vector mixing 11ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-03 chat pinned to old commit keeps querying it after branch head moves 12ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-04 rename: old path correct at old commit, new path at new commit 6ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-05 delete: queryable at the old commit, absent at the delete commit 8ms
+{"level":30,"time":1794769653625,"pid":30000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769653636,"pid":30000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769653646,"pid":30000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769653652,"pid":30000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769653661,"pid":30000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769653668,"pid":30000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769653682,"pid":30000,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-06 merge commit with two parents is indexed correctly 8ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-07 every artifact belongs to its required snapshot (DB-enforced) 10ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts > SA4E-427 acceptance criteria 01–08 > AC-08 vector/lexical queries never leak across snapshot or repository 13ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  02:07:32
+   Duration  867ms (transform 162ms, setup 38ms, import 441ms, tests 127ms, environment 0ms)
+
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx vitest run src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

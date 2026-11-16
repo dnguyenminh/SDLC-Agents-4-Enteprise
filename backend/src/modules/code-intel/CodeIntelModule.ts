@@ -20,6 +20,12 @@ import { OnboardingToolHandler } from './onboarding/OnboardingToolHandler.js';
 import { ONBOARDING_TOOL_DEFINITIONS } from './onboarding/definitions.js';
 import { getSharedPathResolver } from '../../shared/path-resolver-provider.js';
 import type { MultiWorktreePathResolver } from '../../shared/multi-worktree-path-resolver.js';
+// SA4E-420 — 4 core agent tools (search_symbols, get_file_skeleton, read_code_block, query_call_graph)
+import { SnapshotRetrievalService } from '../../engine/retrieval/snapshot-retrieval.js';
+import { CoreAgentTools } from '../../engine/agent-tools/core-tools.js';
+import { CORE_AGENT_TOOL_DEFINITIONS } from '../../engine/agent-tools/mcp-tool-definitions.js';
+import { createCoreAgentToolHandlers } from '../../engine/agent-tools/mcp-tool-handlers.js';
+import { createWorkspaceSourceLoader, unavailableQueryEmbedder } from '../../engine/agent-tools/workspace-source-loader.js';
 
 export class CodeIntelModule implements IModule {
   readonly name = 'codeIntel';
@@ -106,7 +112,21 @@ export class CodeIntelModule implements IModule {
       handlers.set(name, withErrorHandling(this.logger, name)(handler));
     }
 
+    // SA4E-420: 4 core agent tools over the pinned snapshot
+    for (const [name, handler] of this.buildCoreAgentHandlers()) {
+      handlers.set(name, withErrorHandling(this.logger, name)(handler));
+    }
+
     return handlers;
+  }
+
+  /** Wire CoreAgentTools to the shared adapter (single DB, no parallel registry). */
+  private buildCoreAgentHandlers(): Map<string, ToolHandler> {
+    const retrieval = new SnapshotRetrievalService(this.adapter);
+    const tools = new CoreAgentTools(
+      this.adapter, retrieval, unavailableQueryEmbedder, createWorkspaceSourceLoader(this.workspace),
+    );
+    return createCoreAgentToolHandlers(this.adapter, retrieval, tools);
   }
 
   getToolDefinitions(): ToolDefinition[] {
@@ -116,6 +136,6 @@ export class CodeIntelModule implements IModule {
       inputSchema: def.inputSchema as any,
       category: 'code' as const,
     }));
-    return [...codeIntelDefs, ...ONBOARDING_TOOL_DEFINITIONS];
+    return [...codeIntelDefs, ...ONBOARDING_TOOL_DEFINITIONS, ...CORE_AGENT_TOOL_DEFINITIONS];
   }
 }

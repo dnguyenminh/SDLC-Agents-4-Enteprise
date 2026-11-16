@@ -1,0 +1,224 @@
+# orca computer get-app-state --app Kiro --json (TEXT ONLY)
+# label      : 01-entry-sdlc-agents-panel
+# windowTitle: core-tools.ts - sa411 (Workspace) - Kiro
+# appPid     : 29420
+# capturedAt : 2026-11-16T10:20:47.9746151Z
+
+App=Kiro (pid 29420)
+Window: "core-tools.ts - sa411 (Workspace) - Kiro", App: Kiro.
+
+0 window core-tools.ts - sa411 (Workspace) - Kiro
+	1 region core-tools.ts - sa411 (Workspace) - Kiro
+		2 region
+			3 region
+				4 region
+					5 button Minimize
+					6 button Restore
+					7 button Close
+				8 region
+					9 region
+						10 region
+							11 region
+								12 document core-tools.ts - sa411 (Workspace) - Kiro vscode-file://vscode-app/c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/code/electron-browser/workbench/workbench.html, Secondary Actions: SetValue, Scroll
+									13 application
+										14 menu bar
+											15 menu item File
+											16 menu item Edit
+											17 menu item Selection
+											18 menu item View
+											19 menu item Go
+											20 menu item Run
+											21 menu item Terminal
+											22 menu item Help
+										23 tool bar
+											24 button (disabled) Go Back (Alt+LeftArrow)
+											25 button (disabled) Go Forward (Alt+RightArrow)
+											26 tool bar
+												27 button sa411 (Workspace)
+										28 button Open Agent Focus
+										29 tool bar Title actions
+											30 button Customize Layout...
+											31 toggle button Toggle Primary Side Bar (Ctrl+B), Secondary Actions: Toggle
+												32 text 
+											33 toggle button Toggle Panel (Ctrl+J), Secondary Actions: Toggle
+												34 text 
+											35 toggle button Toggle Secondary Side Bar (Ctrl+Alt+B), Secondary Actions: Toggle
+												36 text 
+										37 tab Active View Switcher
+											38 tab item Explorer (Ctrl+Shift+E), Secondary Actions: Expand, Select
+											39 tab item Search (Ctrl+Shift+F), Secondary Actions: Expand, Select
+											40 tab item Source Control (Ctrl+Shift+G) - 116 pending changes, Secondary Actions: Expand, Select
+											41 tab item Run and Debug (Ctrl+Shift+D), Secondary Actions: Expand, Select
+											42 tab item Extensions (Ctrl+Shift+X), Secondary Actions: Expand, Select
+											43 tab item Kiro, Secondary Actions: Expand, Select
+											44 tab item Workflows, Secondary Actions: Expand, Select
+											45 tab item Powers, Secondary Actions: Expand, Select
+											46 tab item Memories, Secondary Actions: Expand, Select
+											47 tab item SDLC Agents 4 Enterprise, Secondary Actions: Collapse, Select
+										48 tool bar Manage
+											49 button Accounts - Signed in with AWS IAM Identity Center, Secondary Actions: Expand
+											50 button Manage, Secondary Actions: Expand
+										51 heading SDLC AGENTS 4 ENTERPRISE: SDLC AGENTS, Secondary Actions: Scroll
+										52 tool bar SDLC Agents 4 Enterprise: SDLC Agents actions
+											53 button SDLC Agents: Inject All Agents
+											54 button SDLC Agents: Open Agentic Chat
+											55 button SDLC Agents: Settings
+											56 button SDLC Agents: Show Status
+										57 tool bar
+										58 tree SDLC Agents
+											59 tree item Backend Target http://127.0.0.1:48731, Secondary Actions: Collapse, Select
+												60 group Backend Target
+											61 tree item Login Required, Secondary Actions: Scroll, Select
+												62 group Login Required
+											63 tree item Knowledge Base, Secondary Actions: Collapse, Select
+												64 group Knowledge Base
+											65 tree item Dashboard, Secondary Actions: Scroll, Select
+												66 group Dashboard
+											67 tree item Graph, Secondary Actions: Scroll, Select
+												68 group Graph
+											69 tree item Tags, Secondary Actions: Scroll, Select
+												70 group Tags
+											71 tree item Quality, Secondary Actions: Scroll, Select
+												72 group Quality
+											73 tree item Analytics, Secondary Actions: Scroll, Select
+												74 group Analytics
+											75 tree item MCP Wrapper Server, Secondary Actions: Collapse, Select
+												76 group MCP Wrapper Server
+											77 tree item Status: Running Port 9185, Secondary Actions: Scroll, Select
+												78 group Status: Running
+											79 tree item Edit Config, Secondary Actions: Scroll, Select
+												80 group Edit Config
+											81 tree item Change Config..., Secondary Actions: Scroll, Select
+												82 group Change Config...
+											83 tree item Quick Actions, Secondary Actions: Expand, Select
+												84 group Quick Actions
+										85 main workbench.parts.editor
+											86 group
+												87 tab
+													88 tab item core-tools.ts, Secondary Actions: Select
+												89 tool bar Editor actions
+													90 button Split Editor Right (Ctrl+\) [Alt] Split Editor Down
+													91 button More Actions..., Secondary Actions: Expand
+												92 list
+													93 list item SA4E-411, Text: SA4E-411 
+														94 group C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411 • Contains emphasized items
+															95 text SA4E-411
+														96 text 
+													97 list item backend, Text: backend 
+														98 group C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend
+															99 text backend
+														100 text 
+													101 list item src, Text: src 
+														102 group C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend\src
+															103 text src
+														104 text 
+													105 list item engine, Text: engine 
+														106 group C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend\src\engine
+															107 text engine
+														108 text 
+													109 list item agent-tools, Text: agent-tools 
+														110 group C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend\src\engine\agent-tools
+															111 text agent-tools
+														112 text 
+													113 list item core-tools.ts, Text:  core-tools.ts 
+														114 group C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend\src\engine\agent-tools\core-tools.ts
+															115 text 
+															116 text core-tools.ts
+														117 text 
+													118 list item CoreAgentTools, Text:  CoreAgentTools
+														119 text 
+														120 group CoreAgentTools (class)
+															121 text CoreAgentTools
+											122 group core-tools.ts
+												123 code
+													124 editor The editor is not accessible at this time. To enable screen reader optimized mode, use Shift+Alt+F1, Secondary Actions: SetValue
+										125 document
+										126 status workbench.parts.statusbar
+											127 group remote
+												128 button remote
+											129 group SA4E-411 (Git) - dnguyenminh/SA4E-411*, Checkout Branch/Tag...
+												130 button SA4E-411 (Git) - dnguyenminh/SA4E-411*, Checkout Branch/Tag...
+											131 group SA4E-411 (Git) - Publish Branch
+												132 button SA4E-411 (Git) - Publish Branch
+											133 group Warnings: 6
+												134 button Warnings: 6
+											135 group Notifications
+												136 button Notifications
+											137 group graph Kiro Pro Max 3445.65 / 5000 updated 1m ago, Open account dashboard
+												138 button graph Kiro Pro Max 3445.65 / 5000 updated 1m ago, Open account dashboard
+											139 group shield Sandbox: Off, Commands run with your full permissions. Click to configure.
+												140 button shield Sandbox: Off, Commands run with your full permissions. Click to configure.
+											141 group bug Report issue, Report a bug or submit feedback to the Kiro team
+												142 button bug Report issue, Report a bug or submit feedback to the Kiro team
+											143 group circle-slash Autocomplete, Click to enable tab autocomplete
+												144 button circle-slash Autocomplete, Click to enable tab autocomplete
+											145 group check Kiro, Agent config: Kiro (matched)
+												146 button check Kiro, Agent config: Kiro (matched)
+											147 group check SDLC Agents, SDLC Agents: Connected (Local / Standby)
+												148 button check SDLC Agents, SDLC Agents: Connected (Local / Standby)
+											149 group TypeScript
+												150 button TypeScript
+											151 group Editor Language Status: backend/tsconfig.json, next: 6.0.3, TypeScript version, next: $(copilot) No inline suggestion available, Inline suggestions
+												152 button Editor Language Status: backend/tsconfig.json, next: 6.0.3, TypeScript version, next: $(copilot) No inline suggestion available, Inline suggestions
+											153 group LF
+												154 button LF
+											155 group UTF-8
+												156 button UTF-8
+											157 group Spaces: 2
+												158 button Spaces: 2
+											159 group Ln 25, Col 14
+												160 button Ln 25, Col 14
+											161 group git-commit nguyenminh (1 week ago)
+												162 button git-commit nguyenminh (1 week ago)
+										163 alert
+										164 alert
+										165 group 69c6feff-ed5e-4ba3-95bd-a1c206f57441, Secondary Actions: Scroll
+											166 document RootWebArea vscode-webview://1ibc207bp3qusu2bq4mik0hjak072fohgtgqdt7582h5r5qe9vqf/index.html?id=69c6feff-ed5e-4ba3-95bd-a1c206f57441&parentId=1&origin=4d59e675-899f-4eef-8d21-eed7d742f8d5&swVersion=6&extensionId=kiro.kiroAgent&platform=electron&vscode-resource-base-authority=vscode-resource.vscode-cdn.net&parentOrigin=vscode-file%3A%2F%2Fvscode-app&purpose=webviewView, Secondary Actions: SetValue, Scroll
+												167 document
+													168 document CUSTOM WEBVIEW TITLE vscode-webview://1ibc207bp3qusu2bq4mik0hjak072fohgtgqdt7582h5r5qe9vqf/index.html?id=69c6feff-ed5e-4ba3-95bd-a1c206f57441&parentId=1&origin=4d59e675-899f-4eef-8d21-eed7d742f8d5&swVersion=6&extensionId=kiro.kiroAgent&platform=electron&vscode-resource-base-authority=vscode-resource.vscode-cdn.net&parentOrigin=vscode-file%3A%2F%2Fvscode-app&purpose=webviewView, Secondary Actions: SetValue, Scroll
+														169 document
+															170 group root
+																171 tab, Secondary Actions: Scroll
+																	172 tab item New Session Close New Session, Secondary Actions: Select
+																173 button New session
+																174 toggle button Session list, Secondary Actions: Toggle
+																	175 text 
+																176 complementary Session actions
+																	177 button Artifacts (0), Secondary Actions: Expand
+																178 graphic Kiro
+																179 heading Let's build
+																180 text Plan, search, or build anything
+																181 text Start with a built-in agent
+																182 text (optional)
+																183 text 
+																184 button Collapse workflows, Secondary Actions: Collapse
+																185 group
+																	186 toggle button  Spec Structured feature development, Secondary Actions: Toggle
+																		187 text 
+																		188 text Spec
+																		189 text Structured feature development
+																	190 toggle button  Plan Plan-only mode that helps break ideas down into an implementation plan without making any changes, Secondary Actions: Toggle
+																		191 text 
+																		192 text Plan
+																		193 text Plan-only mode that helps break ideas down into an implementation plan without making any changes
+																	194 toggle button  Bug Fix Structured bug-fix workflow: investigate, diagnose, and resolve bugs, Secondary Actions: Toggle
+																		195 text 
+																		196 text Bug Fix
+																		197 text Structured bug-fix workflow: investigate, diagnose, and resolve bugs
+																	198 toggle button  Quick Spec Fast spec workflow: clarify, then auto-generate requirements, design, and tasks, Secondary Actions: Toggle
+																		199 text 
+																		200 text Quick Spec
+																		201 text Fast spec workflow: clarify, then auto-generate requirements, design, and tasks
+																202 group
+																	203 group
+																		204 text Ask a question or describe a task...
+																		205 text
+																	206 button (disabled) 
+																	207 button Add context
+																	208 button Attach image or document (or drag & drop)
+																	209 meter 7% context used, Value: 6.6, Secondary Actions: SetValue
+																	210 button Auto , Secondary Actions: Expand
+																	211 button Default , Secondary Actions: Expand
+																	212 combo box Permission mode, Value: Accept file changes , Secondary Actions: SetValue, Expand
+																	213 status
+							214 region

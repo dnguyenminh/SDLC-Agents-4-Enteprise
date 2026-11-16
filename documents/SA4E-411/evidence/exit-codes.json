@@ -1,0 +1,162 @@
+[
+  {
+    "Label": "ac01-08",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/acceptance/__tests__/acceptance-ac01-08.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-ac01-08.txt"
+  },
+  {
+    "Label": "pipeline",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/pipeline/__tests__/index-pipeline.isolation.test.ts src/engine/pipeline/__tests__/index-pipeline.order.test.ts src/engine/chunking/__tests__/ast-chunker.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-pipeline.txt"
+  },
+  {
+    "Label": "retrieval",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/retrieval/__tests__/snapshot-retrieval.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-retrieval.txt"
+  },
+  {
+    "Label": "query",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/api/__tests__/pinned-snapshot-guard.test.ts src/engine/agent-tools/__tests__/core-tools.test.ts src/engine/map/__tests__/repo-map-service.test.ts src/engine/map/__tests__/repo-map-rank.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-query.txt"
+  },
+  {
+    "Label": "coretools",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/map/__tests__/repo-map-service.test.ts src/engine/agent-tools/__tests__/core-tools.test.ts src/engine/map/__tests__/repo-map-rank.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-coretools.txt"
+  },
+  {
+    "Label": "scratchpad",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/scratchpad/__tests__/scratchpad.test.ts src/engine/scratchpad/__tests__/eviction.test.ts src/engine/scratchpad/__tests__/token-eviction.integration.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-scratchpad.txt"
+  },
+  {
+    "Label": "security",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/security/__tests__/staged-patch.test.ts src/engine/security/__tests__/patch-protocol.test.ts src/engine/security/__tests__/sandbox.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-security.txt"
+  },
+  {
+    "Label": "stagedpatch",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/security/__tests__/staged-patch.test.ts src/engine/security/__tests__/patch-protocol.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-stagedpatch.txt"
+  },
+  {
+    "Label": "sandbox",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/security/__tests__/sandbox.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-sandbox.txt"
+  },
+  {
+    "Label": "agent",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/agent/__tests__/sse-stream.test.ts src/engine/agent/__tests__/agent-state-recovery.test.ts src/engine/agent/__tests__/agent-persistence.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-agent.txt"
+  },
+  {
+    "Label": "resume",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/agent/__tests__/agent-persistence.test.ts src/engine/agent/__tests__/agent-state-recovery.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-resume.txt"
+  },
+  {
+    "Label": "sse",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/agent/__tests__/sse-stream.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-sse.txt"
+  },
+  {
+    "Label": "pinned",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/api/__tests__/pinned-snapshot-guard.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-pinned.txt"
+  },
+  {
+    "Label": "ac09-12",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/acceptance/__tests__/acceptance-ac09-12.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-ac09-12.txt"
+  },
+  {
+    "Label": "ac13-16",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-ac13-16.txt"
+  },
+  {
+    "Label": "regression",
+    "Dir": "backend",
+    "Cmd": "npx vitest run src/engine/regression/__tests__/sa4e-regression.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-regression.txt"
+  },
+  {
+    "Label": "tokenbudget",
+    "Dir": "extension",
+    "Cmd": "npx vitest run src/pi-agent/__tests__/acceptance-ac17.test.ts src/pi-agent/__tests__/session-budget-gate.test.ts src/pi-agent/__tests__/budget-gate-runtime-count.test.ts src/pi-agent/__tests__/budget-gate-escalation.test.ts src/pi-agent/__tests__/budget-gate-enforce.test.ts src/pi-agent/__tests__/budget-gate-decisions.test.ts src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts src/pi-agent/__tests__/runtime-tokenizer.test.ts src/pi-agent/__tests__/token-eviction.integration.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-tokenbudget.txt"
+  },
+  {
+    "Label": "ext-regression",
+    "Dir": "extension",
+    "Cmd": "npx vitest run src/__tests__/sa4e-regression.test.ts --reporter=verbose",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-ext-regression.txt"
+  },
+  {
+    "Label": "demo",
+    "Dir": "backend",
+    "Cmd": "npx tsx C:\\Users\\ASUS\\AppData\\Local\\Temp\\opencode\\sa4e-411-demo.mts",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-demo.txt"
+  },
+  {
+    "Label": "demo2",
+    "Dir": "backend",
+    "Cmd": "npx tsx C:\\Users\\ASUS\\AppData\\Local\\Temp\\opencode\\sa4e-411-demo2.mts",
+    "Exit": 0,
+    "CapturedAt": "2026-11-16T02:49:31+07:00",
+    "Source": "evidence/.raw-demo2.txt"
+  }
+]

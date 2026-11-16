@@ -1,0 +1,41 @@
+=== SA4E-411 evidence re-run ===
+label      : ac09-12
+cwd        : C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend
+command    : npx vitest run src/engine/acceptance/__tests__/acceptance-ac09-12.test.ts --reporter=verbose
+portable   : yes (unchanged)
+started_at : 2026-11-16T07:10:52.863Z
+finished_at: 2026-11-16T07:10:54.964Z
+duration_ms: 2101
+EXIT=0
+
+--- stdout ---
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794813054837,"pid":51764,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":40,"time":1794813054883,"pid":51764,"hostname":"WIN-LK2TQOOAELR","name":"index-pipeline","err":{"type":"Error","message":"no JDK toolchain","stack":"Error: no JDK toolchain\n    at java (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/acceptance/__tests__/acceptance-ac09-12.test.ts:71:37)\n    at SnapshotIndexPipeline.runPerLanguage (C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend/src/engine/pipeline/index-pipeline.ts:122:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"},"stage":"E_DEPENDENCY_RESOLUTION","language":"java","msg":"[pipeline] language-scoped failure"}
+ ✓ src/engine/acceptance/__tests__/acceptance-ac09-12.test.ts > SA4E-427 acceptance criteria 09–12 > AC-09 filtered recall + result-count on the multi-snapshot dataset 62ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac09-12.test.ts > SA4E-427 acceptance criteria 09–12 > AC-10 semantic re-run after dependency/classpath change (source unchanged) 17ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac09-12.test.ts > SA4E-427 acceptance criteria 09–12 > AC-11 dependency failure → no fake semantic coverage cascade 15ms
+{"level":30,"time":1794813054862,"pid":51764,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813054880,"pid":51764,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813054891,"pid":51764,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/acceptance/__tests__/acceptance-ac09-12.test.ts > SA4E-427 acceptance criteria 09–12 > AC-12 agent restart → resume from persisted plan/step/approval 13ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  14:10:54
+   Duration  809ms (transform 145ms, setup 31ms, import 422ms, tests 109ms, environment 0ms)
+
+
+--- stderr ---
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"vitest^" run src/engine/acceptance/__tests__/acceptance-ac09-12.test.ts --reporter=verbose
+(node:51764) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+--- exit-code capture (re-run in worktree SA4E-411) ---
+captured_at: 2026-11-16T07:10:52.863Z
+command: npx vitest run src/engine/acceptance/__tests__/acceptance-ac09-12.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

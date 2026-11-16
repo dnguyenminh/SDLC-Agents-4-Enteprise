@@ -1,0 +1,25 @@
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794769661442,"pid":37436,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769661460,"pid":37436,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769661470,"pid":37436,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769661479,"pid":37436,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794769661503,"pid":37436,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/api/__tests__/pinned-snapshot-guard.test.ts > SA4E-426 API pinned snapshot enforcement > rejects missing session_id / index_snapshot_id (400 contract) 47ms
+ ✓ src/engine/api/__tests__/pinned-snapshot-guard.test.ts > SA4E-426 API pinned snapshot enforcement > rejects unknown session, mismatched snapshot, and non-READY snapshot 9ms
+ ✓ src/engine/api/__tests__/pinned-snapshot-guard.test.ts > SA4E-426 API pinned snapshot enforcement > valid request resolves the session pin; branch is echoed display metadata only 11ms
+ ✓ src/engine/api/__tests__/pinned-snapshot-guard.test.ts > SA4E-426 API pinned snapshot enforcement > middleware: 400 with error envelope on missing/mismatch, 200 + context on valid 23ms
+ ✓ src/engine/api/__tests__/pinned-snapshot-guard.test.ts > SA4E-426 API pinned snapshot enforcement > integration AC #3: branch head moves, pinned old commit still queries S1 9ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  02:07:40
+   Duration  621ms (transform 103ms, setup 23ms, import 357ms, tests 100ms, environment 0ms)
+
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx vitest run src/engine/api/__tests__/pinned-snapshot-guard.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

@@ -15,7 +15,7 @@ import { debugLog } from '../../debug-logger';
 import { halveSteeringCap } from '../../pi-agent/budget-gate.js';
 import { DEFAULT_AUTO_CHUNK_CONFIG } from '../../pi-agent/context-budget-auto-split.js';
 import { runSessionBudgetGate } from '../../pi-agent/session-budget-gate.js';
-import { measureRuntimeStaticTokens } from '../../pi-agent/runtime-tokenizer.js';
+import { measureStaticTokensForProvider } from '../../pi-agent/token-counter.js';
 import { scopedSteering } from '../../pi-agent/scoped-steering.js';
 import type { AgentTool } from '@earendil-works/pi-agent-core';
 import { buildWorkspaceSystemPrompt } from '../pi-coding-tools.js';
@@ -98,7 +98,11 @@ export async function createHost(opts: SessionHostOptions): Promise<SessionHost>
     ...loadSessionContextFiles(piCoding, workspaceRoot, agentDir),
     ...skeletonRuntime.injector.gateEntries(sections),
   ];
-  const runtimeStaticCount = await measureRuntimeStaticTokens(opts.baseUrl, gateFiles, workspacePrompt);
+  const runtimeStaticCount = await measureStaticTokensForProvider(
+    { providerId, baseUrl: opts.baseUrl },
+    gateFiles,
+    workspacePrompt,
+  );
   const gate = runSessionBudgetGate(budget, {
     loadFiles: () => gateFiles,
     workspacePrompt,

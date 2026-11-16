@@ -1,0 +1,91 @@
+=== SA4E-411 evidence re-run ===
+label      : demo2
+cwd        : C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend
+command    : npx tsx ..\documents\SA4E-411\evidence\demo-driver-patch-sse-resume.mts
+portable   : yes (in-repo driver path substituted for the temp path recorded in exit-codes.json)
+started_at : 2026-11-16T07:11:04.966Z
+finished_at: 2026-11-16T07:11:06.196Z
+duration_ms: 1230
+EXIT=0
+
+--- stdout ---
+### A. STAGED PATCH: stage → approve → apply ###
+{"level":30,"time":1794813066051,"pid":48604,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813066064,"pid":48604,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794813066065,"pid":48604,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"f47fd873-c9f2-4120-9b6a-bf9275da8a6b","file":"src/auth.ts","valid":true,"msg":"[staged-patch] staged"}
+-- runId: f47fd873-c9f2-4120-9b6a-bf9275da8a6b
+-- changeSetId: dda83714-386d-46cb-b75d-62053525467f | approvalId: 9ddcd5bb-9f9b-43da-bc6f-c6adc109ec90 | valid: true
+-- working tree changed by stage? false  (expected: false)
+-- change_set status: OPEN | approval decision: PENDING
+-- apply before approval → applied=false rejected=NOT_APPROVED
+-- after approval → applied=true newHash=a9de69a78c1f421e1f811e7a31fd12be7e6c6dcc5a9682fab9a8a2e247a896e1
+-- file content now: "const original = 2;\n"
+-- change_set status: APPLIED
+
+### A2. STALE BASE (file drifted while waiting for approval) ###
+-- applied=false rejected=STALE_BASE (expected: STALE_BASE)
+-- file content after rejected apply: "const original = 99;\n"
+
+### A3. PATH TRAVERSAL (target outside the workspace) ###
+-- valid=false (expected: false)
+-- file outside workspace created? false
+
+### B. SSE DURABLE LOG + RECONNECT REPLAY ###
+-- runId: 38b08f8a-64b4-411a-8cb0-23f695dfe493
+-- event ids in log: [1, 2, 3, 4, 5, 6, 7]
+-- reconnect with Last-Event-ID: 3 → received [4, 5, 6, 7]
+-- duplicates: 0 | missing: 0
+-- sample frame:
+id: 4
+event: STEP_STATUS
+data: {"step":1}
+
+
+
+### C. RESUME AFTER RESTART (zero in-memory state) ###
+-- runId: 6c1e936c-3ca0-4585-985e-58fc7f9ced10
+-- objective: implement payment retry
+-- plan status: APPROVED
+-- steps done: 1/2 | next step index: 1
+-- resume point: lastCompletedStepIndex=0 nextStepId=d65774fc-eea8-4e08-acaf-492a42385c23
+
+### D. PINNED SNAPSHOT ENFORCEMENT (chat pinned to a commit) ###
+-- branch head now points at: S2 (generation 2)
+-- missing index_snapshot_id: rejected with SNAPSHOT_ID_REQUIRED (HTTP 400)
+-- mismatched snapshot: rejected with SNAPSHOT_MISMATCH (HTTP 400)
+-- unknown session: rejected with SESSION_NOT_FOUND (HTTP 400)
+-- valid request → pinned snapshot S1, commit c1
+-- query against pinned S1 still returns: [AuthService]
+
+### E. SCRATCHPAD + CONTEXT EVICTION ###
+<scratchpad>
+* Goal: Locate the payment retry logic
+* DeadEnds: src/pay.ts:10-20 -> only DTO definitions
+* Facts: src/pay.ts:45-92 -> retry loop lives here (evidence:ch1)
+* Plan: Read src/pay.ts:45-92 to confirm the retry condition
+</scratchpad>
+-- referenced evidence ids: [ch1]
+-- eviction score old-big: 2000
+-- eviction score ch1 (referenced, exempt): -Infinity
+-- batchTriggered: true | evicted: [old-big, new-small] | exempted: [ch1]
+-- tokens after eviction: 516 (target ≤ 560)
+-- tombstone left in place: "[evicted tool_call_id=old-big]"
+{"level":30,"time":1794813066087,"pid":48604,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813066102,"pid":48604,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813066121,"pid":48604,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813066075,"pid":48604,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"f47fd873-c9f2-4120-9b6a-bf9275da8a6b","file":"src/auth.ts","valid":false,"rejected":"STALE_BASE","msg":"[staged-patch] staged"}
+{"level":40,"time":1794813066076,"pid":48604,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"f47fd873-c9f2-4120-9b6a-bf9275da8a6b","rejected":"STALE_BASE","msg":"[staged-patch] apply rejected, tree untouched"}
+{"level":30,"time":1794813066078,"pid":48604,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"f47fd873-c9f2-4120-9b6a-bf9275da8a6b","file":"../escape.ts","valid":false,"rejected":"PATH_INVALID","msg":"[staged-patch] staged"}
+{"level":30,"time":1794813066069,"pid":48604,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"a9de69a78c1f","msg":"[patch-protocol] applied atomically"}
+
+--- stderr ---
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"tsx^" ..\documents\SA4E-411\evidence\demo-driver-patch-sse-resume.mts
+(node:48604) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+--- exit-code capture (re-run in worktree SA4E-411) ---
+captured_at: 2026-11-16T07:11:04.966Z
+command: npx tsx ..\documents\SA4E-411\evidence\demo-driver-patch-sse-resume.mts (cwd=backend)
+EXIT=0

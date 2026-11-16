@@ -1,0 +1,110 @@
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"vitest^" run src/pi-agent/__tests__/acceptance-ac17.test.ts src/pi-agent/__tests__/session-budget-gate.test.ts src/pi-agent/__tests__/budget-gate-runtime-count.test.ts src/pi-agent/__tests__/budget-gate-escalation.test.ts src/pi-agent/__tests__/budget-gate-enforce.test.ts src/pi-agent/__tests__/budget-gate-decisions.test.ts src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts src/pi-agent/__tests__/runtime-tokenizer.test.ts src/pi-agent/__tests__/token-eviction.integration.test.ts --reporter=verbose
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/extension
+
+ ✓ src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts > resolveContextBudget property-based tests (STC-300/301/302) > imports fast-check successfully (PBT precondition) 1ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts > resolveContextBudget property-based tests (STC-300/301/302) > STC-300: BR-01 — resolved nCtx is always > 0, finite, integer (100 runs) 3ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts > resolveContextBudget property-based tests (STC-300/301/302) > STC-301: BR-02 — safetyMargin === ceil(n × 0.08) for every n in [1, 1,000,000] 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts > resolveContextBudget property-based tests (STC-300/301/302) > STC-302: BR-03 — split invariants hold for every n in [1, 1,000,000] 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts > resolveContextBudget property-based tests (STC-300/301/302) > STC-302 spot anchors: 8192 → {656, 3875, 1661}; 32768 → {2622, 19668, 8430} 0ms
+stdout | src/pi-agent/__tests__/budget-gate-runtime-count.test.ts > SA4E-422 session gate uses runtime count (real tokenizer drives decisions) > runtime count over budget TRIGGERS the escalation ladder (decision driven by real count)
+{"level":"info","msg":"Context budget resolved","modelId":"qwen","source":"provider","nCtx":32768,"reserveOutput":2048,"safetyMargin":2622,"staticBudget":19668,"historyBudget":8430,"timestamp":"2026-11-15T18:54:10.539Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":12.29,"staticTokens":1979,"escalations":[],"timestamp":"2026-11-15T18:54:10.541Z"}
+{"level":"info","msg":"PI_GATE_ESCALATION","step":"compress","staticTokens":1979,"timestamp":"2026-11-15T18:54:10.541Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":12.29,"staticTokens":1979,"escalations":["compress"],"timestamp":"2026-11-15T18:54:10.541Z"}
+
+stdout | src/pi-agent/__tests__/budget-gate-runtime-count.test.ts > SA4E-422 session gate uses runtime count (real tokenizer drives decisions) > REJECT when even the escalation ladder cannot fit the content (fail-safe)
+{"level":"info","msg":"Context budget resolved","modelId":"qwen","source":"provider","nCtx":32768,"reserveOutput":2048,"safetyMargin":2622,"staticBudget":19668,"historyBudget":8430,"timestamp":"2026-11-15T18:54:10.542Z"}
+{"level":"info","msg":"PI_GATE_ESCALATION","step":"compress","staticTokens":76976,"timestamp":"2026-11-15T18:54:10.542Z"}
+{"level":"info","msg":"PI_GATE_ESCALATION","step":"drop-steering","staticTokens":76976,"timestamp":"2026-11-15T18:54:10.543Z"}
+{"level":"info","msg":"PI_GATE_ESCALATION","step":"min-loadout","staticTokens":76886,"timestamp":"2026-11-15T18:54:10.543Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"REJECT","usagePercent":240.89,"staticTokens":76886,"escalations":["compress","drop-steering","min-loadout"],"timestamp":"2026-11-15T18:54:10.543Z"}
+stderr | src/pi-agent/__tests__/budget-gate-runtime-count.test.ts > SA4E-422 session gate uses runtime count (real tokenizer drives decisions) > REJECT when even the escalation ladder cannot fit the content (fail-safe)
+{"level":"error","msg":"PI_CONTEXT_BUDGET_EXCEEDED","staticTokens":76886,"staticBudget":19668,"nCtx":32768,"timestamp":"2026-11-15T18:54:10.543Z"}
+
+
+stdout | src/pi-agent/__tests__/budget-gate-runtime-count.test.ts > SA4E-422 session gate uses runtime count (real tokenizer drives decisions) > qwen 32k breakdown: real count just under budget → initial measurement is the real one (AC5)
+{"level":"info","msg":"Context budget resolved","modelId":"qwen","source":"provider","nCtx":32768,"reserveOutput":2048,"safetyMargin":2622,"staticBudget":19668,"historyBudget":8430,"timestamp":"2026-11-15T18:54:10.543Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":66.12,"staticTokens":19618,"escalations":[],"timestamp":"2026-11-15T18:54:10.543Z"}
+
+ ✓ src/pi-agent/__tests__/budget-gate-runtime-count.test.ts > SA4E-422 measureStaticAssembly with runtime count > uses the REAL count when provided and untransformed 1ms
+ ✓ src/pi-agent/__tests__/budget-gate-runtime-count.test.ts > SA4E-422 measureStaticAssembly with runtime count > ignores the runtime count for transformed (compressed) measurements 1ms
+ ✓ src/pi-agent/__tests__/budget-gate-runtime-count.test.ts > SA4E-422 session gate uses runtime count (real tokenizer drives decisions) > runtime count over budget TRIGGERS the escalation ladder (decision driven by real count) 2ms
+ ✓ src/pi-agent/__tests__/budget-gate-runtime-count.test.ts > SA4E-422 session gate uses runtime count (real tokenizer drives decisions) > REJECT when even the escalation ladder cannot fit the content (fail-safe) 1ms
+ ✓ src/pi-agent/__tests__/budget-gate-runtime-count.test.ts > SA4E-422 session gate uses runtime count (real tokenizer drives decisions) > qwen 32k breakdown: real count just under budget → initial measurement is the real one (AC5) 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > STC-206: 8k model, huge dense static → throws the EXACT actionable message 3ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > STC-207: original incident 67,468 tokens vs n_ctx=65,536 → REJECT — the 400 is structurally impossible 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > STC-201: degenerate n_ctx=2048 (staticBudget 0) → REJECT with actionable message 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > ALLOW and WARN never throw 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > PiContextBudgetExceededError carries the counts for the banner (STC-501 N/M/K) 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > isBudgetExceededError: instanceof OR message prefix (module-instance safe) 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > measureUsagePercent + measureStaticAssembly (UC-05 wiring support) > reuses the real BudgetCalculator: usage = (static + reserve) / nCtx × 100 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > measureUsagePercent + measureStaticAssembly (UC-05 wiring support) > measures context files + workspace prompt + SDK base + tool schemas (chars/4) 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > measureUsagePercent + measureStaticAssembly (UC-05 wiring support) > compression reduces the measurement only for compressible content (BR-04/BR-15) 1ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > halveSteeringCap — ladder step 2 (BR-08) > halves the steering share; other budget fields are preserved 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > halveSteeringCap — ladder step 2 (BR-08) > keeps degenerate budgets degenerate (0 stays 0 — gate decides) 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-011: qwen 32k with static 7,000 tokens → ALLOW, zero escalation events 3ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-012: n_ctx=10,000 with static 7,200 → 92% WARN — proceeds, warning logged 1ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-310/401 boundary: static 6500 → ALLOW 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-310/401 boundary: static 6501 → WARN 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-310/401 boundary: static 7500 → WARN 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-310/401 boundary: static 7501 → REJECT 0ms
+ ✓ src/pi-agent/__tests__/token-eviction.integration.test.ts > SA4E-428 token budget across model tiers (real resolver + tokenizer) > 8192 → 'small': real count fits staticBudget, no overflow 2ms
+ ✓ src/pi-agent/__tests__/token-eviction.integration.test.ts > SA4E-428 token budget across model tiers (real resolver + tokenizer) > 32768 → 'medium': real count fits staticBudget, no overflow 0ms
+ ✓ src/pi-agent/__tests__/token-eviction.integration.test.ts > SA4E-428 token budget across model tiers (real resolver + tokenizer) > 128000 → 'large': real count fits staticBudget, no overflow 0ms
+ ✓ src/pi-agent/__tests__/token-eviction.integration.test.ts > SA4E-428 budget gate escalation (real session gate) > escalates compress → drop-steering → min-loadout and lands under budget 1ms
+ ✓ src/pi-agent/__tests__/token-eviction.integration.test.ts > SA4E-428 budget gate escalation (real session gate) > exhausted ladder → actionable PI_CONTEXT_BUDGET_EXCEEDED (no provider call) 0ms
+ ✓ src/pi-agent/__tests__/token-eviction.integration.test.ts > SA4E-428 role-scope token reduction > role filter drops out-of-role skills; unknown role fails open 1ms
+ ✓ src/pi-agent/__tests__/token-eviction.integration.test.ts > SA4E-428 role-scope token reduction > scoped steering for a known role measures less static context, security survives 1ms
+ ✓ src/pi-agent/__tests__/token-eviction.integration.test.ts > SA4E-428 tool loadout: role filter + schema token cap > BA excludes deploy/git/build tools; DEV keeps them; core+discovery always present 1ms
+ ✓ src/pi-agent/__tests__/token-eviction.integration.test.ts > SA4E-428 tool loadout: role filter + schema token cap > explicit cap trims MCP schemas; an unreachable cap flags capExceeded 0ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > STC-011: small static → ALLOW, flags unchanged, no escalation 2ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > STC-110: over-share static → compress escalates for real (shouldCompress) 1ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > STC-205: drop-steering halves the steering share for scopedSteering 1ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > STC-206: absolute exceed → throws PI_CONTEXT_BUDGET_EXCEEDED (BR-09) 1ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > STC-012: WARN resolves normally — the host proceeds (AF-1 UC-05) 0ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > unloadable workspace measures as empty — the turn never breaks 0ms
+stdout | src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 tryRuntimeTokenCount > fail-open: HTTP error, network throw, timeout, bad payload → null
+{"level":"debug","msg":"PI_RUNTIME_TOKENIZE_HTTP","status":500,"url":"http://s/tokenize","timestamp":"2026-11-15T18:54:11.668Z"}
+
+stdout | src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 tryRuntimeTokenCount > fail-open: HTTP error, network throw, timeout, bad payload → null
+{"level":"debug","msg":"PI_RUNTIME_TOKENIZE_UNAVAILABLE","error":"ECONNREFUSED","url":"http://s/tokenize","timestamp":"2026-11-15T18:54:11.670Z"}
+
+stdout | src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 tryRuntimeTokenCount > fail-open: HTTP error, network throw, timeout, bad payload → null
+{"level":"debug","msg":"PI_RUNTIME_TOKENIZE_UNAVAILABLE","error":"aborted","url":"http://s/tokenize","timestamp":"2026-11-15T18:54:11.670Z"}
+
+stdout | src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 measureRuntimeStaticTokens > endpoint failure → undefined (never throws)
+{"level":"debug","msg":"PI_RUNTIME_TOKENIZE_UNAVAILABLE","error":"down","url":"http://s/tokenize","timestamp":"2026-11-15T18:54:11.671Z"}
+
+ ✓ src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 tryRuntimeTokenCount > llama.cpp payload {tokens:[...]} → exact count 2ms
+ ✓ src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 tryRuntimeTokenCount > accepts {count} from other servers 0ms
+ ✓ src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 tryRuntimeTokenCount > derives /tokenize without trailing slash duplication 0ms
+ ✓ src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 tryRuntimeTokenCount > empty text / missing baseUrl → null without any fetch 0ms
+ ✓ src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 tryRuntimeTokenCount > fail-open: HTTP error, network throw, timeout, bad payload → null 2ms
+ ✓ src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 measureRuntimeStaticTokens > no baseUrl or empty files → undefined (caller uses estimates) 0ms
+ ✓ src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 measureRuntimeStaticTokens > measures files + workspace prompt through the endpoint 0ms
+ ✓ src/pi-agent/__tests__/runtime-tokenizer.test.ts > SA4E-422 measureRuntimeStaticTokens > endpoint failure → undefined (never throws) 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-escalation.test.ts > runBudgetGate — escalation ladder (BR-08 / STC-205 / STC-306) > STC-205: fires strictly in order compress → drop-steering → min-loadout, re-measuring after each 3ms
+ ✓ src/pi-agent/__tests__/budget-gate-escalation.test.ts > runBudgetGate — escalation ladder (BR-08 / STC-205 / STC-306) > STC-306/STC-110: compression alone suffices → steps 2–3 never fire 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-escalation.test.ts > runBudgetGate — escalation ladder (BR-08 / STC-205 / STC-306) > a failing ladder step is logged and skipped — the gate never breaks the turn 0ms
+stdout | src/pi-agent/__tests__/acceptance-ac17.test.ts > SA4E-427 AC-17 runtime tokenizer budget > AC-17: real prompt + tool tokens drive the runtime budget decision
+{"level":"info","msg":"Context budget resolved","modelId":"qwen","source":"provider","nCtx":32768,"reserveOutput":2048,"safetyMargin":2622,"staticBudget":19668,"historyBudget":8430,"timestamp":"2026-11-15T18:54:12.017Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":25.7,"staticTokens":6375,"escalations":[],"timestamp":"2026-11-15T18:54:12.019Z"}
+
+ ✓ src/pi-agent/__tests__/acceptance-ac17.test.ts > SA4E-427 AC-17 runtime tokenizer budget > AC-17: real prompt + tool tokens drive the runtime budget decision 3ms
+
+ Test Files  9 passed (9)
+      Tests  54 passed (54)
+   Start at  01:54:09
+   Duration  2.29s (transform 224ms, setup 0ms, import 944ms, tests 52ms, environment 0ms)
+
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx vitest run src/pi-agent/__tests__/acceptance-ac17.test.ts src/pi-agent/__tests__/session-budget-gate.test.ts src/pi-agent/__tests__/budget-gate-runtime-count.test.ts src/pi-agent/__tests__/budget-gate-escalation.test.ts src/pi-agent/__tests__/budget-gate-enforce.test.ts src/pi-agent/__tests__/budget-gate-decisions.test.ts src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts src/pi-agent/__tests__/runtime-tokenizer.test.ts src/pi-agent/__tests__/token-eviction.integration.test.ts --reporter=verbose (cwd=extension)
+EXIT=0

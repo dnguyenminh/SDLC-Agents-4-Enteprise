@@ -1,0 +1,42 @@
+=== SA4E-411 evidence re-run ===
+label      : ext-regression
+cwd        : C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\extension
+command    : npx vitest run src/__tests__/sa4e-regression.test.ts --reporter=verbose
+portable   : yes (unchanged)
+started_at : 2026-11-16T07:11:02.564Z
+finished_at: 2026-11-16T07:11:03.920Z
+duration_ms: 1356
+EXIT=0
+
+--- stdout ---
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/extension
+
+ ✓ src/__tests__/sa4e-regression.test.ts > SA4E-429 SM pipeline phase contract > exposes the 7 SDLC phases plus completed in canonical order 1ms
+ ✓ src/__tests__/sa4e-regression.test.ts > SA4E-429 SM pipeline phase contract > PhaseRouter advances requirements → … → deployment → completed 1ms
+ ✓ src/__tests__/sa4e-regression.test.ts > SA4E-429 SM pipeline phase contract > abort keeps the current phase and marks the pipeline HALTED 1ms
+ ✓ src/__tests__/sa4e-regression.test.ts > SA4E-429 agent role boundaries > the responsibility matrix covers every agent with allowed + forbidden scopes 1ms
+ ✓ src/__tests__/sa4e-regression.test.ts > SA4E-429 agent role boundaries > every matrix role maps to a real agent prompt with a description 4ms
+ ✓ src/__tests__/sa4e-regression.test.ts > SA4E-429 agent role boundaries > SM prompt enforces coordinator-only role separation 1ms
+ ✓ src/__tests__/sa4e-regression.test.ts > SA4E-429 agent role boundaries > each role never both creates and forbids the same artifact 0ms
+ ✓ src/__tests__/sa4e-regression.test.ts > SA4E-429 agent role boundaries > keeps the critical cross-agent guards from AGENTS.md 0ms
+ ✓ src/__tests__/sa4e-regression.test.ts > SA4E-429 agent role boundaries > role-scope filtering covers the operating roles and fails open for unknown ones 0ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  14:11:03
+   Duration  312ms (transform 38ms, setup 0ms, import 153ms, tests 11ms, environment 0ms)
+
+
+--- stderr ---
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"vitest^" run src/__tests__/sa4e-regression.test.ts --reporter=verbose
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+
+--- exit-code capture (re-run in worktree SA4E-411) ---
+captured_at: 2026-11-16T07:11:02.564Z
+command: npx vitest run src/__tests__/sa4e-regression.test.ts --reporter=verbose (cwd=extension)
+EXIT=0

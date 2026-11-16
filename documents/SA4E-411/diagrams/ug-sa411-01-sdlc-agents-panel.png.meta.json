@@ -1,0 +1,14 @@
+{
+  "label": "01-entry-sdlc-agents-panel",
+  "image": "..\\diagrams\\ug-sa411-01-sdlc-agents-panel.png",
+  "sha256": "0AC40C8CEF487C6DD8EF78AF7A3C68451C2A01BF5A5F73CED5FE529F75D7DE38",
+  "bytes": 274084,
+  "mtimeUtc": "2026-11-16T10:20:47.8165732Z",
+  "app": "Kiro",
+  "appPid": 29420,
+  "windowTitle": "core-tools.ts - sa411 (Workspace) - Kiro",
+  "windowIndex": 0,
+  "backendPort": 48731,
+  "stateTextFile": ".state-01-entry-sdlc-agents-panel.txt",
+  "capturedAtUtc": "2026-11-16T10:20:48.0303036Z"
+}

@@ -1,0 +1,66 @@
+=== SA4E-411 evidence re-run ===
+label      : demo
+cwd        : C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend
+command    : npx tsx ..\documents\SA4E-411\evidence\demo-driver-core-tools.mts
+portable   : yes (in-repo driver path substituted for the temp path recorded in exit-codes.json)
+started_at : 2026-11-16T07:11:03.920Z
+finished_at: 2026-11-16T07:11:04.965Z
+duration_ms: 1045
+EXIT=0
+
+--- stdout ---
+{"level":30,"time":1794813064879,"pid":46732,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+### 1. REPOSITORY MAP (snapshot S1) ###
+[REPOSITORY_MAP (Ranked by PageRank relevance)]
+src/auth.ts:
+  1-40: class AuthService
+  10-20: method login
+src/utils.ts:
+  1-10: function helper
+-- files ranked: 2 | token estimate: 37 | truncated: false
+
+### 2. search_symbols "authorization" ###
+[FOUND 1 SYMBOLS | BUDGET_USED: 0 tokens]
+# [METHOD] login | src/auth.ts:10-20 (body: 50 tok)
+   Sig: 
+-- resultId: f210249a-a63c-4a82-9ec5-82c295cb03cf | evidenceIds: ch1 | budgetUsedTokens: 26
+
+### 3. get_file_skeleton src/auth.ts ###
+[FOUND 3 SKELETON LINES | BUDGET_USED: 0 tokens]
+# [CLASS] AuthService | src/auth.ts:1-40
+# [CLASS] AuthService | src/auth.ts:1-45
+# [METHOD] login | src/auth.ts:10-20
+
+### 4. read_code_block src/auth.ts:1-4 ###
+[CODE BLOCK src/auth.ts:1-4 | LINES: 4]
+export class AuthService {
+  async login(user: User): Promise<Token> {
+    return helper(user);
+  }
+
+### 5. query_call_graph symLogin CALLEES ###
+[FOUND 2 CALLEES NODES | BUDGET_USED: 0 tokens]
+# [FUNCTION] helper (direct) | symUtil
+# [FUNCTION] helper (inferred) | symUtil
+
+### 6. PIN ENFORCEMENT (same query against a FAILED snapshot S3) ###
+-- rejected: SNAPSHOT_NOT_READY: S3 is FAILED
+
+### 7. TOOL SCHEMA TOKEN COST ###
+-- search_symbols: 94 tokens
+-- get_file_skeleton: 68 tokens
+-- read_code_block: 107 tokens
+-- query_call_graph: 81 tokens
+-- total (4 core tools): 350 tokens
+
+--- stderr ---
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"tsx^" ..\documents\SA4E-411\evidence\demo-driver-core-tools.mts
+(node:46732) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+--- exit-code capture (re-run in worktree SA4E-411) ---
+captured_at: 2026-11-16T07:11:03.920Z
+command: npx tsx ..\documents\SA4E-411\evidence\demo-driver-core-tools.mts (cwd=backend)
+EXIT=0

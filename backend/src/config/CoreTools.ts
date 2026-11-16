@@ -14,6 +14,8 @@ export const META_TOOLS: readonly string[] = [
 export const CORE_TOOLS: readonly string[] = [
   'mem_search', 'mem_ingest', 'mem_ingest_file',
   'code_search', 'get_curated_context',
+  // SA4E-420: 4 core agent tools (pinned-snapshot retrieval)
+  'search_symbols', 'get_file_skeleton', 'read_code_block', 'query_call_graph',
   'find_tools', 'execute_dynamic_tool', 'orchestration_status',
   'drawio_export_png', 'drawio_auto_layout',
   'pega_get_rule', 'pega_get_session_context',

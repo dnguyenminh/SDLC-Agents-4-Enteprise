@@ -1,0 +1,52 @@
+=== SA4E-411 evidence re-run ===
+label      : retrieval
+cwd        : C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend
+command    : npx vitest run src/engine/retrieval/__tests__/snapshot-retrieval.test.ts --reporter=verbose
+portable   : yes (unchanged)
+started_at : 2026-11-16T07:10:31.305Z
+finished_at: 2026-11-16T07:10:32.817Z
+duration_ms: 1512
+EXIT=0
+
+--- stdout ---
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794813032685,"pid":55140,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > pinOrThrow: FAILED/unknown snapshot rejected; READY accepted 52ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > resolveActiveSnapshot: ref → active snapshot; re-point switches; FAILED active rejected 10ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > symbolByName: pinned to S1 returns ONLY S1 rows (same name exists in S2) 12ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > symbolByName ranks exact-definition > proven-reference > text-similarity 6ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > lexicalSearch: MATCH hits both snapshots physically, pin returns only S1 chunk 7ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > vectorSearch: only embeddings of the pinned snapshot participate 6ms
+{"level":30,"time":1794813032703,"pid":55140,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813032713,"pid":55140,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813032724,"pid":55140,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813032730,"pid":55140,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813032737,"pid":55140,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813032744,"pid":55140,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813032749,"pid":55140,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813032756,"pid":55140,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813032762,"pid":55140,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > relationshipsOf separates direct (PROVEN) from inferred (heuristic) 6ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > discoverCategory: build/config/test are first-class, snapshot-scoped 6ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > hybridSearch fuses lexical + vector (+ graph chunks) under the pin 6ms
+ ✓ src/engine/retrieval/__tests__/snapshot-retrieval.test.ts > SA4E-415 SnapshotRetrievalService — pin enforcement per path > all paths reject non-READY snapshots (unit per path) 6ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  14:10:32
+   Duration  581ms (transform 85ms, setup 25ms, import 286ms, tests 120ms, environment 0ms)
+
+
+--- stderr ---
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"vitest^" run src/engine/retrieval/__tests__/snapshot-retrieval.test.ts --reporter=verbose
+(node:55140) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+--- exit-code capture (re-run in worktree SA4E-411) ---
+captured_at: 2026-11-16T07:10:31.305Z
+command: npx vitest run src/engine/retrieval/__tests__/snapshot-retrieval.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

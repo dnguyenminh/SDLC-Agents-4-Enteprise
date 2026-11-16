@@ -1,0 +1,79 @@
+=== SA4E-411 evidence re-run ===
+label      : query
+cwd        : C:\Users\ASUS\orca\workspaces\SDLC-Agents-4-Enterprise\SA4E-411\backend
+command    : npx vitest run src/engine/api/__tests__/pinned-snapshot-guard.test.ts src/engine/agent-tools/__tests__/core-tools.test.ts src/engine/map/__tests__/repo-map-service.test.ts src/engine/map/__tests__/repo-map-rank.test.ts --reporter=verbose
+portable   : yes (unchanged)
+started_at : 2026-11-16T07:10:32.817Z
+finished_at: 2026-11-16T07:10:35.601Z
+duration_ms: 2784
+EXIT=0
+
+--- stdout ---
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+{"level":30,"time":1794813034244,"pid":55108,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/map/__tests__/repo-map-service.test.ts > SA4E-418 RepositoryMapService > DSL output matches spec format (header + path: + start-end: signature) 60ms
+ ✓ src/engine/map/__tests__/repo-map-service.test.ts > SA4E-418 RepositoryMapService > query personalization: query-matched file ranks first 8ms
+ ✓ src/engine/map/__tests__/repo-map-service.test.ts > SA4E-418 RepositoryMapService > snapshot pin: FAILED snapshot rejected; scoping keeps S2 symbols out of S1 map 9ms
+ ✓ src/engine/map/__tests__/repo-map-service.test.ts > SA4E-418 RepositoryMapService > token budget respected via binary-search packing (custom small budget) 6ms
+{"level":30,"time":1794813034270,"pid":55108,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813034277,"pid":55108,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813034285,"pid":55108,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813034291,"pid":55108,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/map/__tests__/repo-map-service.test.ts > SA4E-418 RepositoryMapService > performance: repo map generation < 500ms for 10k files (pure ranking path) 205ms
+{"level":30,"time":1794813034864,"pid":21468,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813034885,"pid":21468,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813034898,"pid":21468,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813034905,"pid":21468,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813034911,"pid":21468,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813034919,"pid":21468,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813034926,"pid":21468,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > all 4 tools enforce the session pin (FAILED snapshot + commit mismatch) 52ms
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > search_symbols: hybrid DSL format + metadata + cursor 12ms
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > search_symbols: kind + path_filter narrow results; cursor paginates 9ms
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > get_file_skeleton: signatures only, no bodies (AC) 6ms
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > read_code_block: enforces 120 lines max (AC) + cursor 6ms
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > query_call_graph: CALLERS/CALLEES/IMPLEMENTATIONS directions (AC) 9ms
+ ✓ src/engine/agent-tools/__tests__/core-tools.test.ts > SA4E-420 core agent tools > tool schemas total ~450 tokens (AC) 6ms
+{"level":30,"time":1794813035280,"pid":52560,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/api/__tests__/pinned-snapshot-guard.test.ts > SA4E-426 API pinned snapshot enforcement > rejects missing session_id / index_snapshot_id (400 contract) 51ms
+ ✓ src/engine/api/__tests__/pinned-snapshot-guard.test.ts > SA4E-426 API pinned snapshot enforcement > rejects unknown session, mismatched snapshot, and non-READY snapshot 10ms
+ ✓ src/engine/api/__tests__/pinned-snapshot-guard.test.ts > SA4E-426 API pinned snapshot enforcement > valid request resolves the session pin; branch is echoed display metadata only 8ms
+ ✓ src/engine/api/__tests__/pinned-snapshot-guard.test.ts > SA4E-426 API pinned snapshot enforcement > middleware: 400 with error envelope on missing/mismatch, 200 + context on valid 26ms
+{"level":30,"time":1794813035298,"pid":52560,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813035308,"pid":52560,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813035315,"pid":52560,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794813035340,"pid":52560,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+ ✓ src/engine/api/__tests__/pinned-snapshot-guard.test.ts > SA4E-426 API pinned snapshot enforcement > integration AC #3: branch head moves, pinned old commit still queries S1 11ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 weight formula > tokenizes CamelCase / snake_case into lowercase terms 1ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 weight formula > multipliers: query ×10, test ×0.2, long identifier ×2 0ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 weight formula > W = m × √freq × ln(N/(df+1)) 0ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 personalized PageRank > ranks the central node highest; scores sum ≈ 1 (stochastic) 5ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 personalized PageRank > personalization vector boosts the favored file 0ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 personalized PageRank > query-matched terms weight edges ×10 inside buildFileGraph 0ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 token packing (binary search) > packs the largest prefix within the budget 1ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 token packing (binary search) > budget too small → empty; large budget → all; empty input → empty 0ms
+ ✓ src/engine/map/__tests__/repo-map-rank.test.ts > SA4E-418 token packing (binary search) > binary search does not overshoot (maximal prefix fits) 0ms
+
+ Test Files  4 passed (4)
+      Tests  26 passed (26)
+   Start at  14:10:33
+   Duration  1.84s (transform 167ms, setup 43ms, import 691ms, tests 506ms, environment 0ms)
+
+
+--- stderr ---
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"vitest^" run src/engine/api/__tests__/pinned-snapshot-guard.test.ts src/engine/agent-tools/__tests__/core-tools.test.ts src/engine/map/__tests__/repo-map-service.test.ts src/engine/map/__tests__/repo-map-rank.test.ts --reporter=verbose
+(node:55108) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21468) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52560) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+--- exit-code capture (re-run in worktree SA4E-411) ---
+captured_at: 2026-11-16T07:10:32.817Z
+command: npx vitest run src/engine/api/__tests__/pinned-snapshot-guard.test.ts src/engine/agent-tools/__tests__/core-tools.test.ts src/engine/map/__tests__/repo-map-service.test.ts src/engine/map/__tests__/repo-map-rank.test.ts --reporter=verbose (cwd=backend)
+EXIT=0

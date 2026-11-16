@@ -1,0 +1,30 @@
+npm notice run sdlc-agents-4-enterprise-monorepo@1.55.21 npx
+npm notice run ^"vitest^" run src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts --reporter=verbose
+
+ RUN  v4.1.12 C:/Users/ASUS/orca/workspaces/SDLC-Agents-4-Enterprise/SA4E-411/backend
+
+(node:2916) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"level":30,"time":1794768660941,"pid":2916,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794768660993,"pid":2916,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"e901f9967ee7","msg":"[patch-protocol] applied atomically"}
+{"level":30,"time":1794768660994,"pid":2916,"hostname":"WIN-LK2TQOOAELR","name":"staged-patch","runId":"89615dff-54eb-493f-93f6-f0f76fbf1f05","file":"src/auth.ts","valid":true,"msg":"[staged-patch] staged"}
+ ✓ src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts > SA4E-427 acceptance criteria 13–16 > AC-13 patch rejects stale base hash and path traversal 74ms
+{"level":30,"time":1794768660974,"pid":2916,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794768661013,"pid":2916,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794768661021,"pid":2916,"hostname":"WIN-LK2TQOOAELR","name":"migration-v6","msg":"[migrations] V6: 16K data model applied (28 tables + FTS5 + ownership triggers)"}
+{"level":30,"time":1794768660996,"pid":2916,"hostname":"WIN-LK2TQOOAELR","name":"patch-protocol","file":"src/auth.ts","newHash":"e901f9967ee7","msg":"[patch-protocol] applied atomically"}
+ ✓ src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts > SA4E-427 acceptance criteria 13–16 > AC-14 original working tree unchanged before approval (AC #14) 41ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts > SA4E-427 acceptance criteria 13–16 > AC-15 sandbox: no workspace escape, no unrestricted network 7ms
+ ✓ src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts > SA4E-427 acceptance criteria 13–16 > AC-16 SSE reconnect + replay → no duplicate, no missing 12ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  01:51:00
+   Duration  756ms (transform 145ms, setup 29ms, import 429ms, tests 135ms, environment 0ms)
+
+
+
+--- exit-code capture (re-run of the exact command above) ---
+captured_at: 2026-11-16T02:49:31+07:00
+command: npx vitest run src/engine/acceptance/__tests__/acceptance-ac13-16.test.ts --reporter=verbose (cwd=backend)
+EXIT=0
